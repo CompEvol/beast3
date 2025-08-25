@@ -520,33 +520,6 @@ public class MCMC extends Runnable {
 
         if (printDebugInfo) System.err.print("\n" + sampleNr + " " + operator.getName()+ ":");
 
-        final Distribution evaluatorDistribution = operator.getEvaluatorDistribution();
-        Evaluator evaluator = null;
-
-        if (evaluatorDistribution != null) {
-            evaluator = new Evaluator() {
-                @Override
-                public double evaluate() {
-                    double logP = 0.0;
-
-                    state.storeCalculationNodes();
-                    state.checkCalculationNodesDirtiness();
-
-                    try {
-                        logP = evaluatorDistribution.calculateLogP();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.exit(1);
-                    }
-
-                    state.restore();
-                    state.store(sampleNr);
-
-                    return logP;
-                }
-            };
-        }
-
         if (debugFlag) {
             // Store a checksum of each calculation node to ensure that the initial
             // state is restored when a step is rejected (see validateReject).
@@ -555,7 +528,7 @@ public class MCMC extends Runnable {
             }
         }
 
-        final double logHastingsRatio = operator.proposal(evaluator);
+        final double logHastingsRatio = operator.proposal();
 
         if (logHastingsRatio != Double.NEGATIVE_INFINITY) {
 
