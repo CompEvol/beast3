@@ -1,0 +1,778 @@
+<!-- Build BEAST 2. It is also used by Hudson BEAST_2 project. JUnit test is available for this build. -->
+<project basedir="." default="build_jar_all_BEAST" name="BUILD_BEAST_2" 
+	xmlns:fx="javafx:com.sun.javafx.tools.ant">
+    <description>
+        Build BEAST 2.
+        Also used by Hudson BEAST_2 project.
+        JUnit test is available for this build.
+        $Id: build_BEAST_2.xml $
+    </description>
+
+    <!-- set global properties for this build -->
+    <property name="beast2" location="../beast2"/>
+    <property name="src" location="${beast2}/src"/>
+    <property name="build" location="${beast2}/build" />
+    <property name="lib" location="${beast2}/lib" />
+    <property name="doc" location="${beast2}/doc" />
+    <property name="dist" location="${beast2}/build/dist" />
+    <property name="test" location="${beast2}/test" />
+    
+    <property name="BEASTappName" value="BeastFX" />
+    <property name="beast2app" location="../${BEASTappName}"/>
+    <property name="distapp" location="${beast2app}/build/dist"/>
+    <property name="templates" value="fxtemplates"/>
+
+    <property name="main_class_BEASTLauncher" value="beast.pkgmgmt.launcher.BeastLauncher" />
+    <property name="report" value="build/junitreport" />
+
+    <path id="classpath">
+        <fileset dir="${lib}" includes="beagle.jar"/>
+        <fileset dir="${lib}" includes="colt.jar"/>
+        <fileset dir="${lib}" includes="antlr-runtime-4.10.1.jar"/>
+        <fileset dir="${lib}" includes="commons-math3-3.6.1.jar" />
+        <fileset dir="${lib}/junit" includes="junit-platform-console-standalone-1.8.2.jar"/>
+        <path location="build"/>
+    </path>
+
+    <import file="${beast2app}/build.xml" />
+
+
+    <!-- start -->
+    <target name="init">
+        <echo message="${ant.project.name}: ${ant.file}" />
+        <available file="${beast2}/version.xml" property="versionAvailable"/>
+        <fail unless="versionAvailable">
+              ** Required file version.xml does not exist. **
+        </fail>
+
+        <!-- Read package name and version from xml file -->
+        <xmlproperty file="${beast2}/version.xml" prefix="fromVersionFile" />
+        <property name="version" value="${fromVersionFile.package(version)}" />
+        <echo message="Version: ${version}" />
+        
+	    <!-- name is fixed to BEAST v2.?.? in createdmg.sh -->
+    	<property name="beast.dmg" value="${BEAST_name} v${version}.dmg"/>
+    </target>
+    
+
+    <target name="clean">
+        <delete dir="${build}" />
+    </target>
+
+    <!-- clean previous build, and then compile Java source code, and Juint test -->
+    <target name="build_all_BEAST" depends="clean,compile-all,junit" description="Clean and Build all run-time stuff">
+    </target>
+
+    <!-- clean previous build, compile Java source code, and Junit test, and make the beast.jar -->
+    <target name="build_jar_all_BEAST"
+            depends="clean,compile-all,dist_all_BEAST"
+            description="Clean and Build all run-time stuff">
+    </target>
+
+
+    <!-- No JUnit Test, clean previous build, compile Java source code, and make the beast.jar -->
+    <target name="build_jar_all_BEAST_NoJUnitTest"
+            depends="clean,compile-all,dist_all_BEAST"
+            description="Clean and Build all run-time stuff">
+    </target>
+
+    <!-- compile Java source code -->
+    <target name="compile-all" depends="init,beast.pkgmgmt,beast.base,test.beast,compile-allBeastFX">
+        <echo>Building BEAST 2</echo>
+   
+        <echo message="Successfully compiled." />
+    </target>
+
+    <target name="beast.pkgmgmt" depends="init">
+    
+        <mkdir dir="${build}" />
+    
+    	<javac 
+               srcdir="${beast2}/src"
+               destdir="${build}"
+               classpathref="classpath"
+               fork="true"
+			   encoding="UTF-8"
+               memoryinitialsize="256m"
+               memorymaximumsize="1024m"
+               includeAntRuntime='false'>
+            <include name="beast/pkgmgmt/**/**" />
+        </javac>
+
+        <copy todir="${build}">
+            <fileset dir="${beast2}/src" includes="**/*.png" />
+        </copy>
+                
+        <jar jarfile="${build}/dist/launcher.jar">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+                <attribute name="Main-Class" value="${main_class_BEASTLauncher}" />
+            </manifest>
+            
+            
+			<!--
+			   ice type="beast.pkgmgmt.NameSpaceInfo">
+				<provider classname="beast.pkgmgmt.NameSpaceInfo"/>
+			</service>
+			-->
+            	
+            <fileset dir="${build}">
+                <include name="beast/pkgmgmt/**/*.class" />
+                <include name="beast/pkgmgmt/**/*.properties" />
+                <include name="beast/pkgmgmt/**/*.png" />
+            </fileset>
+        </jar>
+        
+        
+        <jar jarfile="${dist}/launcher.src.jar">
+            <fileset dir="${beast2}/src">
+                <include name="beast/pkgmgmt/**/*.java" />
+            </fileset>
+        </jar>
+
+    </target>
+
+
+    <target name="beast.base" depends="init">
+    	<javac 
+               srcdir="${beast2}/src"
+               destdir="${build}"
+               classpathref="classpath"
+               fork="true"
+			   encoding="UTF-8"
+               memoryinitialsize="256m"
+               memorymaximumsize="1024m"
+               includeAntRuntime='false'>
+            <include name="beast/base/**/**" />
+            <include name="org/**/**" />
+        </javac>
+                
+        <jar jarfile="${build}/dist/BEAST.base.jar">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+            </manifest>
+
+            <fileset dir="${build}">
+                <include name="org/**/*.class" />
+                <include name="beast/base/**/*.class" />
+                <include name="beast/base/**/*.properties" />
+                <include name="beast/base/**/*.png" />
+            </fileset>
+            <zipgroupfileset dir="${lib}" includes="beagle.jar" />
+            <zipgroupfileset dir="${lib}" includes="colt.jar" />
+            <zipgroupfileset dir="${lib}" includes="antlr-runtime-4.10.1.jar"/>
+	        <zipgroupfileset dir="${lib}" includes="commons-math3-3.6.1.jar" />
+        </jar>
+
+        <jar jarfile="${dist}/BEAST.base.src.jar">
+            <fileset dir="${beast2}/src">
+                <include name="beast/base/**/*.java" />
+                <include name="org/**/*.java" />
+            </fileset>
+        </jar>
+    </target>
+
+
+
+    <target name="test.beast" depends="init">
+    	<javac 
+               srcdir="${beast2}/test"
+               destdir="${build}"
+               classpathref="classpath"
+               fork="true"
+			   encoding="UTF-8"
+               memoryinitialsize="256m"
+               memorymaximumsize="1024m"
+               includeAntRuntime='false'>
+            <include name="test/**/**" />
+        </javac>
+                
+        <jar jarfile="${build}/dist/test.beast.jar">
+            <manifest>
+                <attribute name="Built-By" value="${user.name}" />
+            </manifest>
+            <fileset dir="${build}">
+                <include name="test/**/*.class" />
+                <include name="test/**/*.properties" />
+                <include name="test/**/*.png" />
+            </fileset>
+        </jar>
+
+        <jar jarfile="${dist}/beast.test.src.jar">
+            <fileset dir="${beast2}/src">
+                <include name="test/**/*.java" />
+            </fileset>
+        </jar>
+    </target>    
+    
+    
+
+    
+    
+    <!-- make the beast.jar -->
+    <target name="dist_all_BEAST" depends="compile-all" description="create BEAST jar">
+
+        <!-- create BEAST.base package -->
+        <mkdir dir="${release_dir}/package/beast.base/"/>
+        <mkdir dir="${release_dir}/package/beast.base/lib"/>
+        <copy file="${dist}/BEAST.base.src.jar" todir="${release_dir}/package/beast.base/"/>
+        <copy file="${dist}/BEAST.base.jar" todir="${release_dir}/package/beast.base/lib/"/>
+        <copy file="${beast2}/version.xml" todir="${release_dir}/package/beast.base/"/>
+
+        <jar jarfile="${release_dir}/package/BEAST.base.package.v${version}.zip">
+            <fileset dir="${release_dir}/package/beast.base">
+                <include name="version.xml" />
+                <include name="lib/BEAST.base.jar" />
+                <include name="BEAST.base.src.jar" />
+            </fileset>
+            <fileset dir=".">
+                <include name="examples/*.*" />
+                <include name="examples/nexus/*.*" />
+            </fileset>
+         </jar>
+	</target>
+	
+
+    <!-- run beast.jar -->
+    <target name="run_BEAST">
+        <java jar="${dist}/beast.jar" fork="true" />
+    </target>
+
+    <!-- JUnit test -->
+  <target name="junit" depends="junit-unit, junit-integration, junit-xmlparsertest"/>
+
+    <target name="junit-unit">
+        <pathconvert property="classpathProp" refid="classpath"/>
+        <echo>Classpath is ${classpathProp}</echo>
+
+        <java classpathref="classpath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <arg line="-p test.beast.base"/>
+            <arg line="-p test.beast.core"/>
+            <arg line="-p test.beast.evolution"/>
+            <arg line="-p test.beast.math"/>
+            <arg line="-p test.beast.statistic"/>
+            <arg line="-p test.beast.util"/>
+            <arg line="-N test.beast.util.XMLParserTest"/>
+            <arg line="--reports-dir build/junitreport"/>
+        </java>
+        <junitreport todir="build/junitreport">
+            <fileset dir="build/junitreport">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="build/junitreport"/>
+        </junitreport>
+    </target>
+	
+	<!-- separate out test.beast.util.XMLParserTest so the version.xml files get loaded -->
+    <target name="junit-xmlparsertest">
+        <java classpathref="classpath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <arg line="-c test.beast.util.XMLParserTest"/>
+            <arg line="--reports-dir build/xmlparserreport"/>
+        </java>
+        <junitreport todir="build/xmlparserreport">
+            <fileset dir="build/xmlparserreport">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="build/xmlparserreport"/>
+        </junitreport>
+    </target>
+    
+    <target name="junit-integration">
+        <java classpathref="classpath" classname="org.junit.platform.console.ConsoleLauncher" fork="true" failonerror="true">
+            <arg line="-p test.beast.integration"/>
+            <arg line="--reports-dir build/integrationreport"/>
+        </java>
+        <junitreport todir="build/integrationreport">
+            <fileset dir="build/junitreport">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="build/integrationreport"/>
+        </junitreport>
+    </target>
+
+    <target name="junitreport">
+        <junitreport todir="${report}">
+            <fileset dir="${report}" includes="*.xml" />
+            <report format="frames" todir="${report}" />
+        </junitreport>
+        <echo message="JUnit test report finished." />
+    </target>
+    
+    <!-- Target for Travis-CI with non-zero exit status on test failure. -->
+    <target name="travis" depends="clean, compile-all, junit, junitb">
+        <fail if="junitfailed" message="One or more CORE BEAST tests failed."/>
+        <fail if="junitbfailed" message="One or more BEAUTI tests failed."/>
+    </target>
+
+    <!-- testing beauti gui-->
+    <target name="junitb">
+        <mkdir dir="${report}" />
+        <junit printsummary="yes" failureproperty="junitbfailed">
+            <!--showoutput='yes'-->
+            <classpath>
+                <path id="assertj.classpath">
+			        <fileset dir="${lib}" includes="junit-4.8.2.jar"/>
+        			<fileset dir="${lib}" includes="beagle.jar"/>
+			        <fileset dir="${lib}" includes="colt.jar"/>
+			        <fileset dir="${lib}" includes="antlr-runtime-4.10.1.jar"/>
+			        <fileset dir="build/dist" includes="BEAST.base.jar" />
+			        <fileset dir="build/dist" includes="BEAST.app.jar" />
+			        <fileset dir="build/dist" includes="launcher.jar" />
+			        <fileset dir="build/dist" includes="test.beast.jar" />
+                </path>
+                <!--
+                <path location="${build}" />
+                -->
+            </classpath>
+
+            <formatter type="xml" />
+
+            <batchtest fork="yes" todir="${report}">
+                <fileset dir="beast.app/test">
+                    <include name="test/beast/app/beauti/**/*Test.java"/>
+                </fileset>
+            </batchtest>
+        </junit>
+        <echo message="JUnit test finished." />
+    </target>
+
+
+    <!-- Release -->
+    <property name="release_dir" value="${beast2}/release" />
+    <property name="copyright" value="Beast 2 development team 2011-2022" />
+
+    <property name="BEAST_name" value="BEAST" />
+    <property name="beast_name" value="beast" />
+    <property name="BEAUti_name" value="BEAUti" />
+    <property name="TreeAnnotator_name" value="TreeAnnotator" />
+    <property name="LogCombiner_name" value="LogCombiner" />
+    <property name="LogAnalyser_name" value="LogAnalyser" />
+    <property name="AppLauncher_name" value="AppLauncher" />
+
+    <property name="common_dir" value="${release_dir}/common" />
+    <property name="Mac_dir" value="${release_dir}/Mac" />
+    <property name="Linux_dir" value="${release_dir}/Linux" />
+    <property name="Windows_dir" value="${release_dir}/Windows" />
+    <property name="beast1_dir" value="${common_dir}/beast1" />
+    <property name="tools_dir" value="${common_dir}/tools" />
+
+    <property name="Mac_package_dir" value="${Mac_dir}/${BEAST_name}" />
+    <property name="Mac_bundle_dir" value="${Mac_package_dir}/${BEAST_name}" />
+    <property name="Linux_package_dir" value="${Linux_dir}/${beast_name}" />
+    <property name="Windows_package_dir" value="${Windows_dir}/${BEAST_name}" />
+
+
+    <taskdef name="jsign" classname="net.jsign.JsignTask" classpath="${beast2}/lib/bundler/jsign-3.1.jar"/>
+
+    <!-- Need to either install Launch4j under {BEAST workspace}/${release}
+                 or install it in the default directory and change the location of launch4j.dir -->
+    <!--depends="build_jar_all_BEAST_NoJUnitTest"-->
+    <target name="windows"
+            description="release Windows version of BEAST, BEAUTI, TreeAnnotator, LogCombiner">
+
+        <echo message="=============================================="/>
+        <echo message="DO NOT USE ant windows" />
+        <echo message="USE ant windows IN THE BEASTFX PACKAGE INSTEAD" />
+        <echo message="=============================================="/>
+    </target>
+
+
+
+    <target name="linux" depends="compile-all,dist_all_BEAST" 
+            description="release Linux/Unix version of BEAST, BEAUTI, TreeAnnotator, LogCombiner">
+        <echo message="=============================================="/>
+        <echo message="DO NOT USE ant linux" />
+        <echo message="USE ant linux IN THE BEASTFX PACKAGE INSTEAD" />
+        <echo message="=============================================="/>
+    </target>
+
+
+
+    <!-- Define the appbundler task -->
+<!--    <taskdef name="bundleapp" classname="com.oracle.appbundler.AppBundlerTask" classpath="${beast2}/lib/bundler/appbundler-1.0.jar"/>-->
+    <taskdef name="jarbundler" classname="com.ultramixer.jarbundler.JarBundler" classpath="${beast2}/lib/bundler/jarbundler-core-3.3.0.jar"/>
+
+    <!--property name="AppleSigner" value="Developer ID Application: Alexei Drummond (6M6Y6L7RUP)" /-->
+    <!--<property name="AppleSigner" value="Developer ID Application: Remco Bouckaert (LHFJWE5U63)" />-->
+    <property name="AppleSigner" value="Developer ID Application: Walter Xie (27V5YMX65C)" />
+
+    <property name="jvm_version" value="17.0+"/>
+
+    <!-- Create the app bundle -->
+    <target name="bundle">
+    
+
+        <copy file="${common_dir}/icons/beast.png" todir="${Mac_package_dir}/images" />
+        <copy file="${common_dir}/icons/beauti.png" todir="${Mac_package_dir}/images" />
+        <!-- <copy file="${common_dir}/icons/utility.png" todir="${Mac_package_dir}/images" />
+        -->
+        <copy file="${dist}/launcher.jar" todir="${Mac_package_dir}/lib" />
+        <copy file="${dist}/launcher.src.jar" todir="${Mac_package_dir}/lib" />
+
+        <copy file="${beast2}/version.xml" tofile="${Mac_package_dir}/lib/packages/BEAST.base.version.xml" />
+        <copy file="${beast2app}/version.xml" tofile="${Mac_package_dir}/lib/packages/BEAST.app.version.xml" />
+        <copy file="${dist}/BEAST.base.jar" todir="${Mac_package_dir}/lib/packages" />
+        <copy file="${dist}/BEAST.base.src.jar" todir="${Mac_package_dir}/lib/packages" />
+        <copy file="${distapp}/BEAST.app.jar" tofile="${Mac_package_dir}/lib/packages/BEAST.app.jar" />
+        <copy file="${distapp}/BEAST.app.src.jar" tofile="${Mac_package_dir}/lib/packages/BEAST.app.src.jar" />
+
+        <copy file="${tools_dir}/DensiTree.jar" todir="${Mac_package_dir}/lib" />
+        <copy file="${tools_dir}/DensiTree.png" todir="${Mac_package_dir}/images" />
+
+        <copy todir="${Mac_package_dir}/${templates}/">
+            <fileset dir="${beast2app}/${templates}/" />
+        </copy>
+        <copy file="${common_dir}/VERSION HISTORY.txt" todir="${Mac_package_dir}" />
+        <copy file="${common_dir}/README.txt" todir="${Mac_package_dir}" />
+        <copy file="${common_dir}/LICENSE.txt" todir="${Mac_package_dir}" />
+
+
+        <echo message="Creating BEAST.app ..." />
+
+        <!-- create a jar bundle for the mac -->
+        <jarbundler dir="${Mac_package_dir}"
+                    name="${BEAST_name}"
+                    mainclass="beast.pkgmgmt.launcher.BeastLauncher"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${common_dir}/icons/beast.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en"
+                    arguments="-window -working -options"
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="${BEAST_name}, ${copyright}"
+                    bundleid="beastfx.app.beast.BeastMain">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${Mac_package_dir}/lib">
+                <include name="**/launcher.jar"/>
+                <!--                <include name="**/beast.jar"/>-->
+                <!--                <include name="**/beast-beagle.jar"/>-->
+            </jarfileset>
+
+        </jarbundler>
+
+        <echo message="Creating BEAUti.app ..." />
+
+        <jarbundler dir="${Mac_package_dir}"
+                    name="${BEAUti_name}"
+                    mainclass="beast.pkgmgmt.launcher.BeautiLauncher"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${common_dir}/icons/beauti.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en -Xdock:name=&quot;BEAUti&quot;"
+                    arguments="-capture"
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="${BEAUti_name}, ${copyright}"
+                    bundleid="beast.pkgmgmt.launcher.Beauti">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${Mac_package_dir}/lib">
+                <include name="**/launcher.jar"/>
+            </jarfileset>
+
+        </jarbundler>
+
+        <echo message="Creating LogCombiner.app ..." />
+
+        <jarbundler dir="${Mac_package_dir}"
+                    name="${LogCombiner_name}"
+                    mainclass="beast.pkgmgmt.launcher.LogCombinerLauncher"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${common_dir}/icons/utility.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en"
+                    arguments=""
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="${LogCombiner_name}, ${copyright}"
+                    bundleid="beast.pkgmgmt.launcher.LogCombiner">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${Mac_package_dir}/lib">
+                <include name="**/launcher.jar"/>
+            </jarfileset>
+
+        </jarbundler>
+
+        <echo message="Creating TreeAnnotator.app ..." />
+
+        <jarbundler dir="${Mac_package_dir}"
+                    name="${TreeAnnotator_name}"
+                    mainclass="beast.pkgmgmt.launcher.TreeAnnotatorLauncher"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${common_dir}/icons/utility.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en"
+                    arguments=""
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="${TreeAnnotator_name}, ${copyright}"
+                    bundleid="beast.pkgmgmt.launcher.TreeAnnotator">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${Mac_package_dir}/lib">
+                <include name="**/launcher.jar"/>
+            </jarfileset>
+
+        </jarbundler>
+
+        <echo message="Creating AppLauncher_name.app ..." />
+
+        <jarbundler dir="${Mac_package_dir}"
+                    name="${AppLauncher_name}"
+                    mainclass="beast.pkgmgmt.launcher.AppLauncherLauncher"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${common_dir}/icons/utility.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en"
+                    arguments=""
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="${AppLauncher_name}, ${copyright}"
+                    bundleid="beast.pkgmgmt.launcher.AppLauncher">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${Mac_package_dir}/lib">
+                <include name="**/launcher.jar"/>
+            </jarfileset>
+
+        </jarbundler>
+
+        <echo message="Creating DensiTree.app ..." />
+
+        <jarbundler dir="${Mac_package_dir}"
+                    name="DensiTree"
+                    mainclass="viz.DensiTree"
+                    stubfile="${stubfile}"
+                    useJavaXKey="true"
+                    icon="${tools_dir}/DensiTree.icns"
+                    jvmversion="${jvm_version}"
+                    vmoptions="-Xmx8g -Duser.language=en"
+                    arguments=""
+                    highresolutioncapable="true"
+                    version="${version}"
+                    copyright="DensiTree, http://compevol.auckland.ac.nz/software/DensiTree/"
+                    bundleid="viz.DensiTree">
+            <javaproperty name="apple.laf.useScreenMenuBar" value="true"/>
+            <javaproperty name="java.library.path" value="$JAVAROOT:/usr/local/lib"/>
+            <jarfileset dir="${tools_dir}">
+                <include name="**/DensiTree.jar"/>
+            </jarfileset>
+
+        </jarbundler>
+
+    </target>
+
+    <!-- Split from app bundle, because macjre -->
+    <target name="codesign">
+
+        <echo message="codesign BEAST.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/${BEAST_name}.app"/>
+        </exec>
+
+        <echo message="codesign BEAUti.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/${BEAUti_name}.app"/>
+        </exec>
+
+        <echo message="codesign LogCombiner.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/${LogCombiner_name}.app"/>
+        </exec>
+
+        <echo message="codesign TreeAnnotator.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/${TreeAnnotator_name}.app"/>
+        </exec>
+
+        <echo message="codesign AppLauncher_name.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/${AppLauncher_name}.app"/>
+        </exec>
+
+        <echo message="codesign DensiTree.app ..." />
+
+        <!-- code signing -->
+        <exec executable="codesign">
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_package_dir}/DensiTree.app"/>
+        </exec>
+
+        <!-- templates -->
+        <copy todir="${Mac_package_dir}/fxtemplates/">
+            <fileset dir="${beast2app}/fxtemplates/" />
+        </copy>
+
+    </target>
+
+    <!-- build dmg -->
+    <target name="dmg" depends="init">
+        <echo message="Building disk image." />
+        <exec executable='release/Mac/createdmg.sh' dir="${beast2}"/>
+
+        <exec executable="codesign">
+            <!-- have to keep it -->
+            <arg value="--deep"/>
+            <arg value="--options=runtime"/>
+            <arg value="-s"/>
+            <arg value="${AppleSigner}"/>
+            <arg value="-v"/>
+            <arg value="${Mac_dir}/${beast.dmg}"/>
+        </exec>
+
+        <delete file="${Mac_dir}/pack.temp.dmg"/>
+    </target>
+
+
+
+    <!-- notarization without staple -->
+    <target name="notarization">
+        <fail message="DMG NOT FOUND: ${dmg.path}">
+            <condition><not>
+                <available file="${dmg.path}" />
+            </not></condition>
+        </fail>
+
+        <echo message="Start the notarization to ${dmg.path}" />
+
+        <input message="Apple username : " addproperty="appleusr"/>
+        <input message="Apple password : " addproperty="applepwd"/>
+
+        <exec executable="xcrun">
+            <arg value="altool"/>
+            <arg value="--notarize-app"/>
+            <arg value="-f"/>
+            <arg value="${dmg.path}"/>
+            <arg value="--primary-bundle-id"/>
+            <arg value="BEAST2"/>
+            <arg value="-u"/>
+            <arg value="${appleusr}"/>
+            <arg value="-p"/>
+            <arg value="${applepwd}"/>
+        </exec>
+        <!-- xcrun altool &#45;-notarization-info *-*-*-*-* -u * -p *-->
+
+        <echo message="Require manually to staple the notarization because of waiting time" />
+
+        <!--        <exec executable="xcrun">-->
+        <!--            <arg value="stapler"/>-->
+        <!--            <arg value="staple"/>-->
+        <!--            <arg value="${Mac_dir}/${beast.dmg}"/>-->
+        <!--        </exec>-->
+        <!-- xcrun stapler validate BEAST\ v2.6.3.dmg -->
+
+    </target>
+
+    <!-- no jre -->
+    <target name="mac">
+        <echo message="=============================================="/>
+        <echo message="DO NOT USE ant mac" />
+        <echo message="USE ant mac IN THE BEASTFX PACKAGE INSTEAD" />
+        <echo message="=============================================="/>
+    </target>
+
+
+    <target name="doc" description="Create Developer Docs for Beast 2" depends='javadoc'>
+        <copy file="doc/tutorial.slides.part1.pdf" tofile="release/common/doc/develop/" />
+        <copy file="doc/tutorial.slides.part2.pdf" tofile="release/common/doc/develop/" />
+        <!-- part 3 needs updating -->
+        <!--copy file="doc/tutorial.slides.part3.pdf" tofile="release/common/doc/develop/" /-->
+    </target>
+
+    <target name="javadoc" description="Create Javadocs for Beast 2" depends='docPreProcess'>
+        <mkdir dir="${common_dir}/javadoc/" />
+        <javadoc destdir="${common_dir}/javadoc/">
+            <fileset dir="src2/" includes="beast/**/*.java" />
+            <!--<fileset dir="src2/" includes="beast/core/**/*.java" />-->
+            <!--<fileset dir="src2/" includes="beast/util/**/*.java" />-->
+            <!--<fileset dir="src2/" includes="beast/math/**/*.java" />-->
+            <!--<fileset dir="src2/" includes="beast/evolution/**/*.java" />-->
+        </javadoc>
+
+        <!-- clean up -->
+        <delete dir="src2/"/>
+    </target>
+
+    <!-- run perl script that extracts @Description and Input.description info for javadoc -->
+    <target name="docPreProcess">
+        <exec executable="perl" dir="${basedir}">
+            <arg value="scripts/doc.pl" />
+        </exec>
+    </target>
+
+    <property name="sdk_dir" value="${release_dir}/${BEAST_name}_SDK" />
+
+    <!-- zip up everything that goes in the SDK -->
+    <target name="sdk" description="Create Beast 2 SDK" depends="dist_all_BEAST,javadoc">
+
+        <delete file="${release_dir}/${BEAST_name}_v${version}_SDK.zip" />
+
+        <copy file="doc/slides/sdk.pdf" tofile="${common_dir}/Beast_2_Getting_Started.pdf" />
+
+        <zip destfile="${release_dir}/${BEAST_name}_v${version}_SDK.zip">
+            <fileset dir="${common_dir}">
+                <include name="**/*.txt" />
+                <include name="**/*.pdf" />
+                <include name="javadoc/**/*.*" />
+            </fileset>
+            <fileset dir="${dist}">
+                <include name="beast.jar" />
+                <include name="beast.src.jar" />
+            </fileset>
+        </zip>
+
+        <!-- clean up -->
+        <delete file="${common_dir}/Beast_2_Getting_Started.pdf" />
+
+        <echo message="SDK release is finished." />
+    </target>
+
+</project>
+
