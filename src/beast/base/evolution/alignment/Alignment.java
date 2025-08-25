@@ -25,23 +25,28 @@
 package beast.base.evolution.alignment;
 
 
+import java.io.PrintStream;
 import java.util.*;
+
+import org.w3c.dom.Node;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
+import beast.base.inference.StateNode;
 import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 
 @Description("Class representing alignment data")
-public class Alignment extends TreeTipData {
+public class Alignment extends StateNode {
 
-    @Override
-	protected Class<?> mapType() {
-        return String.class;
-    }
+	final public Input<TaxonSet> taxonSetInput =
+            new Input<>("taxa", "An optional taxon-set used only to sort the sequences into the same order as they appear in the taxon-set.", new TaxonSet(), Validate.OPTIONAL);
+
+    final public Input<DataType.Base> userDataTypeInput = new Input<>("userDataType", "non-standard, user specified data type, if specified 'dataType' is ignored");
+
 
     /**
      * default data type *
@@ -195,7 +200,17 @@ public class Alignment extends TreeTipData {
     }
 
     /**
-     * Constructor for testing purposes.
+     * Constructor for testing purposes.        } else {
+            // alignment defined by a map of id -> sequence
+            List<String> taxa = new ArrayList<>();
+            taxa.addAll(map.keySet());
+            sequences.clear();
+            for (String key : taxa) {
+                String sequence = map.get(key);
+                sequences.add(new Sequence(key, sequence));
+            }
+        }
+
      *
      * @param sequences
      * @param stateCount
@@ -228,7 +243,7 @@ public class Alignment extends TreeTipData {
     @Override
     public void initAndValidate() {
 
-        if (sequenceInput.get().size() == 0 && defaultInput.get().size() == 0) {
+        if (sequenceInput.get().size() == 0) {
             throw new IllegalArgumentException("Either a sequence input must be specified, or a map of strings must be specified");
         }
 
@@ -249,18 +264,7 @@ public class Alignment extends TreeTipData {
         }
 
         // initialize the sequence list
-        if (sequenceInput.get().size() > 0) {
-            sequences = sequenceInput.get();
-        } else {
-            // alignment defined by a map of id -> sequence
-            List<String> taxa = new ArrayList<>();
-            taxa.addAll(map.keySet());
-            sequences.clear();
-            for (String key : taxa) {
-                String sequence = map.get(key);
-                sequences.add(new Sequence(key, sequence));
-            }
-        }
+        sequences = sequenceInput.get();
 
         // initialize the alignment from the given list of sequences
         initializeWithSequenceList(sequences, true);
@@ -882,4 +886,74 @@ public class Alignment extends TreeTipData {
 	public boolean notCloneable() {
 		return true;
 	}
+
+	@Override
+	public void init(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void log(long sample, PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void close(PrintStream out) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	// StateNode implementation 
+	@Override
+	public int getDimension() {
+		return 0;
+	}
+
+	@Override
+	public double getArrayValue(int dim) {
+		return 0;
+	}
+
+	@Override
+	public void setEverythingDirty(boolean isDirty) {
+	}
+
+	@Override
+	public StateNode copy() {
+		return null;
+	}
+
+	@Override
+	public void assignTo(StateNode other) {
+	}
+
+	@Override
+	public void assignFrom(StateNode other) {
+	}
+
+	@Override
+	public void assignFromFragile(StateNode other) {
+	}
+
+	@Override
+	public void fromXML(Node node) {
+	}
+
+	@Override
+	public int scale(double scale) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected void store() {
+	}
+
+	@Override
+	public void restore() {
+	}
+	
 } // class Data
