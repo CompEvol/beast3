@@ -179,7 +179,7 @@
             <log idref="prior"/>
             <log idref="treeLikelihood.noncoding"/>
             <log idref="treeLikelihood.coding"/>
-            <log id="TreeHeight.t:primate" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:primate"/>
+            <log id="TreeHeight.t:primate" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:primate"/>
             <log idref="YuleModel.t:primate"/>
             <parameter idref="birthRate.t:primate" name="log"/>
             <parameter idref="rateAC.s:primate" name="log"/>

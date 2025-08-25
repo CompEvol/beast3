@@ -63,7 +63,7 @@
             <log idref="posterior"/>
             <log idref="cyule"/>
             <log idref="birthRate"/>
-            <log id="TreeHeight" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@tree"/>
+            <log id="TreeHeight" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
         </logger>
         <logger logEvery="100" fileName="cond_root_prior.$(seed).trees">
             <log idref="tree"/>

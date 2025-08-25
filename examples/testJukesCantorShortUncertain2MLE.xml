@@ -72,7 +72,7 @@
         <logger logEvery="1000" fileName="test.$(seed).log">
             <model idref='likelihood'/>
             <log idref="likelihood"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
         </logger>
         <logger logEvery="1000" fileName="test.$(seed).trees">
             <log idref="tree"/>

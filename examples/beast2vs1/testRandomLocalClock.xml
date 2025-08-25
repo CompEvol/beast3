@@ -120,7 +120,7 @@
             <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref="prior"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref="popSize"/>
             <log idref="hky.kappa"/>
             <log idref="hky.frequencies"/>
@@ -136,7 +136,7 @@
             <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref="prior"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref="popSize"/>
             <log idref="hky.kappa"/>
             <log idref="hky.frequencies"/>

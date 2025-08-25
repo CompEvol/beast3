@@ -98,7 +98,7 @@
     <logger fileName="beast_$(seed).log" id="tracelog" logEvery="10000" mode="autodetect" model="@posterior">
         <distribution idref="likelihood" name="log"/>
         <parameter idref="firstAndSecondSites.hky.kappa" name="log"/>
-        <log id="TreeHeightLogger0" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@tree"/>
+        <log id="TreeStatLogger0" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
         <parameter idref="firstAndSecondSites.freqParameter" name="log"/>
         <parameter idref="thirdSites.hky.kappa" name="log"/>
         <parameter idref="thirdSites.freqParameter" name="log"/>

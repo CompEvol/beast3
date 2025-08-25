@@ -457,9 +457,9 @@
             <log idref="hky.kappa29"/>
             <log idref="popSize"/>
             <log idref="popSizeTop"/>
-            <log id="TreeHeightSP" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@speciesTree"/>
-            <log id="TreeHeight26" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@tree26"/>
-            <log id="TreeHeight29" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@tree29"/>
+            <log id="TreeHeightSP" spec="beast.base.evolution.tree.TreeStatLogger" tree="@speciesTree"/>
+            <log id="TreeHeight26" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree26"/>
+            <log id="TreeHeight29" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree29"/>
             <log idref="treelikelihood.26"/>
             <log idref="treelikelihood.29"/>
         </logger>

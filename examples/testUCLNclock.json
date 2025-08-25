@@ -109,7 +109,7 @@ beast: [
 			 {idref: "likelihood" },
 			 {idref: "prior" },
 			 {idref: "treeLikelihood.dna" },
-			 {id: "TreeHeight.t:dna", spec: "beast.base.evolution.tree.TreeHeightLogger", tree: "@Tree.t:dna" },
+			 {id: "TreeHeight.t:dna", spec: "beast.base.evolution.tree.TreeStatLogger", tree: "@Tree.t:dna" },
 			 {idref: "YuleModel.t:dna" },
 			 {idref: "birthRate.t:dna" },
 			 {idref: "kappa.s:dna" },

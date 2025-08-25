@@ -64,7 +64,7 @@ beast: [
 		 log: [
 			 {idref: "treeLikelihood" },
 			 {idref: "hky.kappa" },
-			 {spec: "beast.base.evolution.tree.TreeHeightLogger", tree: "@tree" }
+			 {spec: "beast.base.evolution.tree.TreeStatLogger", tree: "@tree" }
 		  ]
 		},
 		{spec: "Logger", fileName: "test.$(seed).trees", logEvery: 10000,

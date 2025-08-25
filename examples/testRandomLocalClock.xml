@@ -91,7 +91,7 @@
 	    <model idref='posterior'/>
             <log idref="coalescent"/>
             <log idref="likelihood"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger'>
+            <log spec='beast.base.evolution.tree.TreeStatLogger'>
                 <tree idref='tree'/>
             </log>
             <log idref="popSize"/>
@@ -107,7 +107,7 @@
 	    <model idref='posterior'/>
             <log idref="coalescent"/>
             <log idref="likelihood"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger'>
+            <log spec='beast.base.evolution.tree.TreeStatLogger'>
                 <tree idref='tree'/>
             </log>
             <log idref="popSize"/>

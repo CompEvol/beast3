@@ -129,10 +129,10 @@
       <distribution idref="speciescoalescent" name="log"/>
       <parameter idref="birthRate.Species" name="log"/>
       <distribution idref="YuleModel.Species" name="log"/>
-      <log id="SpeciesTreeHeight" spec="TreeHeightLogger" tree="@Tree.Species"/>
+      <log id="SpeciesTreeHeight" spec="TreeStatLogger" tree="@Tree.Species"/>
       <log idref="popMean"/>
-      <log id="TreeHeight.sb_l0_examnple01" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.sb_l0_examnple01"/>
-      <log id="TreeHeight.sb_l1_examnple01" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.sb_l1_examnple01"/>
+      <log id="TreeHeight.sb_l0_examnple01" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.sb_l0_examnple01"/>
+      <log id="TreeHeight.sb_l1_examnple01" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.sb_l1_examnple01"/>
       <parameter idref="clockRate.sb_l1_examnple01" name="log"/>
     </logger>
     <logger fileName="sb_examnple01_species_$(seed).trees" id="speciesTreeLogger" logEvery="10000" mode="tree">

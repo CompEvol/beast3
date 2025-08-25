@@ -78,7 +78,7 @@
         <logger logEvery="1000" fileName="test.$(seed).log">
    	        <model idref='posterior'/>
             <log idref="posterior"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref="coalescent"/>
             <log idref="popSize"/>
             <log idref='tipDateA'/>
@@ -92,7 +92,7 @@
 	        <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref="coalescent"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref='rootHeight'/>
             <log idref="popSize"/>
         </logger>

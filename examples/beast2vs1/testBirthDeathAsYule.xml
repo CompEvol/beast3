@@ -142,7 +142,7 @@
             <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref='birthDeath'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref='birthRate'/>
             <log idref='relativeDeathRate'/>
             <log idref='sampleProbability'/>
@@ -152,7 +152,7 @@
             <model idref='posterior'/>
             <log idref="posterior"/>
             <log idref='birthDeath'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref='birthRate'/>
             <log idref='relativeDeathRate'/>
             <log idref='sampleProbability'/>

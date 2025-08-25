@@ -185,7 +185,7 @@
 			<log idref='tipDates2'/>
 			<log idref='hky.kappa'/>
 			<log idref='clockRate'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
         </logger>
         <logger logEvery="10000" fileName="test.$(seed).trees">
             <log idref="tree"/>

@@ -43,14 +43,14 @@
 
         <logger logEvery="10" fileName="test.$(seed).log">
             <log idref='birthDeath'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref='birthRate'/>
             <log idref='relativeDeathRate'/>
         </logger>
 
         <logger logEvery="20000">
             <log idref='birthDeath'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref='birthRate'/>
             <log idref='relativeDeathRate'/>
         </logger>

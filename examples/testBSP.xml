@@ -183,7 +183,7 @@
             <log idref="skyline.popSize"/>
             <log idref="skyline.groupSize"/>
             <log idref="hky.kappa"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree' id='treeModel.rootHeight'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree' id='treeModel.rootHeight'/>
             <log idref="likelihood"/>
             <log idref="skyline"/>
             <log idref="eml1"/>
@@ -197,7 +197,7 @@
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
         </logger>
 
     </run>

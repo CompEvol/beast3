@@ -297,11 +297,11 @@
 			<parameter idref="popSize.t:gene1" name="log"/>
 
 			<log idref="treeLikelihood.gene1"/>
-			<log id="TreeHeight.t:gene1" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:gene1"/>
+			<log id="TreeHeight.t:gene1" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:gene1"/>
 			<log idref="treeLikelihood.gene2"/>
-			<log id="TreeHeight.t:gene2" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:gene2"/>
+			<log id="TreeHeight.t:gene2" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:gene2"/>
 			<log idref="treeLikelihood.gene3"/>
-			<log id="TreeHeight.t:gene3" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:gene3"/>
+			<log id="TreeHeight.t:gene3" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:gene3"/>
 			<log idref="CoalescentConstant.t:gene1"/>
 			<log idref="CoalescentConstant.t:gene2"/>
 			<log idref="CoalescentConstant.t:gene3"/>

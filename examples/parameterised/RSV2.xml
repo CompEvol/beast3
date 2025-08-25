@@ -128,7 +128,7 @@ $(sequences)
         <log idref="likelihood"/>
         <log idref="prior"/>
         <log idref="treeLikelihood.RSV2"/>
-        <log id="TreeHeight.t:RSV2" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:RSV2"/>
+        <log id="TreeHeight.t:RSV2" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:RSV2"/>
         <log idref="clockRate.c:RSV2"/>
         <log idref="kappa.s:RSV2"/>
         <log idref="gammaShape.s:RSV2"/>

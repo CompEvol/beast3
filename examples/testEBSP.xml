@@ -558,10 +558,10 @@
         <log idref="hky000.kappa"/>
         <log idref="hky003.kappa"/>
         <log spec="beast.base.evolution.Sum" arg="@indicators"/>
-        <log spec="beast.base.evolution.tree.TreeHeightLogger" tree="@treeModel000"/>
-        <log spec="beast.base.evolution.tree.TreeHeightLogger" tree="@treeModel001"/>
-        <log spec="beast.base.evolution.tree.TreeHeightLogger" tree="@treeModel002"/>
-        <log spec="beast.base.evolution.tree.TreeHeightLogger" tree="@treeModel003"/>
+        <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@treeModel000"/>
+        <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@treeModel001"/>
+        <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@treeModel002"/>
+        <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@treeModel003"/>
         <log idref="treeLikelihood000"/>
         <log idref="treeLikelihood001"/>
         <log idref="treeLikelihood002"/>

@@ -139,7 +139,7 @@
             <log idref="posterior"/>
             <log idref="prior"/>
             <log idref="likelihood"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref="popSize"/>
             <log idref="CP12.hky.kappa"/>
             <log idref="CP3.hky.kappa"/>
@@ -162,7 +162,7 @@
             <log idref="posterior"/>
             <log idref="prior"/>
             <log idref="likelihood"/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
             <log idref="popSize"/>
             <log idref="coalescent"/>
         </logger>

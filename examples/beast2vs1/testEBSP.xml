@@ -287,7 +287,7 @@
             <log spec="beast.base.evolution.Sum" arg="@indicators"/>
             <log idref="indicators"/>
             <plate spec='Plate' var='n' range='.26,.29,.47'>
-                <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree$(n)'/>
+                <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree$(n)'/>
                 <log idref="hky.kappa$(n)"/>
                 <log idref="hky.frequencies$(n)"/>
                 <log idref="treeLikelihood$(n)"/>
@@ -304,7 +304,7 @@
             <log spec="beast.base.evolution.Sum" arg="@indicators"/>
             <log idref="indicators"/>
             <plate spec='Plate' var='n' range='.26,.29,.47'>
-                <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree$(n)'/>
+                <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree$(n)'/>
                 <log idref="hky.kappa$(n)"/>
                 <log idref="hky.frequencies$(n)"/>
                 <log idref="treeLikelihood$(n)"/>

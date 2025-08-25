@@ -77,13 +77,13 @@
 	    <log idref='yule.prior'/>
 	    <!--log idref='treeLikelihood'/-->
 	    <log idref='yulelike.prior'/>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
 	</logger>
 	<logger logEvery='100' fileName='$(seed).log'>
 	    <log idref='yule.prior'/>
 	    <!--log idref='treeLikelihood'/-->
 	    <!--log idref='yulelike.prior'/-->
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree'/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
 	</logger>
     </run>
 

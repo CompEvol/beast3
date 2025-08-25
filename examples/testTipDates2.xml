@@ -89,7 +89,7 @@ M_fascicularis=1
     <logger fileName="beast_$(seed).log" id="tracelog" logEvery="10000" mode="autodetect" model="@posterior">
         <log idref="likelihood"/>
         <log idref="hky.kappa"/>
-        <log id="TreeHeightLogger0" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@tree"/>
+        <log id="TreeStatLogger0" spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
         <log idref="freqParameter"/>
         <log spec='beast.base.evolution.tree.MRCAPrior' tree='@tree' id='TipDatesLogger' taxonset='@TaxonSet0' tipsonly='true'/>
         <log spec='beast.base.evolution.tree.MRCAPrior' tree='@tree' id='TipDatesLogger2' tipsonly='true'/>

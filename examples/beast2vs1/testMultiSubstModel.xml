@@ -115,7 +115,7 @@
         <distribution idref="posterior" name="log"/>
         <distribution idref="likelihood" name="log"/>
         <distribution idref="prior" name="log"/>
-        <log id="TreeHeight.firsthalf" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.firsthalf"/>
+        <log id="TreeHeight.firsthalf" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.firsthalf"/>
         <parameter idref="clockRate.firsthalf" name="log"/>
         <parameter idref="kappa.firsthalf" name="log"/>
         <parameter idref="freqParameter.firsthalf" name="log"/>

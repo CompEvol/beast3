@@ -121,7 +121,7 @@
             <log idref="treeLikelihood" />
             <log idref="coalescent" />
             <log idref="popSize" />
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree' />
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree' />
             <log idref="hky.kappa" />
             <log idref="hky.frequencies" />
             <log idref="M" />
@@ -138,7 +138,7 @@
             <log idref="coalescent" />
             <log idref="treeLikelihood" />
             <log idref="popSize" />
-            <log spec='beast.base.evolution.tree.TreeHeightLogger' tree='@tree' />
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree' />
             <log idref="hky.kappa" />
             <log idref="S" />
             <log idref="rateCategories" /> 

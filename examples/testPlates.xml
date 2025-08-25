@@ -108,7 +108,7 @@
             <plate var='n' range='.p1,.p2,.p3'>
                 <log idref='hky.kappa$(n)'/>
             </plate>
-            <log spec='beast.base.evolution.tree.TreeHeightLogger'><tree idref='tree'/></log>
+            <log spec='beast.base.evolution.tree.TreeStatLogger'><tree idref='tree'/></log>
         </logger>
         <logger logEvery="10000" fileName="test.$(seed).trees">
             <log idref="tree"/>

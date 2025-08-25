@@ -109,7 +109,7 @@
         <distribution idref="likelihood" name="log"/>
         <distribution idref="prior" name="log"/>
         <distribution idref="treeLikelihood.alignment" name="log"/>
-        <log id="TreeHeight.t:alignment" spec="beast.base.evolution.tree.TreeHeightLogger" tree="@Tree.t:alignment"/>
+        <log id="TreeHeight.t:alignment" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:alignment"/>
         <parameter idref="kappa.s:alignment" name="log"/>
         <distribution idref="chimpgroup.prior" name="log"/>
         <parameter idref="clockRate.c:alignment" name="log"/>

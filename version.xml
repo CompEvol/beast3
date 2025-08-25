@@ -25,7 +25,6 @@
                 <provider classname="beast.base.evolution.Sum"/>
                 <provider classname="beast.base.evolution.TreeWithMetaDataLogger"/>
                 <provider classname="beast.base.evolution.alignment.Alignment"/>
-                <provider classname="beast.base.evolution.alignment.AscertainedAlignment"/>
                 <provider classname="beast.base.evolution.alignment.FilteredAlignment"/>
                 <provider classname="beast.base.evolution.alignment.Sequence"/>
                 <provider classname="beast.base.evolution.alignment.Taxon"/>
@@ -123,7 +122,6 @@
                 <provider classname="beast.base.evolution.tree.TraitSet"/>
                 <provider classname="beast.base.evolution.tree.Tree"/>
                 <provider classname="beast.base.evolution.tree.TreeDistribution"/>
-                <provider classname="beast.base.evolution.tree.TreeHeightLogger"/>
                 <provider classname="beast.base.evolution.tree.TreeIntervals"/>
                 <provider classname="beast.base.evolution.tree.TreeParser"/>
                 <provider classname="beast.base.evolution.tree.TreeStatLogger"/>
@@ -160,7 +158,6 @@
                 <provider classname="beast.base.inference.operator.BitFlipOperator"/>
                 <provider classname="beast.base.inference.operator.DeltaExchangeOperator"/>
                 <provider classname="beast.base.inference.operator.IntRandomWalkOperator"/>
-                <provider classname="beast.base.inference.operator.IntUniformOperator"/>
                 <provider classname="beast.base.inference.operator.JointOperator"/>
                 <provider classname="beast.base.inference.operator.RealRandomWalkOperator"/>
                 <provider classname="beast.base.inference.operator.SliceOperator"/>
