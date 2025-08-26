@@ -1,5 +1,5 @@
-                    BEAST v2.7.8 2025
-                 Beast 2 development team 2011-2025
+                    BEAST v3.0.0 2026
+                 Beast 2 development team 2011-2026
 
 Last updated: June 2025
 

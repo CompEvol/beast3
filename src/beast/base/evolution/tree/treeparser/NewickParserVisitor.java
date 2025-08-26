@@ -1,5 +1,5 @@
+// Generated from NewickParser.g4 by ANTLR 4.13.2
 package beast.base.evolution.tree.treeparser;
-// Generated from NewickParser.g4 by ANTLR 4.10
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**

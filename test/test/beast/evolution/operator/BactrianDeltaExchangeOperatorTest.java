@@ -1,8 +1,6 @@
 package test.beast.evolution.operator;
 
 
-import test.beast.evolution.operator.TestOperator;
-
 import org.apache.commons.math3.stat.StatUtils;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;

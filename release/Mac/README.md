@@ -1,6 +1,6 @@
 # Mac Release
 
-Last update 28-07-2020
+Last update 26-08-2025
 
 
 ## No JRE
@@ -9,9 +9,9 @@ Last update 28-07-2020
 
 This will build the disk image and do the notarization.
 
-2. `cd ~/tmp` to find _BEAST.v2.?.?.dmg_. 
+2. `cd ~/tmp` to find _BEAST.v3.?.?.dmg_. 
 
-Note: this path is depend on the path of beast2 project, which is equivalent to `beast2/../../tmp`. 
+Note: this path is depend on the path of beast3 project, which is equivalent to `beast3/../../tmp`. 
 
 3. `xcrun altool --notarization-info *-*-*-*-* -u username -p passwd`
 
@@ -24,11 +24,11 @@ Note: this path is depend on the path of beast2 project, which is equivalent to 
 
 1. `ant macjre` and then check all messages.
 
-2. `cd ~/tmp` to find _BEAST\_with\_JRE.v2.?.?.dmg_.  
+2. `cd ~/tmp` to find _BEAST\_with\_JRE.v3.?.?.dmg_.  
 
 3. `xcrun altool --notarization-info *-*-*-*-* -u username -p passwd`
 
-4. `xcrun stapler staple BEAST_with_JRE.v2.?.?.dmg`
+4. `xcrun stapler staple BEAST_with_JRE.v3.?.?.dmg`
 
 5. upload dmg to Github.
 
