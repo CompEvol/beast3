@@ -2,9 +2,9 @@ package beast.base.inference.parameter;
 
 import beast.base.type.Vector;
 import beast.base.type.domain.Domain;
-import beast.base.type.domain.Real;
+import beast.base.type.domain.NonNegativeInt;
 
-public class RealVector extends RealParameter implements Vector<Real> {
+public class NonNegativeIntegerVector extends IntegerParameter implements Vector<NonNegativeInt> {
 	
 	@Override
 	public void initAndValidate() {
@@ -13,9 +13,9 @@ public class RealVector extends RealParameter implements Vector<Real> {
 		if (getMinorDimension1() != 1) {
 			throw new IllegalArgumentException("minor dimension must be 1");
 		}
-		
+
 		if (!isValid()) {
-			throw new IllegalArgumentException("Invalid starting values found");
+			throw new IllegalArgumentException("starting value must be a non-negative numbers");
 		}
 	}
 	
@@ -41,7 +41,7 @@ public class RealVector extends RealParameter implements Vector<Real> {
 		}
 		
 		for (int i = 0; i < getDimension(); i++) {
-			if (!Domain.isReal(getArrayValue(i))) {
+			if (!Domain.isNonNegativeInt(getArrayValue(i))) {
 				return false;
 			}
 		}

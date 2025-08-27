@@ -15,7 +15,9 @@ public interface Domain<T> {
      * Return double representation of the value
      * of an instance of this domain
      */
-    public double getDoubleValue();
+//    public double getDoubleValue();
+//    public int getIntValue();
+//    public boolean getBoolValue();
     
     public T get();
     

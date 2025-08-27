@@ -1,19 +1,14 @@
 package beast.base.inference.parameter;
 
-import beast.base.type.Vector;
+import beast.base.type.Matrix;
 import beast.base.type.domain.Domain;
 import beast.base.type.domain.Real;
 
-public class RealVector extends RealParameter implements Vector<Real> {
+public class RealMatrix extends RealParameter implements Matrix<Real> {
 	
 	@Override
 	public void initAndValidate() {
 		super.initAndValidate();
-		
-		if (getMinorDimension1() != 1) {
-			throw new IllegalArgumentException("minor dimension must be 1");
-		}
-		
 		if (!isValid()) {
 			throw new IllegalArgumentException("Invalid starting values found");
 		}
@@ -21,39 +16,26 @@ public class RealVector extends RealParameter implements Vector<Real> {
 	
 	@Override
 	public int[] shape() {
-		return new int[] {getDimension()};
+		return new int[] {getMinorDimension1(), getMinorDimension2()};
 	}
 
 	@Override
 	public double get(int... idx) {
-		return getArrayValue(idx[0]);
+		return getArrayValue(idx[0] * minorDimension + idx[1]);
 	}
 
 	@Override
 	public double getDoubleValue(int... idx) {
-		return getArrayValue(idx[0]);
+		return getArrayValue(idx[0] * minorDimension + idx[1]);
 	}
 
 	@Override
 	public boolean isValid() {
-		if (getMinorDimension1() != 1) {
-			return false;
-		}
-		
 		for (int i = 0; i < getDimension(); i++) {
 			if (!Domain.isReal(getArrayValue(i))) {
 				return false;
 			}
 		}
 		return true;
-	}
-
-	
-	@Override
-	public void setMinorDimension(int dimension) {
-		if (dimension != 1) {
-			throw new IllegalArgumentException("minor dimension must be 1");
-		}
-		super.setMinorDimension(dimension);
 	}
 }
