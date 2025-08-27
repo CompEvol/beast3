@@ -172,6 +172,31 @@
                 <provider classname="beast.base.inference.parameter.CompoundValuable"/>
                 <provider classname="beast.base.inference.parameter.IntegerParameter"/>
                 <provider classname="beast.base.inference.parameter.RealParameter"/>
+
+                <provider classname="beast.base.inference.parameter.RealScalar"/>
+                <provider classname="beast.base.inference.parameter.PositiveRealScalar"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeRealScalar"/>
+                <provider classname="beast.base.inference.parameter.IntegerScalar"/>
+                <provider classname="beast.base.inference.parameter.PositiveIntegerScalar"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeIntegerScalar"/>
+                <provider classname="beast.base.inference.parameter.BooleanScalar"/>
+
+                <provider classname="beast.base.inference.parameter.RealVector"/>
+                <provider classname="beast.base.inference.parameter.PositiveRealVector"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeRealVector"/>
+                <provider classname="beast.base.inference.parameter.IntegerVector"/>
+                <provider classname="beast.base.inference.parameter.PositiveIntegerVector"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeIntegerVector"/>
+                <provider classname="beast.base.inference.parameter.BooleanVector"/>
+
+                <provider classname="beast.base.inference.parameter.RealMatrix"/>
+                <provider classname="beast.base.inference.parameter.PositiveRealMatrix"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeRealMatrix"/>
+                <provider classname="beast.base.inference.parameter.IntegerMatrix"/>
+                <provider classname="beast.base.inference.parameter.PositiveIntegerMatrix"/>
+                <provider classname="beast.base.inference.parameter.NonNegativeIntegerMatrix"/>
+                <provider classname="beast.base.inference.parameter.BooleanMatrix"/>
+
                 <provider classname="beast.base.inference.util.ESS"/>
                 <provider classname="beast.base.inference.util.RPNcalculator"/>
             </service>

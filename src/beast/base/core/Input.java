@@ -33,6 +33,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import beast.base.type.Scalar;
+import beast.base.type.Tensor;
+
 
 /**
  * Represents input of a BEASTObject class.
@@ -61,6 +64,13 @@ public class Input<T> {
      * Used for type checking.
      */
     protected Class<?> theClass;
+    
+    /**
+     * if theClass is parameterised (e.g. Scalar<Real>) theParameterisedClass
+     * contains the class of the parameter (e.g. Scalar) and theClass the
+     * other type (e.g. Real)
+     */
+    protected Class<?> theParameterisedClass;
 
     /**
      * validation rules *
@@ -428,6 +438,50 @@ public class Input<T> {
                         ". " + theClass.getName() + ".isAssignableFrom(" + value.getClass() + ")=false");
             }
 
+        } else if (theParameterisedClass != null) {
+            if (theParameterisedClass.isAssignableFrom(value.getClass())) {
+                if (value instanceof BEASTInterface) {
+                	if (this.value != null) {
+                		((BEASTInterface) this.value).getOutputs().remove(beastObject);
+                	}
+                	((BEASTInterface) value).getOutputs().add(beastObject);
+                }
+
+                // check type of parameterised interface
+                Type[] genericInterfaces = value.getClass().getGenericInterfaces();
+                for (Type genericInterface : genericInterfaces) {
+                    if (genericInterface instanceof ParameterizedType) {
+                        ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
+                        Type rawType = parameterizedType.getRawType();
+
+                        // Check if it's the interface you're interested in
+                        if (rawType.equals(theParameterisedClass)) {
+                            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+
+                            for (int i = 0; i < actualTypeArguments.length; i++) {
+                                Type typeArg = actualTypeArguments[i];
+                                if (typeArg instanceof Class) {
+                                    Class<?> typeClass = (Class<?>) typeArg;
+                                    if (theClass.isAssignableFrom(typeClass)) {
+                                    	this.value = (T) value;
+                                    	return;
+                                    }
+                                } else if (typeArg instanceof ParameterizedType) {
+                                    // Handle cases where a template argument itself is a parameterised type
+                                    ParameterizedType nestedParameterisedType = (ParameterizedType) typeArg;
+                                    rawType = parameterizedType.getRawType();
+                                    if (rawType.equals(theClass)) {
+                                    	this.value = (T) value;
+                                    	return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }                
+                
+            }
+            throw new RuntimeException("Input 102b: type mismatch for input " + getName());
         } else {
             if (theClass.isAssignableFrom(value.getClass())) {
                 if (value instanceof BEASTInterface) {
@@ -532,6 +586,19 @@ public class Input<T> {
                             		if (rawType.getTypeName().equals("java.util.List")) {
                             			// if we got here, value==null
                             			throw new RuntimeException("Programming error: Input<List> not initialised");
+                            		}
+                            		
+                            		String rawTypeName = rawType.getTypeName();
+                            		if (rawType instanceof Class && Tensor.class.isAssignableFrom((Class<?>)rawType)) {
+                            			theParameterisedClass = (Class<?>) rawType;
+                                        Type[] genericTypes2 = ((ParameterizedType) genericTypes[0]).getActualTypeArguments();
+                                        try {
+                                        	theClass = (Class<?>) genericTypes2[0];
+                                        } catch (ClassCastException e) {
+                                        	// can get here with parameterised types, e.g Input<List<Parameter.Base<T>>>
+                                        	theClass = (Class<?>) ((ParameterizedType)genericTypes2[0]).getRawType();
+                                        }
+                            			return;
                             		}
                             	}
                                 theClass = (Class<?>) o;
