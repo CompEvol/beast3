@@ -25,8 +25,8 @@ public class IntegerVector extends IntegerParameter implements Vector<Int> {
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0]);
+	public Integer get(int... idx) {
+		return getValue(idx[0]);
 	}
 
 	@Override

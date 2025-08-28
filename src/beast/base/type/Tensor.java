@@ -16,7 +16,7 @@ public interface Tensor<D extends Domain<?>> {
 
     int[] shape();
 
-    double get(int... idx);
+    Object get(int... idx);
     
     double getDoubleValue(int... idx);
 

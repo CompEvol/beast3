@@ -29,8 +29,8 @@ public class BooleanScalar extends BooleanParameter implements Scalar<Bool> {
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Boolean get(int... idx) {
+		return getValue();
 	}
 
 	@Override

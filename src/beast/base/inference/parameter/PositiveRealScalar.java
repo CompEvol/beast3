@@ -29,8 +29,8 @@ public class PositiveRealScalar extends RealParameter implements Scalar<Positive
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Double get(int... idx) {
+		return getValue();
 	}
 
 	@Override

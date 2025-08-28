@@ -20,8 +20,8 @@ public class NonNegativeIntegerMatrix extends IntegerParameter implements Matrix
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0] * minorDimension + idx[1]);
+	public Integer get(int... idx) {
+		return getValue(idx[0] * minorDimension + idx[1]);
 	}
 
 	@Override

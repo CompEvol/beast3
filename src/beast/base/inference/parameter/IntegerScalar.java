@@ -30,8 +30,8 @@ public class IntegerScalar extends IntegerParameter implements Scalar<Int> {
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Integer get(int... idx) {
+		return getValue();
 	}
 
 	@Override

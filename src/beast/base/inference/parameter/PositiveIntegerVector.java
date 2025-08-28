@@ -25,8 +25,8 @@ public class PositiveIntegerVector extends IntegerParameter implements Vector<Po
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0]);
+	public Integer get(int... idx) {
+		return getValue(idx[0]);
 	}
 
 	@Override

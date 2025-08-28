@@ -25,8 +25,8 @@ public class RealVector extends RealParameter implements Vector<Real> {
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0]);
+	public Double get(int... idx) {
+		return getValue(idx[0]);
 	}
 
 	@Override

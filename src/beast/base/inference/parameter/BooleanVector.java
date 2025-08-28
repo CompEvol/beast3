@@ -25,8 +25,8 @@ public class BooleanVector extends BooleanParameter implements Vector<Bool> {
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0]);
+	public Boolean get(int... idx) {
+		return getValue(idx[0]);
 	}
 
 	@Override

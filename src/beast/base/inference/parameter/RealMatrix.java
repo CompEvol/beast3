@@ -20,8 +20,8 @@ public class RealMatrix extends RealParameter implements Matrix<Real> {
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0] * minorDimension + idx[1]);
+	public Double get(int... idx) {
+		return getValue(idx[0] * minorDimension + idx[1]);
 	}
 
 	@Override

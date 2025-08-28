@@ -30,8 +30,8 @@ public class PositiveIntegerScalar extends IntegerParameter implements Scalar<Po
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Integer get(int... idx) {
+		return getValue();
 	}
 
 	@Override

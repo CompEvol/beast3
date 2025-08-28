@@ -20,8 +20,8 @@ public class NonNegativeRealMatrix extends RealParameter implements Matrix<NonNe
 	}
 
 	@Override
-	public double get(int... idx) {
-		return getArrayValue(idx[0] * minorDimension + idx[1]);
+	public Double get(int... idx) {
+		return getValue(idx[0] * minorDimension + idx[1]);
 	}
 
 	@Override

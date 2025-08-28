@@ -29,8 +29,8 @@ public class NonNegativeRealScalar extends RealParameter implements Scalar<NonNe
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Double get(int... idx) {
+		return getValue();
 	}
 
 	@Override

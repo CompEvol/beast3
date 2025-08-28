@@ -31,8 +31,8 @@ public class NonNegativeIntegerScalar extends IntegerParameter implements Scalar
 	}
 	
 	@Override
-	public double get(int... idx) {
-		return getArrayValue();
+	public Integer get(int... idx) {
+		return getValue();
 	}
 
 	@Override
