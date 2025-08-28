@@ -5,6 +5,9 @@ import java.io.PrintStream;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.type.Tensor;
+import beast.base.type.domain.Domain.DomainType;
+import beast.base.type.domain.Real;
 
 
 /**
@@ -13,10 +16,14 @@ import beast.base.core.Input;
 
 @Description("A real-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
-public class RealParameter extends Parameter.Base<Double> {
+public class RealParameter extends Parameter.Base<Double> implements Tensor {
     final public Input<Double> lowerValueInput = new Input<>("lower", "lower value for this parameter (default -infinity)");
     final public Input<Double> upperValueInput = new Input<>("upper", "upper value for this parameter (default +infinity)");
 
+    final public Input<TensorType> tensorTypeInput = new Input<>("tensor", "type of tensor, determines what dimensions are possible", TensorType.Scalar, TensorType.values());
+    final public Input<DomainType> domainInput = new Input<>("domain", "type of the domain (default DomainType.Real)", DomainType.Real, DomainType.values());
+    
+    
     public RealParameter() {
     }
 
@@ -28,7 +35,7 @@ public class RealParameter extends Parameter.Base<Double> {
      * Constructor used by Input.setValue(String) *
      */
     public RealParameter(final String value) {
-        init(0.0, 0.0, value, 1);
+        init(0.0, 0.0, TensorType.Scalar, DomainType.Real, value, 1);
     }
 
     @Override
@@ -120,6 +127,36 @@ public class RealParameter extends Parameter.Base<Double> {
             values[i] = Double.parseDouble(valuesString[i]);
         }
     }
+
+	@Override
+	public int rank() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int[] shape() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Real get(int... idx) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double getDoubleValue(int... idx) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public boolean isValid() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 
 
 }

@@ -33,8 +33,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import beast.base.type.Scalar;
 import beast.base.type.Tensor;
+import beast.base.type.Tensor.TensorType;
+import beast.base.type.domain.Domain;
+import beast.base.type.domain.Domain.DomainType;
+import beast.base.type.domain.Real;
 
 
 /**
@@ -70,7 +73,18 @@ public class Input<T> {
      * contains the class of the parameter (e.g. Scalar) and theClass the
      * other type (e.g. Real)
      */
-    protected Class<?> theParameterisedClass;
+    protected Class<?> theContainerClass;
+
+    
+    /**
+     * tensorType represents the dimensions of the Input value
+     */
+    protected TensorType tensorType = TensorType.Scalar;
+    
+    /**
+     * domain represents the domain of the Input value
+     */
+    protected Class<? extends Domain<?>> domain = Real.class;
 
     /**
      * validation rules *
@@ -107,6 +121,15 @@ public class Input<T> {
         this.name = name;
         this.tipText = tipText;
         value = null;
+        checkName();
+    } // c'tor
+
+    public Input(String name, String tipText, TensorType tensorType, Class<? extends Domain<?>> domain) {
+        this.name = name;
+        this.tipText = tipText;
+        value = null;
+        this.tensorType = tensorType;
+        this.domain = domain;
         checkName();
     } // c'tor
 
@@ -174,6 +197,18 @@ public class Input<T> {
         }*/
         this.rule = rule;
     } // c'tor
+    
+    
+    public Input(String name, String tipText, TensorType tensorType, Class<? extends Domain<?>> domain,  Validate rule) {
+        this(name, tipText);
+        this.name = name;
+        this.tipText = tipText;
+        value = null;
+        this.tensorType = tensorType;
+        this.domain = domain;
+        checkName();
+    } // c'tor
+
 
     /**
      * constructor for REQUIRED rules for List-inputs, with type pre-specified
@@ -438,15 +473,17 @@ public class Input<T> {
                         ". " + theClass.getName() + ".isAssignableFrom(" + value.getClass() + ")=false");
             }
 
-        } else if (theParameterisedClass != null) {
-            if (theParameterisedClass.isAssignableFrom(value.getClass())) {
+        } else if (theContainerClass != null) {
+            if (theContainerClass.isAssignableFrom(value.getClass())) {
                 if (value instanceof BEASTInterface) {
                 	if (this.value != null) {
                 		((BEASTInterface) this.value).getOutputs().remove(beastObject);
                 	}
                 	((BEASTInterface) value).getOutputs().add(beastObject);
                 }
-
+            	this.value = (T) value;
+                if (true) return;
+                
                 // check type of parameterised interface
                 Type[] genericInterfaces = value.getClass().getGenericInterfaces();
                 for (Type genericInterface : genericInterfaces) {
@@ -455,7 +492,7 @@ public class Input<T> {
                         Type rawType = parameterizedType.getRawType();
 
                         // Check if it's the interface you're interested in
-                        if (rawType.equals(theParameterisedClass)) {
+                        if (rawType.equals(theContainerClass)) {
                             Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 
                             for (int i = 0; i < actualTypeArguments.length; i++) {
@@ -590,10 +627,14 @@ public class Input<T> {
                             		
                             		String rawTypeName = rawType.getTypeName();
                             		if (rawType instanceof Class && Tensor.class.isAssignableFrom((Class<?>)rawType)) {
-                            			theParameterisedClass = (Class<?>) rawType;
+                            			theContainerClass = (Class<?>) rawType;
                                         Type[] genericTypes2 = ((ParameterizedType) genericTypes[0]).getActualTypeArguments();
                                         try {
-                                        	theClass = (Class<?>) genericTypes2[0];
+                                        	if (genericTypes2[0].toString().equals("?")) {
+                                        		theClass = (Class<?>) rawType;                    		
+                                        	} else {
+                                        		theClass = (Class<?>) genericTypes2[0];
+                                        	}
                                         } catch (ClassCastException e) {
                                         	// can get here with parameterised types, e.g Input<List<Parameter.Base<T>>>
                                         	theClass = (Class<?>) ((ParameterizedType)genericTypes2[0]).getRawType();
