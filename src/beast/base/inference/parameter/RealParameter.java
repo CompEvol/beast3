@@ -130,8 +130,7 @@ public class RealParameter extends Parameter.Base<Double> implements Tensor {
 
 	@Override
 	public int rank() {
-		// TODO Auto-generated method stub
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -141,15 +140,31 @@ public class RealParameter extends Parameter.Base<Double> implements Tensor {
 	}
 
 	@Override
-	public Real get(int... idx) {
-		// TODO Auto-generated method stub
-		return null;
+	public Double get(int... idx) {
+		switch (idx.length) {
+		case 0:
+			return values[0];
+		case 1:
+			return values[idx[0]];
+		case 2:
+			return values[idx[0] * minorDimension + idx[1]];
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
 	public double getDoubleValue(int... idx) {
-		// TODO Auto-generated method stub
-		return 0;
+		switch (idx.length) {
+		case 0:
+			return values[0];
+		case 1:
+			return values[idx[0]];
+		case 2:
+			return values[idx[0] * minorDimension + idx[1]];
+		default:
+			throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

@@ -76,10 +76,16 @@ public class Sum extends CalculationNode implements Function, Loggable {
                 }
             }
         } else {
-
             for (Tensor<?> v : functionInput.get()) {
                 for (int i = 0; i < v.size(); i++) {
-                    sum += v.getIntValue(i);
+                	Object o = v.get(i);
+                	if (o instanceof Double x) {
+                		sum += x;
+                	} else if (o instanceof Integer x) {
+                		sum += x;
+                	} else if (o instanceof Boolean x) {
+                		sum += x ? 1 : 0;
+                	}
                 }
             }
         }
