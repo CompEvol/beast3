@@ -9,7 +9,6 @@ import phylospec.base.core.Input;
 import phylospec.base.core.PrimitiveInput;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
 
 public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> {
 
@@ -37,12 +36,12 @@ public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> 
 
     @Override
     public double get() {
-        return 0;
+        return value;
     }
 
     @Override
     public Double get(int... idx) {
-        return null;
+        return value;
     }
 
     @Override
@@ -104,9 +103,10 @@ public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> 
 
     @Override
     public int getDimension() {
-        return 0;
+        return rank();
     }
 
+    //TODO need to fix StateNode, may inherit NumberTensor?
     @Override
     public double getArrayValue(int dim) {
         return 0;

@@ -5,7 +5,7 @@ import org.phylospec.primitives.Real;
 import org.phylospec.types.BoolScalar;
 import org.phylospec.types.Scalar;
 
-public class RealScalarImpl implements Scalar {
+public class RealScalarImpl<P extends Real> implements Scalar<P> {
 
     private final double value;
 
