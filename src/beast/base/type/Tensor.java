@@ -12,11 +12,13 @@ import beast.base.type.domain.Domain;
  */
 public interface Tensor<D extends Domain<?>> {
 
+	public enum TensorType {Scalar, Vector, Matrix, Tensor, Simplex, SquareMatrix};
+	
     int rank();
 
     int[] shape();
 
-    double get(int... idx);
+    Object get(int... idx);
     
     double getDoubleValue(int... idx);
 

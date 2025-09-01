@@ -32,8 +32,9 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.type.Scalar;
-import beast.base.type.domain.PositiveReal;
+import beast.base.type.Tensor;
+import beast.base.type.Tensor.TensorType;
+import beast.base.type.domain.NonNegativeReal;
 
 @Description("HKY85 (Hasegawa, Kishino & Yano, 1985) substitution model of nucleotide evolution.")
 @Citation(value =
@@ -41,7 +42,8 @@ import beast.base.type.domain.PositiveReal;
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
 public class HKY extends SubstitutionModel.NucleotideBase {
-    final public Input<Scalar<PositiveReal>> kappaInput = new Input<>("kappa", "kappa parameter in HKY model", Validate.REQUIRED);
+    final public Input<Tensor<?>> kappaInput = new Input<>("kappa", "kappa parameter in HKY model", 
+    		TensorType.Scalar, NonNegativeReal.class, Validate.REQUIRED);
 
     /**
      * applies to nucleotides only *

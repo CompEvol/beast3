@@ -6,6 +6,8 @@ package beast.base.type.domain;
  */
 public interface Domain<T> {
 	
+	public enum DomainType {Bool, Int, NonNegativeInt, NonNegativeReal, PositiveInt, PositiveReal, Real, UnitInterval};
+	
     /**
      * Check if a value is valid for this domain.
      */
