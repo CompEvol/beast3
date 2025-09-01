@@ -35,7 +35,6 @@ import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
 
 import org.phylospec.primitives.NonNegativeReal;
-import org.phylospec.primitives.PositiveReal;
 import org.phylospec.types.Scalar;
 import phylospec.base.core.Input;
 import phylospec.base.core.Input.Validate;

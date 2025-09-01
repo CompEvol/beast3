@@ -30,7 +30,6 @@ import beast.base.core.Log;
 import org.phylospec.primitives.Primitive;
 import org.phylospec.types.Tensor;
 
-import java.io.File;
 import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.List;
@@ -42,17 +41,19 @@ import java.util.List;
  * e.g. a Logger can get the result it needs to log from a
  * BEASTObject that actually performs a calculation.
  */
-public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
+public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
+
+    //TODO inherit or replace Input<?>
 
     /**
      * value represented by this input, e.g. Tensor
      */
-    T value;
+    P value;
 
     /**
      * Actual value in Java
      */
-    V jValue;
+    T jValue;
 
     /**
      * Type of Tensor, e.g. PositiveReal.
@@ -70,13 +71,13 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
      * used only if validation rule is XOR *
      */
     Input<?> other;
-    public V defaultValue;
+    public T defaultValue;
     /**
      * Possible values for enumerations, e.g. if
      * an input can be any of "constant", "linear", "quadratic"
      * this array contains these values. Used for validation and user interfaces.
      */
-    public V[] possibleValues;
+    public T[] possibleValues;
 
     /**
      * constructors *
@@ -107,25 +108,45 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
     /**
      * constructor for List<>
      */
-    public PrimitiveInput(String name, String tipText, V startValue) {
-        this(name, tipText);
-        jValue = startValue;
-        defaultValue = startValue;
-    } // c'tor
+//    public PrimitiveInput(String name, String tipText, T startValue) {
+//        this(name, tipText);
+//        jValue = startValue;
+//        defaultValue = startValue;
+//    } // TODO no validation
 
     /**
      * constructor for List<> with type specified
      */
-    public PrimitiveInput(String name, String tipText, V startValue, Primitive<?> primitiveType) {
-        this(name, tipText, startValue);
+    public PrimitiveInput(String name, String tipText, T startValue, Primitive<T> primitiveType) {
+        this(name, tipText);
+        if ( !primitiveType.isValid(startValue) ) {
+            throw new IllegalArgumentException( "..., but was: " + value);
+        }
+        jValue = startValue;
+        defaultValue = startValue;
         this.primitiveType = primitiveType;
     } // c'tor
 
     /**
      * constructor for List<> with XOR rules
      */
-    public PrimitiveInput(String name, String tipText, V startValue, Validate rule, Input<?> other) {
-        this(name, tipText, startValue);
+//    public PrimitiveInput(String name, String tipText, T startValue, Validate rule, PrimitiveInput<T,P> other) {
+//        this(name, tipText, startValue);
+//        if (rule != Validate.XOR) {
+//            Log.err.println("Programmer error: input rule should be XOR for this Input constructor");
+//        }
+//        this.rule = rule;
+//        this.other = other;
+//        this.other.other = this;
+//        this.other.rule = rule;
+//        checkName();
+//    } // c'tor
+
+    /**
+     * constructor for List<> with XOR rules with type specified
+     */
+    public PrimitiveInput(String name, String tipText, T startValue, Validate rule, PrimitiveInput<T,P> other, Primitive<T> primitiveType) {
+        this(name, tipText, startValue, primitiveType);
         if (rule != Validate.XOR) {
             Log.err.println("Programmer error: input rule should be XOR for this Input constructor");
         }
@@ -136,35 +157,27 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
         checkName();
     } // c'tor
 
-    /**
-     * constructor for List<> with XOR rules with type specified
-     */
-    public PrimitiveInput(String name, String tipText, V startValue, Validate rule, Input other, Primitive<?> primitiveType) {
-        this(name, tipText, startValue, rule, other);
-        this.primitiveType = primitiveType;
-    } // c'tor
-
 
     /**
      * Constructor for REQUIRED rules for List-inputs, i.e. lists that require
      * at least one value to be specified.
      * If optional (i.e. no value need to be specified), leave the rule out
      */
-    public PrimitiveInput(String name, String tipText, V startValue, Validate rule) {
-        this(name, tipText, startValue);
-        /*if (rule != Validate.REQUIRED) {
-            Log.err.println("Programmer error: input rule should be REQUIRED for this Input constructor"
-                    + " (" + name + ")");
-        }*/
-        this.rule = rule;
-    } // c'tor
+//    public PrimitiveInput(String name, String tipText, T startValue, Validate rule) {
+//        this(name, tipText, startValue);
+//        /*if (rule != Validate.REQUIRED) {
+//            Log.err.println("Programmer error: input rule should be REQUIRED for this Input constructor"
+//                    + " (" + name + ")");
+//        }*/
+//        this.rule = rule;
+//    } // c'tor
 
     /**
      * constructor for REQUIRED rules
      */
-    public PrimitiveInput(String name, String tipText, V startValue, Validate rule, Primitive<?> type) {
-        this(name, tipText, startValue, rule);
-        primitiveType = type;
+    public PrimitiveInput(String name, String tipText, T startValue, Validate rule, Primitive<T> type) {
+        this(name, tipText, startValue, type);
+        this.rule = rule;
     } // c'tor
 
     /**
@@ -182,7 +195,7 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
     /**
      * constructor for REQUIRED rules, with type pre-specified
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, Primitive<?> type) {
+    public PrimitiveInput(String name, String tipText, Validate rule, Primitive<T> type) {
         this(name, tipText, rule);
         this.primitiveType = type;
     }
@@ -190,7 +203,7 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
     /**
      * constructor for XOR rules *
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, Input<?> other) {
+    public PrimitiveInput(String name, String tipText, Validate rule, PrimitiveInput<T,P> other) {
         this(name, tipText);
         if (rule != Validate.XOR) {
             Log.err.println("Programmer error: input rule should be XOR for this Input constructor");
@@ -204,7 +217,7 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
     /**
      * constructor for XOR rules, with type pre-specified
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, Input<?> other, Primitive<?> type) {
+    public PrimitiveInput(String name, String tipText, Validate rule, PrimitiveInput<T,P> other, Primitive<T> type) {
         this(name, tipText, rule, other);
         this.primitiveType = type;
     }
@@ -216,14 +229,14 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
      * the value optional? When providing a 'no-input' entry in the list and setting that as the default,
      * that should cover that situation.)
      */
-    public PrimitiveInput(String name, String tipText, V startValue, V[] possibleValues) {
-        this.name = name;
-        this.tipText = tipText;
-        jValue = startValue;
-        defaultValue = startValue;
-        this.possibleValues = possibleValues;
-        checkName();
-    } // c'tor
+//    public PrimitiveInput(String name, String tipText, T startValue, T[] possibleValues) {
+//        this.name = name;
+//        this.tipText = tipText;
+//        jValue = startValue;
+//        defaultValue = startValue;
+//        this.possibleValues = possibleValues;
+//        checkName();
+//    } // c'tor
 
     /**
      * check name is not one of the reserved ones *
@@ -292,8 +305,12 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
      *
      * @return value of this input
      */
-    public T get() {
+    public P get() {
         return value;
+    }
+
+    public T getJValue() {
+        return jValue;
     }
 
     /**
@@ -735,7 +752,7 @@ public class PrimitiveInput<V, T extends Tensor> extends Input<T> {
         if (possibleValues != null) {
             // it is an enumeration, check the value is in the list
             boolean found = false;
-            for (final V value : possibleValues) {
+            for (final T value : possibleValues) {
                 if (value.equals(this.value)) {
                     found = true;
                 }

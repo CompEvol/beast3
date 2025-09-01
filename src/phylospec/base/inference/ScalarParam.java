@@ -12,14 +12,27 @@ import java.io.PrintStream;
 
 public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> {
 
-    final public Input<Scalar<Real>> valueInput = new PrimitiveInput<>("value",
-            "start value for this scalar parameter", 0.0,
-            Input.Validate.REQUIRED, Real.INSTANCE);
+    final public PrimitiveInput<Double, Scalar<Real>> valueInput = new PrimitiveInput<>(
+            "value","start value for this scalar parameter",
+            0.0, Input.Validate.REQUIRED, Real.INSTANCE);
+
+    final public PrimitiveInput<Double, Scalar<Real>> lowerValueInput = new PrimitiveInput<>(
+            "lower","lower value for this parameter (default -infinity)",
+            Double.NEGATIVE_INFINITY, Real.INSTANCE);
+    final public PrimitiveInput<Double, Scalar<Real>> upperValueInput = new PrimitiveInput<>(
+            "upper","upper value for this parameter (default +infinity)",
+            Double.POSITIVE_INFINITY, Real.INSTANCE);
 
 
     //++++++++ Scalar ++++++++
 
-    private double value;
+    protected double value;
+    protected double storedValue;
+
+    protected Double upper;
+    protected Double lower;
+
+    protected boolean isDirty;
 
     /**
      * Constructs a Boolean with the given value.
@@ -27,11 +40,23 @@ public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> 
      * @param value the boolean value
      */
     public ScalarParam(double value) {
-        this.value = value;
-        if (!isValid()) {
-            throw new IllegalArgumentException(
-                    "..., but was: " + value);
-        }
+        initByName("value", value);
+    }
+
+    @Override
+    public void initAndValidate() {
+        this.value = valueInput.getJValue();
+        this.lower = lowerValueInput.getJValue();
+        this.upper = upperValueInput.getJValue();
+
+        if (!isValid())
+            throw new IllegalArgumentException( "..., but was: " + value);
+        if (!isValidBound())
+            throw new IllegalArgumentException("Value " + value + " should be within [" + lower + ", " + upper + "]");
+    }
+
+    public boolean isValidBound() {
+        return this.lower.compareTo(value) <= 0 && this.upper.compareTo(value) >= 0;
     }
 
     @Override
@@ -48,6 +73,15 @@ public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> 
     public Primitive primitiveType() {
         return Real.INSTANCE;
     }
+
+    public Double getUpper() {
+        return upper;
+    }
+
+    public Double getLower() {
+        return lower;
+    }
+
 
     //++++++++ StateNode ++++++++
 
@@ -88,17 +122,16 @@ public class ScalarParam<P extends Real> extends StateNode implements Scalar<P> 
 
     @Override
     protected void store() {
-
+        storedValue = value;
     }
 
     @Override
     public void restore() {
-
-    }
-
-    @Override
-    public void initAndValidate() {
-
+        final double tmp = storedValue;
+        storedValue = value;
+        value = tmp;
+        hasStartedEditing = false;
+        isDirty = false;
     }
 
     @Override

@@ -31,10 +31,11 @@ import beast.base.inference.CalculationNode;
 
 import java.util.Arrays;
 
+import beast.base.inference.StateNode;
 import org.phylospec.types.BoolScalar;
 import org.phylospec.types.Simplex;
 import phylospec.base.core.Input;
-import phylospec.base.core.Input.Validate;
+import phylospec.base.core.PrimitiveInput;
 import phylospec.base.types.BoolScalarImpl;
 
 
@@ -49,9 +50,8 @@ public class Frequencies extends CalculationNode {
     final public Input<BoolScalar> estimateInput = new Input<>("estimate",
             "Whether to estimate the frequencies from data (true=default) or assume " +
                     "a uniform distribution over characters (false)", new BoolScalarImpl(true));
-    final public Input<Simplex> frequenciesInput = new Input<>("frequencies",
-            "A set of frequencies specified as space separated values summing to 1",
-            Validate.XOR, dataInput);
+    final public PrimitiveInput<Double, Simplex> frequenciesInput = new PrimitiveInput<>("frequencies",
+            "A set of frequencies specified as space separated values summing to 1");
 
     /**
      * contains frequency distribution *
@@ -173,8 +173,8 @@ public class Frequencies extends CalculationNode {
     @Override
     protected boolean requiresRecalculation() {
         boolean recalculates = false;
-        if (frequenciesInput.get().somethingIsDirty()) {
-
+        Simplex freqs = frequenciesInput.get();
+        if (freqs instanceof StateNode stateNode && stateNode.somethingIsDirty()) {
             needsUpdate = true;
             recalculates = true;
         }

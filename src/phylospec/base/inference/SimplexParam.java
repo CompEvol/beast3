@@ -1,11 +1,13 @@
 package phylospec.base.inference;
 
-import org.phylospec.primitives.Primitive;
-import org.phylospec.primitives.Real;
+import org.phylospec.primitives.UnitInterval;
 import org.phylospec.types.Simplex;
 
-public class SimplexParam<P extends Simplex> extends ScalarParam<P> {
+import java.util.List;
 
+public class SimplexParam<P extends UnitInterval> extends VectorParam<P> implements Simplex<P> {
+
+    private List<Double> values;
 
     /**
      * Constructs a Boolean with the given value.
