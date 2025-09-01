@@ -30,6 +30,7 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.CalculationNode;
 
 import java.util.Arrays;
+import java.util.List;
 
 import beast.base.inference.StateNode;
 import org.phylospec.types.BoolScalar;
@@ -50,8 +51,8 @@ public class Frequencies extends CalculationNode {
     final public Input<BoolScalar> estimateInput = new Input<>("estimate",
             "Whether to estimate the frequencies from data (true=default) or assume " +
                     "a uniform distribution over characters (false)", new BoolScalarImpl(true));
-    final public PrimitiveInput<Double, Simplex> frequenciesInput = new PrimitiveInput<>("frequencies",
-            "A set of frequencies specified as space separated values summing to 1");
+    final public PrimitiveInput<List<Double>, Simplex> frequenciesInput = new PrimitiveInput<>(
+            "frequencies","A set of frequencies specified as space separated values summing to 1");
 
     /**
      * contains frequency distribution *
@@ -97,11 +98,11 @@ public class Frequencies extends CalculationNode {
         if (frequenciesInput.get() != null) {
 
             // if user specified, parse frequencies from space delimited string
-            freqs = new double[Math.toIntExact(frequenciesInput.get().size())];
+            freqs = frequenciesInput.getJValue().stream().mapToDouble(Double::doubleValue).toArray();
 
-            for (int i = 0; i < freqs.length; i++) {
-                freqs[i] = frequenciesInput.get().get(i);
-            }
+//            for (int i = 0; i < freqs.length; i++) {
+//                freqs[i] = frequenciesInput.get().get(i);
+//            }
 
 
         } else if (estimateInput.get().get()) { // if not user specified, either estimate from data or set as fixed
