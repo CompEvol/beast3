@@ -30,7 +30,6 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.substitutionmodel.EigenDecomposition;
-import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
 

@@ -30,13 +30,12 @@ import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.CalculationNode;
 
 import java.util.Arrays;
-import java.util.List;
 
 import beast.base.inference.StateNode;
 import org.phylospec.types.BoolScalar;
 import org.phylospec.types.Simplex;
 import phylospec.base.core.Input;
-import phylospec.base.core.PrimitiveInput;
+import phylospec.base.core.TensorInput;
 import phylospec.base.types.BoolScalarImpl;
 
 
@@ -51,7 +50,7 @@ public class Frequencies extends CalculationNode {
     final public Input<BoolScalar> estimateInput = new Input<>("estimate",
             "Whether to estimate the frequencies from data (true=default) or assume " +
                     "a uniform distribution over characters (false)", new BoolScalarImpl(true));
-    final public PrimitiveInput<List<Double>, Simplex> frequenciesInput = new PrimitiveInput<>(
+    final public TensorInput<Simplex> frequenciesInput = new TensorInput<>(
             "frequencies","A set of frequencies specified as space separated values summing to 1");
 
     /**

@@ -41,22 +41,13 @@ import java.util.List;
  * e.g. a Logger can get the result it needs to log from a
  * BEASTObject that actually performs a calculation.
  */
-public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
+public class TensorInput<T extends Tensor> extends Input<T> {
 
     //TODO inherit or replace Input<?>
 
     /**
-     * value represented by this input, e.g. Tensor
-     */
-    P value;
-
-    /**
-     * Actual value in Java
-     */
-    T jValue;
-
-    /**
      * Type of Tensor, e.g. PositiveReal.
+     * @see Tensor#primitiveType()
      */
     protected Primitive<?> primitiveType;
 
@@ -70,25 +61,25 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * used only if validation rule is XOR *
      */
-    Input<?> other;
-    public T defaultValue;
+    TensorInput<?> other;
+//    public J defaultValue;
     /**
      * Possible values for enumerations, e.g. if
      * an input can be any of "constant", "linear", "quadratic"
      * this array contains these values. Used for validation and user interfaces.
      */
-    public T[] possibleValues;
+//    public J[] possibleValues;
 
     /**
      * constructors *
      */
-    public PrimitiveInput() {
+    public TensorInput() {
     }
 
     /**
      * simple constructor, requiring only the input name and tiptext
      */
-    public PrimitiveInput(String name, String tipText) {
+    public TensorInput(String name, String tipText) {
         this.name = name;
         this.tipText = tipText;
         value = null;
@@ -100,7 +91,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
      * This allows inputs of types that cannot be determined through
      * introspection, such as template class inputs, e.g. Input<Parameter<?>>
      */
-    public PrimitiveInput(String name, String tipText, Primitive<?> primitiveType) {
+    public TensorInput(String name, String tipText, Primitive<?> primitiveType) {
         this(name, tipText);
         this.primitiveType = primitiveType;
     } // c'tor
@@ -117,12 +108,13 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for List<> with type specified
      */
-    public PrimitiveInput(String name, String tipText, T startValue, Primitive<T> primitiveType) {
+    public TensorInput(String name, String tipText, T startValue, Primitive<?> primitiveType) {
         this(name, tipText);
-        if ( !primitiveType.isValid(startValue) ) {
-            throw new IllegalArgumentException( "..., but was: " + value);
-        }
-        jValue = startValue;
+        //TODO
+//        if ( !primitiveType.isValid(startValue) ) {
+//            throw new IllegalArgumentException( "..., but was: " + value);
+//        }
+        value = startValue;
         defaultValue = startValue;
         this.primitiveType = primitiveType;
     } // c'tor
@@ -145,7 +137,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for List<> with XOR rules with type specified
      */
-    public PrimitiveInput(String name, String tipText, T startValue, Validate rule, PrimitiveInput<T,P> other, Primitive<T> primitiveType) {
+    public TensorInput(String name, String tipText, T startValue, Validate rule, TensorInput<T> other, Primitive<?> primitiveType) {
         this(name, tipText, startValue, primitiveType);
         if (rule != Validate.XOR) {
             Log.err.println("Programmer error: input rule should be XOR for this Input constructor");
@@ -175,7 +167,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for REQUIRED rules
      */
-    public PrimitiveInput(String name, String tipText, T startValue, Validate rule, Primitive<T> type) {
+    public TensorInput(String name, String tipText, T startValue, Validate rule, Primitive<?> type) {
         this(name, tipText, startValue, type);
         this.rule = rule;
     } // c'tor
@@ -183,7 +175,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for REQUIRED rules
      */
-    public PrimitiveInput(String name, String tipText, Validate rule) {
+    public TensorInput(String name, String tipText, Validate rule) {
         this(name, tipText);
         if (rule != Validate.REQUIRED && rule != Validate.OPTIONAL) {
             Log.err.println("Programmer error: input rule should be REQUIRED for this Input constructor"
@@ -195,7 +187,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for REQUIRED rules, with type pre-specified
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, Primitive<T> type) {
+    public TensorInput(String name, String tipText, Validate rule, Primitive<?> type) {
         this(name, tipText, rule);
         this.primitiveType = type;
     }
@@ -203,7 +195,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for XOR rules *
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, PrimitiveInput<T,P> other) {
+    public TensorInput(String name, String tipText, Validate rule, TensorInput<T> other) {
         this(name, tipText);
         if (rule != Validate.XOR) {
             Log.err.println("Programmer error: input rule should be XOR for this Input constructor");
@@ -217,7 +209,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     /**
      * constructor for XOR rules, with type pre-specified
      */
-    public PrimitiveInput(String name, String tipText, Validate rule, PrimitiveInput<T,P> other, Primitive<T> type) {
+    public TensorInput(String name, String tipText, Validate rule, TensorInput<T> other, Primitive<?> type) {
         this(name, tipText, rule, other);
         this.primitiveType = type;
     }
@@ -305,13 +297,13 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
      *
      * @return value of this input
      */
-    public P get() {
+    public T get() {
         return value;
     }
 
-    public T getJValue() {
-        return jValue;
-    }
+//    public J getJValue() {
+//        return jValue;
+//    }
 
     /**
      * As get() but with this difference that the State can manage
@@ -341,6 +333,12 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
     // isDirty() relies on StateNode and CalculationNode, which rely on beast.app.core
     // so implementing isDirty() here introduces circular dependencies
     // (or require ugly introspection).
+
+
+
+    public void setPrimitiveType(Primitive<?> primitiveType) {
+        this.primitiveType = primitiveType;
+    }
 
 
     /**
@@ -443,7 +441,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
 //                            for (int i = 0; i < actualTypeArguments.length; i++) {
 //                                Type typeArg = actualTypeArguments[i];
 //                                if (typeArg instanceof Class) {
-//                                    Primitive<?> typeClass = (Class<?>) typeArg;
+//                                    Primitive<T> typeClass = (Class<?>) typeArg;
 //                                    if (primitiveType.isAssignableFrom(typeClass)) {
 //                                    	this.value = (T) value;
 //                                    	return;
@@ -537,7 +535,7 @@ public class PrimitiveInput<T, P extends Tensor> extends Input<P> {
             final Field[] fields = beastObject.getClass().getFields();
             // find this input in the beastObject
             for (int i = 0; i < fields.length; i++) {
-                if (fields[i].getType().isAssignableFrom(PrimitiveInput.class)) {
+                if (fields[i].getType().isAssignableFrom(TensorInput.class)) {
                     final Input input = (Input) fields[i].get(beastObject);
                     if (input == this) {
                         // found the input, now determine the type of the input
