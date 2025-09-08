@@ -6,8 +6,8 @@ import phylospec.base.inference.ScalarParam;
 public class OperatorUtils {
 
 
-    public static Double getRandomDouble(double value, Double lower, Double upper,
-                                         boolean useGaussian, final double windowSize) {
+    public static Double proposeNewDouble(double value, ScalarParam param,
+                                          boolean useGaussian, final double windowSize) {
         double newValue = value;
         if (useGaussian) {
             newValue += Randomizer.nextGaussian() * windowSize;
@@ -15,7 +15,7 @@ public class OperatorUtils {
             newValue += Randomizer.nextDouble() * 2 * windowSize - windowSize;
         }
 
-        if (newValue < lower || newValue > upper) {
+        if (!param.isInBound(value)) {
             return null;
         }
         if (newValue == value) {

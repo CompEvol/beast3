@@ -52,8 +52,7 @@ public class RandomWalkOperator<P extends Real> extends Operator {
 //        int i = Randomizer.nextInt(param.getDimension());
 //        double value = param.get(i);
         double value = param.get();
-        Double newValue = OperatorUtils.getRandomDouble(value, param.getLower(), param.getUpper(),
-                useGaussian, windowSize);
+        Double newValue = OperatorUtils.proposeNewDouble(value, param, useGaussian, windowSize);
         if (newValue == null)
             return Double.NEGATIVE_INFINITY;
 

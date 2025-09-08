@@ -72,11 +72,11 @@ public abstract class ScalarParam<P extends Real> extends StateNode implements S
             upper = Double.POSITIVE_INFINITY;
         }
 
-        if (!isInBound())
+        if (!isInBound(value))
             throw new IllegalArgumentException("Value " + value + " should be within [" + lower + ", " + upper + "]");
     }
 
-    public boolean isInBound() {
+    public boolean isInBound(Double value) {
         return value >= lower && value <= upper;
     }
 
