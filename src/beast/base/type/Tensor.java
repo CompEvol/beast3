@@ -10,6 +10,7 @@ import beast.base.type.domain.Domain;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
+@Deprecated
 public interface Tensor<D extends Domain<?>> {
 
 	public enum TensorType {Scalar, Vector, Matrix, Tensor, Simplex, SquareMatrix};
