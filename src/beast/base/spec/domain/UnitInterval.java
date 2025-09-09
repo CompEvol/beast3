@@ -16,6 +16,11 @@ public class UnitInterval extends NonNegativeReal{
 
     @Override
     public boolean isValid(Double value) {
-        return Real.INSTANCE.isValid(value) && value >= 0.0 && value <= 1.0;
+        return Real.INSTANCE.isValid(value) && value >= getLower() && value <= getUpper();
+    }
+
+    @Override
+    public Double getUpper() {
+        return 1.0;
     }
 }

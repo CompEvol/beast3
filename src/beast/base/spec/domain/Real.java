@@ -26,5 +26,13 @@ public class Real implements Domain<Double> {
         return Double.class;
     }
 
+    @Override
+    public Double getLower() {
+        return Double.NEGATIVE_INFINITY;
+    }
 
+    @Override
+    public Double getUpper() {
+        return Double.POSITIVE_INFINITY;
+    }
 }

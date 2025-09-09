@@ -16,6 +16,12 @@ public class NonNegativeInt extends Int {
 
     @Override
     public boolean isValid(Integer value) {
-        return Int.INSTANCE.isValid(value) && value >= 0;
+        return Int.INSTANCE.isValid(value) && value >= getLower();
     }
+
+    @Override
+    public Integer getLower() {
+        return 0;
+    }
+
 }

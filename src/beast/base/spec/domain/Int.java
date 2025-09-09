@@ -24,4 +24,14 @@ public class Int implements Domain<Integer> {
     public Class<Integer> getTypeClass() {
         return Integer.class;
     }
+
+    @Override
+    public Integer getLower() {
+        return null;
+    }
+
+    @Override
+    public Integer getUpper() {
+        return null;
+    }
 }

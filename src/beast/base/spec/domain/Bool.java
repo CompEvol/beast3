@@ -26,4 +26,14 @@ public class Bool implements Domain<Boolean> {
     public Class<Boolean> getTypeClass() {
         return Boolean.class;
     }
+
+    @Override
+    public Boolean getLower() {
+        return null;
+    }
+
+    @Override
+    public Boolean getUpper() {
+        return null;
+    }
 }

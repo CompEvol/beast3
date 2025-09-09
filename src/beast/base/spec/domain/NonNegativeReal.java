@@ -19,4 +19,8 @@ public class NonNegativeReal extends Real {
         return Real.INSTANCE.isValid(value) && value >= 0.0;
     }
 
+    @Override
+    public Double getLower() {
+        return 0.0;
+    }
 }
