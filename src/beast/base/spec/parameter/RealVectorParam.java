@@ -7,10 +7,14 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends RealParameter implements RealScalar<D> {
+public class RealVectorParam<D extends Real> extends RealParameter implements RealVector<D> {
 
     // Domain instance to enforce constraints
     private D domain;
@@ -130,12 +134,6 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
         super.setDimension(dimension);
     }
     
-    // Override to ensure scalar behavior
-    @Override
-    public int getDimension() {
-        return 1;
-    }
-    
     // Hide matrix-related methods by throwing exceptions
     @Override
     public void setMinorDimension(int dimension) {
@@ -152,8 +150,14 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
         return 1;
     }
 
+
     @Override
-    public Double get() {
-        return getValue();
+    public List<Double> getElements() {
+        return Arrays.stream(values).toList();
+    }
+
+    @Override
+    public Double get(int i) {
+        return getArrayValue(i);
     }
 }

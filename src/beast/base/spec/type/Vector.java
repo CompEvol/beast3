@@ -11,7 +11,7 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
      *
      * @return an unmodifiable list of all elements
      */
-    List<D> getElements();
+    List<T> getElements();
 
     /**
      * Get the domain value with the type T.
