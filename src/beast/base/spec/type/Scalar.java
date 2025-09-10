@@ -11,6 +11,10 @@ public interface Scalar<D extends Domain<T>, T> {
      */
     T get();
 
+//    T getLower();
+//
+//    T getUpper();
+
     /**
      * Get the domain type D.
      *
