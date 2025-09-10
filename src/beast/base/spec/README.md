@@ -17,14 +17,14 @@ https://www.azul.com/downloads/?version=java-25-ea&package=jdk#zulu
 
 <a href="./JDK25.png"><img src="./JDK25.png" width="500" ></a>
 
-## Domain
+## 1. Domain
 
 The supported domain types in this version are:
 
 <a href="./Domain0.1.1.png"><img src="./Domain0.1.1.png" width="800" ></a>
 
 
-## Shape
+## 2. Shape
 
 Constrain the value’s dimension.
 
