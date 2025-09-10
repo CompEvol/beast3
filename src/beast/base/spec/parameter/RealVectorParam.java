@@ -38,8 +38,8 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
     @Override
     public void initAndValidate() {
         // Ensure scalar dimension
-        if (dimensionInput.get() != 1 || valuesInput.get().size() > 1) {
-            throw new IllegalArgumentException("ScalarReal must have dimension 1");
+        if (dimensionInput.get() <= 1 || valuesInput.get().size() <= 1) {
+            throw new IllegalArgumentException("Vector must have dimension > 1");
         }
         
         // Initialize domain based on type or bounds
