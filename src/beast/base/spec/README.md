@@ -17,15 +17,23 @@ https://www.azul.com/downloads/?version=java-25-ea&package=jdk#zulu
 
 <a href="./JDK25.png"><img src="./JDK25.png" width="500" ></a>
 
-## Strong typing system
+## Domains and Shapes
 
 ### 1. Domain
 
 The supported domain types in this version are:
 
-<a href="./Domain.png"><img src="./Domain.png" width="800" ></a>
+<a href="./Domain0.1.1.png"><img src="./Domain0.1.1.png" width="800" ></a>
 
 
 ### 2. Type
 
-Coming soon ...
+Constrain the value’s dimension.
+
+- Scalar
+
+<a href="./Scalar0.1.1.png"><img src="./Scalar0.1.1.png" width="500" ></a>
+
+- Vector
+
+<a href="./Vector0.1.1.png"><img src="./Vector0.1.1.png" width="500" ></a>
