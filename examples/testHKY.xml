@@ -49,7 +49,8 @@
         <siteModel idref="siteModel"/>
     </input>
 
-    <parameter id="hky.kappa" spec="parameter.RealParameter" domain="PositiveReal" tensor="Scalar" value="1.0" lower="0.0"/>
+    <input id="hky.kappa" spec="beast.base.spec.parameter.PositiveRealScalarParam"
+               value="-1.0" lower="0.0"/>
 
     <tree id='tree'/>
 

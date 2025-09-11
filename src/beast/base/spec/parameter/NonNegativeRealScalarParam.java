@@ -6,5 +6,6 @@ public class NonNegativeRealScalarParam extends RealScalarParam<NonNegativeReal>
     public NonNegativeRealScalarParam() {
         super();
         // Domain is baked in
+        domainTypeInput.setValue(NonNegativeReal.INSTANCE, this);
     }
 }

@@ -173,6 +173,11 @@
                 <provider classname="beast.base.inference.parameter.IntegerParameter"/>
                 <provider classname="beast.base.inference.parameter.RealParameter"/>
 
+                <provider classname="beast.base.spec.parameter.RealScalarParam"/>
+                <provider classname="beast.base.spec.parameter.NonNegativeRealScalarParam"/>
+                <provider classname="beast.base.spec.parameter.PositiveRealScalarParam"/>
+                <provider classname="beast.base.spec.parameter.InScalarParam"/>
+
                 <provider classname="beast.base.inference.util.ESS"/>
                 <provider classname="beast.base.inference.util.RPNcalculator"/>
             </service>

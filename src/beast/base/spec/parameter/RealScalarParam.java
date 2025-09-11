@@ -3,10 +3,7 @@ package beast.base.spec.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.Real;
-import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.domain.*;
 import beast.base.spec.type.RealScalar;
 
 
@@ -17,9 +14,9 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     private D domain;
     
     // Additional input to specify the domain type
-    public final Input<String> domainTypeInput = new Input<>("domainType", 
+    public final Input<Domain> domainTypeInput = new Input<>("domain",
             "Domain type: Real, PositiveReal, NonNegativeReal, or UnitInterval", 
-            "Real");
+            Real.INSTANCE);
     
     public RealScalarParam() {
         super();
@@ -54,25 +51,25 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
 
     @SuppressWarnings("unchecked")
     private void initializeDomain() {
+        domain = (D) domainTypeInput.get();
         // If domain not already set, create based on inputs
-        if (domain == null) {
-            String domainType = domainTypeInput.get();
-            
+//        if (domain == null) {
+//            String domainType = domainTypeInput.get();
             // This would require a factory or registry pattern
             // For illustration, showing the concept:
-            switch (domainType) {
-                case "PositiveReal":
-                    domain = (D) PositiveReal.INSTANCE;
-                    break;
-                case "NonNegativeReal":
-                    domain = (D) NonNegativeReal.INSTANCE;
-                    break;
-                case "UnitInterval":
-                    domain = (D) UnitInterval.INSTANCE;
-                    break;
-                default:
-                    domain = (D) Real.INSTANCE;
-            }
+//            switch (domainType) {
+//                case "PositiveReal":
+//                    domain = (D) PositiveReal.INSTANCE;
+//                    break;
+//                case "NonNegativeReal":
+//                    domain = (D) NonNegativeReal.INSTANCE;
+//                    break;
+//                case "UnitInterval":
+//                    domain = (D) UnitInterval.INSTANCE;
+//                    break;
+//                default:
+//                    domain = (D) Real.INSTANCE;
+//            }
             
             // Override bounds from domain if not explicitly set
             if (lowerValueInput.get() == null) {
@@ -81,7 +78,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
             if (upperValueInput.get() == null) {
                 m_fUpper = domain.getUpper();
             }
-        }
+//        }
     }
     
     @Override
