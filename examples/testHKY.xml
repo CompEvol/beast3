@@ -26,6 +26,10 @@
         </sequence>
     </data>
 
+
+    <input id="hky.kappa" spec="beast.base.spec.parameter.PositiveRealScalarParam"
+           value="-1.0" lower="0.0"/>
+
     <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
     <input spec='HKY' id='hky'>
         <kappa idref='hky.kappa'/>
@@ -48,9 +52,6 @@
         <tree idref="tree"/>
         <siteModel idref="siteModel"/>
     </input>
-
-    <input id="hky.kappa" spec="beast.base.spec.parameter.PositiveRealScalarParam"
-               value="-1.0" lower="0.0"/>
 
     <tree id='tree'/>
 
