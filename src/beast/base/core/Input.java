@@ -25,6 +25,11 @@
 package beast.base.core;
 
 
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Real;
+import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Vector;
+
 import java.io.File;
 import java.lang.reflect.*;
 import java.math.BigDecimal;
@@ -33,11 +38,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import beast.base.type.Tensor;
-import beast.base.type.Tensor.TensorType;
-import beast.base.type.domain.Domain;
-import beast.base.type.domain.Domain.DomainType;
-import beast.base.type.domain.Real;
 
 
 /**
@@ -64,6 +64,7 @@ public class Input<T> {
 
     /**
      * Type of T, automatically determined when setting a new value.
+     * It can be Java class or tensor class
      * Used for type checking.
      */
     protected Class<?> theClass;
@@ -73,13 +74,8 @@ public class Input<T> {
      * contains the class of the parameter (e.g. Scalar) and theClass the
      * other type (e.g. Real)
      */
-    protected Class<?> theContainerClass;
-
+    protected Class<?> tensorClass;
     
-    /**
-     * tensorType represents the dimensions of the Input value
-     */
-    protected TensorType tensorType = TensorType.Scalar;
     
     /**
      * domain represents the domain of the Input value
@@ -124,11 +120,11 @@ public class Input<T> {
         checkName();
     } // c'tor
 
-    public Input(String name, String tipText, TensorType tensorType, Class<? extends Domain<?>> domain) {
+    public Input(String name, String tipText, Class<?> tensorClass, Class<? extends Domain<?>> domain) {
         this.name = name;
         this.tipText = tipText;
         value = null;
-        this.tensorType = tensorType;
+        this.tensorClass = tensorClass;
         this.domain = domain;
         checkName();
     } // c'tor
@@ -199,12 +195,12 @@ public class Input<T> {
     } // c'tor
     
     
-    public Input(String name, String tipText, TensorType tensorType, Class<? extends Domain<?>> domain,  Validate rule) {
+    public Input(String name, String tipText, Class<?> tensorClass, Class<? extends Domain<?>> domain,  Validate rule) {
         this(name, tipText);
         this.name = name;
         this.tipText = tipText;
         value = null;
-        this.tensorType = tensorType;
+        this.tensorClass = tensorClass;
         this.domain = domain;
         checkName();
     } // c'tor
@@ -473,8 +469,8 @@ public class Input<T> {
                         ". " + theClass.getName() + ".isAssignableFrom(" + value.getClass() + ")=false");
             }
 
-        } else if (theContainerClass != null) {
-            if (theContainerClass.isAssignableFrom(value.getClass())) {
+        } else if (tensorClass != null) {
+            if (tensorClass.isAssignableFrom(value.getClass())) {
                 if (value instanceof BEASTInterface) {
                 	if (this.value != null) {
                 		((BEASTInterface) this.value).getOutputs().remove(beastObject);
@@ -492,7 +488,7 @@ public class Input<T> {
                         Type rawType = parameterizedType.getRawType();
 
                         // Check if it's the interface you're interested in
-                        if (rawType.equals(theContainerClass)) {
+                        if (rawType.equals(tensorClass)) {
                             Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
 
                             for (int i = 0; i < actualTypeArguments.length; i++) {
@@ -626,12 +622,12 @@ public class Input<T> {
                             		}
                             		
                             		String rawTypeName = rawType.getTypeName();
-                            		if (rawType instanceof Class && Tensor.class.isAssignableFrom((Class<?>)rawType)) {
-                            			theContainerClass = (Class<?>) rawType;
+                            		if (rawType instanceof Class rawTypeCls && isTensorClass(rawTypeCls)) {
+                            			tensorClass = rawTypeCls;
                                         Type[] genericTypes2 = ((ParameterizedType) genericTypes[0]).getActualTypeArguments();
                                         try {
                                         	if (genericTypes2[0].toString().equals("?")) {
-                                        		theClass = (Class<?>) rawType;                    		
+                                        		theClass = rawTypeCls;
                                         	} else {
                                         		theClass = (Class<?>) genericTypes2[0];
                                         	}
@@ -667,6 +663,11 @@ public class Input<T> {
             e.printStackTrace();
         }
     } // determineClass
+
+    public boolean isTensorClass(Class<?> rawType) {
+        return Scalar.class.isAssignableFrom(rawType)
+                || Vector.class.isAssignableFrom(rawType);
+    }
 
     /**
      * Try to parse value of string into Integer, Double or Boolean,

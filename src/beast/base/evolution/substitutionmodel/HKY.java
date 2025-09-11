@@ -32,9 +32,8 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.type.Tensor;
-import beast.base.type.Tensor.TensorType;
-import beast.base.type.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 
 @Description("HKY85 (Hasegawa, Kishino & Yano, 1985) substitution model of nucleotide evolution.")
 @Citation(value =
@@ -42,8 +41,9 @@ import beast.base.type.domain.NonNegativeReal;
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
 public class HKY extends SubstitutionModel.NucleotideBase {
-    final public Input<Tensor<?>> kappaInput = new Input<>("kappa", "kappa parameter in HKY model", 
-    		TensorType.Scalar, NonNegativeReal.class, Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> kappaInput = new Input<>(
+            "kappa", "kappa parameter in HKY model",
+            Validate.REQUIRED);
 
     /**
      * applies to nucleotides only *
@@ -179,7 +179,7 @@ public class HKY extends SubstitutionModel.NucleotideBase {
 
             // eigenvectors
             double[] eval = eigenDecomposition.getEigenValues();
-            final double k = kappaInput.get().getDoubleValue();
+            final double k = kappaInput.get().get();
 
             final double beta = -1.0 / (2.0 * (piR * piY + k * (pi[0] * pi[2] + pi[1] * pi[3])));
             final double A_R = 1.0 + piR * (k - 1);
@@ -233,7 +233,7 @@ public class HKY extends SubstitutionModel.NucleotideBase {
         tab3T = tab2C;            // 1 - tab3C;  // freqT/freqY;
         tab2T = tab3C;            // 1 - tab3T; // (freqY-freqT)/freqY; //assert tab2T + tab3T == 1.0 ;
 
-        final double k = kappaInput.get().getDoubleValue();
+        final double k = kappaInput.get().get();
         beta = -1.0 / (2.0 * (freqR * freqY + k * (freqA * freqG + freqC * freqT)));
 
         A_R = 1.0 + freqR * (k - 1);

@@ -2,11 +2,11 @@ package beast.base.spec.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.inference.parameter.RealParameter;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
-import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 
 import java.util.Arrays;

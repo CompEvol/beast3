@@ -1,20 +1,20 @@
 package beast.base.inference.parameter;
 
 
-import java.io.PrintStream;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
+
+import java.io.PrintStream;
 
 
 /**
  * @author Alexei Drummond
  */
-
+@Deprecated
 @Description("An integer-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
-public class IntegerParameter extends Parameter.Base<java.lang.Integer> {
+public class IntegerParameter extends Parameter.Base<Integer> {
     final public Input<Integer> lowerValueInput = new Input<>("lower", "lower value for this parameter (default -infinity)");
     final public Input<Integer> upperValueInput = new Input<>("upper", "upper value for this parameter  (default +infinity)");
 
@@ -111,5 +111,15 @@ public class IntegerParameter extends Parameter.Base<java.lang.Integer> {
         for (int i = 0; i < values.length; i++) {
             values[i] = Integer.parseInt(valueStrings[i]);
         }
+    }
+
+    @Override
+    public Integer getLower() {
+        return super.getLower();
+    }
+
+    @Override
+    public Integer getUpper() {
+        return super.getUpper();
     }
 }

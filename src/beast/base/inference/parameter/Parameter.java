@@ -1,20 +1,18 @@
 package beast.base.inference.parameter;
 
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.StateNode;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@Deprecated
 public interface Parameter<T> extends Function {
 
     T getValue(int i);
@@ -145,8 +143,8 @@ public interface Parameter<T> extends Function {
          * wants to set the dimension, say, this will make it the responsibility
          * of the other class to maintain internal consistency of the parameter.
          */
-        final public Input<List<T>> valuesInput = new Input<>("value", "start value(s) for this parameter. If multiple values are specified, they should be separated by whitespace.", new ArrayList<>(), beast.base.core.Input.Validate.REQUIRED, getMax().getClass());
-        public final Input<java.lang.Integer> dimensionInput =
+        final public Input<List<T>> valuesInput = new Input<>("value", "start value(s) for this parameter. If multiple values are specified, they should be separated by whitespace.", new ArrayList<>(), Input.Validate.REQUIRED, getMax().getClass());
+        public final Input<Integer> dimensionInput =
                 new Input<>("dimension", "dimension of the parameter (default 1, i.e scalar)", 1);
         public final Input<Integer> minorDimensionInput = new Input<>("minordimension", "minor-dimension when the parameter is interpreted as a matrix (default 1)", 1);
 
@@ -258,7 +256,7 @@ public interface Parameter<T> extends Function {
         protected int m_nLastDirty;
 
         private List<String> keys = null; // unmodifiableList
-        private java.util.Map<String, Integer> keyToIndexMap = null;
+        private Map<String, Integer> keyToIndexMap = null;
 
         /**
          * @param i index
@@ -477,7 +475,7 @@ public interface Parameter<T> extends Function {
         @Override
         public Base<T> copy() {
             try {
-                @SuppressWarnings("unchecked") final Parameter.Base<T> copy = (Parameter.Base<T>) this.clone();
+                @SuppressWarnings("unchecked") final Base<T> copy = (Base<T>) this.clone();
                 copy.values = values.clone();//new Boolean[values.length];
                 copy.m_bIsDirty = new boolean[values.length];
                 return copy;
@@ -489,7 +487,7 @@ public interface Parameter<T> extends Function {
 
         @Override
         public void assignTo(final StateNode other) {
-            @SuppressWarnings("unchecked") final Parameter.Base<T> copy = (Parameter.Base<T>) other;
+            @SuppressWarnings("unchecked") final Base<T> copy = (Base<T>) other;
             copy.setID(getID());
             copy.index = index;
             copy.values = values.clone();
@@ -501,7 +499,7 @@ public interface Parameter<T> extends Function {
 
         @Override
         public void assignFrom(final StateNode other) {
-            @SuppressWarnings("unchecked") final Parameter.Base<T> source = (Parameter.Base<T>) other;
+            @SuppressWarnings("unchecked") final Base<T> source = (Base<T>) other;
             setID(source.getID());
             values = source.values.clone();
             storedValues = source.storedValues.clone();
@@ -513,7 +511,7 @@ public interface Parameter<T> extends Function {
 
         @Override
         public void assignFromFragile(final StateNode other) {
-            @SuppressWarnings("unchecked") final Parameter.Base<T> source = (Parameter.Base<T>) other;
+            @SuppressWarnings("unchecked") final Base<T> source = (Base<T>) other;
             this.setDimension(source.values.length);
             System.arraycopy(source.values, 0, values, 0, source.values.length);
             Arrays.fill(m_bIsDirty, false);
