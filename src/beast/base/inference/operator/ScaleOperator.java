@@ -31,7 +31,9 @@ import beast.base.inference.Operator;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.parameter.NonNegativeRealScalarParam;
+import beast.base.spec.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
@@ -40,10 +42,14 @@ import java.text.DecimalFormat;
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
 public class ScaleOperator extends Operator {
 
-    //TODO not sure if any biological values are negative ?
+    //TODO 1. validate in compile time ?
+    // 2. what about if parameter has 0?
+    // 3. how to extend to child class: err "PositiveRealScalarParam, but expected NonNegativeRealScalarParam"
 
-    public final Input<NonNegativeRealScalarParam> parameterInput = new Input<>(
-            "parameter", "if specified, this parameter is scaled");
+//    public final Input<? extends NonNegativeRealScalarParam> parameterInput = new Input<>(
+//            "parameter", "if specified, this parameter is scaled");
+    public final Input<RealScalarParam<? extends PositiveReal>> parameterInput = new Input<>(
+        "parameter", "if specified, this parameter is scaled");
 
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scaling factor: range from 0 to 1. Close to zero is very large jumps, close to 1.0 is very small jumps.", 0.75);
 

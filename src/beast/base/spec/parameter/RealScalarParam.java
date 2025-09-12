@@ -11,7 +11,7 @@ import beast.base.spec.type.RealScalar;
 public class RealScalarParam<D extends Real> extends RealParameter implements RealScalar<D> {
     
     // Domain instance to enforce constraints
-    private D domain;
+    protected D domain;
     
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
@@ -24,7 +24,9 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     
     public RealScalarParam(Double value, D domain) {
         super(new Double[]{value});
-        this.domain = domain;
+//        this.domain = domain; // TODO must set through Input
+        domainTypeInput.setValue(domain, this);
+
         // Override dimension to ensure scalar
         dimensionInput.setValue(1, this);
     }

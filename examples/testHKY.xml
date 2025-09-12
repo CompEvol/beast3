@@ -27,8 +27,16 @@
     </data>
 
 
-    <input id="hky.kappa" spec="beast.base.spec.parameter.PositiveRealScalarParam"
-           value="-1.0" lower="0.0"/>
+
+<!--    <input id="hky.kappa" spec="beast.base.spec.parameter.PositiveRealScalarParam"-->
+<!--           value="1"/>-->
+<!--    value="0.0"/>-->
+<!--    value="-1.0"/>-->
+
+    <input id="hky.kappa" spec="beast.base.spec.parameter.RealScalarParam"
+           domain="PositiveReal" value="0.0"/>
+
+<!--    <parameter id="hky.kappa" spec="parameter.RealParameter" value="1.0" lower="0.0"/>-->
 
     <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
     <input spec='HKY' id='hky'>
@@ -75,6 +83,9 @@
             <distribution id='likelihood' idref="treeLikelihood"/>
         </distribution>
 
+<!-- beast.base.inference.operator.ScaleOperator is strong typing op  -->
+<!--        <operator id='kappaScaler' spec='beast.base.inference.operator.ScaleOperator'-->
+<!--                  scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
         <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
 

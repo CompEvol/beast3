@@ -25,8 +25,7 @@
 package beast.base.core;
 
 
-import beast.base.spec.domain.Domain;
-import beast.base.spec.domain.Real;
+import beast.base.spec.domain.*;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Vector;
 
@@ -525,7 +524,8 @@ public class Input<T> {
                 }
                 this.value = (T) value;
             } else {
-                throw new RuntimeException("Input 102: type mismatch for input " + getName());
+                throw new RuntimeException("Input 102: type mismatch for input " + getName() +
+                        "\nProvide type " + value.getClass() + ", but expected " + theClass);
             }
         }
     }
@@ -704,6 +704,29 @@ public class Input<T> {
                         ((BEASTInterface) o).getOutputs().add(beastObject);
                     }
                 }
+            }
+            return;
+        }
+
+        if (Domain.class.isAssignableFrom(theClass)) {
+            switch (stringValue) {
+                case "Real":
+                    value = (T) Real.INSTANCE;
+                    break;
+                case "PositiveReal":
+                    value = (T) PositiveReal.INSTANCE;
+                    break;
+                case "NonNegativeReal":
+                    value = (T) NonNegativeReal.INSTANCE;
+                    break;
+                case "UnitInterval":
+                    value = (T) UnitInterval.INSTANCE;
+                    break;
+
+                    //TODO more
+
+                default:
+                    throw new IllegalArgumentException(stringValue + " is not a supported domain type " + theClass);
             }
             return;
         }
