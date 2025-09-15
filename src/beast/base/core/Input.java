@@ -119,15 +119,6 @@ public class Input<T> {
         checkName();
     } // c'tor
 
-    public Input(String name, String tipText, Class<?> tensorClass, Class<? extends Domain<?>> domain) {
-        this.name = name;
-        this.tipText = tipText;
-        value = null;
-        this.tensorClass = tensorClass;
-        this.domain = domain;
-        checkName();
-    } // c'tor
-
     /**
      * simple constructor as above but with type pre-specified.
      * This allows inputs of types that cannot be determined through
@@ -194,17 +185,6 @@ public class Input<T> {
     } // c'tor
     
     
-    public Input(String name, String tipText, Class<?> tensorClass, Class<? extends Domain<?>> domain,  Validate rule) {
-        this(name, tipText);
-        this.name = name;
-        this.tipText = tipText;
-        value = null;
-        this.tensorClass = tensorClass;
-        this.domain = domain;
-        checkName();
-    } // c'tor
-
-
     /**
      * constructor for REQUIRED rules for List-inputs, with type pre-specified
      */
