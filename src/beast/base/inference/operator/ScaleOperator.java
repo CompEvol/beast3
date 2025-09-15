@@ -28,11 +28,8 @@ package beast.base.inference.operator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Operator;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.parameter.NonNegativeRealScalarParam;
 import beast.base.spec.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
 
@@ -56,9 +53,9 @@ public class ScaleOperator extends Operator {
     final public Input<Integer> degreesOfFreedomInput = new Input<>("degreesOfFreedom", "Degrees of freedom used when " +
             "scaleAllIndependently=false and scaleAll=true to override default in calculation of Hasting ratio. " +
             "Ignored when less than 1, default 0.", 0);
-    final public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "indicates which of the dimension " +
-            "of the parameters can be scaled. Only used when scaleAllIndependently=false and scaleAll=false. If not specified " +
-            "it is assumed all dimensions are allowed to be scaled.");
+//    final public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "indicates which of the dimension " +
+//            "of the parameters can be scaled. Only used when scaleAllIndependently=false and scaleAll=false. If not specified " +
+//            "it is assumed all dimensions are allowed to be scaled.");
 
     final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
 
@@ -81,24 +78,24 @@ public class ScaleOperator extends Operator {
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
 
-        final BooleanParameter indicators = indicatorInput.get();
-        if (indicators != null) {
+//        final BooleanParameter indicators = indicatorInput.get();
+//        if (indicators != null) {
 //            if (m_bIsTreeScaler) {
 //                throw new IllegalArgumentException("indicator is specified which has no effect for scaling a tree");
 //            }
-            final int dataDim = parameterInput.get().getDimension();
-            final int indsDim = indicators.getDimension();
-            if (!(indsDim == dataDim || indsDim + 1 == dataDim)) {
-                throw new IllegalArgumentException("indicator dimension not compatible from parameter dimension");
-            }
-        }
+//            final int dataDim = parameterInput.get().getDimension();
+//            final int indsDim = indicators.getDimension();
+//            if (!(indsDim == dataDim || indsDim + 1 == dataDim)) {
+//                throw new IllegalArgumentException("indicator dimension not compatible from parameter dimension");
+//            }
+//        }
     }
 
 //    protected boolean isTreeScaler() {
 //        return m_bIsTreeScaler;
 //    }
 
-    protected boolean outsideBounds(final double value, final RealParameter param) {
+    protected boolean outsideBounds(final double value, final RealScalarParam param) {
         final Double l = param.getLower();
         final Double h = param.getUpper();
 
@@ -147,7 +144,8 @@ public class ScaleOperator extends Operator {
             final int specifiedDoF = degreesOfFreedomInput.get();
 //            final boolean scaleAllIndependently = scaleAllIndependentlyInput.get();
 
-            final RealParameter param = (RealParameter) InputUtil.get(parameterInput, this);
+            // TODO
+            final RealScalarParam param = (RealScalarParam) InputUtil.get(parameterInput, this);
 
             assert param.getLower() != null && param.getUpper() != null;
 
@@ -204,41 +202,42 @@ public class ScaleOperator extends Operator {
                 hastingsRatio = -Math.log(scale);
 
                 // which position to scale
-                final int index;
-                final BooleanParameter indicators = indicatorInput.get();
-                if (indicators != null) {
-                    final int dimCount = indicators.getDimension();
-                    final Boolean[] indicator = indicators.getValues();
-                    final boolean impliedOne = dimCount == (dim - 1);
+//                final int index;
+//                final BooleanParameter indicators = indicatorInput.get();
+//                if (indicators != null) {
+//                    final int dimCount = indicators.getDimension();
+//                    final Boolean[] indicator = indicators.getValues();
+//                    final boolean impliedOne = dimCount == (dim - 1);
+//
+//                    // available bit locations. there can be hundreds of them. scan list only once.
+//                    final int[] loc = new int[dimCount + 1];
+//                    int locIndex = 0;
+//
+//                    if (impliedOne) {
+//                        loc[locIndex] = 0;
+//                        ++locIndex;
+//                    }
+//                    for (int i = 0; i < dimCount; i++) {
+//                        if (indicator[i]) {
+//                            loc[locIndex] = i + (impliedOne ? 1 : 0);
+//                            ++locIndex;
+//                        }
+//                    }
+//
+//                    if (locIndex > 0) {
+//                        final int rand = Randomizer.nextInt(locIndex);
+//                        index = loc[rand];
+//                    } else {
+//                        return Double.NEGATIVE_INFINITY; // no active indicators
+//                    }
+//
+//                } else {
+//                    // any is good
+//                    index = Randomizer.nextInt(dim);
+//                }
 
-                    // available bit locations. there can be hundreds of them. scan list only once.
-                    final int[] loc = new int[dimCount + 1];
-                    int locIndex = 0;
-
-                    if (impliedOne) {
-                        loc[locIndex] = 0;
-                        ++locIndex;
-                    }
-                    for (int i = 0; i < dimCount; i++) {
-                        if (indicator[i]) {
-                            loc[locIndex] = i + (impliedOne ? 1 : 0);
-                            ++locIndex;
-                        }
-                    }
-
-                    if (locIndex > 0) {
-                        final int rand = Randomizer.nextInt(locIndex);
-                        index = loc[rand];
-                    } else {
-                        return Double.NEGATIVE_INFINITY; // no active indicators
-                    }
-
-                } else {
-                    // any is good
-                    index = Randomizer.nextInt(dim);
-                }
-
-                final double oldValue = param.getValue(index);
+//                final double oldValue = param.getValue(index);
+            final double oldValue = param.getValue();
 
                 if (oldValue == 0) {
                     // Error: parameter has value 0 and cannot be scaled
@@ -252,7 +251,8 @@ public class ScaleOperator extends Operator {
                     return Double.NEGATIVE_INFINITY;
                 }
 
-                param.setValue(index, newValue);
+//            param.setValue(index, newValue);
+                param.setValue(newValue); // TODO scalar, no index
                 // provides a hook for subclasses
                 //cleanupOperation(newValue, oldValue);
 //            }

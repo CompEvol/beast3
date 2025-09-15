@@ -84,9 +84,9 @@
         </distribution>
 
 <!-- beast.base.inference.operator.ScaleOperator is strong typing op  -->
-<!--        <operator id='kappaScaler' spec='beast.base.inference.operator.ScaleOperator'-->
-<!--                  scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
-        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
+        <operator id='kappaScaler' spec='beast.base.inference.operator.ScaleOperator'
+                  scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
+<!--        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
 
         <operator id='subtreeSlide' spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>

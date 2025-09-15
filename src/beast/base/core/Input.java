@@ -593,27 +593,35 @@ public class Input<T> {
                             // it is not a list (or if it is, this will fail)
                             try {
                             	Object o = genericTypes[0];
-                            	if (o instanceof ParameterizedType) {
-                                    Type rawType = ((ParameterizedType) genericTypes[0]).getRawType();
+                            	if (o instanceof ParameterizedType pt) {
+                                    Type rawType = pt.getRawType();
                                     // Log.warning.println(rawType.getTypeName());
                             		if (rawType.getTypeName().equals("java.util.List")) {
                             			// if we got here, value==null
                             			throw new RuntimeException("Programming error: Input<List> not initialised");
                             		}
-                            		
-                            		String rawTypeName = rawType.getTypeName();
+
+                                    // For tensor input like Input<RealScalar<PositiveReal>>
                             		if (rawType instanceof Class rawTypeCls && isTensorClass(rawTypeCls)) {
-                            			tensorClass = rawTypeCls;
-                                        Type[] genericTypes2 = ((ParameterizedType) genericTypes[0]).getActualTypeArguments();
-                                        try {
-                                        	if (genericTypes2[0].toString().equals("?")) {
-                                        		theClass = rawTypeCls;
-                                        	} else {
-                                        		theClass = (Class<?>) genericTypes2[0];
-                                        	}
-                                        } catch (ClassCastException e) {
-                                        	// can get here with parameterised types, e.g Input<List<Parameter.Base<T>>>
-                                        	theClass = (Class<?>) ((ParameterizedType)genericTypes2[0]).getRawType();
+                                        Type[] genericTypes2 = pt.getActualTypeArguments();
+                                        Type firstType = genericTypes2[0];
+
+                                        tensorClass = rawTypeCls; // RealScalar
+
+                                        // Resolve theClass safely
+                                        if (firstType instanceof Class<?> cls) {
+                                            theClass = cls;
+                                        } else if (firstType instanceof ParameterizedType pType) {
+                                            theClass = (Class<?>) pType.getRawType();
+                                        } else if (firstType instanceof WildcardType wType) {
+                                            Type[] upperBounds = wType.getUpperBounds();
+                                            if (upperBounds.length > 0 && upperBounds[0] instanceof Class<?> boundCls) {
+                                                theClass = boundCls;
+                                            } else {
+                                                throw new IllegalArgumentException("Unsupported wildcard type: " + firstType);
+                                            }
+                                        } else {
+                                            throw new IllegalArgumentException("Unsupported generic type: " + firstType);
                                         }
                             			return;
                             		}

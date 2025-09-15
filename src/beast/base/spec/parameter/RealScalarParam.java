@@ -156,4 +156,14 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     public Double get() {
         return getValue();
     }
+
+    @Override
+    public Double getLower() {
+        return super.getLower();
+    }
+
+    @Override
+    public Double getUpper() {
+        return super.getUpper();
+    }
 }
