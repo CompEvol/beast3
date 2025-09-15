@@ -41,7 +41,6 @@ public class ScaleOperator extends Operator {
 
     //TODO 1. validate in compile time ?
     // 2. what about if parameter has 0?
-    // 3. how to extend to child class: err "PositiveRealScalarParam, but expected NonNegativeRealScalarParam"
 
 //    public final Input<? extends NonNegativeRealScalarParam> parameterInput = new Input<>(
 //            "parameter", "if specified, this parameter is scaled");
