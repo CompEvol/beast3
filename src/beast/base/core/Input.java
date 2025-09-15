@@ -688,28 +688,18 @@ public class Input<T> {
             return;
         }
 
+        /*
+         * The code to recognize domain attr in XML, for example
+         * <input id="hky.kappa" spec="RealScalarParam" domain="PositiveReal" value="1.0"/>
+         */
         if (Domain.class.isAssignableFrom(theClass)) {
-            switch (stringValue) {
-                case "Real":
-                    value = (T) Real.INSTANCE;
-                    break;
-                case "PositiveReal":
-                    value = (T) PositiveReal.INSTANCE;
-                    break;
-                case "NonNegativeReal":
-                    value = (T) NonNegativeReal.INSTANCE;
-                    break;
-                case "UnitInterval":
-                    value = (T) UnitInterval.INSTANCE;
-                    break;
-
-                    //TODO more
-
-                default:
-                    throw new IllegalArgumentException(stringValue + " is not a supported domain type " + theClass);
-            }
+            value = DomainRegister.fromString(stringValue);
             return;
         }
+
+        /*
+         * Java types
+         */
 
         if (theClass.equals(Integer.class)) {
             value = (T) (Integer) new BigDecimal(stringValue).intValueExact();
