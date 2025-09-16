@@ -27,7 +27,7 @@ public class Int implements Domain<Integer>, Bounded<Integer> {
      */
     @Override
     public boolean isValid(Integer value) {
-        return value != null && Bounded.super.isValid(value);
+        return value != null && Bounded.super.withinBounds(value);
     }
 
     @Override

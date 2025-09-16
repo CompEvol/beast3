@@ -39,53 +39,29 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
         }
         
         // Initialize domain based on type or bounds
-        initializeDomain();
-        
+        domain = (D) domainTypeInput.get();
+
+        // if lower/upper not set, then use Domain range
+        if (lowerValueInput.get() == null) {
+            m_fLower = domain.getLower();
+        }
+        if (upperValueInput.get() == null) {
+            m_fUpper = domain.getUpper();
+        }
+
         // Let parent handle basic initialization
         super.initAndValidate();
         
         // Validate against domain constraints
-        if (!domain.isValid(getValue())) {
+        if (! isValid(getValue())) {
             throw new IllegalArgumentException("Initial value " + getValue() + 
                     " is not valid for domain " + domain.getClass().getName());
         }
     }
-
-    @SuppressWarnings("unchecked")
-    private void initializeDomain() {
-        domain = (D) domainTypeInput.get();
-        // If domain not already set, create based on inputs
-//        if (domain == null) {
-//            String domainType = domainTypeInput.get();
-            // This would require a factory or registry pattern
-            // For illustration, showing the concept:
-//            switch (domainType) {
-//                case "PositiveReal":
-//                    domain = (D) PositiveReal.INSTANCE;
-//                    break;
-//                case "NonNegativeReal":
-//                    domain = (D) NonNegativeReal.INSTANCE;
-//                    break;
-//                case "UnitInterval":
-//                    domain = (D) UnitInterval.INSTANCE;
-//                    break;
-//                default:
-//                    domain = (D) Real.INSTANCE;
-//            }
-            
-            // Override bounds from domain if not explicitly set
-            if (lowerValueInput.get() == null) {
-                m_fLower = domain.getLower();
-            }
-            if (upperValueInput.get() == null) {
-                m_fUpper = domain.getUpper();
-            }
-//        }
-    }
     
     @Override
     public void setValue(Double value) {
-        if (!domain.isValid(value)) {
+        if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value + 
                     " is not valid for domain " + domain.getClass().getName());
         }
@@ -103,7 +79,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     @Override
     public int scale(double scale) {
         Double newValue = getValue() * scale;
-        if (!domain.isValid(newValue)) {
+        if (! isValid(newValue)) {
             throw new IllegalArgumentException("Scaled value " + newValue + 
                     " is not valid for domain " + domain.getClass().getName());
         }
@@ -151,6 +127,8 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     public int getMinorDimension2() {
         return 1;
     }
+
+    // TODO 1. merge Bound and Parameter, 2. Scalar and Parameter
 
     @Override
     public Double get() {

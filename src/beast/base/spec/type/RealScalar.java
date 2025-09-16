@@ -1,9 +1,31 @@
 package beast.base.spec.type;
 
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 
-public interface RealScalar<P extends Real> extends Scalar<P, Double> {
+public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<Double> {
 
     Double get();
 
+    @Override
+    default Double getLower() {
+        D domain = domainType();
+        return domain.getLower();
+    }
+
+    @Override
+    default Double getUpper() {
+        D domain = domainType();
+        return domain.getUpper();
+    }
+
+    @Override
+    default boolean lowerInclusive() {
+        return true;
+    }
+
+    @Override
+    default boolean upperInclusive() {
+        return true;
+    }
 }

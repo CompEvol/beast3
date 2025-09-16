@@ -52,7 +52,7 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
         return new int[]{Math.toIntExact(size())};
     }
 
-    /**
+    /**TODO
      * Validate that this instance satisfies the type constraints.
      *
      * @return true if this instance is valid according to its type constraints, false otherwise

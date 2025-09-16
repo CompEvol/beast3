@@ -14,10 +14,10 @@ public class UnitInterval extends NonNegativeReal{
 
     protected UnitInterval() {}
 
-    @Override
-    public boolean isValid(Double value) {
-        return Real.INSTANCE.isValid(value) && value >= getLower() && value <= getUpper();
-    }
+//    @Override
+//    public boolean isValid(Double value) {
+//        return Real.INSTANCE.withinBounds(value) && value >= getLower() && value <= getUpper();
+//    }
 
     @Override
     public Double getUpper() {

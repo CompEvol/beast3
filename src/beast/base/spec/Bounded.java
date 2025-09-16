@@ -46,7 +46,7 @@ public interface Bounded<T extends Comparable<T>> {
      * @param value the value to validate
      * @return {@code true} if the value is within the range, {@code false} otherwise
      */
-    default boolean isValid(T value) {
+    default boolean withinBounds(T value) {
         boolean lowerCheck = lowerInclusive()
                 ? value.compareTo(getLower()) >= 0
                 : value.compareTo(getLower()) > 0;

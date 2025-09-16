@@ -40,14 +40,14 @@ public abstract class AbstractScaleOp extends Operator {
 //        }
     }
 
-    //TODO use Bounded interface
-    protected boolean outsideBounds(final double value, final RealScalarParam param) {
-        final Double l = param.getLower();
-        final Double h = param.getUpper();
-
-        return (value < l || value > h);
+    //TODO replaced by isValid()
+//    protected boolean outsideBounds(final double value, final RealScalarParam param) {
+//        final Double l = param.getLower();
+//        final Double h = param.getUpper();
+//
+//        return (value < l || value > h);
         //return (l != null && value < l || h != null && value > h);
-    }
+//    }
 
     protected double getScaler() {
         return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));

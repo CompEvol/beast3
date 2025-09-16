@@ -45,7 +45,7 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
         super.initAndValidate();
         
         // Validate against domain constraints
-        if (!domain.isValid(getValue())) {
+        if (!domain.withinBounds(getValue())) {
             throw new IllegalArgumentException("Initial value " + getValue() + 
                     " is not valid for domain " + domain.getClass().getName());
         }

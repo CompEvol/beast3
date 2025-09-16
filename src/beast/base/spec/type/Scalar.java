@@ -11,10 +11,6 @@ public interface Scalar<D extends Domain<T>, T> {
      */
     T get();
 
-//    T getLower();
-//
-//    T getUpper();
-
     /**
      * Get the domain type D.
      *
@@ -51,9 +47,9 @@ public interface Scalar<D extends Domain<T>, T> {
      *
      * @return true if this instance is valid according to its type constraints, false otherwise
      */
-    default boolean isValid() {
+    default boolean isValid(T value) {
         D d = domainType();
-        return d.isValid(get());
+        return d.isValid(value);
     }
 
 }

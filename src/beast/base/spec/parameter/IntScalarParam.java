@@ -43,7 +43,7 @@ public class IntScalarParam<D extends Int> extends IntegerParameter implements I
         super.initAndValidate();
         
         // Validate against domain constraints
-        if (!domain.isValid(getValue())) {
+        if (! isValid(getValue())) {
             throw new IllegalArgumentException("Initial value " + getValue() + 
                     " is not valid for domain " + domain.getClass().getName());
         }
@@ -80,7 +80,7 @@ public class IntScalarParam<D extends Int> extends IntegerParameter implements I
     
     @Override
     public void setValue(Integer value) {
-        if (!domain.isValid(value)) {
+        if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value + 
                     " is not valid for domain " + domain.getClass().getName());
         }

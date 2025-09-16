@@ -29,7 +29,7 @@ public class Real implements Domain<Double>, Bounded<Double> {
     @Override
     public boolean isValid(Double value) {
         // Bound requires Inf
-        return value != null && !Double.isNaN(value) && Bounded.super.isValid(value);
+        return value != null && !Double.isNaN(value) && Bounded.super.withinBounds(value);
     }
 
     @Override
