@@ -19,4 +19,8 @@ public class PositiveInt extends NonNegativeInt {
         return Int.INSTANCE.isValid(value) && value > getLower();
     }
 
+    @Override
+    public boolean lowerInclusive() {
+        return false;
+    }
 }

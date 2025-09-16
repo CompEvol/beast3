@@ -14,8 +14,5 @@ public interface Domain<T> {
 
     Class<T> getTypeClass();
 
-    T getLower();
-
-    T getUpper();
 }
 

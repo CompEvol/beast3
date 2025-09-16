@@ -14,13 +14,14 @@ public class NonNegativeReal extends Real {
 
     protected NonNegativeReal() {}
 
-    @Override
-    public boolean isValid(Double value) {
-        return Real.INSTANCE.isValid(value) && value >= 0.0;
-    }
+//    @Override
+//    public boolean isValid(Double value) {
+//        return Real.INSTANCE.isValid(value) && value >= 0.0;
+//    }
 
     @Override
     public Double getLower() {
         return 0.0;
     }
+
 }

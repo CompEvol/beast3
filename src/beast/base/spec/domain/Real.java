@@ -1,5 +1,7 @@
 package beast.base.spec.domain;
 
+import beast.base.spec.Bounded;
+
 /**
  * Real number type.
  *
@@ -10,15 +12,24 @@ package beast.base.spec.domain;
  * @author PhyloSpec Contributors
  * @since 1.0
  */
-public class Real implements Domain<Double> {
+public class Real implements Domain<Double>, Bounded<Double> {
+
     public static final Real INSTANCE = new Real();
 
     protected Real() {}
 
+    /**
+     * Checks whether a given value is valid {@code Real}
+     * and also lies within the defined bounds.
+     *
+     * @param value the Double value to validate
+     * @return {@code true} if the value is not null or NaN, and also within the range,
+     *         {@code false} otherwise.
+     */
     @Override
     public boolean isValid(Double value) {
         // Bound requires Inf
-        return !Double.isNaN(value); //&& !Double.isInfinite(value);
+        return value != null && !Double.isNaN(value) && Bounded.super.isValid(value);
     }
 
     @Override
@@ -35,4 +46,15 @@ public class Real implements Domain<Double> {
     public Double getUpper() {
         return Double.POSITIVE_INFINITY;
     }
+
+    @Override
+    public boolean lowerInclusive() {
+        return true;
+    }
+
+    @Override
+    public boolean upperInclusive() {
+        return true;
+    }
+
 }
