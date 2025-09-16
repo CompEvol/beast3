@@ -27,17 +27,13 @@ package beast.base.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.Operator;
 import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.parameter.RealScalarParam;
-import beast.base.util.Randomizer;
-
-import java.text.DecimalFormat;
 
 
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
-public class ScaleOperator extends Operator {
+public class ScaleScalarOperator extends AbstractScaleOp {
 
     //TODO 1. validate in compile time ?
     // 2. what about if parameter has 0?
@@ -47,63 +43,22 @@ public class ScaleOperator extends Operator {
     public final Input<RealScalarParam<? extends PositiveReal>> parameterInput = new Input<>(
         "parameter", "if specified, this parameter is scaled");
 
-    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scaling factor: range from 0 to 1. Close to zero is very large jumps, close to 1.0 is very small jumps.", 0.75);
-
-    final public Input<Integer> degreesOfFreedomInput = new Input<>("degreesOfFreedom", "Degrees of freedom used when " +
-            "scaleAllIndependently=false and scaleAll=true to override default in calculation of Hasting ratio. " +
-            "Ignored when less than 1, default 0.", 0);
+    //    final public Input<Integer> degreesOfFreedomInput = new Input<>("degreesOfFreedom", "Degrees of freedom used when " +
+//            "scaleAllIndependently=false and scaleAll=true to override default in calculation of Hasting ratio. " +
+//            "Ignored when less than 1, default 0.", 0);
 //    final public Input<BooleanParameter> indicatorInput = new Input<>("indicator", "indicates which of the dimension " +
 //            "of the parameters can be scaled. Only used when scaleAllIndependently=false and scaleAll=false. If not specified " +
 //            "it is assumed all dimensions are allowed to be scaled.");
 
-    final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
 
-    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0 - 1e-8);
-    final public Input<Double> scaleLowerLimit = new Input<>("lower", "Lower limit of scale factor", 1e-8);
-
-    /**
-     * shadows input *
-     */
-    private double scaleFactor;
-
-    private double upper, lower;
+    //    protected boolean isTreeScaler() {
+//        return m_bIsTreeScaler;
+//    }
 
 
     @Override
     public void initAndValidate() {
-
-        scaleFactor = scaleFactorInput.get();
-//        m_bIsTreeScaler = (treeInput.get() != null);
-        upper = scaleUpperLimit.get();
-        lower = scaleLowerLimit.get();
-
-//        final BooleanParameter indicators = indicatorInput.get();
-//        if (indicators != null) {
-//            if (m_bIsTreeScaler) {
-//                throw new IllegalArgumentException("indicator is specified which has no effect for scaling a tree");
-//            }
-//            final int dataDim = parameterInput.get().getDimension();
-//            final int indsDim = indicators.getDimension();
-//            if (!(indsDim == dataDim || indsDim + 1 == dataDim)) {
-//                throw new IllegalArgumentException("indicator dimension not compatible from parameter dimension");
-//            }
-//        }
-    }
-
-//    protected boolean isTreeScaler() {
-//        return m_bIsTreeScaler;
-//    }
-
-    protected boolean outsideBounds(final double value, final RealScalarParam param) {
-        final Double l = param.getLower();
-        final Double h = param.getUpper();
-
-        return (value < l || value > h);
-        //return (l != null && value < l || h != null && value > h);
-    }
-
-    protected double getScaler() {
-        return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
+        super.initAndValidate();
     }
 
     /**
@@ -140,15 +95,15 @@ public class ScaleOperator extends Operator {
 
             // not a tree scaler, so scale a parameter
 //            final boolean scaleAll = scaleAllInput.get();
-            final int specifiedDoF = degreesOfFreedomInput.get();
+//            final int specifiedDoF = degreesOfFreedomInput.get();
 //            final boolean scaleAllIndependently = scaleAllIndependentlyInput.get();
 
-            // TODO
+            // TODO use Bounded interface to validate
             final RealScalarParam param = (RealScalarParam) InputUtil.get(parameterInput, this);
 
             assert param.getLower() != null && param.getUpper() != null;
 
-            final int dim = param.getDimension();
+//            final int dim = param.getDimension();
 
 //            if (scaleAllIndependently) {
 //                // update all dimensions independently.
@@ -264,47 +219,5 @@ public class ScaleOperator extends Operator {
         }
     }
 
-
-    /**
-     * automatic parameter tuning *
-     */
-    @Override
-    public void optimize(final double logAlpha) {
-        if (optimiseInput.get()) {
-            double delta = calcDelta(logAlpha);
-            delta += Math.log(1.0 / scaleFactor - 1.0);
-            setCoercableParameterValue(1.0 / (Math.exp(delta) + 1.0));
-        }
-    }
-
-    @Override
-    public double getCoercableParameterValue() {
-        return scaleFactor;
-    }
-
-    @Override
-    public void setCoercableParameterValue(final double value) {
-        scaleFactor = Math.max(Math.min(value, upper), lower);
-    }
-
-    @Override
-    public String getPerformanceSuggestion() {
-        final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
-        final double targetProb = getTargetAcceptanceProbability();
-
-        double ratio = prob / targetProb;
-        if (ratio > 2.0) ratio = 2.0;
-        if (ratio < 0.5) ratio = 0.5;
-
-        // new scale factor
-        final double sf = Math.pow(scaleFactor, ratio);
-
-        final DecimalFormat formatter = new DecimalFormat("#.###");
-        if (prob < 0.10) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
-        } else if (prob > 0.40) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
-        } else return "";
-    }
 
 } // class ScaleOperator
