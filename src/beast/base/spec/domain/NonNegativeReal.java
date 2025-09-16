@@ -19,6 +19,11 @@ public class NonNegativeReal extends Real {
 //        return Real.INSTANCE.isValid(value) && value >= 0.0;
 //    }
 
+    /*
+     * To customize how value ranges are validated in isValid(Double value),
+     * override the four bound-related methods in Bounded interface.
+     */
+
     @Override
     public Double getLower() {
         return 0.0;

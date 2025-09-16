@@ -14,10 +14,10 @@ public class PositiveInt extends NonNegativeInt {
 
     protected PositiveInt() {}
 
-    @Override
-    public boolean isValid(Integer value) {
-        return Int.INSTANCE.isValid(value) && value > getLower();
-    }
+//    @Override
+//    public boolean isValid(Integer value) {
+//        return Int.INSTANCE.isValid(value) && value > getLower();
+//    }
 
     @Override
     public boolean lowerInclusive() {
