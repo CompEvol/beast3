@@ -17,4 +17,25 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
 //        return arr;
 //    }
 
+    @Override
+    default Integer getLower() {
+        D domain = domainType();
+        return domain.getLower();
+    }
+
+    @Override
+    default Integer getUpper() {
+        D domain = domainType();
+        return domain.getUpper();
+    }
+
+    @Override
+    default boolean lowerInclusive() {
+        return true;
+    }
+
+    @Override
+    default boolean upperInclusive() {
+        return true;
+    }
 }

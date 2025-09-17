@@ -18,4 +18,25 @@ public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<D
 //        return arr;
 //    }
 
+    @Override
+    default Double getLower() {
+        D domain = domainType();
+        return domain.getLower();
+    }
+
+    @Override
+    default Double getUpper() {
+        D domain = domainType();
+        return domain.getUpper();
+    }
+
+    @Override
+    default boolean lowerInclusive() {
+        return true;
+    }
+
+    @Override
+    default boolean upperInclusive() {
+        return true;
+    }
 }
