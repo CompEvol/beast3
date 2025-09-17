@@ -1,9 +1,10 @@
 package beast.base.spec.type;
 
 
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 
-public interface IntVector<P extends Int> extends Vector<P, Integer> {
+public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<Integer> {
 
     Integer get(int i);
 

@@ -1,8 +1,9 @@
 package beast.base.spec.type;
 
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 
-public interface IntScalar<P extends Int> extends Scalar<P, Integer> {
+public interface IntScalar<P extends Int> extends Scalar<P, Integer>, Bounded<Integer> {
 
     Integer get();
 

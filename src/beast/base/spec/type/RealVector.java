@@ -1,9 +1,10 @@
 package beast.base.spec.type;
 
 
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 
-public interface RealVector<P extends Real> extends Vector<P, Double> {
+public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<Double> {
 
 
     Double get(int i);
