@@ -37,51 +37,29 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
         if (dimensionInput.get() <= 1 || valuesInput.get().size() <= 1) {
             throw new IllegalArgumentException("Vector must have dimension > 1");
         }
-        
+
         // Initialize domain based on type or bounds
-        initializeDomain();
+        domain = (D) domainTypeInput.get();
+
+        // if lower/upper not set, then use Domain range
+        if (lowerValueInput.get() == null)
+            m_fLower = domain.getLower();
+        if (upperValueInput.get() == null)
+            m_fUpper = domain.getUpper();
         
         // Let parent handle basic initialization
         super.initAndValidate();
-        
+
+
+        // TODO static method, e.g. resolveBounds() ?
+        setBounds(Math.max(getLower(), domain.getLower()),
+                Math.min(getUpper(), domain.getUpper()));
+
         // Validate against domain constraints
-        if (!domain.withinBounds(getValue())) {
-            throw new IllegalArgumentException("Initial value " + getValue() + 
+        if (! isValid()) {
+            throw new IllegalArgumentException("Initial value of " + this +
                     " is not valid for domain " + domain.getClass().getName());
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private void initializeDomain() {
-        domain = (D) domainTypeInput.get();
-        // If domain not already set, create based on inputs
-//        if (domain == null) {
-//            String domainType = domainTypeInput.get();
-//
-//            // This would require a factory or registry pattern
-//            // For illustration, showing the concept:
-//            switch (domainType) {
-//                case "PositiveReal":
-//                    domain = (D) PositiveReal.INSTANCE;
-//                    break;
-//                case "NonNegativeReal":
-//                    domain = (D) NonNegativeReal.INSTANCE;
-//                    break;
-//                case "UnitInterval":
-//                    domain = (D) UnitInterval.INSTANCE;
-//                    break;
-//                default:
-//                    domain = (D) Real.INSTANCE;
-//            }
-//
-            // Override bounds from domain if not explicitly set
-            if (lowerValueInput.get() == null) {
-                m_fLower = domain.getLower();
-            }
-            if (upperValueInput.get() == null) {
-                m_fUpper = domain.getUpper();
-            }
-//        }
     }
 
     @Override
@@ -109,5 +87,38 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
     @Override
     public Double get(int i) {
         return getArrayValue(i);
+    }
+
+    //====== bounds ======//
+
+    @Override
+    public Double getLower() {
+        return super.getLower();
+    }
+
+    @Override
+    public void setLower(Double lower) {
+        if (!domain.withinBounds(lower))
+            throw new IllegalArgumentException("Lower bound " + lower +
+                    " is not valid for domain " + domain.getClass().getName());
+        super.setLower(lower);
+    }
+
+    @Override
+    public Double getUpper() {
+        return super.getUpper();
+    }
+
+    @Override
+    public void setUpper(Double upper) {
+        if (!domain.withinBounds(upper))
+            throw new IllegalArgumentException("Upper bound " + upper +
+                    " is not valid for domain " + domain.getClass().getName());
+        super.setUpper(upper);
+    }
+
+    @Override
+    public void setBounds(Double lower, Double upper) {
+        super.setBounds(lower, upper);
     }
 }

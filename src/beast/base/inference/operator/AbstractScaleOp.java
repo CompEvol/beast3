@@ -2,7 +2,6 @@ package beast.base.inference.operator;
 
 import beast.base.core.Input;
 import beast.base.inference.Operator;
-import beast.base.spec.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;

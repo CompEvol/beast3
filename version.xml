@@ -179,8 +179,9 @@
 <!--   in dev   -->
 
                 <provider classname="beast.base.spec.parameter.RealScalarParam"/>
-                <provider classname="beast.base.spec.parameter.NonNegativeRealScalarParam"/>
-                <provider classname="beast.base.spec.parameter.PositiveRealScalarParam"/>
+                <provider classname="beast.base.spec.parameter.SimplexParam"/>
+<!--                <provider classname="beast.base.spec.parameter.NonNegativeRealScalarParam"/>-->
+<!--                <provider classname="beast.base.spec.parameter.PositiveRealScalarParam"/>-->
                 <provider classname="beast.base.spec.parameter.InScalarParam"/>
 
                 <provider classname="beast.base.inference.operator.ScaleScalarOperator"/>

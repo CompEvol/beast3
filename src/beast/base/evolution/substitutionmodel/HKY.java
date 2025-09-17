@@ -68,10 +68,12 @@ public class HKY extends SubstitutionModel.NucleotideBase {
     @Override
     public void initAndValidate() {
         super.initAndValidate();
-        if (kappaInput.get() instanceof RealParameter) {
-        	RealParameter kappa = (RealParameter) kappaInput.get(); 
-            kappa.setBounds(Math.max(0.0, kappa.getLower()), kappa.getUpper());
-        }
+
+        // TODO this should be replaced by Param's validation, if bounds are resolved
+//        if (kappaInput.get() instanceof RealParameter) {
+//        	RealParameter kappa = (RealParameter) kappaInput.get();
+//            kappa.setBounds(Math.max(0.0, kappa.getLower()), kappa.getUpper());
+//        }
 
         nrOfStates = STATE_COUNT;
     }

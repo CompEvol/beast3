@@ -28,11 +28,11 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
      */
     D domainType();
 
-    default long size(){
-        long s=1;
-        for(int d:shape())
-            s*=d;
-        return s;
+    // TODO long size() makes programming difficult
+    default int size(){
+        if (getElements() == null)
+            throw new IllegalArgumentException("Vector does not contain any elements !");
+        return getElements().size();
     }
 
     /**
@@ -49,10 +49,12 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
      * @return one integer for Vector
      */
     default int[] shape(){
-        return new int[]{Math.toIntExact(size())};
+        if (getElements() == null)
+            throw new IllegalArgumentException("Vector does not contain any elements !");
+        return new int[]{getElements().size()};
     }
 
-    /**TODO
+    /**TODO still need isValid(T value) ?
      * Validate that this instance satisfies the type constraints.
      *
      * @return true if this instance is valid according to its type constraints, false otherwise

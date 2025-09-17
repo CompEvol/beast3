@@ -33,6 +33,7 @@ public class RealParameter extends Parameter.Base<Double> {
 
     @Override
     public void initAndValidate() {
+        //TODO duplicate
         if (lowerValueInput.get() != null) {
             m_fLower = lowerValueInput.get();
         } else {

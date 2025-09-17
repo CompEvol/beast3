@@ -42,19 +42,21 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
         domain = (D) domainTypeInput.get();
 
         // if lower/upper not set, then use Domain range
-        if (lowerValueInput.get() == null) {
+        if (lowerValueInput.get() == null)
             m_fLower = domain.getLower();
-        }
-        if (upperValueInput.get() == null) {
+        if (upperValueInput.get() == null)
             m_fUpper = domain.getUpper();
-        }
 
         // Let parent handle basic initialization
         super.initAndValidate();
-        
+
+        // TODO static method, e.g. resolveBounds() ?
+        setBounds(Math.max(getLower(), domain.getLower()),
+                Math.min(getUpper(), domain.getUpper()));
+
         // Validate against domain constraints
         if (! isValid(getValue())) {
-            throw new IllegalArgumentException("Initial value " + getValue() + 
+            throw new IllegalArgumentException("Initial value of " + this +
                     " is not valid for domain " + domain.getClass().getName());
         }
     }
@@ -80,7 +82,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     public int scale(double scale) {
         Double newValue = getValue() * scale;
         if (! isValid(newValue)) {
-            throw new IllegalArgumentException("Scaled value " + newValue + 
+            throw new IllegalArgumentException("Scaled value " + newValue +
                     " is not valid for domain " + domain.getClass().getName());
         }
         return super.scale(scale);
@@ -143,5 +145,26 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     @Override
     public Double getUpper() {
         return super.getUpper();
+    }
+
+    @Override
+    public void setLower(Double lower) {
+        if (!domain.withinBounds(lower))
+            throw new IllegalArgumentException("Lower bound " + lower +
+                    " is not valid for domain " + domain.getClass().getName());
+        super.setLower(lower);
+    }
+
+    @Override
+    public void setUpper(Double upper) {
+        if (!domain.withinBounds(upper))
+            throw new IllegalArgumentException("Upper bound " + upper +
+                    " is not valid for domain " + domain.getClass().getName());
+        super.setUpper(upper);
+    }
+
+    @Override
+    public void setBounds(Double lower, Double upper) {
+        super.setBounds(lower, upper);
     }
 }

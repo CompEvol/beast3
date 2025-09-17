@@ -32,8 +32,8 @@ import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.CalculationNode;
-import beast.base.inference.parameter.RealParameter;
-
+import beast.base.inference.StateNode;
+import beast.base.spec.type.Simplex;
 
 
 // RRB: TODO: make this an interface?
@@ -44,7 +44,10 @@ import beast.base.inference.parameter.RealParameter;
 public class Frequencies extends CalculationNode {
     final public Input<Alignment> dataInput = new Input<>("data", "Sequence data for which frequencies are calculated");
     final public Input<Boolean> estimateInput = new Input<>("estimate", "Whether to estimate the frequencies from data (true=default) or assume a uniform distribution over characters (false)", true);
-    final public Input<RealParameter> frequenciesInput = new Input<>("frequencies", "A set of frequencies specified as space separated values summing to 1", Validate.XOR, dataInput);
+
+    final public Input<Simplex> frequenciesInput = new Input<>(
+            "frequencies", "A set of frequencies specified as space separated values summing to 1",
+            Validate.XOR, dataInput);
 
     /**
      * contains frequency distribution *
@@ -90,10 +93,10 @@ public class Frequencies extends CalculationNode {
         if (frequenciesInput.get() != null) {
 
             // if user specified, parse frequencies from space delimited string
-            freqs = new double[frequenciesInput.get().getDimension()];
+            freqs = new double[frequenciesInput.get().size()];
 
             for (int i = 0; i < freqs.length; i++) {
-                freqs[i] = frequenciesInput.get().getValue(i);
+                freqs[i] = frequenciesInput.get().get(i);
             }
 
 
@@ -166,8 +169,11 @@ public class Frequencies extends CalculationNode {
     @Override
     protected boolean requiresRecalculation() {
         boolean recalculates = false;
-        if (frequenciesInput.get().somethingIsDirty()) {
 
+        //TODO re-engineering ?
+        // if (frequenciesInput.get().somethingIsDirty()) {
+        if (frequenciesInput.get() instanceof StateNode stateNode
+                && stateNode.somethingIsDirty()) {
             needsUpdate = true;
             recalculates = true;
         }
