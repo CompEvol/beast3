@@ -7,24 +7,26 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 
 @Description("Symmetrical model of nucleotide evolution with equal base frequencies." +
         "Rates that are not specified are assumed to be 1.")
 public class SYM extends GeneralSubstitutionModel {
-    final public Input<RealParameter> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
-    final public Input<RealParameter> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
-    final public Input<RealParameter> rateATInput = new Input<>("rateAT", "substitution rate for A to T (default 1)");
-    final public Input<RealParameter> rateCGInput = new Input<>("rateCG", "substitution rate for C to G (default 1)");
-    final public Input<RealParameter> rateCTInput = new Input<>("rateCT", "substitution rate for C to T (default 1)");
-    final public Input<RealParameter> rateGTInput = new Input<>("rateGT", "substitution rate for G to T (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateATInput = new Input<>("rateAT", "substitution rate for A to T (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateCGInput = new Input<>("rateCG", "substitution rate for C to G (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateCTInput = new Input<>("rateCT", "substitution rate for C to T (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateGTInput = new Input<>("rateGT", "substitution rate for G to T (default 1)");
 
-    RealParameter rateAC;
-    RealParameter rateAG;
-    RealParameter rateAT;
-    RealParameter rateCG;
-    RealParameter rateCT;
-    RealParameter rateGT;
+    RealScalar<PositiveReal> rateAC;
+    RealScalar<PositiveReal> rateAG;
+    RealScalar<PositiveReal> rateAT;
+    RealScalar<PositiveReal> rateCG;
+    RealScalar<PositiveReal> rateCT;
+    RealScalar<PositiveReal> rateGT;
 
     // For hardcoding equal base frequencies
     //double[] frequencies;
@@ -82,30 +84,30 @@ public class SYM extends GeneralSubstitutionModel {
         rateGT = getParameter(rateGTInput);
     }
 
-    private RealParameter getParameter(Input<RealParameter> parameterInput) {
+    private RealScalar<PositiveReal> getParameter(Input<RealScalar<PositiveReal>> parameterInput) {
         if (parameterInput.get() != null) {
             return parameterInput.get();
         }
-        return new RealParameter("1.0");
+        return new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);
     }
 
     @Override
     public void setupRelativeRates() {
-        relativeRates[0] = rateAC.getValue(); // A->C
-        relativeRates[1] = rateAG.getValue(); // A->G
-        relativeRates[2] = rateAT.getValue(); // A->T
+        relativeRates[0] = rateAC.get(); // A->C
+        relativeRates[1] = rateAG.get(); // A->G
+        relativeRates[2] = rateAT.get(); // A->T
 
-        relativeRates[3] = rateAC.getValue(); // C->A
-        relativeRates[4] = rateCG.getValue(); // C->G
-        relativeRates[5] = rateCT.getValue(); // C->T
+        relativeRates[3] = rateAC.get(); // C->A
+        relativeRates[4] = rateCG.get(); // C->G
+        relativeRates[5] = rateCT.get(); // C->T
 
-        relativeRates[6] = rateAG.getValue(); // G->A
-        relativeRates[7] = rateCG.getValue(); // G->C
-        relativeRates[8] = rateGT.getValue(); // G->T
+        relativeRates[6] = rateAG.get(); // G->A
+        relativeRates[7] = rateCG.get(); // G->C
+        relativeRates[8] = rateGT.get(); // G->T
 
-        relativeRates[9] = rateAT.getValue(); // T->A
-        relativeRates[10] = rateCT.getValue(); //T->C
-        relativeRates[11] = rateGT.getValue(); //T->G
+        relativeRates[9] = rateAT.get(); // T->A
+        relativeRates[10] = rateCT.get(); //T->C
+        relativeRates[11] = rateGT.get(); //T->G
     }
 
     @Override

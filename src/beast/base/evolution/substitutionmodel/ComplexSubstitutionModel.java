@@ -60,8 +60,8 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
 		}
 
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[ratesInput.get().size()];
+        storedRelativeRates = new double[ratesInput.get().size()];
 	}
 	
 	
@@ -172,7 +172,7 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
 
     protected void setupRelativeRates(double[] rates) {
         for (int i = 0; i < rates.length; i++)
-            rates[i] = ratesInput.get().getArrayValue(i);
+            rates[i] = ratesInput.get().get(i);
     }
 
 //    protected void setupQMatrix(double[] rates, double[] pi, double[][] matrix) {

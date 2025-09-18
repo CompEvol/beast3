@@ -1,16 +1,17 @@
 package beast.base.evolution.substitutionmodel;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 
 @Description("Mutation Death substitution model, can be used as Stochastic Dollo model.")
 public class MutationDeathModel extends SubstitutionModel.Base {
 
-    final public Input<Function> delParameter = new Input<>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> delParameter = new Input<>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);
     // mutation rate is already provided in SiteModel, so no need to duplicate it here
     //public Input<RealParameter> mutationRate = new Input<>("mu", "mutation rate, default 1");
     final public Input<SubstitutionModel.Base> CTMCModelInput = new Input<>("substmodel", "CTMC Model for the life states, so should have " +
@@ -50,7 +51,7 @@ public class MutationDeathModel extends SubstitutionModel.Base {
         int i, j;
         // assuming that expected number of changes in CTMCModel is 1 per unit time
         // we are contributing s*deathRate number of changes per unit of time
-        double deathProb = Math.exp(-distance * delParameter.get().getArrayValue());
+        double deathProb = Math.exp(-distance * delParameter.get().get());
         double mutationR = 2;
 //        if (mutationRate.get() != null) {
 //            mutationR *= mutationRate.get().getValue();

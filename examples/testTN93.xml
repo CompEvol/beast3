@@ -54,10 +54,10 @@
                 </taxonset>
             </tree>
             <parameter id="birthRate.t:primate" name="stateNode" value="1.0"/>
-            <parameter id="rateAG.s:primate" lower="0.0" name="stateNode" value="2.0"/>
-            <parameter id="rateCT.s:primate" lower="0.0" name="stateNode" value="2.0"/>
-            <parameter dimension="4" id="freqParameter.s:primate" lower="0.0" name="stateNode" upper="1.0"
-                       value="0.25"/>
+            <stateNode id="rateAG.s:primate" lower="0.0" name="stateNode" value="2.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"/>
+            <stateNode id="rateCT.s:primate" lower="0.0" name="stateNode" value="2.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"/>
+            <stateNode dimension="4" id="freqParameter.s:primate" lower="0.0" spec="beast.base.spec.parameter.SimplexParam" upper="1.0"
+                       value="0.25 0.25 0.25 0.25"/>
         </state>
 
         <init estimate="false" id="RandomTree.t:primate" initial="@Tree.t:primate"

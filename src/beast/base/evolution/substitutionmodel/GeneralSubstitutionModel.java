@@ -31,12 +31,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealVector;
 import beast.pkgmgmt.BEASTClassLoader;
 
 
@@ -45,7 +46,7 @@ import beast.pkgmgmt.BEASTClassLoader;
         "than that one of the is equal to one and the others are specified relative to " +
         "this unit rate. Works for any number of states.")
 public class GeneralSubstitutionModel extends SubstitutionModel.Base {
-    final public Input<Function> ratesInput =
+    final public Input<RealVector<PositiveReal>> ratesInput =
             new Input<>("rates", "Rate parameter which defines the transition rate matrix. " +
                     "Only the off-diagonal entries need to be specified (diagonal makes row sum to zero in a " +
                     "rate matrix). Entry i specifies the rate from floor(i/(n-1)) to i%(n-1)+delta where " +
@@ -63,8 +64,8 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
         super.initAndValidate();
         updateMatrix = true;
         nrOfStates = frequencies.getFreqs().length;
-        if (ratesInput.get().getDimension() != nrOfStates * (nrOfStates - 1)) {
-            throw new IllegalArgumentException("Dimension of input 'rates' is " + ratesInput.get().getDimension() + " but a " +
+        if (ratesInput.get().size() != nrOfStates * (nrOfStates - 1)) {
+            throw new IllegalArgumentException("Dimension of input 'rates' is " + ratesInput.get().size() + " but a " +
                     "rate matrix of dimension " + nrOfStates + "x" + (nrOfStates - 1) + "=" + nrOfStates * (nrOfStates - 1) + " was " +
                     "expected");
         }
@@ -78,8 +79,8 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
         //eigenSystem = new DefaultEigenSystem(m_nStates);
 
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[ratesInput.get().size()];
+        storedRelativeRates = new double[ratesInput.get().size()];
     } // initAndValidate
 
     /**
@@ -189,9 +190,9 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
     }
 
     public void setupRelativeRates() {
-        Function rates = this.ratesInput.get();
-        for (int i = 0; i < rates.getDimension(); i++) {
-            relativeRates[i] = rates.getArrayValue(i);
+    	RealVector<PositiveReal> rates = this.ratesInput.get();
+        for (int i = 0; i < rates.size(); i++) {
+            relativeRates[i] = rates.get(i);
         }
     }
 

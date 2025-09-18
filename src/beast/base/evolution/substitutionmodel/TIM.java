@@ -3,29 +3,30 @@ package beast.base.evolution.substitutionmodel;
 import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 
 @Description("Transition model of nucleotide evolution (variable transition rates, two transversion rates). " +
         "Rates that are not specified are assumed to be 1.")
 public class TIM extends GeneralSubstitutionModel {
 
     // Transition rates
-    final public Input<Function> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
-    final public Input<Function> rateCTInput = new Input<>("rateCT", "substitution rate for C to T (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
+    final public Input<RealScalar<PositiveReal>> rateCTInput = new Input<>("rateCT", "substitution rate for C to T (default 1)");
 
     // Transversion rates
-    final public Input<Function> rateTransversions1Input = new Input<>("rateTransversions1", "substitution rate for A<->C and G<->T");
-    final public Input<Function> rateTransversions2Input = new Input<>("rateTransversions2", "substitution rate for C<->G and A<->T");
+    final public Input<RealScalar<PositiveReal>> rateTransversions1Input = new Input<>("rateTransversions1", "substitution rate for A<->C and G<->T");
+    final public Input<RealScalar<PositiveReal>> rateTransversions2Input = new Input<>("rateTransversions2", "substitution rate for C<->G and A<->T");
 
-    Function rateAG;
-    Function rateCT;
-    Function rateTransversions1;
-    Function rateTransversions2;
+    RealScalar<PositiveReal> rateAG;
+    RealScalar<PositiveReal> rateCT;
+    RealScalar<PositiveReal> rateTransversions1;
+    RealScalar<PositiveReal> rateTransversions2;
 
     public TIM() {
         ratesInput.setRule(Validate.OPTIONAL);
@@ -66,30 +67,30 @@ public class TIM extends GeneralSubstitutionModel {
         rateTransversions2 = getParameter(rateTransversions2Input);
     }
 
-    private Function getParameter(Input<Function> parameterInput) {
+    private RealScalar<PositiveReal> getParameter(Input<RealScalar<PositiveReal>> parameterInput) {
         if (parameterInput.get() != null) {
             return parameterInput.get();
         }
-        return new RealParameter("1.0");
+        return new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);
     }
 
     @Override
     public void setupRelativeRates() {
-        relativeRates[0] = rateTransversions1.getArrayValue(); // A->C
-        relativeRates[1] = rateAG.getArrayValue(); // A->G
-        relativeRates[2] = rateTransversions2.getArrayValue(); // A->T
+        relativeRates[0] = rateTransversions1.get(); // A->C
+        relativeRates[1] = rateAG.get(); // A->G
+        relativeRates[2] = rateTransversions2.get(); // A->T
 
-        relativeRates[3] = rateTransversions1.getArrayValue(); // C->A
-        relativeRates[4] = rateTransversions2.getArrayValue(); // C->G
-        relativeRates[5] = rateCT.getArrayValue(); // C->T
+        relativeRates[3] = rateTransversions1.get(); // C->A
+        relativeRates[4] = rateTransversions2.get(); // C->G
+        relativeRates[5] = rateCT.get(); // C->T
 
-        relativeRates[6] = rateAG.getArrayValue(); // G->A
-        relativeRates[7] = rateTransversions2.getArrayValue(); // G->C
-        relativeRates[8] = rateTransversions1.getArrayValue(); // G->T
+        relativeRates[6] = rateAG.get(); // G->A
+        relativeRates[7] = rateTransversions2.get(); // G->C
+        relativeRates[8] = rateTransversions1.get(); // G->T
 
-        relativeRates[9] = rateTransversions2.getArrayValue(); // T->A
-        relativeRates[10] = rateCT.getArrayValue(); //T->C
-        relativeRates[11] = rateTransversions1.getArrayValue(); //T->G
+        relativeRates[9] = rateTransversions2.get(); // T->A
+        relativeRates[10] = rateCT.get(); //T->C
+        relativeRates[11] = rateTransversions1.get(); //T->G
     }
 
     @Override

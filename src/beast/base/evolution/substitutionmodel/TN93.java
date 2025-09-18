@@ -31,7 +31,8 @@ import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 
 
 /**
@@ -61,8 +62,8 @@ import beast.base.inference.parameter.RealParameter;
 @Citation(value = "Tamura, K., & Nei, M. (1993). Estimation of the number of nucleotide substitutions in the control region " +
         "of mitochondrial DNA in humans and chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.", DOI = "10.1093/oxfordjournals.molbev.a040023", year = 1994, firstAuthorSurname = "tamura")
 public class TN93 extends SubstitutionModel.NucleotideBase {
-    final public Input<RealParameter> kappa1Variable = new Input<>("kappa1", "rate of A<->G transitions", Validate.REQUIRED);
-    final public Input<RealParameter> kappa2Variable = new Input<>("kappa2", "rate of C<->T transitions", Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> kappa1Variable = new Input<>("kappa1", "rate of A<->G transitions", Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> kappa2Variable = new Input<>("kappa2", "rate of C<->T transitions", Validate.REQUIRED);
 
     private boolean updateIntermediates = true;
 
@@ -110,8 +111,8 @@ public class TN93 extends SubstitutionModel.NucleotideBase {
     public void initAndValidate() {
         super.initAndValidate();
 
-        kappa1Variable.get().setBounds(Math.max(0.0, kappa1Variable.get().getLower()), kappa1Variable.get().getUpper());
-        kappa2Variable.get().setBounds(Math.max(0.0, kappa2Variable.get().getLower()), kappa2Variable.get().getUpper());
+        //kappa1Variable.get().setBounds(Math.max(0.0, kappa1Variable.get().getLower()), kappa1Variable.get().getUpper());
+        //kappa2Variable.get().setBounds(Math.max(0.0, kappa2Variable.get().getLower()), kappa2Variable.get().getUpper());
 
         nrOfStates = STATE_COUNT;
 
@@ -122,14 +123,14 @@ public class TN93 extends SubstitutionModel.NucleotideBase {
      * @return kappa1
      */
     public final double getKappa1() {
-        return kappa1Variable.get().getValue(0);
+        return kappa1Variable.get().get();
     }
 
     /**
      * @return kappa2
      */
     public final double getKappa2() {
-        return kappa2Variable.get().getValue(0);
+        return kappa2Variable.get().get();
     }
 
     /**

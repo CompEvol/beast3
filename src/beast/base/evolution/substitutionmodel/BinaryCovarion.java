@@ -3,13 +3,15 @@ package beast.base.evolution.substitutionmodel;
 import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.TwoStateCovarion;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Simplex;
 
 
 /**
@@ -67,10 +69,10 @@ import beast.base.inference.parameter.RealParameter;
  */
 @Description("Covarion model for Binary data")
 public class BinaryCovarion extends GeneralSubstitutionModel {
-    final public Input<Function> alphaInput = new Input<>("alpha", "the rate of evolution in slow mode", Validate.REQUIRED);
-    final public Input<Function> switchRateInput = new Input<>("switchRate", "the rate of flipping between slow and fast modes", Validate.REQUIRED);
-    final public Input<Function> vfrequenciesInput = new Input<>("vfrequencies", "the frequencies of the visible states", Validate.REQUIRED);
-    final public Input<Function> hfrequenciesInput = new Input<>("hfrequencies", "the frequencies of the hidden rates");
+    final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha", "the rate of evolution in slow mode", Validate.REQUIRED);
+    final public Input<RealVector<PositiveReal>> switchRateInput = new Input<>("switchRate", "the rate of flipping between slow and fast modes", Validate.REQUIRED);
+    final public Input<Simplex> vfrequenciesInput = new Input<>("vfrequencies", "the frequencies of the visible states", Validate.REQUIRED);
+    final public Input<Simplex> hfrequenciesInput = new Input<>("hfrequencies", "the frequencies of the hidden rates");
 
     public enum MODE {BEAST, REVERSIBLE, TUFFLEYSTEEL};
 	final public Input<MODE> modeInput = new Input<>("mode","one of BEAST, REVERSIBLE, TUFFLESTEEL "
@@ -78,10 +80,10 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
 			+ "REVERSIBLE = like BEAST 1 implementation, but using frequencies to make it reversible "
 			+ "TUFFLEYSTEEL = Tuffley & Steel (1996) impementation (no rates for ", MODE.BEAST,MODE.values());
 
-    private Function alpha;
-    private Function switchRate;
-    private Function visibleFrequencies;
-    private Function hiddenFrequencies;
+    private RealScalar<PositiveReal> alpha;
+    private RealVector<PositiveReal> switchRate;
+    private Simplex visibleFrequencies;
+    private Simplex hiddenFrequencies;
 
     protected double[][] unnormalizedQ;
     protected double[][] storedUnnormalizedQ;
@@ -103,25 +105,25 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
 
         
         if (mode.equals(MODE.BEAST) || mode.equals(MODE.REVERSIBLE)) {
-        	if (switchRate.getDimension() != 1) {
+        	if (switchRate.size() != 1) {
         		throw new IllegalArgumentException("switchRate should have dimension 1");
         	}
         } else {
-        	if (switchRate.getDimension() != 2) {
+        	if (switchRate.size() != 2) {
         		throw new IllegalArgumentException("switchRate should have dimension 2");
         	}
         }
-        if (alpha.getDimension() != 1) {
-            throw new IllegalArgumentException("alpha should have dimension 1");
-        }
-        if (visibleFrequencies.getDimension() != 2) {
+//        if (alpha.getDimension() != 1) {
+//            throw new IllegalArgumentException("alpha should have dimension 1");
+//        }
+        if (visibleFrequencies.size() != 2) {
             throw new IllegalArgumentException("frequencies should have dimension 2");
         }
         if (mode.equals(MODE.BEAST) || mode.equals(MODE.REVERSIBLE)) {
         	if (hfrequenciesInput.get() == null) {
         		throw new IllegalArgumentException("hiddenFrequenciesshould should be specified");
         	}
-            if (hiddenFrequencies.getDimension() != 2) {
+            if (hiddenFrequencies.size() != 2) {
                 throw new IllegalArgumentException("hiddenFrequenciesshould have dimension 2");
             }
         } else {
@@ -199,17 +201,17 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
     public double[] getFrequencies() {
         double[] freqs = new double[4];
         if (mode.equals(MODE.BEAST) || mode.equals(MODE.REVERSIBLE)) {
-	        freqs[0] = visibleFrequencies.getArrayValue(0) * hiddenFrequencies.getArrayValue(0);
-	        freqs[1] = visibleFrequencies.getArrayValue(1) * hiddenFrequencies.getArrayValue(0);
-	        freqs[2] = visibleFrequencies.getArrayValue(0) * hiddenFrequencies.getArrayValue(1);
-	        freqs[3] = visibleFrequencies.getArrayValue(1) * hiddenFrequencies.getArrayValue(1);
+	        freqs[0] = visibleFrequencies.get(0) * hiddenFrequencies.get(0);
+	        freqs[1] = visibleFrequencies.get(1) * hiddenFrequencies.get(0);
+	        freqs[2] = visibleFrequencies.get(0) * hiddenFrequencies.get(1);
+	        freqs[3] = visibleFrequencies.get(1) * hiddenFrequencies.get(1);
         } else {
-        	double h0 = switchRate.getArrayValue(1) / (switchRate.getArrayValue(0) + switchRate.getArrayValue(1));
-        	double h1 = switchRate.getArrayValue(0) / (switchRate.getArrayValue(0) + switchRate.getArrayValue(1));
-	        freqs[0] = visibleFrequencies.getArrayValue(0) * h0;
-	        freqs[1] = visibleFrequencies.getArrayValue(1) * h0;
-	        freqs[2] = visibleFrequencies.getArrayValue(0) * h1;
-	        freqs[3] = visibleFrequencies.getArrayValue(1) * h1;
+        	double h0 = switchRate.get(1) / (switchRate.get(0) + switchRate.get(1));
+        	double h1 = switchRate.get(0) / (switchRate.get(0) + switchRate.get(1));
+	        freqs[0] = visibleFrequencies.get(0) * h0;
+	        freqs[1] = visibleFrequencies.get(1) * h0;
+	        freqs[2] = visibleFrequencies.get(0) * h1;
+	        freqs[3] = visibleFrequencies.get(1) * h1;
         }
         return freqs;
     }
@@ -220,12 +222,12 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
         switch (mode) {
         case BEAST: {
 
-            double a = alpha.getArrayValue(0);
-            double s = switchRate.getArrayValue(0);
-            double f0 = hiddenFrequencies.getArrayValue(0);
-            double f1 = hiddenFrequencies.getArrayValue(1);
-            double p0 = visibleFrequencies.getArrayValue(0);
-            double p1 = visibleFrequencies.getArrayValue(1);
+            double a = alpha.get();
+            double s = switchRate.get(0);
+            double f0 = hiddenFrequencies.get(0);
+            double f1 = hiddenFrequencies.get(1);
+            double p0 = visibleFrequencies.get(0);
+            double p1 = visibleFrequencies.get(1);
 
             assert Math.abs(1.0 - f0 - f1) < 1e-8;
             assert Math.abs(1.0 - p0 - p1) < 1e-8;
@@ -249,12 +251,12 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
         break;
         case REVERSIBLE: {
 
-            double a = alpha.getArrayValue(0);
-            double s = switchRate.getArrayValue(0);
-            double f0 = hiddenFrequencies.getArrayValue(0);
-            double f1 = hiddenFrequencies.getArrayValue(1);
-            double p0 = visibleFrequencies.getArrayValue(0);
-            double p1 = visibleFrequencies.getArrayValue(1);
+            double a = alpha.get();
+            double s = switchRate.get(0);
+            double f0 = hiddenFrequencies.get(0);
+            double f1 = hiddenFrequencies.get(1);
+            double p0 = visibleFrequencies.get(0);
+            double p1 = visibleFrequencies.get(1);
 
             assert Math.abs(1.0 - f0 - f1) < 1e-8;
             assert Math.abs(1.0 - p0 - p1) < 1e-8;
@@ -277,11 +279,11 @@ public class BinaryCovarion extends GeneralSubstitutionModel {
         }
     	break;
         case TUFFLEYSTEEL: {
-            double a = alpha.getArrayValue(0);
-            double s1 = switchRate.getArrayValue(0);
-            double s2 = switchRate.getArrayValue(1);
-            double p0 = visibleFrequencies.getArrayValue(0);
-            double p1 = visibleFrequencies.getArrayValue(1);
+            double a = alpha.get();
+            double s1 = switchRate.get(0);
+            double s2 = switchRate.get(1);
+            double p0 = visibleFrequencies.get(0);
+            double p1 = visibleFrequencies.get(1);
 
             assert Math.abs(1.0 - p0 - p1) < 1e-8;
 
