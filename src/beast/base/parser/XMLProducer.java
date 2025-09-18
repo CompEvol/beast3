@@ -49,6 +49,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import beast.base.spec.domain.Domain;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -1137,7 +1138,12 @@ public class XMLProducer extends XMLParser {
                     }
             	}
                 return;
-            } else {
+			} else if (value instanceof Domain<?> domain) {
+
+				if (isShort)
+					buf.append(" " + input.getName() + "='" + domain.getClass().getSimpleName() + "'");
+
+			} else {
             	if (BEASTObjectStore.isPrimitive(value)) {             	
 	            	if (!value.equals(input.defaultValue)) {
 	                    // primitive type
