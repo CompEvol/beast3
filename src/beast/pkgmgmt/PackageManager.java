@@ -85,8 +85,9 @@ public class PackageManager {
     public final static String BEAST_APP_PACKAGE_NAME = "BEAST.app";
 
     public final static String PACKAGES_XML = "https://raw.githubusercontent.com/CompEvol/CBAN/master/packages" + 
-    		BEASTVersion.INSTANCE.getMajorVersion() +".xml";
-    public final static String PACKAGES_XML_BACKUP = "https://bitbucket.org/rrb/cbanclone/raw/master/packages2.7.xml";
+    		BEASTVersion.INSTANCE.getMajorVersion() + ".xml";
+    public final static String PACKAGES_XML_BACKUP = "https://bitbucket.org/rrb/cbanclone/raw/master/packages" +
+    		BEASTVersion.INSTANCE.getMajorVersion() + ".xml";
 
     private final static Set<String> RECOMMENDED_PACKAGES = new HashSet<>(Arrays.asList("ORC", "starbeast3", "CCD"));
 

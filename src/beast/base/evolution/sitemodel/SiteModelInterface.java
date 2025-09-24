@@ -179,12 +179,14 @@ public interface SiteModelInterface {
          * add item to the list *
          * @param stateNode
          */
-        public void addCondition(final Input<? extends StateNode> stateNode) {
-            if (stateNode.get() == null) return;
+        public void addCondition(final Input<?> stateNodeInput) {
+            if (stateNodeInput.get() == null) return;
 
             if (conditions == null) conditions = new ArrayList<>();
 
-            conditions.add(stateNode.get().getID());
+            if (stateNodeInput.get() instanceof StateNode) {
+            	conditions.add(((StateNode)stateNodeInput.get()).getID());
+            }
         }
 
         @Override

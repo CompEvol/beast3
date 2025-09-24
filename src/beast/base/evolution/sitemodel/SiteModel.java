@@ -42,6 +42,11 @@ import beast.base.evolution.tree.Node;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.Scalar;
 
 
 
@@ -57,31 +62,31 @@ import beast.base.inference.util.InputUtil;
 public class SiteModel extends SiteModelInterface.Base {
 
 
-    final public Input<RealParameter> muParameterInput = new Input<>("mutationRate", "mutation rate (defaults to 1.0)");
+    final public Input<RealScalar<PositiveReal>> muParameterInput = new Input<>("mutationRate", "mutation rate (defaults to 1.0)");
     final public Input<Integer> gammaCategoryCount =
             new Input<>("gammaCategoryCount", "gamma category count (default=zero for no gamma)", 0);
-    final public Input<RealParameter> shapeParameterInput =
+    final public Input<RealScalar<PositiveReal>> shapeParameterInput =
             new Input<>("shape", "shape parameter of gamma distribution. Ignored if gammaCategoryCount 1 or less");
-    final public Input<RealParameter> invarParameterInput =
+    final public Input<RealScalar<NonNegativeReal>> invarParameterInput =
             new Input<>("proportionInvariant", "proportion of sites that is invariant: should be between 0 (default) and 1");
     //public Input<Boolean> useBeast1StyleGammaInput = new Input<>("useBeast1Gamma", "use BEAST1 style gamma categories -- for backward compatibility testing", false);
 
-    protected RealParameter muParameter;
-    protected RealParameter shapeParameter;
-    protected RealParameter invarParameter;
+    protected RealScalar<PositiveReal> muParameter;
+    protected RealScalar<PositiveReal> shapeParameter;
+    protected RealScalar<NonNegativeReal> invarParameter;
     protected boolean useBeast1StyleGamma;
     
     @Override
     public void initAndValidate() {
     	useBeast1StyleGamma = true; //useBeast1StyleGammaInput.get();
-        muParameter = muParameterInput.get();
+        muParameter = null;//muParameterInput.get();
         if (muParameter == null) {
-            muParameter = new RealParameter("1.0");
+            muParameter = new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);
         }
-        shapeParameter = shapeParameterInput.get();
-        invarParameter = invarParameterInput.get();
+        shapeParameter = new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);//shapeParameterInput.get();
+        invarParameter = null;// invarParameterInput.get();
         if (invarParameter == null) {
-            invarParameter = new RealParameter("0.0");
+            invarParameter = new RealScalarParam<NonNegativeReal>(0.0, NonNegativeReal.INSTANCE);
         }
         if (invarParameter instanceof RealParameter) {
         	RealParameter invar = (RealParameter) invarParameter;
@@ -105,7 +110,7 @@ public class SiteModel extends SiteModelInterface.Base {
         }
 
 
-        if (/*invarParameter != null && */(invarParameter.getArrayValue() < 0 || invarParameter.getArrayValue() > 1)) {
+        if (/*invarParameter != null && */(invarParameter.get() < 0 || invarParameter.get() > 1)) {
             throw new IllegalArgumentException("proportion invariant should be between 0 and 1");
         }
         refresh();
@@ -140,8 +145,8 @@ public class SiteModel extends SiteModelInterface.Base {
             categoryCount = 1;
         }
 
-        if (/*invarParameter != null && */invarParameter.getArrayValue() > 0) {
-            if (invarParameter.getArrayValue() >= 1.0) {
+        if (/*invarParameter != null && */invarParameter.get() > 0) {
+            if (invarParameter.get() >= 1.0) {
             	throw new RuntimeException("Wrong value for parameter " + ((BEASTInterface)invarParameter).getID() +
             			". Proportion invariant should be in bewteen 0 and 1 (exclusive)");
             }
@@ -186,7 +191,7 @@ public class SiteModel extends SiteModelInterface.Base {
 
         //final double mu = (muParameter != null) ? muParameter.getValue() : 1.0;
 
-        return categoryRates[category] * muParameter.getArrayValue();
+        return categoryRates[category] * muParameter.get();
     }
 
 
@@ -204,7 +209,7 @@ public class SiteModel extends SiteModelInterface.Base {
             }
         }
 
-        final double mu = muParameter.getArrayValue();//(muParameter != null) ? muParameter.getValue() : 1.0;
+        final double mu = muParameter.get();//(muParameter != null) ? muParameter.getValue() : 1.0;
 
         final double[] rates = new double[categoryRates.length];
         for (int i = 0; i < rates.length; i++) {
@@ -266,12 +271,12 @@ public class SiteModel extends SiteModelInterface.Base {
         double propVariable = 1.0;
         int cat = 0;
 
-        if (/*invarParameter != null && */invarParameter.getArrayValue() > 0) {
+        if (/*invarParameter != null && */invarParameter.get() > 0) {
             if (hasPropInvariantCategory) {
                 categoryRates[0] = 0.0;
-                categoryProportions[0] = invarParameter.getArrayValue();
+                categoryProportions[0] = invarParameter.get();
             }
-            propVariable = 1.0 - invarParameter.getArrayValue();
+            propVariable = 1.0 - invarParameter.get();
             if (hasPropInvariantCategory) {
                 cat = 1;
             }
@@ -279,7 +284,7 @@ public class SiteModel extends SiteModelInterface.Base {
 
         if (shapeParameter != null) {
 
-            final double a = shapeParameter.getArrayValue();
+            final double a = shapeParameter.get();
             double mean = 0.0;
             final int gammaCatCount = categoryCount - cat;
 
@@ -629,7 +634,7 @@ public class SiteModel extends SiteModelInterface.Base {
         //if (invarParameter == null) {
         //	return 0;
         //}
-        return invarParameter.getArrayValue();
+        return invarParameter.get();
     }
 
 } // class SiteModel

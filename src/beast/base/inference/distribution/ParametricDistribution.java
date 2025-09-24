@@ -33,6 +33,8 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.CalculationNode;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
 
 /**
@@ -67,6 +69,23 @@ public abstract class ParametricDistribution extends CalculationNode implements 
         return logP;
     }
 
+    public double calcLogP(final RealScalar<?> fun) {
+        final double offset = offsetInput.get();
+        double logP = 0;
+        final double x = fun.get();
+        logP += logDensity(x, offset);
+        return logP;
+    }
+
+    public double calcLogP(final RealVector<?> fun) {
+        final double offset = offsetInput.get();
+        double logP = 0;
+        for (int i = 0; i < fun.size(); i++) {
+            final double x = fun.get(i);
+            logP += logDensity(x, offset);
+        }
+        return logP;
+    }
     /*
      * This implementation is only suitable for univariate distributions.
      * Must be overwritten for multivariate ones.
