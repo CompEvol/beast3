@@ -28,4 +28,11 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
     default boolean upperInclusive() {
         return true;
     }
+
+    @Override
+    default boolean isValid(Double value) {
+        // 1st check domain constraints, 2nd check if value is in the real scalar range
+        // Note: these bounds can be the subset of domain bounds.
+        return Scalar.super.isValid(value) && withinBounds(value);
+    }
 }

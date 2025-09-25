@@ -2,7 +2,7 @@ package beast.base.spec.type;
 
 import beast.base.spec.domain.Domain;
 
-public interface Scalar<D extends Domain<T>, T> {
+public interface Scalar<D extends Domain<T>, T> extends Tensor<D, T> {
 
     /**
      * Get a single value.
@@ -11,20 +11,10 @@ public interface Scalar<D extends Domain<T>, T> {
      */
     T get();
 
-    /**
-     * Get the domain type D.
-     *
-     * @return the domain type, e.g. Real, Int, ...
-     */
-    D domainType();
-
-    default long size(){
-        long s=1;
-        for(int d:shape())
-            s*=d;
-        return s;
+    default T get(int... idx) {
+        return get();
     }
-    
+
     // rank() == 0 but size == 1
 
     /**
@@ -43,9 +33,9 @@ public interface Scalar<D extends Domain<T>, T> {
     default int[] shape(){ return new int[]{}; }
 
     /**
-     * Validate that this instance satisfies the type constraints.
+     * Validate that this instance satisfies the domain constraints.
      *
-     * @return true if this instance is valid according to its type constraints, false otherwise
+     * @return true if this instance is valid according to its domain constraints, false otherwise
      */
     default boolean isValid(T value) {
         D d = domainType();

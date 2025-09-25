@@ -25,15 +25,20 @@ public interface Simplex extends RealVector<UnitInterval> {
     }
 
     default boolean isValid() {
+        for (int i = 0; i < size(); i++)
+            if ( !isValid(get(i)))
+                return false;
+
         double s = sum();
         if (Math.abs(s - 1.0) > 1e-10)
             return false;
 
-        for(int i = 0; i < size(); i++) {
-            double v = get(i);
-            if (v < 0 || v > 1)
-                return false;
-        }
+        // this is duplicated with Domain validation
+//        for(int i = 0; i < size(); i++) {
+//            double v = get(i);
+//            if (v < 0 || v > 1)
+//                return false;
+//        }
         return true;
     }
 

@@ -38,4 +38,19 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
     default boolean upperInclusive() {
         return true;
     }
+
+    @Override
+    default boolean isValid() {
+        for (int i = 0; i < size(); i++)
+            if ( !isValid(get(i)))
+                return false;
+        return true;
+    }
+
+    @Override
+    default boolean isValid(Integer value) {
+        // 1st check domain constraints, 2nd check if value is in the real scalar range
+        // Note: these bounds can be the subset of domain bounds.
+        return Vector.super.isValid(value) && withinBounds(value);
+    }
 }

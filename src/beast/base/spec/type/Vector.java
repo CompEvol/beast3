@@ -4,8 +4,8 @@ import beast.base.spec.domain.Domain;
 
 import java.util.List;
 
-public interface Vector<D extends Domain<T>, T> {//extends List<D> {
-    
+public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
+
     /**
      * Get all elements in the vector.
      *
@@ -16,20 +16,19 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
     /**
      * Get the domain value with the type T.
      *
-     * @param idx  index/indices, depending on the dimension
-     * @return  the domain value with the type T in Java.
+     * @param i index/indices, depending on the dimension
+     * @return the domain value with the type T in Java.
      */
-    T get(int idx);
+    T get(int i);
 
-    /**
-     * Get the domain type D.
-     *
-     * @return the domain type, e.g. Real, Int, ...
-     */
-    D domainType();
+    default T get(int... idx) {
+        if (idx.length != 1)
+            throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);
+        return get(idx[0]);
+    }
 
     // TODO long size() makes programming difficult
-    default int size(){
+    default int size() {
         if (getElements() == null)
             throw new IllegalArgumentException("Vector does not contain any elements !");
         return getElements().size();
@@ -39,32 +38,40 @@ public interface Vector<D extends Domain<T>, T> {//extends List<D> {
      * The order or degree of a tensor.
      * Vector → rank = 1 (needs 1 index),
      *
-     * @return  the number of indices needed to uniquely identify one of its elements.
+     * @return the number of indices needed to uniquely identify one of its elements.
      */
-    default int rank(){ return 1; }
+    default int rank() {
+        return 1;
+    }
 
     /**
      * The size(s) along each dimension.
      *
      * @return one integer for Vector
      */
-    default int[] shape(){
+    default int[] shape() {
         if (getElements() == null)
             throw new IllegalArgumentException("Vector does not contain any elements !");
         return new int[]{getElements().size()};
     }
 
-    /**TODO still need isValid(T value) ?
+    /**
+     * TODO still need isValid(T value) ?
      * Validate that this instance satisfies the type constraints.
      *
      * @return true if this instance is valid according to its type constraints, false otherwise
      */
     default boolean isValid() {
-        D d = domainType();
-        for (int i=0; i<Math.toIntExact(size()); i++)
-            if (!d.isValid(get(i)))
+        for (int i = 0; i < size(); i++)
+            if ( !isValid(get(i)))
                 return false;
         return true;
+    }
+
+    @Override
+    default boolean isValid(T value) {
+        D d = domainType();
+        return d.isValid(value);
     }
 
 }
