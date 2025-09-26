@@ -2,17 +2,16 @@ package beast.base.spec.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.spec.domain.*;
 import beast.base.spec.type.RealScalar;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
 public class RealScalarParam<D extends Real> extends RealParameter implements RealScalar<D> {
-    
+
     // Domain instance to enforce constraints
     protected D domain;
-    
+
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
             "Domain type: Real, PositiveReal, NonNegativeReal, or UnitInterval", 
@@ -41,16 +40,11 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
         // Initialize domain based on type or bounds
         domain = (D) domainTypeInput.get();
 
-        // if lower/upper not set, then use Domain range
-        if (lowerValueInput.get() == null)
-            m_fLower = domain.getLower();
-        if (upperValueInput.get() == null)
-            m_fUpper = domain.getUpper();
-
         // Let parent handle basic initialization
         super.initAndValidate();
 
         // TODO static method, e.g. resolveBounds() ?
+        // adjust bound to the Domain range
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
@@ -93,12 +87,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     public D domainType() {
         return domain;
     }
-    
-    @Override
-    public Double getValue() {
-        return super.getValue();
-    }
-    
+
     // Prevent dimension changes
     @Override
     public void setDimension(int dimension) {
@@ -137,15 +126,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
         return getValue();
     }
 
-    @Override
-    public Double getLower() {
-        return super.getLower();
-    }
-
-    @Override
-    public Double getUpper() {
-        return super.getUpper();
-    }
+    //TODO setValue ?
 
     @Override
     public void setLower(Double lower) {
@@ -163,8 +144,4 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
         super.setUpper(upper);
     }
 
-    @Override
-    public void setBounds(Double lower, Double upper) {
-        super.setBounds(lower, upper);
-    }
 }

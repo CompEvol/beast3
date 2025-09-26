@@ -2,7 +2,6 @@ package beast.base.spec.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.spec.domain.*;
 import beast.base.spec.type.RealVector;
 

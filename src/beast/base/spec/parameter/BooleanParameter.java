@@ -22,22 +22,21 @@
 * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 * Boston, MA  02110-1301  USA
 */
-package beast.base.inference.parameter;
+package beast.base.spec.parameter;
 
-
-import java.io.PrintStream;
 
 import beast.base.core.Description;
 import beast.base.core.Log;
 
+import java.io.PrintStream;
+
 
 /**
- * @author Joseph Heled
+ *
  */
-@Deprecated
 @Description("A Boolean-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
-public class BooleanParameter extends Parameter.Base<java.lang.Boolean> {
+public class BooleanParameter extends Parameter<Boolean> {
     public BooleanParameter() {
         m_fUpper = true;
     }

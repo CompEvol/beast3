@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Deprecated
 public interface Parameter<T> extends Function {
 
     T getValue(int i);
