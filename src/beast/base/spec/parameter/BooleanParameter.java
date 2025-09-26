@@ -37,33 +37,28 @@ import java.io.PrintStream;
 @Description("A Boolean-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
 public class BooleanParameter extends Parameter<Boolean> {
-    public BooleanParameter() {
-        m_fUpper = true;
-    }
-
-    public BooleanParameter(Boolean[] values) {
-        super(values);
-        m_fUpper = true;
-    }
-
-    /**
-     * Constructor used by Input.setValue(String) *
-     */
-    public BooleanParameter(String value) {
-        init(value, 1);
-        m_fUpper = true;
-    }
-
-
-    @Override
-    Boolean getMax() {
-        return true;
-    }
+//    public BooleanParameter() {
+//        m_fUpper = true;
+//    }
+//
+//    public BooleanParameter(Boolean[] values) {
+//        super(values);
+//        m_fUpper = true;
+//    }
+//
+//    /**
+//     * Constructor used by Input.setValue(String) *
+//     */
+//    public BooleanParameter(String value) {
+//        init(value, 1);
+//        m_fUpper = true;
+//    }
 
     @Override
-    Boolean getMin() {
-        return false;
+    public Class<Boolean> getPrimitiveClass() {
+        return Boolean.class;
     }
+
 
     /** Valuable implementation follows **/
     /**

@@ -9,6 +9,7 @@ import org.w3c.dom.Node;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,7 +27,7 @@ public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
      */
     final public Input<List<T>> valuesInput = new Input<>("value",
             "start value(s) for this parameter. If multiple values are specified, they should be separated by whitespace.",
-            new ArrayList<>(), Input.Validate.REQUIRED, getGenericClass());//, getMax().getClass());
+            new ArrayList<>(), Input.Validate.REQUIRED, getPrimitiveClass());//, getMax().getClass());
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
     public final Input<Integer> minorDimensionInput = new Input<>("minordimension",
@@ -91,7 +92,7 @@ public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
     public void initAndValidate() {
 //        T[] valuesString = valuesInput.get().toArray((T[]) Array.newInstance(getMax().getClass(), 0));
 
-        Class<T> genericClass = getGenericClass();
+        Class<T> genericClass = getPrimitiveClass();
         T[] valuesString = valuesInput.get().toArray(size -> (T[]) Array.newInstance(genericClass, size));
 
         int dimension = Math.max(dimensionInput.get(), valuesString.length);
@@ -136,12 +137,8 @@ public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public Class<T> getGenericClass() {
-        ParameterizedType superClass = (ParameterizedType) getClass().getGenericSuperclass();
-        return (Class<T>) superClass.getActualTypeArguments()[0];
-    }
 
+    public abstract Class<T> getPrimitiveClass();
 
     private void initKeys(List<String> keys) {
         this.keys = keys;
@@ -268,7 +265,7 @@ public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
 
         if (getDimension() != dimension) {
 //            final T[] values2 = (T[]) Array.newInstance(getMax().getClass(), dimension);
-            Class<T> genericClass = getGenericClass();
+            Class<T> genericClass = getPrimitiveClass();
             final T[] values2 = (T[]) Array.newInstance(genericClass, dimension);
 
             for (int i = 0; i < dimension; i++) {
@@ -619,7 +616,7 @@ public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
     protected void store() {
         if (storedValues.length != values.length) {
 //            storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), values.length);
-            Class<T> genericClass = getGenericClass();
+            Class<T> genericClass = getPrimitiveClass();
             storedValues = (T[]) Array.newInstance(genericClass, values.length);
         }
         System.arraycopy(values, 0, storedValues, 0, values.length);

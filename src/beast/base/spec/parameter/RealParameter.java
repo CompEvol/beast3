@@ -58,6 +58,12 @@ public class RealParameter extends Parameter<Double> implements Bounded<Double> 
             }
         }
     }
+
+    @Override
+    public Class<Double> getPrimitiveClass() {
+        return Double.class;
+    }
+
 //    @Override
 //    Double getMax() {
 //        return Double.POSITIVE_INFINITY;

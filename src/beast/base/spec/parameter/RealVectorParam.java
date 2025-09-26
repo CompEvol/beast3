@@ -39,18 +39,13 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
 
         // Initialize domain based on type or bounds
         domain = (D) domainTypeInput.get();
-
-        // if lower/upper not set, then use Domain range
-        if (lowerValueInput.get() == null)
-            m_fLower = domain.getLower();
-        if (upperValueInput.get() == null)
-            m_fUpper = domain.getUpper();
         
         // Let parent handle basic initialization
         super.initAndValidate();
 
 
         // TODO static method, e.g. resolveBounds() ?
+        // adjust bound to the Domain range
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
@@ -91,33 +86,19 @@ public class RealVectorParam<D extends Real> extends RealParameter implements Re
     //====== bounds ======//
 
     @Override
-    public Double getLower() {
-        return super.getLower();
-    }
-
-    @Override
     public void setLower(Double lower) {
-        if (!domain.withinBounds(lower))
+        if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + domain.getClass().getName());
         super.setLower(lower);
     }
 
     @Override
-    public Double getUpper() {
-        return super.getUpper();
-    }
-
-    @Override
     public void setUpper(Double upper) {
-        if (!domain.withinBounds(upper))
+        if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + domain.getClass().getName());
         super.setUpper(upper);
     }
 
-    @Override
-    public void setBounds(Double lower, Double upper) {
-        super.setBounds(lower, upper);
-    }
 }

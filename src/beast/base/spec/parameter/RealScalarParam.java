@@ -54,7 +54,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
                     " is not valid for domain " + domain.getClass().getName());
         }
     }
-    
+
     @Override
     public void setValue(Double value) {
         if (! isValid(value)) {
@@ -65,10 +65,10 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
     }
     
     @Override
-    public void setValue(int param, Double value) {
-        if (param != 0) {
-            throw new IllegalArgumentException("ScalarReal only has index 0");
-        }
+    public void setValue(int i, Double value) {
+        if (i != 0)
+            throw new IllegalArgumentException("RealScalar only has index 0");
+
         setValue(value);
     }
     
@@ -130,7 +130,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
 
     @Override
     public void setLower(Double lower) {
-        if (!domain.withinBounds(lower))
+        if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + domain.getClass().getName());
         super.setLower(lower);
@@ -138,7 +138,7 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
 
     @Override
     public void setUpper(Double upper) {
-        if (!domain.withinBounds(upper))
+        if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + domain.getClass().getName());
         super.setUpper(upper);
