@@ -54,13 +54,13 @@
                 </taxonset>
             </tree>
             <parameter id="birthRate.t:primate" name="stateNode" value="1.0"/>
-            <stateNode id="rateAC.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateAG.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateAT.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateCG.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateGT.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode dimension="4" id="freqParameter.s:primate" lower="0.0" spec="beast.base.spec.parameter.SimplexParam" upper="1.0"
-                       value="0.25 0.25 0.25 0.25"/>
+            <parameter id="rateAC.s:primate" lower="0.0" name="stateNode" value="1.0"/>
+            <parameter id="rateAG.s:primate" lower="0.0" name="stateNode" value="1.0"/>
+            <parameter id="rateAT.s:primate" lower="0.0" name="stateNode" value="1.0"/>
+            <parameter id="rateCG.s:primate" lower="0.0" name="stateNode" value="1.0"/>
+            <parameter id="rateGT.s:primate" lower="0.0" name="stateNode" value="1.0"/>
+            <parameter dimension="4" id="freqParameter.s:primate" lower="0.0" name="stateNode" upper="1.0"
+                       value="0.25"/>
         </state>
 
         <init estimate="false" id="RandomTree.t:primate" initial="@Tree.t:primate"
@@ -123,6 +123,7 @@
                         <substModel id="gtr.s:primate" rateAC="@rateAC.s:primate" rateAG="@rateAG.s:primate"
                                     rateAT="@rateAT.s:primate" rateCG="@rateCG.s:primate" rateGT="@rateGT.s:primate"
                                     spec="GTR">
+                            <parameter estimate="false" id="rateCT.s:primate" lower="0.0" name="rateCT" value="1.0"/>
                             <frequencies frequencies="@freqParameter.s:primate" id="estimatedFreqs.s:primate"
                                          spec="Frequencies"/>
                         </substModel>
@@ -156,19 +157,19 @@
 
         <operator id="WilsonBalding.t:primate" spec="WilsonBalding" tree="@Tree.t:primate" weight="3.0"/>
 
-        <operator id="RateACScaler.s:primate" parameter="@rateAC.s:primate" scaleFactor="0.5" spec="beast.base.inference.operator.ScaleScalarOperator"
+        <operator id="RateACScaler.s:primate" parameter="@rateAC.s:primate" scaleFactor="0.5" spec="ScaleOperator"
                   weight="0.1"/>
 
-        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="beast.base.inference.operator.ScaleScalarOperator"
+        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="ScaleOperator"
                   weight="0.1"/>
 
-        <operator id="RateATScaler.s:primate" parameter="@rateAT.s:primate" scaleFactor="0.5" spec="beast.base.inference.operator.ScaleScalarOperator"
+        <operator id="RateATScaler.s:primate" parameter="@rateAT.s:primate" scaleFactor="0.5" spec="ScaleOperator"
                   weight="0.1"/>
 
-        <operator id="RateCGScaler.s:primate" parameter="@rateCG.s:primate" scaleFactor="0.5" spec="beast.base.inference.operator.ScaleScalarOperator"
+        <operator id="RateCGScaler.s:primate" parameter="@rateCG.s:primate" scaleFactor="0.5" spec="ScaleOperator"
                   weight="0.1"/>
 
-        <operator id="RateGTScaler.s:primate" parameter="@rateGT.s:primate" scaleFactor="0.5" spec="beast.base.inference.operator.ScaleScalarOperator"
+        <operator id="RateGTScaler.s:primate" parameter="@rateGT.s:primate" scaleFactor="0.5" spec="ScaleOperator"
                   weight="0.1"/>
 
         <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="DeltaExchangeOperator" weight="0.1">

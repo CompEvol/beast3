@@ -1,19 +1,21 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 
 @Description("Mutation Death substitution model, can be used as Stochastic Dollo model.")
-public class MutationDeathModel extends SubstitutionModel.Base {
+public class MutationDeathModel extends Base {
 
-    final public Input<Function> delParameter = new Input<>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> delParameter = new Input<>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);
     // mutation rate is already provided in SiteModel, so no need to duplicate it here
     //public Input<RealParameter> mutationRate = new Input<>("mu", "mutation rate, default 1");
-    final public Input<SubstitutionModel.Base> CTMCModelInput = new Input<>("substmodel", "CTMC Model for the life states, so should have " +
+    final public Input<beast.base.spec.evolution.substitutionmodel.Base> CTMCModelInput = new Input<>("substmodel", "CTMC Model for the life states, so should have " +
             "a state-space one less than this model. If not specified, ...");
     // TODO: figure out the end of the last sentence
 
@@ -50,7 +52,7 @@ public class MutationDeathModel extends SubstitutionModel.Base {
         int i, j;
         // assuming that expected number of changes in CTMCModel is 1 per unit time
         // we are contributing s*deathRate number of changes per unit of time
-        double deathProb = Math.exp(-distance * delParameter.get().getArrayValue());
+        double deathProb = Math.exp(-distance * delParameter.get().get());
         double mutationR = 2;
 //        if (mutationRate.get() != null) {
 //            mutationR *= mutationRate.get().getValue();
@@ -60,7 +62,7 @@ public class MutationDeathModel extends SubstitutionModel.Base {
         for (i = 0; i < freqs.length - 1; ++i) {
             mutationR *= freqs[i];
         }
-        SubstitutionModel.Base CTMCModel = CTMCModelInput.get();
+        beast.base.spec.evolution.substitutionmodel.Base CTMCModel = CTMCModelInput.get();
         if (CTMCModel != null) {
             CTMCModel.getTransitionProbabilities(node, startTime, endTime, mutationR * rate, trMatrix);
         } else {
@@ -95,7 +97,7 @@ public class MutationDeathModel extends SubstitutionModel.Base {
     	if (CTMCModelInput.get() == null) {
     		return dataType.getStateCount() == 2;
     	} else {
-    		int states = CTMCModelInput.get().nrOfStates;
+    		int states = CTMCModelInput.get().getStateCount();
     		return dataType.getStateCount() == states + 1;
     	}
     }

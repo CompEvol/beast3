@@ -54,10 +54,10 @@
                 </taxonset>
             </tree>
             <parameter id="birthRate.t:primate" name="stateNode" value="1.0"/>
-            <parameter id="rateAG.s:primate" lower="0.0" name="stateNode" value="2.0"/>
-            <parameter id="rateCT.s:primate" lower="0.0" name="stateNode" value="2.0"/>
-            <parameter dimension="4" id="freqParameter.s:primate" lower="0.0" name="stateNode" upper="1.0"
-                       value="0.25"/>
+            <stateNode id="rateAG.s:primate" lower="0.0" name="stateNode" value="2.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"/>
+            <stateNode id="rateCT.s:primate" lower="0.0" name="stateNode" value="2.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"/>
+            <stateNode dimension="4" id="freqParameter.s:primate" lower="0.0" spec="beast.base.spec.parameter.SimplexParam" upper="1.0"
+                       value="0.25 0.25 0.25 0.25"/>
         </state>
 
         <init estimate="false" id="RandomTree.t:primate" initial="@Tree.t:primate"
@@ -77,15 +77,15 @@
             </distribution>
             <distribution id="likelihood" spec="CompoundDistribution">
                 <distribution data="@coding" id="treeLikelihood.coding" spec="TreeLikelihood" tree="@Tree.t:primate">
-                    <siteModel id="SiteModel.s:primate" spec="SiteModel">
-                        <parameter estimate="false" id="mutationRate.s:primate" name="mutationRate" value="1.0"/>
-                        <parameter estimate="false" id="gammaShape.s:primate" name="shape" value="1.0"/>
-                        <parameter estimate="false" id="proportionInvariant.s:primate" lower="0.0"
+                    <siteModel id="SiteModel.s:primate" spec="beast.base.spec.evolution.sitemodel.SiteModel">
+                        <mutationRate spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="mutationRate.s:primate" name="mutationRate" value="1.0"/>
+                        <shape spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="gammaShape.s:primate" name="shape" value="1.0"/>
+                        <proportionInvariant spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="proportionInvariant.s:primate" lower="0.0"
                                    name="proportionInvariant" upper="1.0" value="0.0"/>
                         <substModel id="tn93.s:primate" kappa1="@rateAG.s:primate" kappa2="@rateCT.s:primate"
-                                    spec="TN93">
+                                    spec="beast.base.spec.evolution.substitutionmodel.TN93">
                             <frequencies frequencies="@freqParameter.s:primate" id="estimatedFreqs.s:primate"
-                                         spec="Frequencies"/>
+                                         spec="beast.base.spec.evolution.substitutionmodel.Frequencies"/>
                         </substModel>
                     </siteModel>
                     <branchRateModel id="StrictClock.c:primate" spec="beast.base.evolution.branchratemodel.StrictClockModel">
@@ -117,13 +117,13 @@
 
         <operator id="WilsonBalding.t:primate" spec="WilsonBalding" tree="@Tree.t:primate" weight="3.0"/>
 
-        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="ScaleOperator"
+        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleScalarOperator"
                   weight="0.1"/>
 
-        <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" spec="ScaleOperator"
+        <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleScalarOperator"
                   weight="0.1"/>
 
-        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="DeltaExchangeOperator" weight="0.1">
+        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.DeltaExchangeOperator" weight="0.1">
             <parameter idref="freqParameter.s:primate"/>
         </operator>
 

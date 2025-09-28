@@ -22,7 +22,7 @@
 * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 * Boston, MA  02110-1301  USA
 */
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import java.util.Arrays;
 
@@ -32,22 +32,22 @@ import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.CalculationNode;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.inference.StateNode;
+import beast.base.spec.type.Simplex;
 
 
-
+// RRB: TODO: make this an interface?
 
 @Description("Represents character frequencies typically used as distribution of the root of the tree. " +
         "Calculates empirical frequencies of characters in sequence data, or simply assumes a uniform " +
         "distribution if the estimate flag is set to false.")
-/**
- * @deprecated use beast.base.spec.evolution.substitutionmodel.Frequencies instead
- */
-@Deprecated(since="v3.0.0", forRemoval = true)
 public class Frequencies extends CalculationNode {
     final public Input<Alignment> dataInput = new Input<>("data", "Sequence data for which frequencies are calculated");
     final public Input<Boolean> estimateInput = new Input<>("estimate", "Whether to estimate the frequencies from data (true=default) or assume a uniform distribution over characters (false)", true);
-    final public Input<RealParameter> frequenciesInput = new Input<>("frequencies", "A set of frequencies specified as space separated values summing to 1", Validate.XOR, dataInput);
+
+    final public Input<Simplex> frequenciesInput = new Input<>(
+            "frequencies", "A set of frequencies specified as space separated values summing to 1",
+            Validate.XOR, dataInput);
 
     /**
      * contains frequency distribution *
@@ -93,10 +93,10 @@ public class Frequencies extends CalculationNode {
         if (frequenciesInput.get() != null) {
 
             // if user specified, parse frequencies from space delimited string
-            freqs = new double[frequenciesInput.get().getDimension()];
+            freqs = new double[frequenciesInput.get().size()];
 
             for (int i = 0; i < freqs.length; i++) {
-                freqs[i] = frequenciesInput.get().getValue(i);
+                freqs[i] = frequenciesInput.get().get(i);
             }
 
 
@@ -169,8 +169,11 @@ public class Frequencies extends CalculationNode {
     @Override
     protected boolean requiresRecalculation() {
         boolean recalculates = false;
-        if (frequenciesInput.get().somethingIsDirty()) {
 
+        //TODO re-engineering ?
+        // if (frequenciesInput.get().somethingIsDirty()) {
+        if (frequenciesInput.get() instanceof StateNode stateNode
+                && stateNode.somethingIsDirty()) {
             needsUpdate = true;
             recalculates = true;
         }

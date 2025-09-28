@@ -1,5 +1,5 @@
 <beast version='2.0'
-       namespace='beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+       namespace='beast.base.evolution.alignment:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.spec.inference.operator:beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:beast.base.evolution.likelihood'>
 
 
     <!-- The sequence alignment                                                  -->
@@ -26,16 +26,28 @@
         </sequence>
     </data>
 
+
+    <input id="hky.kappa" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"
+           value="1.0"/>
+    <!--    value="0.0"/>-->
+    <!--    value="-1.0"/>-->
+<!--    <parameter id="hky.kappa" spec="parameter.RealParameter" value="1.0" lower="0.0"/>-->
+
+    <input id="freqs" spec="beast.base.spec.parameter.SimplexParam" dimension="4"
+           value="0.25 0.25 0.25 0.25"/>
+<!--    value="0.25 0.25 0.25 2"/>-->
+
     <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
     <input spec='HKY' id='hky'>
         <kappa idref='hky.kappa'/>
-        <frequencies id='freqs' spec='Frequencies'>
-            <data idref='alignment'/>
+        <frequencies id='hky.freqs' spec='Frequencies'>
+            <frequencies idref='freqs'/>
+<!--            <data idref='alignment'/>-->
         </frequencies>
     </input>
 
     <!-- site model                                                              -->
-    <input spec='SiteModel' id="siteModel" gammaCategoryCount='1'>
+    <input spec='beast.base.spec.evolution.sitemodel.SiteModel' id="siteModel" gammaCategoryCount='1'>
         <!--
             <parameter name='shape' id='shape' value='0.5'/>
             <parameter name='proportionInvariant' id='propInvar' value='0.2'/>
@@ -48,8 +60,6 @@
         <tree idref="tree"/>
         <siteModel idref="siteModel"/>
     </input>
-
-    <parameter id="hky.kappa" value="1.0" lower="0.0"/>
 
     <tree id='tree'/>
 
@@ -73,11 +83,14 @@
             <distribution id='likelihood' idref="treeLikelihood"/>
         </distribution>
 
-        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
+<!-- beast.base.inference.operator.ScaleOperator is strong typing op  -->
+        <operator id='kappaScaler' spec='ScaleScalarOperator'
+                  scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
+<!--        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
+
+
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
-
         <operator id='subtreeSlide' spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>
-
         <operator id='uniform' spec='Uniform' weight="10" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="1" tree="@tree"/>
         <operator id='wide' spec='Exchange' isNarrow='false' weight="1" tree="@tree"/>
@@ -98,6 +111,7 @@
             <ESS spec='ESS' name='log' arg="@likelihood"/>
             <log idref='hky.kappa'/>
             <ESS spec='ESS' name='log' arg="@hky.kappa"/>
+            <log idref='freqs'/>
         </logger>
     </run>
 

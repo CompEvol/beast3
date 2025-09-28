@@ -77,12 +77,12 @@ public class SiteModel extends SiteModelInterface.Base {
     @Override
     public void initAndValidate() {
     	useBeast1StyleGamma = true; //useBeast1StyleGammaInput.get();
-        muParameter = null;//muParameterInput.get();
+        muParameter = muParameterInput.get();
         if (muParameter == null) {
             muParameter = new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);
         }
-        shapeParameter = new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);//shapeParameterInput.get();
-        invarParameter = null;// invarParameterInput.get();
+        shapeParameter = shapeParameterInput.get();
+        invarParameter = invarParameterInput.get();
         if (invarParameter == null) {
             invarParameter = new RealScalarParam<NonNegativeReal>(0.0, NonNegativeReal.INSTANCE);
         }

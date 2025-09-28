@@ -22,25 +22,29 @@
 * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 * Boston, MA  02110-1301  USA
 */
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
+
 
 import beast.base.core.Citation;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 
 @Description("HKY85 (Hasegawa, Kishino & Yano, 1985) substitution model of nucleotide evolution.")
 @Citation(value =
         "Hasegawa M, Kishino H, Yano T (1985) Dating the human-ape splitting by a\n"+
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
-public class HKY extends SubstitutionModel.NucleotideBase {
-    final public Input<Function> kappaInput = new Input<>("kappa", "kappa parameter in HKY model", Validate.REQUIRED);
+public class HKY extends NucleotideBase {
+    final public Input<RealScalar<PositiveReal>> kappaInput = new Input<>(
+            "kappa", "kappa parameter in HKY model",
+            Validate.REQUIRED);
 
     /**
      * applies to nucleotides only *
@@ -65,10 +69,12 @@ public class HKY extends SubstitutionModel.NucleotideBase {
     @Override
     public void initAndValidate() {
         super.initAndValidate();
-        if (kappaInput.get() instanceof RealParameter) {
-        	RealParameter kappa = (RealParameter) kappaInput.get(); 
-            kappa.setBounds(Math.max(0.0, kappa.getLower()), kappa.getUpper());
-        }
+
+        // TODO this should be replaced by Param's validation, if bounds are resolved
+//        if (kappaInput.get() instanceof RealParameter) {
+//        	RealParameter kappa = (RealParameter) kappaInput.get();
+//            kappa.setBounds(Math.max(0.0, kappa.getLower()), kappa.getUpper());
+//        }
 
         nrOfStates = STATE_COUNT;
     }
@@ -176,7 +182,7 @@ public class HKY extends SubstitutionModel.NucleotideBase {
 
             // eigenvectors
             double[] eval = eigenDecomposition.getEigenValues();
-            final double k = kappaInput.get().getArrayValue();
+            final double k = kappaInput.get().get();
 
             final double beta = -1.0 / (2.0 * (piR * piY + k * (pi[0] * pi[2] + pi[1] * pi[3])));
             final double A_R = 1.0 + piR * (k - 1);
@@ -230,7 +236,7 @@ public class HKY extends SubstitutionModel.NucleotideBase {
         tab3T = tab2C;            // 1 - tab3C;  // freqT/freqY;
         tab2T = tab3C;            // 1 - tab3T; // (freqY-freqT)/freqY; //assert tab2T + tab3T == 1.0 ;
 
-        final double k = kappaInput.get().getArrayValue();
+        final double k = kappaInput.get().get();
         beta = -1.0 / (2.0 * (freqR * freqY + k * (freqA * freqG + freqC * freqT)));
 
         A_R = 1.0 + freqR * (k - 1);

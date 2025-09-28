@@ -181,10 +181,23 @@
                 <provider classname="beast.base.spec.parameter.SimplexParam"/>
                 <provider classname="beast.base.spec.parameter.InScalarParam"/>
 
-                <provider classname="beast.base.inference.operator.ScaleScalarOperator"/>
-
+                <provider classname="beast.base.spec.inference.operator.ScaleScalarOperator"/>
                 <provider classname="beast.base.spec.inference.operator.DeltaExchangeOperator"/>
+                
                 <provider classname="beast.base.spec.evolution.sitemodel.SiteModel"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.BinaryCovarion"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.ComplexSubstitutionModel"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.Frequencies"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.GeneralSubstitutionModel"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.GTR"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.HKY"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.JTT"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.JukesCantor"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.MutationDeathModel"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.SYM"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.TIM"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.TN93"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.TVM"/>
 
             </service>
 </package>

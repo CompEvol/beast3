@@ -1,4 +1,4 @@
-package beast.base.inference.operator;
+package beast.base.spec.inference.operator;
 
 import beast.base.core.Input;
 import beast.base.inference.Operator;

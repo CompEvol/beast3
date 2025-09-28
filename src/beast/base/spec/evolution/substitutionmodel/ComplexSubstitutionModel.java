@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 
 import java.util.Arrays;
@@ -31,6 +31,8 @@ import java.util.Arrays;
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.substitutionmodel.ComplexColtEigenSystem;
+import beast.base.evolution.substitutionmodel.EigenSystem;
 import beast.base.evolution.tree.Node;
 
 /**
@@ -60,8 +62,8 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
 		}
 
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[ratesInput.get().size()];
+        storedRelativeRates = new double[ratesInput.get().size()];
 	}
 	
 	
@@ -172,7 +174,7 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
 
     protected void setupRelativeRates(double[] rates) {
         for (int i = 0; i < rates.length; i++)
-            rates[i] = ratesInput.get().getArrayValue(i);
+            rates[i] = ratesInput.get().get(i);
     }
 
 //    protected void setupQMatrix(double[] rates, double[] pi, double[][] matrix) {

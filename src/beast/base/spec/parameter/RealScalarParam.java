@@ -28,6 +28,8 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
 
         // Override dimension to ensure scalar
         dimensionInput.setValue(1, this);
+        
+        initAndValidate();
     }
     
     @Override
@@ -49,10 +51,10 @@ public class RealScalarParam<D extends Real> extends RealParameter implements Re
                 Math.min(getUpper(), domain.getUpper()));
 
         // Validate against domain constraints
-        if (! isValid(getValue())) {
-            throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + domain.getClass().getName());
-        }
+//        if (! isValid(getValue())) {
+//            throw new IllegalArgumentException("Initial value of " + this +
+//                    " is not valid for domain " + domain.getClass().getName());
+//        }
     }
 
     @Override
