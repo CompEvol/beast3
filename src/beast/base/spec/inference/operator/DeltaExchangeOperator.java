@@ -1,5 +1,4 @@
-package beast.base.inference.operator.kernel;
-
+package beast.base.spec.inference.operator;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -9,17 +8,13 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.operator.CompoundParameterHelper;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.inference.operator.kernel.KernelOperator;
+import beast.base.spec.parameter.IntegerParameter;
+import beast.base.spec.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
-/**
- * @deprecated
- * use beast.base.spec.inference.operator.DeltaExchangeOperator instead
- */
-@Deprecated(since="v3.0.0", forRemoval = true)
-public class BactrianDeltaExchangeOperator extends KernelOperator {
+public class DeltaExchangeOperator extends KernelOperator {
 
     public final Input<List<RealParameter>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on", new ArrayList<>());
