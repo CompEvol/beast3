@@ -38,7 +38,7 @@
     <map name="LogNormal">beast.base.inference.distribution.LogNormalDistributionModel</map>
     <map name="Gamma">beast.base.inference.distribution.Gamma</map>
     <map name="Uniform">beast.base.inference.distribution.Uniform</map>
-    <map name="prior">beast.base.inference.distribution.Prior</map>
+    <map name="prior">beast.base.spec.inference.distribution.Prior</map>
     <map name="LaplaceDistribution">beast.base.inference.distribution.LaplaceDistribution</map>
     <map name="OneOnX">beast.base.inference.distribution.OneOnX</map>
     <map name="Normal">beast.base.inference.distribution.Normal</map>
@@ -74,38 +74,39 @@
             <distribution id="prior" spec="CompoundDistribution">
                 <distribution birthDiffRate="@birthRate.t:primate" id="YuleModel.t:primate"
                               spec="beast.base.evolution.speciation.YuleModel" tree="@Tree.t:primate"/>
-                <prior id="YuleBirthRatePrior.t:primate" name="distribution" x="@birthRate.t:primate">
+                <prior id="YuleBirthRatePrior.t:primate" name="distribution" x="@birthRate.t:primate"
+                	spec="beast.base.inference.distribution.Prior">
                     <Uniform id="Uniform.0" name="distr" upper="Infinity"/>
                 </prior>
-                <prior id="RateACPrior.s:primate" name="distribution" x="@rateAC.s:primate">
+                <prior id="RateACPrior.s:primate" name="distribution" scalar="@rateAC.s:primate">
                     <LogNormal id="LogNormalDistributionModel.0" name="distr">
                         <parameter estimate="false" id="RealParameter.0" name="M" value="0"/>
                         <parameter estimate="false" id="RealParameter.01" lower="0.0" name="S" upper="5.0"
                                    value="1.25"/>
                     </LogNormal>
                 </prior>
-                <prior id="RateAGPrior.s:primate" name="distribution" x="@rateAG.s:primate">
+                <prior id="RateAGPrior.s:primate" name="distribution" scalar="@rateAG.s:primate">
                     <LogNormal id="LogNormalDistributionModel.01" name="distr">
                         <parameter estimate="false" id="RealParameter.02" name="M" value="0"/>
                         <parameter estimate="false" id="RealParameter.03" lower="0.0" name="S" upper="5.0"
                                    value="1.25"/>
                     </LogNormal>
                 </prior>
-                <prior id="RateATPrior.s:primate" name="distribution" x="@rateAT.s:primate">
+                <prior id="RateATPrior.s:primate" name="distribution" scalar="@rateAT.s:primate">
                     <LogNormal id="LogNormalDistributionModel.02" name="distr">
                         <parameter estimate="false" id="RealParameter.04" name="M" value="0"/>
                         <parameter estimate="false" id="RealParameter.05" lower="0.0" name="S" upper="5.0"
                                    value="1.25"/>
                     </LogNormal>
                 </prior>
-                <prior id="RateCGPrior.s:primate" name="distribution" x="@rateCG.s:primate">
+                <prior id="RateCGPrior.s:primate" name="distribution" scalar="@rateCG.s:primate">
                     <LogNormal id="LogNormalDistributionModel.03" name="distr">
                         <parameter estimate="false" id="RealParameter.06" name="M" value="0"/>
                         <parameter estimate="false" id="RealParameter.07" lower="0.0" name="S" upper="5.0"
                                    value="1.25"/>
                     </LogNormal>
                 </prior>
-                <prior id="RateGTPrior.s:primate" name="distribution" x="@rateGT.s:primate">
+                <prior id="RateGTPrior.s:primate" name="distribution" scalar="@rateGT.s:primate">
                     <LogNormal id="LogNormalDistributionModel.04" name="distr">
                         <parameter estimate="false" id="RealParameter.08" name="M" value="0"/>
                         <parameter estimate="false" id="RealParameter.09" lower="0.0" name="S" upper="5.0"
@@ -118,7 +119,7 @@
                     <siteModel id="SiteModel.s:primate" spec="SiteModel">
                         <mutationRate spec="parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="mutationRate.s:primate" name="mutationRate" value="1.0"/>
                         <shape spec="parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="gammaShape.s:primate" name="shape" value="1.0"/>
-                        <proportionInvariant spec="parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="proportionInvariant.s:primate" lower="0.0"
+                        <proportionInvariant spec="parameter.RealScalarParam" domain="NonNegativeReal" estimate="false" id="proportionInvariant.s:primate" lower="0.0"
                                    name="proportionInvariant" upper="1.0" value="0.0"/>
 
                         <substModel id="gtr.s:primate" rateAC="@rateAC.s:primate" rateAG="@rateAG.s:primate"

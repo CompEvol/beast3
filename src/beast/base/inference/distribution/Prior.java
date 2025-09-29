@@ -16,19 +16,13 @@ import beast.base.core.Input.Validate;
 import beast.base.inference.*;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.spec.Bounded;
-import beast.base.spec.domain.Real;
-import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.RealVector;
 
 
 @Description("Produces prior (log) probability of value x." +
         "If x is multidimensional, the components of x are assumed to be independent, " +
         "so the sum of log probabilities of all elements of x is returned as the prior.")
 public class Prior extends Distribution {
-    final public Input<Function> m_x = new Input<>("x", "point at which the density is calculated");
-    final public Input<RealScalar<?>> scalarInput = new Input<>("scalar", "point at which the density is calculated");
-    final public Input<RealVector<?>> vectorInput = new Input<>("vector", "point at which the density is calculated");
+    final public Input<Function> m_x = new Input<>("x", "point at which the density is calculated", Validate.REQUIRED);
     final public Input<ParametricDistribution> distInput = new Input<>("distr", "distribution used to calculate prior, e.g. normal, beta, gamma.", Validate.REQUIRED);
 
     /**
@@ -39,73 +33,34 @@ public class Prior extends Distribution {
     @Override
     public void initAndValidate() {
         dist = distInput.get();
-        
-        int inputCount = ((m_x.get() != null) ? 1 : 0) +
-						((scalarInput.get() != null) ? 1 : 0) +
-						((vectorInput.get() != null) ? 1 : 0);
-        if (inputCount != 1) {
-        	throw new IllegalArgumentException("Exactly one of 'x', 'scalar' and 'vector' must be specified, not " + inputCount);
-        }
-        
         calculateLogP();
     }
 
     @Override
     public double calculateLogP() {
         Function x = m_x.get();
-        logP = 0;
-        if (x != null) {
-	        if (x instanceof RealParameter || x instanceof IntegerParameter) {
-	            // test that parameter is inside its bounds
-	            double l = 0.0;
-	            double h = 0.0;
-	            if (x instanceof RealParameter) {
-	                l = ((RealParameter) x).getLower();
-	                h = ((RealParameter) x).getUpper();
-	            } else {
-	                l = ((IntegerParameter) x).getLower();
-	                h = ((IntegerParameter) x).getUpper();
-	            }
-	            for (int i = 0; i < x.getDimension(); i++) {
-	                double value = x.getArrayValue(i);
-	                if (value < l || value > h) {
-	                    logP = Double.NEGATIVE_INFINITY;
-	                    return Double.NEGATIVE_INFINITY;
-	                }
-	            }
-	        }
-	        logP = dist.calcLogP(x);
-	        if (logP == Double.POSITIVE_INFINITY) {
-	            logP = Double.NEGATIVE_INFINITY;
-	        }
+        if (x instanceof RealParameter || x instanceof IntegerParameter) {
+            // test that parameter is inside its bounds
+            double l = 0.0;
+            double h = 0.0;
+            if (x instanceof RealParameter) {
+                l = ((RealParameter) x).getLower();
+                h = ((RealParameter) x).getUpper();
+            } else {
+                l = ((IntegerParameter) x).getLower();
+                h = ((IntegerParameter) x).getUpper();
+            }
+            for (int i = 0; i < x.getDimension(); i++) {
+                double value = x.getArrayValue(i);
+                if (value < l || value > h) {
+                    logP = Double.NEGATIVE_INFINITY;
+                    return Double.NEGATIVE_INFINITY;
+                }
+            }
         }
-        
-        if (scalarInput.get() != null) {
-        	RealScalar<?> scalar = scalarInput.get();
-        	if (scalar instanceof Bounded b) {
-        		if (!b.withinBounds(scalar.get())) {
-    	            logP = Double.NEGATIVE_INFINITY;        			
-    	            return logP;
-        		}
-        	}
-			Constant c = new Constant(scalar.get()+"");
-			logP = dist.calcLogP(c);
-        }
-        
-        if (vectorInput.get() != null) {
-        	RealVector<?> vector = vectorInput.get();
-        	if (vector instanceof Bounded b) {
-        		for (int i = 0; i < vector.size(); i++) {
-        			if (!b.withinBounds(vector.get(i))) {
-        				logP = Double.NEGATIVE_INFINITY;
-        				return logP;
-        			}
-        		}
-        	}
-    		for (int i = 0; i < vector.size(); i++) {
-    			Constant c = new Constant(vector.get(i)+"");
-    			logP += dist.calcLogP(c);
-    		}
+        logP = dist.calcLogP(x);
+        if (logP == Double.POSITIVE_INFINITY) {
+            logP = Double.NEGATIVE_INFINITY;
         }
         return logP;
     }

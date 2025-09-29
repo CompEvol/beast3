@@ -80,7 +80,7 @@
                     <siteModel id="SiteModel.s:primate" spec="beast.base.spec.evolution.sitemodel.SiteModel">
                         <mutationRate spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="mutationRate.s:primate" name="mutationRate" value="1.0"/>
                         <shape spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="gammaShape.s:primate" name="shape" value="1.0"/>
-                        <proportionInvariant spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" estimate="false" id="proportionInvariant.s:primate" lower="0.0"
+                        <proportionInvariant spec="beast.base.spec.parameter.RealScalarParam" domain="NonNegativeReal" estimate="false" id="proportionInvariant.s:primate" lower="0.0"
                                    name="proportionInvariant" upper="1.0" value="0.0"/>
                         <substModel id="tn93.s:primate" kappa1="@rateAG.s:primate" kappa2="@rateCT.s:primate"
                                     spec="beast.base.spec.evolution.substitutionmodel.TN93">

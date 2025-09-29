@@ -77,7 +77,7 @@
 
         <init idref='coalescentSimulator'/>
         <distribution spec='CompoundDistribution' id='posterior'>
-            <distribution spec='beast.base.inference.distribution.Prior' x='@hky.kappa'>
+            <distribution spec='beast.base.spec.inference.distribution.Prior' scalar='@hky.kappa'>
                 <distr spec='beast.base.inference.distribution.OneOnX'/>
             </distribution>
             <distribution id='likelihood' idref="treeLikelihood"/>
@@ -110,7 +110,7 @@
             <log idref="likelihood"/>
             <ESS spec='ESS' name='log' arg="@likelihood"/>
             <log idref='hky.kappa'/>
-            <ESS spec='ESS' name='log' arg="@hky.kappa"/>
+            <!--ESS spec='ESS' name='log' arg="@hky.kappa"/-->
             <log idref='freqs'/>
         </logger>
     </run>
