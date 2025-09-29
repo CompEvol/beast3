@@ -70,7 +70,10 @@ public class CompoundValuable extends CalculationNode implements Function {
         for (BEASTObject beastObject : m_values.get()) {
             Function valuable = (Function) beastObject;
             if (beastObject instanceof StateNode) {
-                valuable = ((StateNode) beastObject).getCurrent();
+        		Object o = ((StateNode) beastObject).getCurrent();
+        		if (o instanceof Function) {
+                    valuable = (Function) o;
+        		}
             }
             int dimension = valuable.getDimension();
             for (int i = 0; i < dimension; i++) {

@@ -2,64 +2,45 @@ package beast.base.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
-import beast.base.spec.parameter.IntScalarParam;
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
-@Description("Assign one or more parameter values to a uniformly selected value in its range.")
-public class IntUniformOperator extends Operator {
-    //TODO : ScalarInput<IntScalar<Int>> ?
-    final public Input<IntScalarParam> parameterInput = new Input<>(
-            "parameter", "a real or integer parameter to sample individual values for",
-            Validate.REQUIRED, IntScalarParam.class);
-//    final public Input<Integer> howManyInput = new Input<>(
-//            "howMany",
-//            "number of items to sample, default 1, must be less than the dimension of the parameter",
-//            1);
 
-//    int howMany;
-    IntScalarParam parameter; //TODO
-    double lower, upper;
-//    int lowerIndex, upperIndex;
+@Description("A uniform random operator that selects a random dimension of the integer parameter and picks a new random value within the bounds.")
+@Deprecated
+public class IntUniformOperator extends Operator {
+    final public Input<IntegerParameter> parameterInput = new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
+
 
     @Override
-    public void initAndValidate() {
-        parameter = parameterInput.get();
-//        if (parameter instanceof RealParameter) {
-            lower = parameter.getLower();
-            upper = parameter.getUpper();
-//        } else if (parameter instanceof IntegerParameter) {
-//            lowerIndex = (Integer) parameter.getLower();
-//            upperIndex = (Integer) parameter.getUpper();
-//        } else {
-//            throw new IllegalArgumentException("parameter should be a RealParameter or IntergerParameter, not " + parameter.getClass().getName());
-//        }
-
-//        howMany = howManyInput.get();
-//        if (howMany > parameter.getDimension()) {
-//            throw new IllegalArgumentException("howMany it too large: must be less than the dimension of the parameter");
-//        }
+	public void initAndValidate() {
+    	Log.warning.println("\n\nIntUniformOperator is depracated. Use UniformOperator instead.\n\n");
     }
 
+    /**
+     * override this for proposals,
+     * returns log of hastingRatio, or Double.NEGATIVE_INFINITY if proposal should not be accepted *
+     */
     @Override
     public double proposal() {
-//        for (int n = 0; n < howMany; ++n) {
-            // do not worry about duplication, does not matter
-            int index = Randomizer.nextInt(parameter.getDimension());
 
-//            if (parameter instanceof IntegerParameter) {
-//                int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-            int newValue = Randomizer.nextInt();
-            parameter.setValue(index, newValue);
-//            } else {
-//                double newValue = Randomizer.nextDouble() * (upper - lower) + lower;
-//                ((RealParameter) parameter).setValue(index, newValue);
-//            }
+        IntegerParameter param = (IntegerParameter) InputUtil.get(parameterInput, this);
 
-//        }
+        int i = Randomizer.nextInt(param.getDimension());
+        int newValue = Randomizer.nextInt(param.getUpper() - param.getLower() + 1) + param.getLower();
+
+        param.setValue(i, newValue);
 
         return 0.0;
     }
 
-}
+    @Override
+    public void optimize(double logAlpha) {
+        // nothing to optimise
+    }
+
+} // class IntUniformOperator

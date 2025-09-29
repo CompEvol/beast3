@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.TaxonSet;
@@ -16,7 +17,7 @@ import beast.pkgmgmt.BEASTClassLoader;
 @Description("Tree (the T in BEAST) representing gene beast.tree, species"
         + " beast.tree, language history, or other time-beast.tree"
         + " relationships among sequence data.")
-public class Tree extends StateNode implements TreeInterface {
+public class Tree extends StateNode implements TreeInterface, Function {
     final public Input<Tree> m_initial = new Input<>("initial", "tree to start with");
     final public Input<List<TraitSet>> m_traitList = new Input<>("trait",
             "trait information for initializing traits (like node dates) in the tree",

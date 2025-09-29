@@ -242,23 +242,4 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         setBounds(source.getLower(), source.getUpper());
     }
 
-    //TODO from Function
-
-    /**
-     * A scalar is a 0-dimensional tensor, does not need dimension.
-     */
-    @Deprecated
-    @Override
-    public int getDimension() {
-        return rank(); // A scalar is often treated as a 0-dimensional tensor (rank-0).
-    }
-
-    /**
-     * @deprecated replaced by {@link #get()}
-     */
-    @Deprecated
-    @Override
-    public double getArrayValue(int dim) {
-        return get();
-    }
 }

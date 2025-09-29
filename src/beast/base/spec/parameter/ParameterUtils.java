@@ -1,7 +1,7 @@
 package beast.base.spec.parameter;
 
 import beast.base.spec.Bounded;
-import beast.base.spec.inference.StateNode;
+import beast.base.inference.StateNode;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import org.w3c.dom.NamedNodeMap;

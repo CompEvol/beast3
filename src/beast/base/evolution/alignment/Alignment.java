@@ -908,16 +908,6 @@ public class Alignment extends StateNode {
 	
 	// StateNode implementation 
 	@Override
-	public int getDimension() {
-		return 0;
-	}
-
-	@Override
-	public double getArrayValue(int dim) {
-		return 0;
-	}
-
-	@Override
 	public void setEverythingDirty(boolean isDirty) {
 	}
 

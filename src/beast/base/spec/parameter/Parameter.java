@@ -1,6 +1,7 @@
 package beast.base.spec.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import org.w3c.dom.NamedNodeMap;
@@ -20,7 +21,7 @@ import java.util.regex.Pattern;
  */
 @Deprecated
 @Description("A parameter represents a value in the state space that can be changed by operators.")
-public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
+public abstract class Parameter<T> extends StateNode implements Function {//implements Bounded<T> {
 
     /**
      * value is a required input since it is very hard to ensure any

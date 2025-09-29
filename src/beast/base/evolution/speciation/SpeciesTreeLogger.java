@@ -54,17 +54,26 @@ public class SpeciesTreeLogger extends BEASTObject implements Loggable {
         final Tree tree = (Tree) treeInput.get().getCurrent();
         Function metadata = parameterInput.get();
         if (metadata instanceof StateNode) {
-            metadata = ((StateNode) metadata).getCurrent();
+            Object o = ((StateNode) metadata).getCurrent();
+            if (o instanceof Function) {
+            	metadata = (Function) o;
+            }
         }
         Function metadataTop = parameterTopInput.get();
         if (metadataTop != null && metadataTop instanceof StateNode) {
-            metadataTop = ((StateNode) metadataTop).getCurrent();
+            Object o = ((StateNode) metadata).getCurrent();
+            if (o instanceof Function) {
+            	metadataTop = (Function) o;
+            }
         }
 
         List<Function> metadataList = metadataInput.get();
         for (int i = 0; i < metadataList.size(); i++) {
         	if (metadataList.get(i) instanceof StateNode) {
-        		metadataList.set(i, ((StateNode) metadataList.get(i)).getCurrent());
+        		Object o = ((StateNode) metadataList.get(i)).getCurrent();
+        		if (o instanceof Function) {
+        			metadataList.set(i, (Function) o);
+        		}
         	}
         }
 

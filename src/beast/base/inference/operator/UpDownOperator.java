@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
@@ -67,16 +68,16 @@ public class UpDownOperator extends Operator {
         if (elementWiseInput.get()) {
             int size = 0;
             for (StateNode up : upInput.get()) {
-                if (size == 0) size = up.getDimension();
-                if (size > 0 && up.getDimension() != size) {
+                if (size == 0) size = ((Function)up).getDimension();
+                if (size > 0 && ((Function)up).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
                 goingUp += 1;
             }
 
             for (StateNode down : downInput.get()) {
-                if (size == 0) size = down.getDimension();
-                if (size > 0 && down.getDimension() != size) {
+                if (size == 0) size = ((Function)down).getDimension();
+                if (size > 0 && ((Function)down).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
                 goingDown += 1;
