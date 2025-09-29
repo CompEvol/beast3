@@ -8,14 +8,17 @@ import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 import java.lang.reflect.Array;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 //TODO:  still StateNode implements Function
 
+/**
+ * @deprecated use {@link RealScalarParam} or {@link RealVectorParam}
+ * @param <T>
+ */
+@Deprecated
 @Description("A parameter represents a value in the state space that can be changed by operators.")
 public abstract class Parameter<T> extends StateNode {//implements Bounded<T> {
 

@@ -11,7 +11,9 @@ import java.io.PrintStream;
 
 
 /**
+ * @deprecated use {@link IntScalarParam} or {@link IntVectorParam}
  */
+@Deprecated
 @Description("An integer-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
 public class IntegerParameter extends Parameter<Integer> implements Bounded<Integer> {

@@ -9,6 +9,7 @@ import java.io.PrintStream;
 
 
 /**
+ * @deprecated use {@link beast.base.spec.parameter.IntScalarParam} or {@link beast.base.spec.parameter.IntVectorParam}
  * @author Alexei Drummond
  */
 @Deprecated

@@ -4,6 +4,8 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
+import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.parameter.RealVectorParam;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -13,6 +15,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @deprecated use {@link RealScalarParam} or {@link RealVectorParam}
+ */
 @Deprecated
 public interface Parameter<T> extends Function {
 

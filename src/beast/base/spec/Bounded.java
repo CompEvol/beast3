@@ -61,7 +61,7 @@ public interface Bounded<T extends Comparable<T>> {
     default String boundsToString() {
         String lowerBracket = lowerInclusive() ? "[" : "(";
         String upperBracket = upperInclusive() ? "]" : ")";
-        return lowerBracket + getLower() + ", " + getUpper() + upperBracket;
+        return lowerBracket + getLower() + "," + getUpper() + upperBracket;
     }
 
 }

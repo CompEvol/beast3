@@ -53,13 +53,13 @@ public class ScaleScalarOperator extends AbstractScaleOp {
 
         try {
 
-            // TODO use Bounded interface to validate
-            final RealScalarParam param = (RealScalarParam) InputUtil.get(parameterInput, this);
+            // TODO seem not to require InputUtil.get(...)
+            final RealScalarParam param = parameterInput.get();
 
             // TODO this would not happened after merge Parameter with Bounded interface
             assert param.getLower() != null && param.getUpper() != null;
 
-            final double oldValue = param.getValue();
+            final double oldValue = param.get();
             // TODO not sure if still required, when validation is working
             if (oldValue == 0) {
                 // Error: parameter has value 0 and cannot be scaled
@@ -76,7 +76,7 @@ public class ScaleScalarOperator extends AbstractScaleOp {
             }
 
             // scalar, no index
-            param.setValue(newValue);
+            param.set(newValue);
             // provides a hook for subclasses
             //cleanupOperation(newValue, oldValue);
 

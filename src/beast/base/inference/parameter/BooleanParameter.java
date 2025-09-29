@@ -30,8 +30,8 @@ import java.io.PrintStream;
 import beast.base.core.Description;
 import beast.base.core.Log;
 
-
 /**
+ * @deprecated use {@link beast.base.spec.parameter.BoolScalarParam}
  * @author Joseph Heled
  */
 @Deprecated

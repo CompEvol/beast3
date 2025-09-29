@@ -10,8 +10,9 @@ import java.io.PrintStream;
 
 
 /**
- *
+ * @deprecated use {@link RealScalarParam} or {@link RealVectorParam}
  */
+@Deprecated
 @Description("A real-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
 public class RealParameter extends Parameter<Double> implements Bounded<Double> {

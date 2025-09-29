@@ -6,8 +6,8 @@ import beast.base.core.Input;
 
 import java.io.PrintStream;
 
-
 /**
+ * @deprecated use {@link beast.base.spec.parameter.RealScalarParam} or {@link beast.base.spec.parameter.RealVectorParam}
  * @author Alexei Drummond
  */
 @Deprecated
