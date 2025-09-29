@@ -23,7 +23,7 @@ public interface Tensor<D extends Domain<T>, T> {
      *
      * @return the domain type, e.g. Real, Int, ...
      */
-    D domainType();
+    D getDomain();
 
     /**
      * The order or degree of a tensor.

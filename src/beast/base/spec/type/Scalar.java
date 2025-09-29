@@ -38,7 +38,7 @@ public interface Scalar<D extends Domain<T>, T> extends Tensor<D, T> {
      * @return true if this instance is valid according to its domain constraints, false otherwise
      */
     default boolean isValid(T value) {
-        D d = domainType();
+        D d = getDomain();
         return d.isValid(value);
     }
 

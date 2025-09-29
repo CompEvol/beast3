@@ -71,15 +71,6 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     }
 
-    //    @Override
-    public void set(Integer value) {
-        if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
-        }
-        this.value = value;
-    }
-
     @Override
     public Integer get() {
         return value;
@@ -87,19 +78,29 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     // Implement Scalar<D> interface methods
     @Override
-    public D domainType() {
+    public D getDomain() {
         return domain;
     }
 
     //*** setValue ***
 
-    //    @Override
+    public void set(Integer value) {
+        startEditing(null);
+
+        if (! isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + domain.getClass().getName());
+        }
+        this.value = value;
+    }
+
     public void setDomain(D domain) {
+        startEditing(null);
+
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }
 
-    //    @Override
     public void setLower(Integer lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -108,7 +109,6 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         lowerValueInput.setValue(lower, this);
     }
 
-    //    @Override
     public void setUpper(Integer upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
@@ -227,7 +227,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         @SuppressWarnings("unchecked") final IntScalarParam<D> copy = (IntScalarParam<D>) other;
         copy.setID(getID());
         copy.index = index;
-        copy.setDomain(domainType());
+        copy.setDomain(getDomain());
         copy.set(get());
         copy.setBounds(getLower(), getUpper());
     }
@@ -238,7 +238,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         setID(source.getID());
         set(source.get());
         storedValue = source.storedValue;
-        setDomain(source.domainType());
+        setDomain(source.getDomain());
         setBounds(source.getLower(), source.getUpper());
     }
 

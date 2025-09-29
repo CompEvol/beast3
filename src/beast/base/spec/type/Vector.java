@@ -70,7 +70,7 @@ public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
 
     @Override
     default boolean isValid(T value) {
-        D d = domainType();
+        D d = getDomain();
         return d.isValid(value);
     }
 

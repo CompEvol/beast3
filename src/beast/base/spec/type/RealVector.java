@@ -20,13 +20,13 @@ public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<D
 
     @Override
     default Double getLower() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getLower();
     }
 
     @Override
     default Double getUpper() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getUpper();
     }
 

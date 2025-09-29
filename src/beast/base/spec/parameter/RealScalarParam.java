@@ -9,7 +9,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,14 +46,16 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     public RealScalarParam() { }
 
     public RealScalarParam(double value, D domain) {
-        this.value = value;
-        setDomain(domain); // must set Input as well
+        setDomain(domain); // this set Input as well
+        set(value); // contain validation, and set value after domain and bounds are set
     }
 
     public RealScalarParam(double value, D domain, Double lower, Double upper) {
-        this(value, domain);
-        setLower(lower);
-        setUpper(upper);
+        setDomain(domain); // this set Input as well
+        // adjust bound to the Domain range
+        setBounds(Math.max(lower, domain.getLower()),
+                Math.min(upper, domain.getUpper()));
+        set(value); // contain validation, and set value after domain and bounds are set
     }
 
     @Override
@@ -66,18 +67,9 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
-        // contain validation, and it must be after domain and bounds are set
+        // contain validation, and set value after domain and bounds are set
         set(valuesInput.get());
 
-    }
-
-//    @Override
-    public void set(Double value) {
-        if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
-        }
-        this.value = value;
     }
 
     @Override
@@ -87,19 +79,29 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     // Implement Scalar<D> interface methods
     @Override
-    public D domainType() {
+    public D getDomain() {
         return domain;
     }
 
     //*** setValue ***
 
-//    @Override
+    public void set(Double value) {
+        startEditing(null);
+
+        if (! isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + domain.getClass().getName());
+        }
+        this.value = value;
+    }
+
     public void setDomain(D domain) {
+        startEditing(null);
+
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }
 
-//    @Override
     public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -108,7 +110,6 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         lowerValueInput.setValue(lower, this);
     }
 
-//    @Override
     public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
@@ -118,11 +119,30 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     public void setBounds(Double lower, Double upper) {
+        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
+        //       setUpper(Math.min(getUpper(), domain.getUpper()));
         setLower(lower);
         setUpper(upper);
     }
 
     //*** StateNode methods ***
+
+    @Override
+    protected void store() {
+        storedValue = value;
+    }
+
+    @Override
+    public void restore() {
+        value = storedValue;
+        setEverythingDirty(false);
+    }
+
+
+    @Override
+    public void setEverythingDirty(boolean isDirty) {
+        setSomethingIsDirty(isDirty);
+    }
 
     @Override
     public void init(PrintStream out) {
@@ -185,29 +205,12 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     @Override
-    protected void store() {
-        storedValue = value;
-    }
-
-    @Override
-    public void restore() {
-        value = storedValue;
-        setEverythingDirty(false);
-    }
-
-
-    @Override
-    public void setEverythingDirty(boolean isDirty) {
-        setSomethingIsDirty(isDirty);
-    }
-
-    @Override
     public StateNode copy() {
         try {
             @SuppressWarnings("unchecked") final RealScalarParam copy = (RealScalarParam) this.clone();
             copy.set(value);
             copy.setDomain(domain);
-            copy.setBounds(getLower(), getUpper());
+//            copy.setBounds(getLower(), getUpper());
             return copy;
         } catch (Exception e) {
             e.printStackTrace();
@@ -227,7 +230,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         @SuppressWarnings("unchecked") final RealScalarParam<D> copy = (RealScalarParam<D>) other;
         copy.setID(getID());
         copy.index = index;
-        copy.setDomain(domainType());
+        copy.setDomain(getDomain());
         copy.set(get());
         copy.setBounds(getLower(), getUpper());
     }
@@ -238,7 +241,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         setID(source.getID());
         set(source.get());
         storedValue = source.storedValue;
-        setDomain(source.domainType());
+        setDomain(source.getDomain());
         setBounds(source.getLower(), source.getUpper());
     }
 

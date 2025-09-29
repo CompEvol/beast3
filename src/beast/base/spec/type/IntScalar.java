@@ -9,13 +9,13 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
 
     @Override
     default Integer getLower() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getLower();
     }
 
     @Override
     default Integer getUpper() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getUpper();
     }
 

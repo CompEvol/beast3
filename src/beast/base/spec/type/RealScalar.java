@@ -9,13 +9,13 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
 
     @Override
     default Double getLower() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getLower();
     }
 
     @Override
     default Double getUpper() {
-        D domain = domainType();
+        D domain = getDomain();
         return domain.getUpper();
     }
 

@@ -71,15 +71,6 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     }
 
-    //    @Override
-    public void set(Boolean value) {
-        if (!isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
-        }
-        this.value = value;
-    }
-
     @Override
     public Boolean get() {
         return value;
@@ -87,13 +78,22 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     // Implement Scalar<D> interface methods
     @Override
-    public Bool domainType() {
+    public Bool getDomain() {
         return domain;
     }
 
     //*** setValue ***
 
-    //    @Override
+    public void set(Boolean value) {
+        startEditing(null);
+
+        if (!isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + domain.getClass().getName());
+        }
+        this.value = value;
+    }
+
     public void setDomain(Bool domain) {
         throw new IllegalArgumentException();
     }
