@@ -15,10 +15,10 @@ import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
 /**
- * @deprecated
+ * @deprecated from BEAST v3.0.0
  * use beast.base.spec.inference.operator.DeltaExchangeOperator instead
  */
-@Deprecated(since="v3.0.0", forRemoval = true)
+@Deprecated(forRemoval = true)
 public class BactrianDeltaExchangeOperator extends KernelOperator {
 
     public final Input<List<RealParameter>> parameterInput = new Input<>("parameter",

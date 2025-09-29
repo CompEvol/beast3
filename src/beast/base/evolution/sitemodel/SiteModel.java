@@ -55,10 +55,10 @@ import beast.base.inference.util.InputUtil;
         "and gamma distributed rates across sites (optional) " +
         "and proportion of the sites invariant (also optional).")
 /** 
- * @deprecated
+ * @deprecated from BEAST v3.0.0
  * Use beast.base.spec.evolution.sitemodel.SiteModel instead 
  ***/
-@Deprecated(since="3.0.0", forRemoval = true) 
+@Deprecated(forRemoval = true) 
 public class SiteModel extends SiteModelInterface.Base {
 
 

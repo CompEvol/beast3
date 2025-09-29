@@ -41,9 +41,10 @@ import beast.base.inference.parameter.RealParameter;
         "Calculates empirical frequencies of characters in sequence data, or simply assumes a uniform " +
         "distribution if the estimate flag is set to false.")
 /**
- * @deprecated use beast.base.spec.evolution.substitutionmodel.Frequencies instead
+ * @deprecated from BEAST v3.0.0
+ * use beast.base.spec.evolution.substitutionmodel.Frequencies instead
  */
-@Deprecated(since="v3.0.0", forRemoval = true)
+@Deprecated(forRemoval = true)
 public class Frequencies extends CalculationNode {
     final public Input<Alignment> dataInput = new Input<>("data", "Sequence data for which frequencies are calculated");
     final public Input<Boolean> estimateInput = new Input<>("estimate", "Whether to estimate the frequencies from data (true=default) or assume a uniform distribution over characters (false)", true);
