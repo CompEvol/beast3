@@ -27,7 +27,6 @@ package beast.base.spec.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.parameter.RealScalarParam;
 
