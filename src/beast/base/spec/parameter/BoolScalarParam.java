@@ -29,6 +29,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.BoolScalar;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -55,7 +56,7 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     protected boolean storedValue;
 
     // domain is fixed
-    final private Bool domain = Bool.INSTANCE;
+//    final private Bool domain = Bool.INSTANCE;
 
     public BoolScalarParam() {
     }
@@ -76,10 +77,10 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
         return value;
     }
 
-    // Implement Scalar<D> interface methods
+    // enforce the correct domain
     @Override
     public Bool getDomain() {
-        return domain;
+        return Bool.INSTANCE;
     }
 
     //*** setValue ***
@@ -89,13 +90,15 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
         if (!isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
         this.value = value;
     }
 
+    // enforce the correct domain
     public void setDomain(Bool domain) {
-        throw new IllegalArgumentException();
+        if (! domain.equals(Bool.INSTANCE))
+            throw new IllegalArgumentException();
     }
 
     //*** StateNode methods ***

@@ -2,9 +2,11 @@ package beast.base.spec.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.*;
-import beast.base.spec.type.RealVector;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Int;
+import beast.base.spec.type.IntVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -15,39 +17,39 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
-@Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends StateNode implements RealVector<D> {
+@Description("A scalar int-valued parameter with domain constraints")
+public class IntVectorParam<D extends Int> extends StateNode implements IntVector<D> {
 
-    final public Input<List<Double>> valuesInput = new Input<>("value",
+    final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
-            new ArrayList<>(), Input.Validate.REQUIRED, Double.class);
+            new ArrayList<>(), Input.Validate.REQUIRED, Integer.class);
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
             "Domain type: Real, PositiveReal, NonNegativeReal, or UnitInterval",
-            Real.INSTANCE);
+            Int.INSTANCE);
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 
     public final Input<String> keysInput = new Input<>("keys",
             "the keys (unique dimension names) for the dimensions of this parameter", (String) null);
 
-    final public Input<Double> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default -infinity)");
-    final public Input<Double> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default +infinity)");
+    final public Input<Integer> lowerValueInput = new Input<>("lower",
+            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
+    final public Input<Integer> upperValueInput = new Input<>("upper",
+            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
     /**
      * the actual values of this parameter
      */
-    protected double[] values;
-    protected double[] storedValues;
+    protected int[] values;
+    protected int[] storedValues;
 
     // Domain instance to enforce constraints
     protected D domain;
 
     // default
-    protected Double lower = Double.NEGATIVE_INFINITY;
-    protected Double upper = Double.POSITIVE_INFINITY;
+    protected Integer lower = Integer.MIN_VALUE + 1;
+    protected Integer upper = Integer.MAX_VALUE - 1;
 
     /**
      * isDirty flags for individual elements in high dimensional parameters
@@ -65,15 +67,15 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
     /**
      * constructors *
      */
-    public RealVectorParam() {
+    public IntVectorParam() {
     }
 
-    // TODO Double?
-    public RealVectorParam(final double[] values, D domain) {
+    // TODO Integer?
+    public IntVectorParam(final int[] values, D domain) {
         this(values, domain, null, null);
     }
 
-    public RealVectorParam(final double[] values, D domain, Double lower, Double upper) {
+    public IntVectorParam(final int[] values, D domain, Integer lower, Integer upper) {
         this.values = values.clone();
         this.storedValues = values.clone();
         setDomain(domain); // must set Input as well
@@ -85,25 +87,25 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
             setUpper(Math.min(upper, domain.getUpper()));
 
         // validate value after domain and bounds are set
-        for (Double value : values) {
+        for (Integer value : values) {
             if (! isValid(value))
                 throw new IllegalArgumentException("Value " + value +
-                        " is not valid for domain " + getDomain().getClass().getName());
+                        " is not valid for domain " + domain.getClass().getName());
 
             valuesInput.get().add(value);
         }
     }
-    
+
     @Override
     public void initAndValidate() {
         // allow value=1.0 dimension=4 to create a vector of four 1.0
-        double[] valuesString = valuesInput.get().stream()
-                .mapToDouble(Double::doubleValue)
+        int[] valuesString = valuesInput.get().stream()
+                .mapToInt(Integer::intValue)
                 .toArray();
         int dimension = Math.max(dimensionInput.get(), valuesString.length);
         dimensionInput.setValue(dimension, this);
 
-        values = new double[dimension];
+        values = new int[dimension];
         for (int i = 0; i < values.length; i++) {
             values[i] = valuesString[i % valuesString.length];
         }
@@ -142,41 +144,41 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
     }
 
     @Override
-    public List<Double> getElements() {
+    public List<Integer> getElements() {
         // TODO unmodified ?
         return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
     @Override
-    public Double get(int i) {
+    public Integer get(int i) {
         return getValue(i); // unboxed
     }
 
-    public double getValue(final int i) {
+    public int getValue(final int i) {
         return values[i];
     }
 
-    public double getStoredValue(final int i) {
+    public int getStoredValue(final int i) {
         return storedValues[i];
     }
 
-    public double[] getValues() {
+    public int[] getValues() {
         return Arrays.copyOf(values, values.length);
     }
 
-    public double[] getStoredValues() {
+    public int[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
     }
-    
+
     public int getDimension() {
         return values.length;
     }
-    
+
     /**
      * @param key unique key for a value
      * @return the value associated with that key, or null
      */
-    public Double get(String key) {
+    public Integer get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
 
@@ -190,15 +192,15 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
 
     //*** setValue ***
 
-    public void setValue(final Double value) {
+    public void setValue(final Integer value) {
         this.setValue(0, value);
     }
 
-    public void setValue(final int i, final Double value) {
+    public void setValue(final int i, final Integer value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+                    " is not valid for domain " + domain.getClass().getName());
         }
         values[i] = value;
         isDirty[i] = true;
@@ -213,7 +215,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      */
     public void swap(final int i1, final int i2) {
         startEditing(null);
-        final double tmp = values[i1];
+        final int tmp = values[i1];
         values[i1] = values[i2];
         values[i2] = tmp;
         isDirty[i1] = true;
@@ -231,8 +233,8 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
         startEditing(null);
 
         if (getDimension() != dimension) {
-            values = new double[dimension];
-            storedValues = new double[dimension];
+            values = new int[dimension];
+            storedValues = new int[dimension];
             isDirty = new boolean[dimension];
         }
         try {
@@ -242,23 +244,23 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
         }
     }
 
-    public void setLower(Double lower) {
+    public void setLower(Integer lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + getDomain().getClass().getName());
+                    " is not valid for domain " + domain.getClass().getName());
         this.lower = lower;
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(Double upper) {
+    public void setUpper(Integer upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + getDomain().getClass().getName());
+                    " is not valid for domain " + domain.getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
     }
 
-    public void setBounds(Double lower, Double upper) {
+    public void setBounds(Integer lower, Integer upper) {
         //TODO ? setLower(Math.max(getLower(), domain.getLower()));
         //       setUpper(Math.min(getUpper(), domain.getUpper()));
         setLower(lower);
@@ -271,13 +273,13 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
     @Override
     protected void store() {
         if (storedValues.length != values.length)
-            storedValues = new double[values.length];
+            storedValues = new int[values.length];
         System.arraycopy(values, 0, storedValues, 0, values.length);
     }
 
     @Override
     public void restore() {
-        final double[] tmp = storedValues;
+        final int[] tmp = storedValues;
         storedValues = values;
         values = tmp;
         setEverythingDirty(false);
@@ -321,7 +323,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
     @Override
     public void log(final long sample, final PrintStream out) {
         //TODO why not use getValues() directly ?
-        final RealVectorParam var = (RealVectorParam) getCurrent();
+        final IntVectorParam var = (IntVectorParam) getCurrent();
         final int values = var.getDimension();
         for (int value = 0; value < values; value++) {
             out.print(var.getValue(value) + "\t");
@@ -338,21 +340,9 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      */
     @Override
     public int scale(final double scale) {
-        int nScaled = 0;
-
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] == 0.0)
-                continue;
-
-            values[i] *= scale;
-            nScaled += 1;
-
-            if (! isValid(values[i]))
-                throw new IllegalArgumentException("Parameter " + getID() + " scaled out of range !");
-
-        }
-
-        return nScaled;
+        // nothing to do
+        Log.warning.println("Attempt to scale Integer parameter " + getID() + "  has no effect");
+        return 0;
     }
 
     /**
@@ -365,7 +355,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
         buf.append(getID()).append("[").append(values.length);
         buf.append("] ");
         buf.append(boundsToString()).append(": ");
-        for (final double value : values) {
+        for (final int value : values) {
             buf.append(value).append(" ");
         }
         return buf.toString();
@@ -376,9 +366,9 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      *         This will generally be called only for stochastic nodes.
      */
     @Override
-    public RealVectorParam copy() {
+    public IntVectorParam copy() {
         try {
-            @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) this.clone();
+            @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) this.clone();
             copy.values = values.clone();
             copy.setDomain(domain);
             copy.isDirty = new boolean[values.length];
@@ -396,7 +386,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      */
     @Override
     public void assignTo(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) other;
         copy.setID(getID());
         copy.index = index;
         copy.values = values.clone();
@@ -412,7 +402,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      */
     @Override
     public void assignFrom(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
         setID(source.getID());
         values = source.values.clone();
         storedValues = source.storedValues.clone();
@@ -428,7 +418,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      */
     @Override
     public void assignFromFragile(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
         this.setDimension(source.values.length);
         System.arraycopy(source.values, 0, values, 0, source.values.length);
         Arrays.fill(isDirty, false);
@@ -476,11 +466,11 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
 
     //TODO
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
-        setLower(Double.parseDouble(lower));
-        setUpper(Double.parseDouble(upper));
-        values = new double[dimension];
+        setLower(Integer.parseInt(lower));
+        setUpper(Integer.parseInt(upper));
+        values = new int[dimension];
         for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Double.parseDouble(valuesString[i]);
+            values[i] = Integer.parseInt(valuesString[i]);
         }
     }
 

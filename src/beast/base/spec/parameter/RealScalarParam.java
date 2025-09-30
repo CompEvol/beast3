@@ -90,7 +90,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
         this.value = value;
     }
@@ -105,7 +105,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
         lowerValueInput.setValue(lower, this);
     }
@@ -113,7 +113,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
     }

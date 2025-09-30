@@ -25,9 +25,9 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
                     "specifies the permissible range of values.", Real.INSTANCE);
 
     final public Input<Integer> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default -infinity)");
+            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
     final public Input<Integer> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default +infinity)");
+            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
     /**
      * the actual values of this parameter
@@ -89,7 +89,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
         this.value = value;
     }
@@ -104,7 +104,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     public void setLower(Integer lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
         lowerValueInput.setValue(lower, this);
     }
@@ -112,7 +112,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     public void setUpper(Integer upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
     }

@@ -10,7 +10,7 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     public SimplexParam() {
         super();
-        setDomain(UnitInterval.INSTANCE); // must set Input as well
+        super.setDomain(UnitInterval.INSTANCE); // must set Input as well
     }
 
     public SimplexParam(final double[] values) {
@@ -23,6 +23,7 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     @Override
     public void initAndValidate() {
+        super.setDomain(UnitInterval.INSTANCE); // fix domain to UnitInterval
         super.initAndValidate();
     }
 
@@ -32,6 +33,7 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
         return UnitInterval.INSTANCE;
     }
 
+    // enforce the correct domain
     @Override
     public void setDomain(UnitInterval domain) {
         if (! domain.equals(UnitInterval.INSTANCE))
