@@ -34,6 +34,7 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     @Override
     public void setDomain(UnitInterval domain) {
-        throw new IllegalArgumentException();
+        if (! domain.equals(UnitInterval.INSTANCE))
+            throw new IllegalArgumentException();
     }
 }
