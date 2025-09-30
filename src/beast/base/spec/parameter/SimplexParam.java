@@ -1,6 +1,7 @@
 package beast.base.spec.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Input;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
 
@@ -10,6 +11,7 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     public SimplexParam() {
         super();
+//TODO        domainTypeInput.setRule(Input.Validate.FORBIDDEN);
         super.setDomain(UnitInterval.INSTANCE); // must set Input as well
     }
 

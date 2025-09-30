@@ -25,8 +25,8 @@ public class IntVectorParam<D extends Int> extends StateNode implements IntVecto
             new ArrayList<>(), Input.Validate.REQUIRED, Integer.class);
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "Domain type: Real, PositiveReal, NonNegativeReal, or UnitInterval",
-            Int.INSTANCE);
+            "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
+                    "specifies the permissible range of values.", Int.INSTANCE);
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 

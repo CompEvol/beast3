@@ -21,8 +21,8 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "The domain type (default: Real; alternatives: PositiveReal, NonNegativeReal, or UnitInterval) " +
-                    "specifies the permissible range of values.", Real.INSTANCE);
+            "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
+                    "specifies the permissible range of values.", Int.INSTANCE);
 
     final public Input<Integer> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default Integer.MIN_VALUE + 1)");

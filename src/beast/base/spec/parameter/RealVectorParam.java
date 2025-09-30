@@ -23,8 +23,9 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
             new ArrayList<>(), Input.Validate.REQUIRED, Double.class);
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "Domain type: Real, PositiveReal, NonNegativeReal, or UnitInterval",
-            Real.INSTANCE);
+            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
+                    "specifies the permissible range of values.", Real.INSTANCE);
+
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 

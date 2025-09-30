@@ -21,7 +21,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "The domain type (default: Real; alternatives: PositiveReal, NonNegativeReal, or UnitInterval) " +
+            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
                     "specifies the permissible range of values.", Real.INSTANCE);
 
     final public Input<Double> lowerValueInput = new Input<>("lower",
