@@ -13,6 +13,10 @@ import beast.base.spec.parameter.IntegerParameter;
 import beast.base.spec.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+/**
+ * @deprecated use strong typed op {@link SimplexDeltaExchangeOperator}, {@link IntDeltaExchangeOperator}
+ */
+@Deprecated
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
 public class DeltaExchangeOperator extends KernelOperator {
 

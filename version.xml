@@ -183,7 +183,7 @@
 
                 <provider classname="beast.base.spec.inference.operator.ScaleScalarOperator"/>
                 <provider classname="beast.base.spec.inference.operator.DeltaExchangeOperator"/>
-                <provider classname="beast.base.spec.inference.operator.RealDeltaExchangeOperator"/>
+                <provider classname="beast.base.spec.inference.operator.SimplexDeltaExchangeOperator"/>
                 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 

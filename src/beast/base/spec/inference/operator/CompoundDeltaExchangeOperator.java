@@ -1,0 +1,12 @@
+package beast.base.spec.inference.operator;
+
+public class CompoundDeltaExchangeOperator {
+
+    //TODO  CompoundRealScalarParam<D extends Real> extends RealVectorParam<D>
+    // or  CompoundParameterHelper
+    // or both ?
+
+    // TODO List<Parameter<T>> parameterList
+    //      Scalar + Vector ?
+
+}

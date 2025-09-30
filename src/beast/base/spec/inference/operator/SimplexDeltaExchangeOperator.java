@@ -12,7 +12,7 @@ import beast.base.util.Randomizer;
 import java.text.DecimalFormat;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
-public class RealDeltaExchangeOperator extends KernelOperator {
+public class SimplexDeltaExchangeOperator extends KernelOperator {
 
     public final Input<SimplexParam> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on");
@@ -47,7 +47,7 @@ public class RealDeltaExchangeOperator extends KernelOperator {
 //		}
 
 		if (parameterWeightsInput.get() != null) {
-			if (weights.length != parameterWeightsInput.get().getDimension())
+			if (weights.length != parameterWeightsInput.get().size())
 				throw new IllegalArgumentException(
 						"Weights vector should have the same length as parameter dimension");
 
@@ -109,6 +109,7 @@ public class RealDeltaExchangeOperator extends KernelOperator {
 //            dim = compoundParameter.getDimension();
 //        }
     	if (dim <= 1) {
+            //TODO why not Exception?
     		Log.warning.println("WARNING: the dimension of the parameter is " + dim + " at the start of the run.\n"
     				+ "         The operator " + getID() + " has no effect (if this does not change).");
     	}

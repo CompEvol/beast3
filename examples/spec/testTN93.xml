@@ -123,7 +123,7 @@
         <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleScalarOperator"
                   weight="0.1"/>
 
-        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.RealDeltaExchangeOperator" weight="0.1">
+        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.SimplexDeltaExchangeOperator" weight="0.1">
             <parameter idref="freqParameter.s:primate"/>
         </operator>
 
