@@ -136,7 +136,13 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
+    @Override
     public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public int size() {
         return values.length;
     }
 
@@ -144,6 +150,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      * @param key unique key for a value
      * @return the value associated with that key, or null
      */
+    @Override
     public Boolean get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));

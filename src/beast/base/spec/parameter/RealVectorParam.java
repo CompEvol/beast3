@@ -162,11 +162,17 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public double[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
     }
-    
+
+    @Override
     public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public int size() {
         return values.length;
     }
-    
+
     /**
      * @param key unique key for a value
      * @return the value associated with that key, or null

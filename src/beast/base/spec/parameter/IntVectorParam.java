@@ -163,7 +163,13 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
+    @Override
     public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public int size() {
         return values.length;
     }
 
@@ -171,6 +177,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      * @param key unique key for a value
      * @return the value associated with that key, or null
      */
+    @Override
     public Integer get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
