@@ -3,14 +3,12 @@ package beast.base.spec.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.spec.domain.*;
 import beast.base.spec.type.RealVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
