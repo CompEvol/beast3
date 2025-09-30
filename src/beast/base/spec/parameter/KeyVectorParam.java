@@ -2,7 +2,6 @@ package beast.base.spec.parameter;
 
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Real;
 
 import java.util.*;
 
@@ -16,7 +15,11 @@ public abstract class KeyVectorParam<T> extends StateNode {
 
     public abstract T get(String key);
 
-    public abstract int getDimension();
+    /**
+     * Same method signature with {@link beast.base.spec.type.Vector}.
+     * @return the dimension of this parameter
+     */
+    public abstract int size();
 
     protected void initKeys(List<String> keys) {
         this.keys = keys;
@@ -28,7 +31,7 @@ public abstract class KeyVectorParam<T> extends StateNode {
             }
             if (keyToIndexMap.keySet().size() != keys.size()) {
                 throw new IllegalArgumentException("All keys must be unique! Found " +
-                        keyToIndexMap.keySet().size() + " unique keys for " + getDimension() + " dimensions.");
+                        keyToIndexMap.keySet().size() + " unique keys for " + size() + " dimensions.");
             }
         }
     }
@@ -41,8 +44,8 @@ public abstract class KeyVectorParam<T> extends StateNode {
      */
     public String getKey(int i) {
         if (keys != null) return keys.get(i);
-        if (getDimension() == 1) return "0";
-        else if (i < getDimension()) return "" + (i + 1);
+        if (size() == 1) return "0";
+        else if (i < size()) return "" + (i + 1);
         throw new IllegalArgumentException("Invalid index " + i);
     }
 
@@ -55,7 +58,7 @@ public abstract class KeyVectorParam<T> extends StateNode {
         if (keys != null)
             return keys; // unmodifiable list
         List<String> keys = new ArrayList<>();
-        for (int i = 0; i < getDimension(); i++) {
+        for (int i = 0; i < size(); i++) {
             keys.add(getKey(i));
         }
         return Collections.unmodifiableList(keys);

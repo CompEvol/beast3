@@ -89,9 +89,9 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
             // unmodifiable list : UnsupportedOperationException if attempting to modify
             List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
 
-            if (keys.size() != getDimension())
+            if (keys.size() != this.size())
                 throw new IllegalArgumentException("For vector, keys must have the same length as dimension ! " +
-                        "Dimension = " + getDimension() + ", but keys.size() = " + keys.size());
+                        "Dimension = " + this.size() + ", but keys.size() = " + keys.size());
             initKeys(keys);
         }
 
@@ -134,11 +134,6 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     public boolean[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
-    }
-
-    @Override
-    public int getDimension() {
-        return size();
     }
 
     @Override
@@ -203,7 +198,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public void setDimension(final int dimension) {
         startEditing(null);
 
-        if (getDimension() != dimension) {
+        if (this.size() != dimension) {
             values = new boolean[dimension];
             storedValues = new boolean[dimension];
             isDirty = new boolean[dimension];
@@ -255,7 +250,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      */
     @Override
     public void init(final PrintStream out) {
-        final int valueCount = getDimension();
+        final int valueCount = this.size();
         if (valueCount == 1) {
             out.print(getID() + "\t");
         } else {
@@ -272,7 +267,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public void log(final long sample, final PrintStream out) {
         //TODO why not use getValues() directly ?
         final BoolVectorParam var = (BoolVectorParam) getCurrent();
-        final int values = var.getDimension();
+        final int values = var.size();
         for (int value = 0; value < values; value++) {
             out.print(var.getValue(value) + "\t");
         }
