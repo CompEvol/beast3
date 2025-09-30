@@ -222,9 +222,7 @@ public class IntVectorParam<D extends Int> extends StateNode implements IntVecto
         isDirty[i2] = true;
     }
 
-    public void setDomain(D domain) {
-        startEditing(null);
-
+    protected void setDomain(D domain) {
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }

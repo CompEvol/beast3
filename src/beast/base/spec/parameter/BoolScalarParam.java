@@ -29,7 +29,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.BoolScalar;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -96,10 +95,10 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     }
 
     // enforce the correct domain
-    public void setDomain(Bool domain) {
-        if (! domain.equals(Bool.INSTANCE))
-            throw new IllegalArgumentException();
-    }
+//    public void setDomain(Bool domain) {
+//        if (! domain.equals(Bool.INSTANCE))
+//            throw new IllegalArgumentException();
+//    }
 
     //*** StateNode methods ***
 

@@ -92,12 +92,10 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             throw new IllegalArgumentException("Value " + value +
                     " is not valid for domain " + getDomain().getClass().getName());
         }
-        this.value = value;
+        this.value = value; // a primitive value
     }
 
-    public void setDomain(D domain) {
-        startEditing(null);
-
+    private void setDomain(D domain) {
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }
@@ -204,13 +202,17 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * @return a deep copy of this node in the state.
+     *         This will generally be called only for stochastic nodes.
+     */
     @Override
     public StateNode copy() {
         try {
             @SuppressWarnings("unchecked") final RealScalarParam copy = (RealScalarParam) this.clone();
-            copy.set(value);
+            // value is primitive field
             copy.setDomain(domain);
-//            copy.setBounds(getLower(), getUpper());
+            copy.setBounds(getLower(), getUpper());
             return copy;
         } catch (Exception e) {
             e.printStackTrace();
@@ -239,10 +241,10 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     public void assignFrom(final StateNode other) {
         @SuppressWarnings("unchecked") final RealScalarParam<D> source = (RealScalarParam<D>) other;
         setID(source.getID());
-        set(source.get());
-        storedValue = source.storedValue;
         setDomain(source.getDomain());
         setBounds(source.getLower(), source.getUpper());
+        set(source.get());
+        storedValue = source.storedValue;
     }
 
 }

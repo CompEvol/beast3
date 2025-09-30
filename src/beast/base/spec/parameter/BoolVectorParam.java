@@ -195,10 +195,10 @@ public class BoolVectorParam extends StateNode implements BoolVector {
         isDirty[i2] = true;
     }
 
-    public void setDomain(Bool domain) {
-        if (! domain.equals(Bool.INSTANCE))
-            throw new IllegalArgumentException();
-    }
+//    public void setDomain(Bool domain) {
+//        if (! domain.equals(Bool.INSTANCE))
+//            throw new IllegalArgumentException();
+//    }
 
     public void setDimension(final int dimension) {
         startEditing(null);

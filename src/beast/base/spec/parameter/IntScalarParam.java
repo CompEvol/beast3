@@ -91,12 +91,10 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
             throw new IllegalArgumentException("Value " + value +
                     " is not valid for domain " + getDomain().getClass().getName());
         }
-        this.value = value;
+        this.value = value; // a primitive value
     }
 
-    public void setDomain(D domain) {
-        startEditing(null);
-
+    private void setDomain(D domain) {
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }

@@ -221,9 +221,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
         isDirty[i2] = true;
     }
 
-    public void setDomain(D domain) {
-        startEditing(null);
-
+    protected void setDomain(D domain) {
         this.domain = domain;
         domainTypeInput.setValue(domain, this);
     }
