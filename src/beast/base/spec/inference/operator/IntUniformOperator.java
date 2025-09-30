@@ -5,13 +5,14 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
+import beast.base.spec.domain.Int;
 import beast.base.spec.parameter.IntScalarParam;
 import beast.base.util.Randomizer;
 
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
 public class IntUniformOperator extends Operator {
-    //TODO : ScalarInput<IntScalar<Int>> ?
-    final public Input<IntScalarParam> parameterInput = new Input<>(
+
+    final public Input<IntScalarParam<? extends Int>> parameterInput = new Input<>(
             "parameter", "a real or integer parameter to sample individual values for",
             Validate.REQUIRED, IntScalarParam.class);
 //    final public Input<Integer> howManyInput = new Input<>(
