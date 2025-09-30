@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class BoolVectorParam extends StateNode implements BoolVector {
+public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -24,9 +24,6 @@ public class BoolVectorParam extends StateNode implements BoolVector {
 
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
-
-    public final Input<String> keysInput = new Input<>("keys",
-            "the keys (unique dimension names) for the dimensions of this parameter", (String) null);
 
     /**
      * the actual values of this parameter
@@ -45,10 +42,6 @@ public class BoolVectorParam extends StateNode implements BoolVector {
      * last element to be changed *
      */
     protected int lastDirty;
-
-    private List<String> keys = null; // unmodifiableList
-    private Map<String, Integer> keyToIndexMap = null;
-
 
     /**
      * constructors *
@@ -411,51 +404,6 @@ public class BoolVectorParam extends StateNode implements BoolVector {
         for (int i = 0; i < valuesString.length; i++) {
             values[i] = Boolean.parseBoolean(valuesString[i]);
         }
-    }
-
-    //*** Keys methods ***
-
-    private void initKeys(List<String> keys) {
-        this.keys = keys;
-
-        if (keys != null) {
-            keyToIndexMap = new TreeMap<>();
-            for (int i = 0; i < keys.size(); i++) {
-                keyToIndexMap.put(keys.get(i), i);
-            }
-            if (keyToIndexMap.keySet().size() != keys.size()) {
-                throw new IllegalArgumentException("All keys must be unique! Found " +
-                        keyToIndexMap.keySet().size() + " unique keys for " + getDimension() + " dimensions.");
-            }
-        }
-    }
-
-    /**
-     * @param i index
-     * @return the unique key for the i'th value.
-     *         if no key, it will return a string representing the zero-based index,
-     *        (i.e. a string representation of the argument).
-     */
-    public String getKey(int i) {
-        if (keys != null) return keys.get(i);
-        if (getDimension() == 1) return "0";
-        else if (i < getDimension()) return "" + (i+1);
-        throw new IllegalArgumentException("Invalid index " + i);
-    }
-
-    /**
-     * @return the unmodifiable list of keys (a unique string for each dimension)
-     *         that parallels the parameter index.
-     *         It will throw UnsupportedOperationException if attempting to modify
-     */
-    public List<String> getKeysList() {
-        if (keys != null)
-            return keys; // unmodifiable list
-        List<String> keys = new ArrayList<>();
-        for (int i = 0; i < getDimension(); i++) {
-            keys.add(getKey(i));
-        }
-        return Collections.unmodifiableList(keys);
     }
 
 }

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends StateNode implements RealVector<D> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D> {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -28,9 +28,6 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
 
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
-
-    public final Input<String> keysInput = new Input<>("keys",
-            "the keys (unique dimension names) for the dimensions of this parameter", (String) null);
 
     final public Input<Double> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default -infinity)");
@@ -58,9 +55,6 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      * last element to be changed *
      */
     protected int lastDirty;
-
-    private List<String> keys = null; // unmodifiableList
-    private Map<String, Integer> keyToIndexMap = null;
 
 
     /**
@@ -177,6 +171,7 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
      * @param key unique key for a value
      * @return the value associated with that key, or null
      */
+    @Override
     public Double get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
@@ -481,51 +476,6 @@ public class RealVectorParam<D extends Real> extends StateNode implements RealVe
         for (int i = 0; i < valuesString.length; i++) {
             values[i] = Double.parseDouble(valuesString[i]);
         }
-    }
-
-    //*** Keys methods ***
-
-    private void initKeys(List<String> keys) {
-        this.keys = keys;
-
-        if (keys != null) {
-            keyToIndexMap = new TreeMap<>();
-            for (int i = 0; i < keys.size(); i++) {
-                keyToIndexMap.put(keys.get(i), i);
-            }
-            if (keyToIndexMap.keySet().size() != keys.size()) {
-                throw new IllegalArgumentException("All keys must be unique! Found " +
-                        keyToIndexMap.keySet().size() + " unique keys for " + getDimension() + " dimensions.");
-            }
-        }
-    }
-
-    /**
-     * @param i index
-     * @return the unique key for the i'th value.
-     *         if no key, it will return a string representing the zero-based index,
-     *        (i.e. a string representation of the argument).
-     */
-    public String getKey(int i) {
-        if (keys != null) return keys.get(i);
-        if (getDimension() == 1) return "0";
-        else if (i < getDimension()) return "" + (i+1);
-        throw new IllegalArgumentException("Invalid index " + i);
-    }
-
-    /**
-     * @return the unmodifiable list of keys (a unique string for each dimension)
-     *         that parallels the parameter index.
-     *         It will throw UnsupportedOperationException if attempting to modify
-     */
-    public List<String> getKeysList() {
-        if (keys != null)
-            return keys; // unmodifiable list
-        List<String> keys = new ArrayList<>();
-        for (int i = 0; i < getDimension(); i++) {
-            keys.add(getKey(i));
-        }
-        return Collections.unmodifiableList(keys);
     }
 
 }
