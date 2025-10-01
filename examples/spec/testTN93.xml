@@ -117,13 +117,13 @@
 
         <operator id="WilsonBalding.t:primate" spec="WilsonBalding" tree="@Tree.t:primate" weight="3.0"/>
 
-        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleScalarOperator"
+        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.scale.ScaleScalarOperator"
                   weight="0.1"/>
 
-        <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleScalarOperator"
+        <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" spec="beast.base.spec.inference.operator.scale.ScaleScalarOperator"
                   weight="0.1"/>
 
-        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.RealDeltaExchangeOperator" weight="0.1">
+        <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator" weight="0.1">
             <parameter idref="freqParameter.s:primate"/>
         </operator>
 

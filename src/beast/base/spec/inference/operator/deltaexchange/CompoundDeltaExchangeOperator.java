@@ -1,4 +1,4 @@
-package beast.base.spec.inference.operator;
+package beast.base.spec.inference.operator.deltaexchange;
 
 public class CompoundDeltaExchangeOperator {
 

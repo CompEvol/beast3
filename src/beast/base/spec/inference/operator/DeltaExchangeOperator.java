@@ -9,6 +9,8 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelOperator;
+import beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator;
+import beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator;
 import beast.base.spec.inference.parameter.IntegerParameter;
 import beast.base.spec.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;

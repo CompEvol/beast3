@@ -22,7 +22,7 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA  02110-1301  USA
  */
-package beast.base.spec.inference.operator;
+package beast.base.spec.inference.operator.scale;
 
 
 import beast.base.core.Description;
@@ -32,7 +32,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 
 
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
-public class ScaleScalarOperator extends AbstractScaleOp {
+public class ScaleScalarOperator extends AbstractScale {
 
     public final Input<RealScalarParam<? extends PositiveReal>> parameterInput = new Input<>(
             "parameter", "if specified, this parameter is scaled");
