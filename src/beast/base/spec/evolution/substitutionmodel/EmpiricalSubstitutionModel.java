@@ -1,23 +1,21 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.parameter.SimplexParam;
 
 @Description("A substitution model where the rates and frequencies are obtained from " +
         "empirical evidence. Especially, amino acid models like WAG.")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.EmpiricalSubstitutionModel instead
- */
-@Deprecated
-public abstract class EmpiricalSubstitutionModel extends GeneralSubstitutionModel {
+public abstract class EmpiricalSubstitutionModel extends BasicGeneralSubstitutionModel {
 
     public EmpiricalSubstitutionModel() {
+    	// empirical models come with empirical frequencies,
+    	// so if frequencies are not otherwise specified we still
+    	// can return empirical frequencies
         frequenciesInput.setRule(Validate.OPTIONAL);
-        ratesInput.setRule(Validate.OPTIONAL);
     }
 
     double[] m_empiricalRates;
@@ -52,7 +50,7 @@ public abstract class EmpiricalSubstitutionModel extends GeneralSubstitutionMode
 
 
     /**
-     * convert empirical rates into a RealParameter, only off diagonal entries are recorded *
+     * convert empirical rates into an array, only off diagonal entries are recorded *
      */
     public double[] getEmpericalRateValues() {
         double[][] matrix = getEmpiricalRates();
@@ -74,27 +72,18 @@ public abstract class EmpiricalSubstitutionModel extends GeneralSubstitutionMode
     }
 
     /**
-     * convert empirical frequencies into a RealParameter *
+     * convert empirical frequencies into a Frequencies object *
      */
     Frequencies getEmpericalFrequencieValues() {
         double[] freqs = getEmpiricalFrequencies();
         int[] order = getEncodingOrder();
         int states = freqs.length;
-        Frequencies freqsParam = new Frequencies();
-        String valuesString = "";
-
+        double [] freqsInOrder = new double[states];
         for (int i = 0; i < states; i++) {
-            valuesString += freqs[order[i]] + " ";
+        	freqsInOrder[i] = freqs[order[i]];
         }
-        RealParameter freqsRParam = new RealParameter();
-        freqsRParam.initByName(
-                "value", valuesString,
-                "lower", 0.0,
-                "upper", 1.0,
-                "dimension", states
-        );
-        freqsParam.frequenciesInput.setValue(freqsRParam, freqsParam);
-        freqsParam.initAndValidate();
+        SimplexParam freqsRParam = new SimplexParam(freqsInOrder, 0.0, 1.0);
+        Frequencies freqsParam = new Frequencies(freqsRParam);
         return freqsParam;
     }
 

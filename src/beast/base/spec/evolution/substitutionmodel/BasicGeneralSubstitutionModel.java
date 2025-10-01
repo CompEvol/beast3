@@ -24,36 +24,26 @@
 * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 * Boston, MA  02110-1301  USA
 */
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.substitutionmodel.DefaultEigenSystem;
+import beast.base.evolution.substitutionmodel.EigenDecomposition;
+import beast.base.evolution.substitutionmodel.EigenSystem;
 import beast.base.evolution.tree.Node;
 import beast.pkgmgmt.BEASTClassLoader;
 
 
 
-@Description("Specifies transition probability matrix with no restrictions on the rates other " +
-        "than that one of the is equal to one and the others are specified relative to " +
-        "this unit rate. Works for any number of states.")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.GeneralSubstitutionModel instead
- */
-@Deprecated
-public class GeneralSubstitutionModel extends SubstitutionModel.Base {
-    final public Input<Function> ratesInput =
-            new Input<>("rates", "Rate parameter which defines the transition rate matrix. " +
-                    "Only the off-diagonal entries need to be specified (diagonal makes row sum to zero in a " +
-                    "rate matrix). Entry i specifies the rate from floor(i/(n-1)) to i%(n-1)+delta where " +
-                    "n is the number of states and delta=1 if floor(i/(n-1)) <= i%(n-1) and 0 otherwise.", Validate.REQUIRED);
+@Description("Abstract class for general substituiton models that works for any number of states.")
+abstract public class BasicGeneralSubstitutionModel extends Base {
 
     final public Input<String> eigenSystemClass = new Input<>("eigenSystem", "Name of the class used for creating an EigenSystem", DefaultEigenSystem.class.getName());
     /**
@@ -67,11 +57,6 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
         super.initAndValidate();
         updateMatrix = true;
         nrOfStates = frequencies.getFreqs().length;
-        if (ratesInput.get().getDimension() != nrOfStates * (nrOfStates - 1)) {
-            throw new IllegalArgumentException("Dimension of input 'rates' is " + ratesInput.get().getDimension() + " but a " +
-                    "rate matrix of dimension " + nrOfStates + "x" + (nrOfStates - 1) + "=" + nrOfStates * (nrOfStates - 1) + " was " +
-                    "expected");
-        }
 
         try {
 			eigenSystem = createEigenSystem();
@@ -82,8 +67,8 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
         //eigenSystem = new DefaultEigenSystem(m_nStates);
 
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[nrOfStates * (nrOfStates - 1)];
+        storedRelativeRates = new double[relativeRates.length];
     } // initAndValidate
 
     /**
@@ -192,12 +177,18 @@ public class GeneralSubstitutionModel extends SubstitutionModel.Base {
         return rateMatrix.clone();
     }
 
-    public void setupRelativeRates() {
-        Function rates = this.ratesInput.get();
-        for (int i = 0; i < rates.getDimension(); i++) {
-            relativeRates[i] = rates.getArrayValue(i);
+    @Override
+    public double[] getRateMatrix(Node node) {
+        int stateCount = getStateCount();
+        double [] rateMatrix = new double[stateCount * stateCount];
+        for (int i = 0; i < stateCount; i++) {
+        	System.arraycopy(this.rateMatrix[i], 0, rateMatrix, stateCount * i, stateCount);
         }
+        return rateMatrix;
     }
+
+    
+    abstract public void setupRelativeRates();
 
     /**
      * sets up rate matrix *

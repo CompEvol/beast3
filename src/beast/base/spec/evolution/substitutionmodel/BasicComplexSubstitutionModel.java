@@ -23,14 +23,15 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 
 import java.util.Arrays;
 
-import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.evolution.datatype.DataType;
+import beast.base.evolution.substitutionmodel.ComplexColtEigenSystem;
+import beast.base.evolution.substitutionmodel.EigenSystem;
 import beast.base.evolution.tree.Node;
 
 /**
@@ -39,17 +40,8 @@ import beast.base.evolution.tree.Node;
  *
  * @author Marc Suchard
  */
-
 @Description("Complex-diagonalizable, irreversible substitution model")
-@Citation(value = "Edwards, C. J., Suchard, M. A., Lemey, P., ... & Valdiosera, C. E. (2011).\n" +
-        "Ancient hybridization and an Irish origin for the modern polar bear matriline.\n" +
-        "Current Biology, 21(15), 1251-1258.",
-        year = 2011, firstAuthorSurname = "Edwards", DOI="10.1016/j.cub.2011.05.058")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.ComplexSubstitutionModel instead
- */
-@Deprecated
-public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
+abstract public class BasicComplexSubstitutionModel extends BasicGeneralSubstitutionModel {
 	
 	@Override
 	public void initAndValidate() {
@@ -64,8 +56,8 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
 		}
 
         rateMatrix = new double[nrOfStates][nrOfStates];
-        relativeRates = new double[ratesInput.get().getDimension()];
-        storedRelativeRates = new double[ratesInput.get().getDimension()];
+        relativeRates = new double[nrOfStates * (nrOfStates-1)];
+        storedRelativeRates = new double[nrOfStates * (nrOfStates-1)];
 	}
 	
 	
@@ -169,86 +161,6 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
             }
         }
     }
-
-//    protected int getRateCount(int stateCount) {
-//        return (stateCount - 1) * stateCount;
-//    }
-
-    protected void setupRelativeRates(double[] rates) {
-        for (int i = 0; i < rates.length; i++)
-            rates[i] = ratesInput.get().getArrayValue(i);
-    }
-
-//    protected void setupQMatrix(double[] rates, double[] pi, double[][] matrix) {
-//        int i, j, k = 0;
-//        int stateCount = getStateCount();
-//
-//        for (i = 0; i < stateCount; i++) {
-//            for (j = i + 1; j < stateCount; j++) {
-//                double thisRate = rates[k++];
-//                if (thisRate < 0.0) thisRate = 0.0;
-//                matrix[i][j] = thisRate * pi[j];
-//            }
-//        }
-//        // Copy lower triangle in column-order form (transposed)
-//        for (j = 0; j < stateCount; j++) {
-//            for (i = j + 1; i < stateCount; i++) {
-//                double thisRate = rates[k++];
-//                if (thisRate < 0.0) thisRate = 0.0;
-//                matrix[i][j] = thisRate * pi[j];
-//            }
-//        }
-//    }
-//
-//    public boolean canReturnComplexDiagonalization() {
-//        return true;
-//    }
-//
-//    protected double getNormalizationValue(double[][] matrix, double[] pi) {
-//        double norm = 1.0;
-//        if (doNormalization) {
-//            norm = super.getNormalizationValue(matrix, pi);
-//        }
-////            return super.getNormalizationValue(matrix, pi);
-////        } else {
-////            return 1.0;
-////        }
-////        System.err.println("norm = " + doNormalization + " " + norm);
-////        System.err.println(new Matrix(matrix));
-//        return norm;
-//    }
-//
-//    public double getLogLikelihood() {
-//        if (BayesianStochasticSearchVariableSelection.Utils.connectedAndWellConditioned(probability, this))
-//            return 0;
-//        return Double.NEGATIVE_INFINITY;
-//    }
-
-    /**
-     * Needs to be evaluated before the corresponding data likelihood.
-     *
-     * @return
-     */
-//    public boolean evaluateEarly() {
-//        return true;
-//    }
-//
-//    public void setNormalization(boolean doNormalization) {
-//        this.doNormalization = doNormalization;
-//    }
-//
-//    public void makeDirty() {
-//
-//    }
-//
-//    private double[] probability;
-//
-//
-//    void setDoNormalization(boolean normalize) {
-//        this.doNormalization = normalize;
-//    }
-//
-//    private boolean doNormalization = true;
 
 	@Override
 	public boolean canHandleDataType(DataType dataType) {
