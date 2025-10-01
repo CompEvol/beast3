@@ -1,12 +1,10 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Domain;
-import beast.base.spec.domain.Int;
-import beast.base.spec.type.IntVector;
+import beast.base.spec.domain.*;
+import beast.base.spec.type.RealVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -17,36 +15,37 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
-@Description("A scalar int-valued parameter with domain constraints")
-public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> {
+@Description("A scalar real-valued parameter with domain constraints")
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D> {
 
-    final public Input<List<Integer>> valuesInput = new Input<>("value",
+    final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
-            new ArrayList<>(), Input.Validate.REQUIRED, Integer.class);
+            new ArrayList<>(), Input.Validate.REQUIRED, Double.class);
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
-                    "specifies the permissible range of values.", Int.INSTANCE);
+            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
+                    "specifies the permissible range of values.", Real.INSTANCE);
+
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 
-    final public Input<Integer> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
-    final public Input<Integer> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
+    final public Input<Double> lowerValueInput = new Input<>("lower",
+            "lower value for this parameter (default -infinity)");
+    final public Input<Double> upperValueInput = new Input<>("upper",
+            "upper value for this parameter (default +infinity)");
 
     /**
      * the actual values of this parameter
      */
-    protected int[] values;
-    protected int[] storedValues;
+    protected double[] values;
+    protected double[] storedValues;
 
     // Domain instance to enforce constraints
     protected D domain;
 
     // default
-    protected Integer lower = Integer.MIN_VALUE + 1;
-    protected Integer upper = Integer.MAX_VALUE - 1;
+    protected Double lower = Double.NEGATIVE_INFINITY;
+    protected Double upper = Double.POSITIVE_INFINITY;
 
     /**
      * isDirty flags for individual elements in high dimensional parameters
@@ -57,18 +56,19 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     protected int lastDirty;
 
+
     /**
      * constructors *
      */
-    public IntVectorParam() {
+    public RealVectorParam() {
     }
 
-    // TODO Integer?
-    public IntVectorParam(final int[] values, D domain) {
+    // TODO Double?
+    public RealVectorParam(final double[] values, D domain) {
         this(values, domain, null, null);
     }
 
-    public IntVectorParam(final int[] values, D domain, Integer lower, Integer upper) {
+    public RealVectorParam(final double[] values, D domain, Double lower, Double upper) {
         this.values = values.clone();
         this.storedValues = values.clone();
         setDomain(domain); // must set Input as well
@@ -80,25 +80,25 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
             setUpper(Math.min(upper, domain.getUpper()));
 
         // validate value after domain and bounds are set
-        for (Integer value : values) {
+        for (Double value : values) {
             if (! isValid(value))
                 throw new IllegalArgumentException("Value " + value +
-                        " is not valid for domain " + domain.getClass().getName());
+                        " is not valid for domain " + getDomain().getClass().getName());
 
             valuesInput.get().add(value);
         }
     }
-
+    
     @Override
     public void initAndValidate() {
         // allow value=1.0 dimension=4 to create a vector of four 1.0
-        int[] valuesString = valuesInput.get().stream()
-                .mapToInt(Integer::intValue)
+        double[] valuesString = valuesInput.get().stream()
+                .mapToDouble(Double::doubleValue)
                 .toArray();
         int dimension = Math.max(dimensionInput.get(), valuesString.length);
         dimensionInput.setValue(dimension, this);
 
-        values = new int[dimension];
+        values = new double[dimension];
         for (int i = 0; i < values.length; i++) {
             values[i] = valuesString[i % valuesString.length];
         }
@@ -137,29 +137,29 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     }
 
     @Override
-    public List<Integer> getElements() {
+    public List<Double> getElements() {
         // TODO unmodified ?
         return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
     @Override
-    public Integer get(int i) {
+    public Double get(int i) {
         return getValue(i); // unboxed
     }
 
-    public int getValue(final int i) {
+    public double getValue(final int i) {
         return values[i];
     }
 
-    public int getStoredValue(final int i) {
+    public double getStoredValue(final int i) {
         return storedValues[i];
     }
 
-    public int[] getValues() {
+    public double[] getValues() {
         return Arrays.copyOf(values, values.length);
     }
 
-    public int[] getStoredValues() {
+    public double[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
@@ -173,7 +173,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      * @return the value associated with that key, or null
      */
     @Override
-    public Integer get(String key) {
+    public Double get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
 
@@ -187,15 +187,15 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     //*** setValue ***
 
-    public void setValue(final Integer value) {
+    public void setValue(final Double value) {
         this.setValue(0, value);
     }
 
-    public void setValue(final int i, final Integer value) {
+    public void setValue(final int i, final Double value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
         values[i] = value;
         isDirty[i] = true;
@@ -210,7 +210,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     public void swap(final int i1, final int i2) {
         startEditing(null);
-        final int tmp = values[i1];
+        final double tmp = values[i1];
         values[i1] = values[i2];
         values[i2] = tmp;
         isDirty[i1] = true;
@@ -226,8 +226,8 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         startEditing(null);
 
         if (this.size() != dimension) {
-            values = new int[dimension];
-            storedValues = new int[dimension];
+            values = new double[dimension];
+            storedValues = new double[dimension];
             isDirty = new boolean[dimension];
         }
         try {
@@ -237,23 +237,23 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         }
     }
 
-    public void setLower(Integer lower) {
+    public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(Integer upper) {
+    public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
     }
 
-    public void setBounds(Integer lower, Integer upper) {
+    public void setBounds(Double lower, Double upper) {
         //TODO ? setLower(Math.max(getLower(), domain.getLower()));
         //       setUpper(Math.min(getUpper(), domain.getUpper()));
         setLower(lower);
@@ -266,13 +266,13 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     @Override
     protected void store() {
         if (storedValues.length != values.length)
-            storedValues = new int[values.length];
+            storedValues = new double[values.length];
         System.arraycopy(values, 0, storedValues, 0, values.length);
     }
 
     @Override
     public void restore() {
-        final int[] tmp = storedValues;
+        final double[] tmp = storedValues;
         storedValues = values;
         values = tmp;
         setEverythingDirty(false);
@@ -316,7 +316,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     @Override
     public void log(final long sample, final PrintStream out) {
         //TODO why not use getValues() directly ?
-        final IntVectorParam var = (IntVectorParam) getCurrent();
+        final RealVectorParam var = (RealVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
             out.print(var.getValue(value) + "\t");
@@ -333,9 +333,21 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     @Override
     public int scale(final double scale) {
-        // nothing to do
-        Log.warning.println("Attempt to scale Integer parameter " + getID() + "  has no effect");
-        return 0;
+        int nScaled = 0;
+
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] == 0.0)
+                continue;
+
+            values[i] *= scale;
+            nScaled += 1;
+
+            if (! isValid(values[i]))
+                throw new IllegalArgumentException("Parameter " + getID() + " scaled out of range !");
+
+        }
+
+        return nScaled;
     }
 
     /**
@@ -348,7 +360,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         buf.append(getID()).append("[").append(values.length);
         buf.append("] ");
         buf.append(boundsToString()).append(": ");
-        for (final int value : values) {
+        for (final double value : values) {
             buf.append(value).append(" ");
         }
         return buf.toString();
@@ -359,9 +371,9 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      *         This will generally be called only for stochastic nodes.
      */
     @Override
-    public IntVectorParam copy() {
+    public RealVectorParam copy() {
         try {
-            @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) this.clone();
+            @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) this.clone();
             copy.values = values.clone();
             copy.setDomain(domain);
             copy.isDirty = new boolean[values.length];
@@ -379,7 +391,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     @Override
     public void assignTo(final StateNode other) {
-        @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) other;
         copy.setID(getID());
         copy.index = index;
         copy.values = values.clone();
@@ -395,7 +407,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     @Override
     public void assignFrom(final StateNode other) {
-        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
         setID(source.getID());
         values = source.values.clone();
         storedValues = source.storedValues.clone();
@@ -411,7 +423,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      */
     @Override
     public void assignFromFragile(final StateNode other) {
-        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
         this.setDimension(source.values.length);
         System.arraycopy(source.values, 0, values, 0, source.values.length);
         Arrays.fill(isDirty, false);
@@ -459,11 +471,11 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     //TODO
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
-        setLower(Integer.parseInt(lower));
-        setUpper(Integer.parseInt(upper));
-        values = new int[dimension];
+        setLower(Double.parseDouble(lower));
+        setUpper(Double.parseDouble(upper));
+        values = new double[dimension];
         for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Integer.parseInt(valuesString[i]);
+            values[i] = Double.parseDouble(valuesString[i]);
         }
     }
 

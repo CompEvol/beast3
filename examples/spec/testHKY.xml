@@ -27,13 +27,13 @@
     </data>
 
 
-    <input id="hky.kappa" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"
+    <input id="hky.kappa" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"
            value="1.0"/>
     <!--    value="0.0"/>-->
     <!--    value="-1.0"/>-->
 <!--    <parameter id="hky.kappa" spec="parameter.RealParameter" value="1.0" lower="0.0"/>-->
 
-    <input id="freqs" spec="beast.base.spec.parameter.SimplexParam" dimension="4"
+    <input id="freqs" spec="beast.base.spec.inference.parameter.SimplexParam" dimension="4"
            value="0.25 0.25 0.25 0.25"/>
 <!--    value="0.25 0.25 0.25 2"/>-->
 

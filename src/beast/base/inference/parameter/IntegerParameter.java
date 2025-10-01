@@ -4,12 +4,14 @@ package beast.base.inference.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.IntVectorParam;
 
 import java.io.PrintStream;
 
 
 /**
- * @deprecated use {@link beast.base.spec.parameter.IntScalarParam} or {@link beast.base.spec.parameter.IntVectorParam}
+ * @deprecated use {@link IntScalarParam} or {@link IntVectorParam}
  * @author Alexei Drummond
  */
 @Deprecated

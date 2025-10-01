@@ -7,7 +7,7 @@ import beast.base.core.Input;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
 @Description("General Time Reversible model of nucleotide evolution. " +

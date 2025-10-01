@@ -9,12 +9,12 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelOperator;
-import beast.base.spec.parameter.IntegerParameter;
-import beast.base.spec.parameter.RealParameter;
+import beast.base.spec.inference.parameter.IntegerParameter;
+import beast.base.spec.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
 /**
- * @deprecated use strong typed op {@link SimplexDeltaExchangeOperator}, {@link IntDeltaExchangeOperator}
+ * @deprecated use strong typed op {@link RealDeltaExchangeOperator}, {@link IntDeltaExchangeOperator}
  */
 @Deprecated
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")

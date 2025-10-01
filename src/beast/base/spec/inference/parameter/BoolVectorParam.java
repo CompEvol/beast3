@@ -1,10 +1,11 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.*;
-import beast.base.spec.type.RealVector;
+import beast.base.spec.domain.Bool;
+import beast.base.spec.type.BoolVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -12,40 +13,26 @@ import java.io.PrintStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D> {
+public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector {
 
-    final public Input<List<Double>> valuesInput = new Input<>("value",
+    final public Input<List<Boolean>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
-            new ArrayList<>(), Input.Validate.REQUIRED, Double.class);
-    // Additional input to specify the domain type
-    public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
-                    "specifies the permissible range of values.", Real.INSTANCE);
+            new ArrayList<>(), Input.Validate.REQUIRED, Boolean.class);
 
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 
-    final public Input<Double> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default -infinity)");
-    final public Input<Double> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default +infinity)");
-
     /**
      * the actual values of this parameter
      */
-    protected double[] values;
-    protected double[] storedValues;
+    protected boolean[] values;
+    protected boolean[] storedValues;
 
-    // Domain instance to enforce constraints
-    protected D domain;
-
-    // default
-    protected Double lower = Double.NEGATIVE_INFINITY;
-    protected Double upper = Double.POSITIVE_INFINITY;
+    // domain is fixed
+//    final private Bool domain = Bool.INSTANCE;
 
     /**
      * isDirty flags for individual elements in high dimensional parameters
@@ -56,31 +43,20 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     protected int lastDirty;
 
-
     /**
      * constructors *
      */
-    public RealVectorParam() {
+    public BoolVectorParam() {
     }
 
-    // TODO Double?
-    public RealVectorParam(final double[] values, D domain) {
-        this(values, domain, null, null);
-    }
-
-    public RealVectorParam(final double[] values, D domain, Double lower, Double upper) {
+    // TODO Boolean?
+    public BoolVectorParam(final boolean[] values) {
         this.values = values.clone();
         this.storedValues = values.clone();
-        setDomain(domain); // must set Input as well
         isDirty = new boolean[values.length];
-        // adjust bound to the Domain range
-        if (lower != null)
-            setLower(Math.max(lower, domain.getLower()));
-        if (upper != null)
-            setUpper(Math.min(upper, domain.getUpper()));
 
         // validate value after domain and bounds are set
-        for (Double value : values) {
+        for (Boolean value : values) {
             if (! isValid(value))
                 throw new IllegalArgumentException("Value " + value +
                         " is not valid for domain " + getDomain().getClass().getName());
@@ -88,17 +64,19 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
             valuesInput.get().add(value);
         }
     }
-    
+
     @Override
     public void initAndValidate() {
-        // allow value=1.0 dimension=4 to create a vector of four 1.0
-        double[] valuesString = valuesInput.get().stream()
-                .mapToDouble(Double::doubleValue)
-                .toArray();
+        // allow value=true dimension=4 to create a vector of four true
+        List<Boolean> valuesList = valuesInput.get();
+        boolean[] valuesString = new boolean[valuesList.size()];
+        for (int i = 0; i < valuesList.size(); i++)
+            valuesString[i] = valuesList.get(i);
+
         int dimension = Math.max(dimensionInput.get(), valuesString.length);
         dimensionInput.setValue(dimension, this);
 
-        values = new double[dimension];
+        values = new boolean[dimension];
         for (int i = 0; i < values.length; i++) {
             values[i] = valuesString[i % valuesString.length];
         }
@@ -117,49 +95,44 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
             initKeys(keys);
         }
 
-        // Initialize domain based on type or bounds
-        domain = (D) domainTypeInput.get();
-
-        // adjust bound to the Domain range
-        setBounds(Math.max(getLower(), domain.getLower()),
-                Math.min(getUpper(), domain.getUpper()));
-
         // Validate against domain and bounds constraints
         if (! isValid()) {
             throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
     }
 
     @Override
-    public D getDomain() {
-        return domain;
+    public Bool getDomain() {
+        return Bool.INSTANCE;
     }
 
     @Override
-    public List<Double> getElements() {
-        // TODO unmodified ?
-        return Arrays.stream(values).boxed().collect(Collectors.toList());
+    public List<Boolean> getElements() {
+        // Java has no BooleanStream
+        List<Boolean> list = new ArrayList<>(values.length);
+        for (boolean b : values) list.add(b);
+        return list;
     }
 
     @Override
-    public Double get(int i) {
+    public Boolean get(int i) {
         return getValue(i); // unboxed
     }
 
-    public double getValue(final int i) {
+    public boolean getValue(final int i) {
         return values[i];
     }
 
-    public double getStoredValue(final int i) {
+    public boolean getStoredValue(final int i) {
         return storedValues[i];
     }
 
-    public double[] getValues() {
+    public boolean[] getValues() {
         return Arrays.copyOf(values, values.length);
     }
 
-    public double[] getStoredValues() {
+    public boolean[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
@@ -173,7 +146,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      * @return the value associated with that key, or null
      */
     @Override
-    public Double get(String key) {
+    public Boolean get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
 
@@ -187,11 +160,11 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     //*** setValue ***
 
-    public void setValue(final Double value) {
+    public void setValue(final Boolean value) {
         this.setValue(0, value);
     }
 
-    public void setValue(final int i, final Double value) {
+    public void setValue(final int i, final Boolean value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -210,24 +183,24 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     public void swap(final int i1, final int i2) {
         startEditing(null);
-        final double tmp = values[i1];
+        final boolean tmp = values[i1];
         values[i1] = values[i2];
         values[i2] = tmp;
         isDirty[i1] = true;
         isDirty[i2] = true;
     }
 
-    protected void setDomain(D domain) {
-        this.domain = domain;
-        domainTypeInput.setValue(domain, this);
-    }
+//    public void setDomain(Bool domain) {
+//        if (! domain.equals(Bool.INSTANCE))
+//            throw new IllegalArgumentException();
+//    }
 
     public void setDimension(final int dimension) {
         startEditing(null);
 
         if (this.size() != dimension) {
-            values = new double[dimension];
-            storedValues = new double[dimension];
+            values = new boolean[dimension];
+            storedValues = new boolean[dimension];
             isDirty = new boolean[dimension];
         }
         try {
@@ -237,42 +210,19 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
-    public void setLower(Double lower) {
-        if (lower < domain.getLower())
-            throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.lower = lower;
-        lowerValueInput.setValue(lower, this);
-    }
-
-    public void setUpper(Double upper) {
-        if (upper > domain.getUpper())
-            throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.upper = upper;
-        upperValueInput.setValue(upper, this);
-    }
-
-    public void setBounds(Double lower, Double upper) {
-        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
-        //       setUpper(Math.min(getUpper(), domain.getUpper()));
-        setLower(lower);
-        setUpper(upper);
-    }
-
     //*** StateNode methods ***
 
     @SuppressWarnings("unchecked")
     @Override
     protected void store() {
         if (storedValues.length != values.length)
-            storedValues = new double[values.length];
+            storedValues = new boolean[values.length];
         System.arraycopy(values, 0, storedValues, 0, values.length);
     }
 
     @Override
     public void restore() {
-        final double[] tmp = storedValues;
+        final boolean[] tmp = storedValues;
         storedValues = values;
         values = tmp;
         setEverythingDirty(false);
@@ -316,7 +266,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     @Override
     public void log(final long sample, final PrintStream out) {
         //TODO why not use getValues() directly ?
-        final RealVectorParam var = (RealVectorParam) getCurrent();
+        final BoolVectorParam var = (BoolVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
             out.print(var.getValue(value) + "\t");
@@ -333,21 +283,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     @Override
     public int scale(final double scale) {
-        int nScaled = 0;
-
-        for (int i = 0; i < values.length; i++) {
-            if (values[i] == 0.0)
-                continue;
-
-            values[i] *= scale;
-            nScaled += 1;
-
-            if (! isValid(values[i]))
-                throw new IllegalArgumentException("Parameter " + getID() + " scaled out of range !");
-
-        }
-
-        return nScaled;
+        // nothing to do
+        Log.warning.println("Attempt to scale Boolean parameter " + getID() + "  has no effect");
+        return 0;
     }
 
     /**
@@ -358,11 +296,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append(getID()).append("[").append(values.length);
-        buf.append("] ");
-        buf.append(boundsToString()).append(": ");
-        for (final double value : values) {
+        buf.append("] ").append(": ");
+        for (final boolean value : values)
             buf.append(value).append(" ");
-        }
         return buf.toString();
     }
 
@@ -371,11 +307,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      *         This will generally be called only for stochastic nodes.
      */
     @Override
-    public RealVectorParam copy() {
+    public BoolVectorParam copy() {
         try {
-            @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) this.clone();
+            @SuppressWarnings("unchecked") final BoolVectorParam copy = (BoolVectorParam) this.clone();
             copy.values = values.clone();
-            copy.setDomain(domain);
             copy.isDirty = new boolean[values.length];
             return copy;
         } catch (Exception e) {
@@ -391,12 +326,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     @Override
     public void assignTo(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final BoolVectorParam copy = (BoolVectorParam) other;
         copy.setID(getID());
         copy.index = index;
         copy.values = values.clone();
-        copy.setDomain(getDomain());
-        copy.setBounds(getLower(), getUpper());
         copy.isDirty = new boolean[values.length];
     }
 
@@ -407,13 +340,11 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     @Override
     public void assignFrom(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final BoolVectorParam source = (BoolVectorParam) other;
         setID(source.getID());
         values = source.values.clone();
         storedValues = source.storedValues.clone();
         System.arraycopy(source.values, 0, values, 0, values.length);
-        setDomain(source.getDomain());
-        setBounds(source.getLower(), source.getUpper());
         isDirty = new boolean[source.values.length];
     }
 
@@ -423,7 +354,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     @Override
     public void assignFromFragile(final StateNode other) {
-        @SuppressWarnings("unchecked") final RealVectorParam<D> source = (RealVectorParam<D>) other;
+        @SuppressWarnings("unchecked") final BoolVectorParam source = (BoolVectorParam) other;
         this.setDimension(source.values.length);
         System.arraycopy(source.values, 0, values, 0, source.values.length);
         Arrays.fill(isDirty, false);
@@ -471,11 +402,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     //TODO
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
-        setLower(Double.parseDouble(lower));
-        setUpper(Double.parseDouble(upper));
-        values = new double[dimension];
+        values = new boolean[dimension];
         for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Double.parseDouble(valuesString[i]);
+            values[i] = Boolean.parseBoolean(valuesString[i]);
         }
     }
 

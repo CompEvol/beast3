@@ -29,9 +29,10 @@ import java.io.PrintStream;
 
 import beast.base.core.Description;
 import beast.base.core.Log;
+import beast.base.spec.inference.parameter.BoolScalarParam;
 
 /**
- * @deprecated use {@link beast.base.spec.parameter.BoolScalarParam}
+ * @deprecated use {@link BoolScalarParam}
  * @author Joseph Heled
  */
 @Deprecated

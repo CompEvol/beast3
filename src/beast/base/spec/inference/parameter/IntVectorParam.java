@@ -1,11 +1,12 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Bool;
-import beast.base.spec.type.BoolVector;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Int;
+import beast.base.spec.type.IntVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -13,26 +14,39 @@ import java.io.PrintStream;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
-@Description("A scalar real-valued parameter with domain constraints")
-public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector {
+@Description("A scalar int-valued parameter with domain constraints")
+public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> {
 
-    final public Input<List<Boolean>> valuesInput = new Input<>("value",
+    final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
-            new ArrayList<>(), Input.Validate.REQUIRED, Boolean.class);
-
+            new ArrayList<>(), Input.Validate.REQUIRED, Integer.class);
+    // Additional input to specify the domain type
+    public final Input<Domain> domainTypeInput = new Input<>("domain",
+            "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
+                    "specifies the permissible range of values.", Int.INSTANCE);
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
+
+    final public Input<Integer> lowerValueInput = new Input<>("lower",
+            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
+    final public Input<Integer> upperValueInput = new Input<>("upper",
+            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
     /**
      * the actual values of this parameter
      */
-    protected boolean[] values;
-    protected boolean[] storedValues;
+    protected int[] values;
+    protected int[] storedValues;
 
-    // domain is fixed
-//    final private Bool domain = Bool.INSTANCE;
+    // Domain instance to enforce constraints
+    protected D domain;
+
+    // default
+    protected Integer lower = Integer.MIN_VALUE + 1;
+    protected Integer upper = Integer.MAX_VALUE - 1;
 
     /**
      * isDirty flags for individual elements in high dimensional parameters
@@ -46,20 +60,30 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     /**
      * constructors *
      */
-    public BoolVectorParam() {
+    public IntVectorParam() {
     }
 
-    // TODO Boolean?
-    public BoolVectorParam(final boolean[] values) {
+    // TODO Integer?
+    public IntVectorParam(final int[] values, D domain) {
+        this(values, domain, null, null);
+    }
+
+    public IntVectorParam(final int[] values, D domain, Integer lower, Integer upper) {
         this.values = values.clone();
         this.storedValues = values.clone();
+        setDomain(domain); // must set Input as well
         isDirty = new boolean[values.length];
+        // adjust bound to the Domain range
+        if (lower != null)
+            setLower(Math.max(lower, domain.getLower()));
+        if (upper != null)
+            setUpper(Math.min(upper, domain.getUpper()));
 
         // validate value after domain and bounds are set
-        for (Boolean value : values) {
+        for (Integer value : values) {
             if (! isValid(value))
                 throw new IllegalArgumentException("Value " + value +
-                        " is not valid for domain " + getDomain().getClass().getName());
+                        " is not valid for domain " + domain.getClass().getName());
 
             valuesInput.get().add(value);
         }
@@ -67,16 +91,14 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     @Override
     public void initAndValidate() {
-        // allow value=true dimension=4 to create a vector of four true
-        List<Boolean> valuesList = valuesInput.get();
-        boolean[] valuesString = new boolean[valuesList.size()];
-        for (int i = 0; i < valuesList.size(); i++)
-            valuesString[i] = valuesList.get(i);
-
+        // allow value=1.0 dimension=4 to create a vector of four 1.0
+        int[] valuesString = valuesInput.get().stream()
+                .mapToInt(Integer::intValue)
+                .toArray();
         int dimension = Math.max(dimensionInput.get(), valuesString.length);
         dimensionInput.setValue(dimension, this);
 
-        values = new boolean[dimension];
+        values = new int[dimension];
         for (int i = 0; i < values.length; i++) {
             values[i] = valuesString[i % valuesString.length];
         }
@@ -95,44 +117,49 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
             initKeys(keys);
         }
 
+        // Initialize domain based on type or bounds
+        domain = (D) domainTypeInput.get();
+
+        // adjust bound to the Domain range
+        setBounds(Math.max(getLower(), domain.getLower()),
+                Math.min(getUpper(), domain.getUpper()));
+
         // Validate against domain and bounds constraints
         if (! isValid()) {
             throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + getDomain().getClass().getName());
+                    " is not valid for domain " + domain.getClass().getName());
         }
     }
 
     @Override
-    public Bool getDomain() {
-        return Bool.INSTANCE;
+    public D getDomain() {
+        return domain;
     }
 
     @Override
-    public List<Boolean> getElements() {
-        // Java has no BooleanStream
-        List<Boolean> list = new ArrayList<>(values.length);
-        for (boolean b : values) list.add(b);
-        return list;
+    public List<Integer> getElements() {
+        // TODO unmodified ?
+        return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
     @Override
-    public Boolean get(int i) {
+    public Integer get(int i) {
         return getValue(i); // unboxed
     }
 
-    public boolean getValue(final int i) {
+    public int getValue(final int i) {
         return values[i];
     }
 
-    public boolean getStoredValue(final int i) {
+    public int getStoredValue(final int i) {
         return storedValues[i];
     }
 
-    public boolean[] getValues() {
+    public int[] getValues() {
         return Arrays.copyOf(values, values.length);
     }
 
-    public boolean[] getStoredValues() {
+    public int[] getStoredValues() {
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
@@ -146,7 +173,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      * @return the value associated with that key, or null
      */
     @Override
-    public Boolean get(String key) {
+    public Integer get(String key) {
         if (keys != null)
             return get(keyToIndexMap.get(key));
 
@@ -160,15 +187,15 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     //*** setValue ***
 
-    public void setValue(final Boolean value) {
+    public void setValue(final Integer value) {
         this.setValue(0, value);
     }
 
-    public void setValue(final int i, final Boolean value) {
+    public void setValue(final int i, final Integer value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+                    " is not valid for domain " + domain.getClass().getName());
         }
         values[i] = value;
         isDirty[i] = true;
@@ -183,24 +210,24 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      */
     public void swap(final int i1, final int i2) {
         startEditing(null);
-        final boolean tmp = values[i1];
+        final int tmp = values[i1];
         values[i1] = values[i2];
         values[i2] = tmp;
         isDirty[i1] = true;
         isDirty[i2] = true;
     }
 
-//    public void setDomain(Bool domain) {
-//        if (! domain.equals(Bool.INSTANCE))
-//            throw new IllegalArgumentException();
-//    }
+    protected void setDomain(D domain) {
+        this.domain = domain;
+        domainTypeInput.setValue(domain, this);
+    }
 
     public void setDimension(final int dimension) {
         startEditing(null);
 
         if (this.size() != dimension) {
-            values = new boolean[dimension];
-            storedValues = new boolean[dimension];
+            values = new int[dimension];
+            storedValues = new int[dimension];
             isDirty = new boolean[dimension];
         }
         try {
@@ -210,19 +237,42 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         }
     }
 
+    public void setLower(Integer lower) {
+        if (lower < domain.getLower())
+            throw new IllegalArgumentException("Lower bound " + lower +
+                    " is not valid for domain " + domain.getClass().getName());
+        this.lower = lower;
+        lowerValueInput.setValue(lower, this);
+    }
+
+    public void setUpper(Integer upper) {
+        if (upper > domain.getUpper())
+            throw new IllegalArgumentException("Upper bound " + upper +
+                    " is not valid for domain " + domain.getClass().getName());
+        this.upper = upper;
+        upperValueInput.setValue(upper, this);
+    }
+
+    public void setBounds(Integer lower, Integer upper) {
+        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
+        //       setUpper(Math.min(getUpper(), domain.getUpper()));
+        setLower(lower);
+        setUpper(upper);
+    }
+
     //*** StateNode methods ***
 
     @SuppressWarnings("unchecked")
     @Override
     protected void store() {
         if (storedValues.length != values.length)
-            storedValues = new boolean[values.length];
+            storedValues = new int[values.length];
         System.arraycopy(values, 0, storedValues, 0, values.length);
     }
 
     @Override
     public void restore() {
-        final boolean[] tmp = storedValues;
+        final int[] tmp = storedValues;
         storedValues = values;
         values = tmp;
         setEverythingDirty(false);
@@ -266,7 +316,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     @Override
     public void log(final long sample, final PrintStream out) {
         //TODO why not use getValues() directly ?
-        final BoolVectorParam var = (BoolVectorParam) getCurrent();
+        final IntVectorParam var = (IntVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
             out.print(var.getValue(value) + "\t");
@@ -284,7 +334,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     @Override
     public int scale(final double scale) {
         // nothing to do
-        Log.warning.println("Attempt to scale Boolean parameter " + getID() + "  has no effect");
+        Log.warning.println("Attempt to scale Integer parameter " + getID() + "  has no effect");
         return 0;
     }
 
@@ -296,9 +346,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public String toString() {
         final StringBuilder buf = new StringBuilder();
         buf.append(getID()).append("[").append(values.length);
-        buf.append("] ").append(": ");
-        for (final boolean value : values)
+        buf.append("] ");
+        buf.append(boundsToString()).append(": ");
+        for (final int value : values) {
             buf.append(value).append(" ");
+        }
         return buf.toString();
     }
 
@@ -307,10 +359,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      *         This will generally be called only for stochastic nodes.
      */
     @Override
-    public BoolVectorParam copy() {
+    public IntVectorParam copy() {
         try {
-            @SuppressWarnings("unchecked") final BoolVectorParam copy = (BoolVectorParam) this.clone();
+            @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) this.clone();
             copy.values = values.clone();
+            copy.setDomain(domain);
             copy.isDirty = new boolean[values.length];
             return copy;
         } catch (Exception e) {
@@ -326,10 +379,12 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      */
     @Override
     public void assignTo(final StateNode other) {
-        @SuppressWarnings("unchecked") final BoolVectorParam copy = (BoolVectorParam) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) other;
         copy.setID(getID());
         copy.index = index;
         copy.values = values.clone();
+        copy.setDomain(getDomain());
+        copy.setBounds(getLower(), getUpper());
         copy.isDirty = new boolean[values.length];
     }
 
@@ -340,11 +395,13 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      */
     @Override
     public void assignFrom(final StateNode other) {
-        @SuppressWarnings("unchecked") final BoolVectorParam source = (BoolVectorParam) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
         setID(source.getID());
         values = source.values.clone();
         storedValues = source.storedValues.clone();
         System.arraycopy(source.values, 0, values, 0, values.length);
+        setDomain(source.getDomain());
+        setBounds(source.getLower(), source.getUpper());
         isDirty = new boolean[source.values.length];
     }
 
@@ -354,7 +411,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
      */
     @Override
     public void assignFromFragile(final StateNode other) {
-        @SuppressWarnings("unchecked") final BoolVectorParam source = (BoolVectorParam) other;
+        @SuppressWarnings("unchecked") final IntVectorParam<D> source = (IntVectorParam<D>) other;
         this.setDimension(source.values.length);
         System.arraycopy(source.values, 0, values, 0, source.values.length);
         Arrays.fill(isDirty, false);
@@ -402,9 +459,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     //TODO
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
-        values = new boolean[dimension];
+        setLower(Integer.parseInt(lower));
+        setUpper(Integer.parseInt(upper));
+        values = new int[dimension];
         for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Boolean.parseBoolean(valuesString[i]);
+            values[i] = Integer.parseInt(valuesString[i]);
         }
     }
 

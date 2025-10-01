@@ -14,8 +14,8 @@ import beast.base.core.Input.Validate;
 import beast.base.inference.*;
 import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.spec.Bounded;
-import beast.base.spec.parameter.IntScalarParam;
-import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 

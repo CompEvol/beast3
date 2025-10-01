@@ -42,10 +42,9 @@ import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.StateNode;
 import beast.base.inference.util.InputUtil;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beast.base.evolution.sitemodel.SiteModelInterface;
 

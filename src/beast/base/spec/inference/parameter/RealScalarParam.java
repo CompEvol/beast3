@@ -1,9 +1,9 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.*;
-import beast.base.spec.type.IntScalar;
+import beast.base.spec.type.RealScalar;
 import beast.base.inference.StateNode;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -13,48 +13,49 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D> {
+public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D> {
 
-    final public Input<Integer> valuesInput = new Input<>("value",
+    final public Input<Double> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
-            0, Input.Validate.REQUIRED, Integer.class);
+            0.0, Input.Validate.REQUIRED, Double.class);
 
     // Additional input to specify the domain type
     public final Input<Domain> domainTypeInput = new Input<>("domain",
-            "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
-                    "specifies the permissible range of values.", Int.INSTANCE);
+            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
+                    "specifies the permissible range of values.", Real.INSTANCE);
 
-    final public Input<Integer> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
-    final public Input<Integer> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
+    final public Input<Double> lowerValueInput = new Input<>("lower",
+            "lower value for this parameter (default -infinity)");
+    final public Input<Double> upperValueInput = new Input<>("upper",
+            "upper value for this parameter (default +infinity)");
 
     /**
      * the actual values of this parameter
      */
-    protected int value;
-    protected int storedValue;
+    protected double value;
+    protected double storedValue;
 
     // Domain instance to enforce constraints
     protected D domain;
 
     // default
-    protected Integer lower = Integer.MIN_VALUE + 1;
-    protected Integer upper = Integer.MAX_VALUE - 1;
+    protected Double lower = Double.NEGATIVE_INFINITY;
+    protected Double upper = Double.POSITIVE_INFINITY;
 
 
-    public IntScalarParam() {
+    public RealScalarParam() { }
+
+    public RealScalarParam(double value, D domain) {
+        setDomain(domain); // this set Input as well
+        set(value); // contain validation, and set value after domain and bounds are set
     }
 
-    public IntScalarParam(int value, D domain) {
-        this.value = value;
-        setDomain(domain); // must set Input as well
-    }
-
-    public IntScalarParam(int value, D domain, Integer lower, Integer upper) {
-        this(value, domain);
-        setLower(lower);
-        setUpper(upper);
+    public RealScalarParam(double value, D domain, Double lower, Double upper) {
+        setDomain(domain); // this set Input as well
+        // adjust bound to the Domain range
+        setBounds(Math.max(lower, domain.getLower()),
+                Math.min(upper, domain.getUpper()));
+        set(value); // contain validation, and set value after domain and bounds are set
     }
 
     @Override
@@ -66,13 +67,13 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
-        // contain validation, and it must be after domain and bounds are set
+        // contain validation, and set value after domain and bounds are set
         set(valuesInput.get());
 
     }
 
     @Override
-    public Integer get() {
+    public Double get() {
         return value;
     }
 
@@ -84,7 +85,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     //*** setValue ***
 
-    public void set(Integer value) {
+    public void set(Double value) {
         startEditing(null);
 
         if (! isValid(value)) {
@@ -99,7 +100,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         domainTypeInput.setValue(domain, this);
     }
 
-    public void setLower(Integer lower) {
+    public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -107,7 +108,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(Integer upper) {
+    public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -115,12 +116,31 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         upperValueInput.setValue(upper, this);
     }
 
-    public void setBounds(Integer lower, Integer upper) {
+    public void setBounds(Double lower, Double upper) {
+        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
+        //       setUpper(Math.min(getUpper(), domain.getUpper()));
         setLower(lower);
         setUpper(upper);
     }
 
     //*** StateNode methods ***
+
+    @Override
+    protected void store() {
+        storedValue = value;
+    }
+
+    @Override
+    public void restore() {
+        value = storedValue;
+        setEverythingDirty(false);
+    }
+
+
+    @Override
+    public void setEverythingDirty(boolean isDirty) {
+        setSomethingIsDirty(isDirty);
+    }
 
     @Override
     public void init(PrintStream out) {
@@ -165,9 +185,9 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     public void fromXML(final String valuesString, final String lower, final String upper) {
-        set(Integer.parseInt(valuesString));
-        setLower(Integer.parseInt(lower));
-        setUpper(Integer.parseInt(upper));
+        set(Double.parseDouble(valuesString));
+        setLower(Double.parseDouble(lower));
+        setUpper(Double.parseDouble(upper));
     }
 
     @Override
@@ -182,28 +202,15 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    protected void store() {
-        storedValue = value;
-    }
-
-    @Override
-    public void restore() {
-        value = storedValue;
-        setEverythingDirty(false);
-    }
-
-
-    @Override
-    public void setEverythingDirty(boolean isDirty) {
-        setSomethingIsDirty(isDirty);
-    }
-
+    /**
+     * @return a deep copy of this node in the state.
+     *         This will generally be called only for stochastic nodes.
+     */
     @Override
     public StateNode copy() {
         try {
-            @SuppressWarnings("unchecked") final IntScalarParam copy = (IntScalarParam) this.clone();
-            copy.set(value);
+            @SuppressWarnings("unchecked") final RealScalarParam copy = (RealScalarParam) this.clone();
+            // value is primitive field
             copy.setDomain(domain);
             copy.setBounds(getLower(), getUpper());
             return copy;
@@ -215,14 +222,14 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     @Override
     public void assignFromFragile(final StateNode other) {
-        @SuppressWarnings("unchecked") final IntScalarParam source = (IntScalarParam) other;
+        @SuppressWarnings("unchecked") final RealScalarParam source = (RealScalarParam) other;
         set(source.get());
 //        setBounds(source.getLower(), source.getUpper());
     }
 
     @Override
     public void assignTo(StateNode other) {
-        @SuppressWarnings("unchecked") final IntScalarParam<D> copy = (IntScalarParam<D>) other;
+        @SuppressWarnings("unchecked") final RealScalarParam<D> copy = (RealScalarParam<D>) other;
         copy.setID(getID());
         copy.index = index;
         copy.setDomain(getDomain());
@@ -232,12 +239,12 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     @Override
     public void assignFrom(final StateNode other) {
-        @SuppressWarnings("unchecked") final IntScalarParam<D> source = (IntScalarParam<D>) other;
+        @SuppressWarnings("unchecked") final RealScalarParam<D> source = (RealScalarParam<D>) other;
         setID(source.getID());
-        set(source.get());
-        storedValue = source.storedValue;
         setDomain(source.getDomain());
         setBounds(source.getLower(), source.getUpper());
+        set(source.get());
+        storedValue = source.storedValue;
     }
 
 }

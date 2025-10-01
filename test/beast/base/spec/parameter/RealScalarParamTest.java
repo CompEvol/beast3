@@ -2,6 +2,7 @@ package beast.base.spec.parameter;
 
 import beast.base.parser.XMLProducer;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

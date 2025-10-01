@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import beast.base.core.Description;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
-import beast.base.spec.parameter.SimplexParam;
+import beast.base.spec.inference.parameter.SimplexParam;
 
 @Description("A substitution model where the rates and frequencies are obtained from " +
         "empirical evidence. Especially, amino acid models like WAG.")

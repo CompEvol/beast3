@@ -3,11 +3,13 @@ package beast.base.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 
 import java.io.PrintStream;
 
 /**
- * @deprecated use {@link beast.base.spec.parameter.RealScalarParam} or {@link beast.base.spec.parameter.RealVectorParam}
+ * @deprecated use {@link RealScalarParam} or {@link RealVectorParam}
  * @author Alexei Drummond
  */
 @Deprecated

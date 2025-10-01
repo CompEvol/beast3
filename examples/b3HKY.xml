@@ -26,8 +26,8 @@
         </sequence>
     </data>
 
-    <input id="hky.kappa" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal"
-               value="1"/>
+    <input id="hky.kappa" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"
+           value="1"/>
     <!--    value="0.0"/>-->
     <!--    value="-1.0"/>-->
 

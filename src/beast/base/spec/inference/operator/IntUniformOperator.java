@@ -6,7 +6,7 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
-import beast.base.spec.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.util.Randomizer;
 
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")

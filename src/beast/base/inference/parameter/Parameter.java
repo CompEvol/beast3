@@ -4,8 +4,8 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
-import beast.base.spec.parameter.RealScalarParam;
-import beast.base.spec.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 

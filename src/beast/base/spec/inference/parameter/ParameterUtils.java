@@ -1,4 +1,4 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.spec.Bounded;
 import beast.base.inference.StateNode;

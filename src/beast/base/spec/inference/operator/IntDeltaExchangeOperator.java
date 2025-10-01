@@ -3,18 +3,13 @@ package beast.base.spec.inference.operator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.parameter.IntVectorParam;
-import beast.base.spec.parameter.IntegerParameter;
-import beast.base.spec.parameter.RealParameter;
+import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for integer valued parameters")
 public class IntDeltaExchangeOperator extends KernelOperator {

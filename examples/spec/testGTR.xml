@@ -54,12 +54,12 @@
                 </taxonset>
             </tree>
             <parameter id="birthRate.t:primate" name="stateNode" value="1.0"/>
-            <stateNode id="rateAC.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateAG.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateAT.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateCG.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode id="rateGT.s:primate" lower="0.0" spec="beast.base.spec.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
-            <stateNode dimension="4" id="freqParameter.s:primate" lower="0.0" spec="beast.base.spec.parameter.SimplexParam" upper="1.0"
+            <stateNode id="rateAC.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
+            <stateNode id="rateAG.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
+            <stateNode id="rateAT.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
+            <stateNode id="rateCG.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
+            <stateNode id="rateGT.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
+            <stateNode dimension="4" id="freqParameter.s:primate" lower="0.0" spec="beast.base.spec.inference.parameter.SimplexParam" upper="1.0"
                        value="0.25 0.25 0.25 0.25"/>
         </state>
 

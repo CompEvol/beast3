@@ -1,7 +1,6 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
-import beast.base.core.Input;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
 

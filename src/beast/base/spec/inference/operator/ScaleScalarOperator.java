@@ -28,7 +28,7 @@ package beast.base.spec.inference.operator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 
 
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
