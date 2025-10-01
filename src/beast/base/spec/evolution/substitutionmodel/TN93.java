@@ -62,7 +62,7 @@ import beast.base.spec.type.RealScalar;
 @Description("TN93 (Tamura and Nei, 1993) substitution model of nucleotide evolution.")
 @Citation(value = "Tamura, K., & Nei, M. (1993). Estimation of the number of nucleotide substitutions in the control region " +
         "of mitochondrial DNA in humans and chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.", DOI = "10.1093/oxfordjournals.molbev.a040023", year = 1994, firstAuthorSurname = "tamura")
-public class TN93 extends NucleotideBase {
+public class TN93 extends Base {
     final public Input<RealScalar<PositiveReal>> kappa1Variable = new Input<>("kappa1", "rate of A<->G transitions", Validate.REQUIRED);
     final public Input<RealScalar<PositiveReal>> kappa2Variable = new Input<>("kappa2", "rate of C<->T transitions", Validate.REQUIRED);
 
@@ -90,6 +90,13 @@ public class TN93 extends NucleotideBase {
     private double k2t;
     private double k2c;
     private double subrateScale;
+    
+    public double freqA, freqC, freqG, freqT,
+    // A+G
+    freqR,
+    // C+T
+    freqY;
+
 
     /**
      * applies to nucleotides only *
@@ -311,7 +318,14 @@ public class TN93 extends NucleotideBase {
 
     private void calculateIntermediates() {
 
-        calculateFreqRY();
+        double[] freqs = frequencies.getFreqs();
+        freqA = freqs[0];
+        freqC = freqs[1];
+        freqG = freqs[2];
+        freqT = freqs[3];
+        freqR = freqA + freqG;
+        freqY = freqC + freqT;
+;
 
         double k1 = getKappa1();
         double k2 = getKappa2();
@@ -389,5 +403,12 @@ public class TN93 extends NucleotideBase {
     public boolean canHandleDataType(DataType dataType) {
         return dataType instanceof Nucleotide;
     }
+    
+    @Override
+    public double[] getRateMatrix(Node node) {
+    	// TODO: not implemented yet
+    	return null;
+   }
+
 
 }

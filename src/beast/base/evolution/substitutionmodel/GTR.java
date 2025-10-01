@@ -12,6 +12,10 @@ import beast.base.inference.parameter.RealParameter;
 
 @Description("General Time Reversible model of nucleotide evolution. " +
         "Rates that are not specified are assumed to be 1. ")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.GTR instead
+ */
+@Deprecated
 public class GTR extends GeneralSubstitutionModel {
     final public Input<Function> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
     final public Input<Function> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");

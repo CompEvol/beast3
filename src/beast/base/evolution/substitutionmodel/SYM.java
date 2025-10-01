@@ -11,6 +11,10 @@ import beast.base.inference.parameter.RealParameter;
 
 @Description("Symmetrical model of nucleotide evolution with equal base frequencies." +
         "Rates that are not specified are assumed to be 1.")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.SYM instead
+ */
+@Deprecated
 public class SYM extends GeneralSubstitutionModel {
     final public Input<RealParameter> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
     final public Input<RealParameter> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");

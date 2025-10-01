@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.spec.domain.PositiveReal;
@@ -13,7 +12,7 @@ import beast.base.spec.type.RealScalar;
 
 @Description("Transversion model of nucleotide evolution (variable transversion rates, equal transition rates)." +
         "Rates that are not specified are assumed to be 1.")
-public class TVM extends GeneralSubstitutionModel {
+public class TVM extends BasicGeneralSubstitutionModel {
 
     // Transversion rates
     final public Input<RealScalar<PositiveReal>> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
@@ -30,22 +29,8 @@ public class TVM extends GeneralSubstitutionModel {
     RealScalar<PositiveReal> rateCG;
     RealScalar<PositiveReal> rateTransitions;
 
-    public TVM() {
-        ratesInput.setRule(Validate.OPTIONAL);
-        try {
-            ratesInput.setValue(null, this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            // TODO: handle exception
-        }
-    }
-
     @Override
     public void initAndValidate() {
-        if (ratesInput.get() != null) {
-            throw new IllegalArgumentException("the rates attribute should not be used. Use the individual rates rateAC, rateCG, etc, instead.");
-        }
-
         frequencies = frequenciesInput.get();
         updateMatrix = true;
         nrOfStates = frequencies.getFreqs().length;

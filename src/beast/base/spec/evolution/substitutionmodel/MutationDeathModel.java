@@ -106,4 +106,11 @@ public class MutationDeathModel extends Base {
     public boolean canReturnComplexDiagonalization() {
     	return true;
     }
+
+	@Override
+	public double[] getRateMatrix(Node node) {
+		// not implemented yet
+		return null;
+	}
+	
 } // class MutationDeathModel

@@ -66,6 +66,10 @@ import beast.base.inference.parameter.RealParameter;
  * Note: to use Tuffley & Steel's methods, set a = 0.
  */
 @Description("Covarion model for Binary data")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.BinaryCovarion instead
+ */
+@Deprecated
 public class BinaryCovarion extends GeneralSubstitutionModel {
     final public Input<Function> alphaInput = new Input<>("alpha", "the rate of evolution in slow mode", Validate.REQUIRED);
     final public Input<Function> switchRateInput = new Input<>("switchRate", "the rate of flipping between slow and fast modes", Validate.REQUIRED);

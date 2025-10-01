@@ -1,4 +1,4 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
@@ -6,10 +6,6 @@ import beast.base.evolution.datatype.DataType;
 
 @Description("BLOSUM62 model of amino acid evolution " +
         "Henikoff, S., and J. G. Henikoff. 1992. PNAS USA 89:10915-10919.")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.Blosum62 instead
- */
-@Deprecated
 public class Blosum62 extends EmpiricalSubstitutionModel {
 
 

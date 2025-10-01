@@ -1,4 +1,4 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
@@ -8,10 +8,6 @@ import beast.base.evolution.datatype.DataType;
         " D.T. Jones, W.R. Taylor, and J.M. Thornton " +
         " The rapid generation of mutation data matrices from protein sequences " +
         " CABIOS  vol. 8 no. 3 1992 pp. 275-282.")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.JTT instead
- */
-@Deprecated
 public class JTT extends EmpiricalSubstitutionModel {
 
 

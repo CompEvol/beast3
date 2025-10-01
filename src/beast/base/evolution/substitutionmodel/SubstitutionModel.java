@@ -96,6 +96,10 @@ public interface SubstitutionModel {
      * basic implementation of a SubstitutionModel bringing together relevant super class*
      */
     @Description(value = "Base implementation of a substitution model.", isInheritable = false)
+    /**
+     * @deprecated use beast.base.spec.evolution.subsitutionmodel.Base instead
+     */
+    @Deprecated
     public abstract class Base extends CalculationNode implements SubstitutionModel {
         final public Input<Frequencies> frequenciesInput =
                 new Input<>("frequencies", "substitution model equilibrium state frequencies", Validate.REQUIRED);
@@ -142,6 +146,10 @@ public interface SubstitutionModel {
      * basic implementation of a SubstitutionModel bringing together relevant super class*
      */
     @Description(value = "Base implementation of a nucleotide substitution model.", isInheritable = false)
+    /**
+     * @deprecated since no class uses this -- copy code if you really need this
+     */
+    @Deprecated
     public abstract class NucleotideBase extends Base {
 
         public double freqA, freqC, freqG, freqT,

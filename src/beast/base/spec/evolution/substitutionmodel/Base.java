@@ -73,9 +73,7 @@ import beast.base.inference.CalculationNode;
         }
 
         @Override
-        public double[] getRateMatrix(Node node) {
-            return null;
-        }
+        abstract public double[] getRateMatrix(Node node);
 
     } // class Base
 

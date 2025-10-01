@@ -12,6 +12,10 @@ import beast.base.inference.parameter.RealParameter;
 
 @Description("Transversion model of nucleotide evolution (variable transversion rates, equal transition rates)." +
         "Rates that are not specified are assumed to be 1.")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.TVM instead
+ */
+@Deprecated
 public class TVM extends GeneralSubstitutionModel {
 
     // Transversion rates

@@ -59,6 +59,13 @@ public class Frequencies extends CalculationNode {
      */
     protected boolean needsUpdate;
 
+    
+    public Frequencies() {}
+    
+    public Frequencies(Simplex freqs) {
+    	initByName("frequencies", freqs);
+    }
+    
 
     @Override
     public void initAndValidate() {

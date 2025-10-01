@@ -1,4 +1,4 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
@@ -9,10 +9,6 @@ import beast.base.evolution.datatype.DataType;
         " A model of evolutionary change in proteins. " +
         " Dayhoff, M.O. (ed.) Atlas of Protein Sequence Structur., Vol5, Suppl. 3, " +
         " National Biomedical Research Foundation, Washington DC, pp. 345-352.")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.Dayhoff instead
- */
-@Deprecated
 public class Dayhoff extends EmpiricalSubstitutionModel {
 
 

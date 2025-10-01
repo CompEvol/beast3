@@ -41,10 +41,16 @@ import beast.base.spec.type.RealScalar;
         "Hasegawa M, Kishino H, Yano T (1985) Dating the human-ape splitting by a\n"+
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
-public class HKY extends NucleotideBase {
+public class HKY extends Base {
     final public Input<RealScalar<PositiveReal>> kappaInput = new Input<>(
             "kappa", "kappa parameter in HKY model",
             Validate.REQUIRED);
+
+    public double freqA, freqC, freqG, freqT,
+    // A+G
+    freqR,
+    // C+T
+    freqY;
 
     /**
      * applies to nucleotides only *
@@ -210,7 +216,13 @@ public class HKY extends NucleotideBase {
 
     protected void setupMatrix() {
 
-        calculateFreqRY();
+        double[] freqs = frequencies.getFreqs();
+        freqA = freqs[0];
+        freqC = freqs[1];
+        freqG = freqs[2];
+        freqT = freqs[3];
+        freqR = freqA + freqG;
+        freqY = freqC + freqT;
 
         // small speed up - reduce calculations. Comments show original code
 
@@ -279,5 +291,22 @@ public class HKY extends NucleotideBase {
     public boolean canHandleDataType(DataType dataType) {
         return dataType instanceof Nucleotide;
     }
+    
+    @Override
+    public double[] getRateMatrix(Node node) {
+        synchronized(this) {
+        	if (updateMatrix) {
+        		setupMatrix();
+        	}
+        }
+
+        return new double[] {
+        		-tab1A-tab2A-tab3A, tab1A, tab2A, tab3A,
+        		tab1C, -tab1C-tab2C-tab3C, tab2C, tab3C,
+        		tab1G, tab2G, -tab1G-tab2G-tab3G, tab3G,
+        		tab1T, tab2T, tab3T, -tab1T-tab2T-tab3T
+        };
+    }
+
 
 }

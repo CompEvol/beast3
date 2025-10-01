@@ -1,4 +1,4 @@
-package beast.base.evolution.substitutionmodel;
+package beast.base.spec.evolution.substitutionmodel;
 
 import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
@@ -7,10 +7,7 @@ import beast.base.util.DiscreteStatistics;
 
 @Description("WAG model of amino acid evolution by " +
         "S. Whelan and N. Goldman. 2001. Molecular biology and evolution 18.5 (2001): 691-699 ")
-/**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.WAG instead
- */
-@Deprecated
+
 public class WAG extends EmpiricalSubstitutionModel {
 
     @Override

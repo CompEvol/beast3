@@ -39,6 +39,10 @@ import beast.base.inference.parameter.RealParameter;
         "Hasegawa M, Kishino H, Yano T (1985) Dating the human-ape splitting by a\n"+
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.HKY instead
+ */
+@Deprecated
 public class HKY extends SubstitutionModel.NucleotideBase {
     final public Input<Function> kappaInput = new Input<>("kappa", "kappa parameter in HKY model", Validate.REQUIRED);
 

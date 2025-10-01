@@ -8,6 +8,10 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
 
 @Description("Mutation Death substitution model, can be used as Stochastic Dollo model.")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.MutationDeathModel instead
+ */
+@Deprecated
 public class MutationDeathModel extends SubstitutionModel.Base {
 
     final public Input<Function> delParameter = new Input<>("deathprob", "rate of death, used to calculate death probability", Validate.REQUIRED);

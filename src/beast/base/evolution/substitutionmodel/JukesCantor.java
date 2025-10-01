@@ -9,6 +9,10 @@ import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.tree.Node;
 
 @Description("Jukes Cantor substitution model: all rates equal and " + "uniformly distributed frequencies")
+/**
+ * @deprecated use beast.base.spec.evolution.subsitutionmodel.JukesCantor instead
+ */
+@Deprecated
 public class JukesCantor extends SubstitutionModel.Base {
 
     public JukesCantor() {

@@ -4,7 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.spec.domain.PositiveReal;
@@ -13,7 +12,7 @@ import beast.base.spec.type.RealScalar;
 
 @Description("Symmetrical model of nucleotide evolution with equal base frequencies." +
         "Rates that are not specified are assumed to be 1.")
-public class SYM extends GeneralSubstitutionModel {
+public class SYM extends BasicGeneralSubstitutionModel {
     final public Input<RealScalar<PositiveReal>> rateACInput = new Input<>("rateAC", "substitution rate for A to C (default 1)");
     final public Input<RealScalar<PositiveReal>> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
     final public Input<RealScalar<PositiveReal>> rateATInput = new Input<>("rateAT", "substitution rate for A to T (default 1)");
@@ -31,34 +30,8 @@ public class SYM extends GeneralSubstitutionModel {
     // For hardcoding equal base frequencies
     //double[] frequencies;
 
-    public SYM() {
-        ratesInput.setRule(Validate.OPTIONAL);
-        try {
-            ratesInput.setValue(null, this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            // TODO: handle exception
-        }
-
-        // Override the superclass SubstitutionModel.Base requirement for input frequencies, since they are equal in SYM
-        //frequenciesInput.setRule(Validate.OPTIONAL);
-        //try {
-        //    initAndValidate();
-        //} catch (Exception e) {
-        //    e.printStackTrace();
-        //    throw new RuntimeException("initAndValidate() call failed when constructing SYM()");
-        //}
-    }
-
     @Override
     public void initAndValidate() {
-        if (ratesInput.get() != null) {
-            throw new IllegalArgumentException("the rates attribute should not be used. Use the individual rates rateAC, rateCG, etc, instead.");
-        }
-
-        //if (frequenciesInput.get() != null) {
-        //    throw new RuntimeException("Frequencies must not be specified in the SYM model. They are assumed equal.");
-        // }
 
         // Set equal base frequencies
         //frequencies = new double[]{0.25, 0.25, 0.25, 0.25};

@@ -13,7 +13,7 @@ import beast.base.spec.type.RealScalar;
 
 @Description("Transition model of nucleotide evolution (variable transition rates, two transversion rates). " +
         "Rates that are not specified are assumed to be 1.")
-public class TIM extends GeneralSubstitutionModel {
+public class TIM extends BasicGeneralSubstitutionModel {
 
     // Transition rates
     final public Input<RealScalar<PositiveReal>> rateAGInput = new Input<>("rateAG", "substitution rate for A to G (default 1)");
@@ -28,22 +28,8 @@ public class TIM extends GeneralSubstitutionModel {
     RealScalar<PositiveReal> rateTransversions1;
     RealScalar<PositiveReal> rateTransversions2;
 
-    public TIM() {
-        ratesInput.setRule(Validate.OPTIONAL);
-        try {
-            ratesInput.setValue(null, this);
-        } catch (Exception e) {
-            e.printStackTrace();
-            // TODO: handle exception
-        }
-    }
-
     @Override
     public void initAndValidate() {
-        if (ratesInput.get() != null) {
-            throw new IllegalArgumentException("the rates attribute should not be used. Use the individual rates rateAG, rateCT, etc, instead.");
-        }
-
         frequencies = frequenciesInput.get();
         updateMatrix = true;
         nrOfStates = frequencies.getFreqs().length;
