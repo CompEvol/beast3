@@ -6,12 +6,12 @@ import beast.base.core.Log;
 import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.inference.operator.OptimizeUtils;
+import beast.base.spec.inference.operator.AutoOptimized;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for integer valued parameters")
-public class IntDeltaExchangeOperator extends Operator implements Weighted {
+public class IntDeltaExchangeOperator extends Operator implements Weighted, AutoOptimized {
 
     public final Input<IntVectorParam<? extends Int>> intparameterInput = new Input<>(
             "parameter", "if specified, this parameter is operated on",
@@ -139,13 +139,12 @@ public class IntDeltaExchangeOperator extends Operator implements Weighted {
     }
 
     @Override
-    public final String getPerformanceSuggestion() {
-        final double targetProb = getTargetAcceptanceProbability();
-        return OptimizeUtils.getPerformanceSuggestion(m_nNrAccepted, m_nNrRejected, targetProb, delta);
+    public double getTargetAcceptanceProbability() {
+        return AutoOptimized.Target_Acceptance_Probability;
     }
 
     @Override
-    public double getTargetAcceptanceProbability() {
-        return OptimizeUtils.Target_Acceptance_Probability;
+    public final String getPerformanceSuggestion() {
+        return getPerformanceSuggestion(this, "delta");
     }
 }

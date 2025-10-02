@@ -52,7 +52,6 @@ public class ScaleScalarOperator extends AbstractScale {
 
         try {
 
-            // TODO seem not to require InputUtil.get(...)
             final RealScalarParam param = parameterInput.get();
 
             // TODO this would not happened after merge Parameter with Bounded interface

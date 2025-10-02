@@ -6,12 +6,12 @@ import beast.base.core.Log;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.operator.OptimizeUtils;
+import beast.base.spec.inference.operator.AutoOptimized;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
-public class RealDeltaExchangeOperator extends KernelOperator implements Weighted {
+public class RealDeltaExchangeOperator extends KernelOperator implements Weighted, AutoOptimized {
 
     public final Input<RealVectorParam<? extends Real>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on",
@@ -140,15 +140,12 @@ public class RealDeltaExchangeOperator extends KernelOperator implements Weighte
     }
 
     @Override
-    public final String getPerformanceSuggestion() {
-        final double targetProb = getTargetAcceptanceProbability();
-        return OptimizeUtils.getPerformanceSuggestion(m_nNrAccepted, m_nNrRejected, targetProb, delta);
+    public double getTargetAcceptanceProbability() {
+        return AutoOptimized.Target_Acceptance_Probability;
     }
-
 
     @Override
-    public double getTargetAcceptanceProbability() {
-        return OptimizeUtils.Target_Acceptance_Probability;
+    public final String getPerformanceSuggestion() {
+        return getPerformanceSuggestion(this, "delta");
     }
-
 }
