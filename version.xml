@@ -185,6 +185,8 @@
 <!--                <provider classname="beast.base.spec.inference.operator.DeltaExchangeOperator"/>-->
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"/>
+                <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>
+                <provider classname="beast.base.spec.inference.operator.uniform.IntVectorUniformOperator"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 
