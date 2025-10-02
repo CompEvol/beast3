@@ -3,20 +3,47 @@ package beast.base.spec.inference.operator.deltaexchange;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.inference.operator.kernel.KernelOperator;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.operator.OptimizeUtils;
+import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
-import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
-public class RealDeltaExchangeOperator extends AbstractDeltaExchange {
+public class RealDeltaExchangeOperator extends KernelOperator implements Weighted {
 
     public final Input<RealVectorParam<? extends Real>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on",
             Input.Validate.REQUIRED, RealVectorParam.class);
 
+    public final Input<IntVectorParam<? extends PositiveInt>> parameterWeightsInput = new Input<>(
+            "weightvector", "weights on a vector parameter");
 
+    public final Input<Double> deltaInput = new Input<>("delta",
+            "Magnitude of change for two randomly picked values.", 1.0);
+    public final Input<Boolean> autoOptimizeiInput = new Input<>("autoOptimize",
+            "if true, window size will be adjusted during the MCMC run to improve mixing.",
+            true);
+
+    private boolean autoOptimize;
+    private double delta;
+
+    public RealDeltaExchangeOperator() {
+        super();
+
+    }
+
+    @Override
+    public IntVectorParam<? extends PositiveInt> getWeights() {
+        return parameterWeightsInput.get();
+    }
+
+    @Override
     public void initAndValidate() {
         super.initAndValidate();
+        delta = deltaInput.get();
+        autoOptimize = autoOptimizeiInput.get();
 
         // dimension sanity check
         int dim = parameterInput.get().size();
@@ -35,12 +62,7 @@ public class RealDeltaExchangeOperator extends AbstractDeltaExchange {
 //        final int dim = parameterWeights.length;
 
         // Find the number of weights that are nonzero
-        int nonZeroWeights = 0;
-        for (int i: parameterWeights) {
-            if (i != 0) {
-                ++nonZeroWeights;
-            }
-        }
+        int nonZeroWeights = findNonZeroWeight(parameterWeights);
 
         if (nonZeroWeights <= 1) {
             // it is impossible to select two distinct entries in this case, so there is nothing to propose
@@ -48,30 +70,9 @@ public class RealDeltaExchangeOperator extends AbstractDeltaExchange {
         }
 
         // Generate indices for the values to be modified
-        int dim1 = Randomizer.nextInt(nonZeroWeights);
-        int dim2 = Randomizer.nextInt(nonZeroWeights-1);
-        if (dim2 >= dim1) {
-            ++dim2;
-        }
-        if (nonZeroWeights<dim) {
-            // There are zero weights, so we need to increase dim1 and dim2 accordingly.
-            int nonZerosBeforeDim1 = dim1;
-            int nonZerosBeforeDim2 = dim2;
-            dim1 = 0;
-            dim2 = 0;
-            while (nonZerosBeforeDim1 > 0 | parameterWeights[dim1] == 0 ) {
-                if (parameterWeights[dim1] != 0) {
-                    --nonZerosBeforeDim1;
-                }
-                ++dim1;
-            }
-            while (nonZerosBeforeDim2 > 0 | parameterWeights[dim2] == 0 ) {
-                if (parameterWeights[dim2] != 0) {
-                    --nonZerosBeforeDim2;
-                }
-                ++dim2;
-            }
-        }
+        IntPair dims = getPairedDim(nonZeroWeights, parameterWeights);
+        int dim1 = dims.first();
+        int dim2 = dims.second();
 
         double logq = 0.0;
 
@@ -98,8 +99,8 @@ public class RealDeltaExchangeOperator extends AbstractDeltaExchange {
                 scalar2 < realparameter.getLower() || scalar2 > realparameter.getUpper()) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            realparameter.setValue(dim1, scalar1);
-            realparameter.setValue(dim2, scalar2);
+            realparameter.set(dim1, scalar1);
+            realparameter.set(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");
@@ -109,6 +110,45 @@ public class RealDeltaExchangeOperator extends AbstractDeltaExchange {
 
     private double getNextDouble(int i) {
         return kernelDistribution.getRandomDelta(i, Double.NaN, delta);
+    }
+
+    @Override
+    public double getCoercableParameterValue() {
+        return delta;
+    }
+
+    @Override
+    public void setCoercableParameterValue(final double value) {
+        delta = value;
+    }
+
+    /**
+     * called after every invocation of this operator to see whether
+     * a parameter can be optimised for better acceptance hence faster
+     * mixing
+     *
+     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     */
+    @Override
+    public void optimize(final double logAlpha) {
+        // must be overridden by operator implementation to have an effect
+        if (autoOptimize) {
+            double _delta = calcDelta(logAlpha);
+            _delta += Math.log(delta);
+            delta = Math.exp(_delta);
+        }
+    }
+
+    @Override
+    public final String getPerformanceSuggestion() {
+        final double targetProb = getTargetAcceptanceProbability();
+        return OptimizeUtils.getPerformanceSuggestion(m_nNrAccepted, m_nNrRejected, targetProb, delta);
+    }
+
+
+    @Override
+    public double getTargetAcceptanceProbability() {
+        return OptimizeUtils.Target_Acceptance_Probability;
     }
 
 }

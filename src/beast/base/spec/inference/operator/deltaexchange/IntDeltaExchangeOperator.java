@@ -3,26 +3,44 @@ package beast.base.spec.inference.operator.deltaexchange;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.inference.operator.OptimizeUtils;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for integer valued parameters")
-public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
+public class IntDeltaExchangeOperator extends Operator implements Weighted {
 
-    //TODO rename to "parameter"
     public final Input<IntVectorParam<? extends Int>> intparameterInput = new Input<>(
             "parameter", "if specified, this parameter is operated on",
             Input.Validate.REQUIRED, IntVectorParam.class);
 
+        public final Input<IntVectorParam<? extends PositiveInt>> parameterWeightsInput = new Input<>(
+            "weightvector", "weights on a vector parameter");
+
 //    public final Input<Integer> deltaInput = new Input<>("delta",
 //            "Magnitude of change for two randomly picked values.", 1);
+    public final Input<Double> deltaInput = new Input<>("delta",
+        "Magnitude of change for two randomly picked values.", 1.0);
+    public final Input<Boolean> autoOptimizeiInput = new Input<>("autoOptimize",
+            "if true, window size will be adjusted during the MCMC run to improve mixing.",
+            true);
 
+    private boolean autoOptimize;
     // TODO possible to update Operator to Operator<Number> ?, so take int delta
 //    private int delta;
+    private double delta;
+
+    @Override
+    public IntVectorParam<? extends PositiveInt> getWeights() {
+        return parameterWeightsInput.get();
+    }
 
     public void initAndValidate() {
-        super.initAndValidate();
+        delta = deltaInput.get();
+        autoOptimize = autoOptimizeiInput.get();
 
         //TODO this is the reason to use strong typing
         if (delta != Math.round(delta)) { // isIntegerOperator &&
@@ -46,12 +64,7 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
 //        final int dim = parameterWeights.length;
 
         // Find the number of weights that are nonzero
-        int nonZeroWeights = 0;
-        for (int i: parameterWeights) {
-            if (i != 0) {
-                ++nonZeroWeights;
-            }
-        }
+        int nonZeroWeights = findNonZeroWeight(parameterWeights);
 
         if (nonZeroWeights <= 1) {
             // it is impossible to select two distinct entries in this case, so there is nothing to propose
@@ -59,30 +72,9 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         }
 
         // Generate indices for the values to be modified
-        int dim1 = Randomizer.nextInt(nonZeroWeights);
-        int dim2 = Randomizer.nextInt(nonZeroWeights-1);
-        if (dim2 >= dim1) {
-            ++dim2;
-        }
-        if (nonZeroWeights<dim) {
-            // There are zero weights, so we need to increase dim1 and dim2 accordingly.
-            int nonZerosBeforeDim1 = dim1;
-            int nonZerosBeforeDim2 = dim2;
-            dim1 = 0;
-            dim2 = 0;
-            while (nonZerosBeforeDim1 > 0 | parameterWeights[dim1] == 0 ) {
-                if (parameterWeights[dim1] != 0) {
-                    --nonZerosBeforeDim1;
-                }
-                ++dim1;
-            }
-            while (nonZerosBeforeDim2 > 0 | parameterWeights[dim2] == 0 ) {
-                if (parameterWeights[dim2] != 0) {
-                    --nonZerosBeforeDim2;
-                }
-                ++dim2;
-            }
-        }
+        IntPair dims = getPairedDim(nonZeroWeights, parameterWeights);
+        int dim1 = dims.first();
+        int dim2 = dims.second();
 
         double logq = 0.0;
 
@@ -103,8 +95,8 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
                 scalar2 < intparameter.getLower() || scalar2 > intparameter.getUpper()) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            intparameter.setValue(dim1, scalar1);
-            intparameter.setValue(dim2, scalar2);
+            intparameter.set(dim1, scalar1);
+            intparameter.set(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");
@@ -136,4 +128,24 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         }
     }
 
+    @Override
+    public double getCoercableParameterValue() {
+        return delta;
+    }
+
+    @Override
+    public void setCoercableParameterValue(final double value) {
+        delta = value;
+    }
+
+    @Override
+    public final String getPerformanceSuggestion() {
+        final double targetProb = getTargetAcceptanceProbability();
+        return OptimizeUtils.getPerformanceSuggestion(m_nNrAccepted, m_nNrRejected, targetProb, delta);
+    }
+
+    @Override
+    public double getTargetAcceptanceProbability() {
+        return OptimizeUtils.Target_Acceptance_Probability;
+    }
 }
