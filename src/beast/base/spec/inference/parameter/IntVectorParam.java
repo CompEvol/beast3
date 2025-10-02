@@ -187,11 +187,11 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     //*** setValue ***
 
-    public void setValue(final Integer value) {
-        this.setValue(0, value);
+    public void set(final Integer value) {
+        this.set(0, value);
     }
 
-    public void setValue(final int i, final Integer value) {
+    public void set(final int i, final Integer value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +

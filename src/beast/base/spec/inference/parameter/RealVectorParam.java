@@ -187,11 +187,11 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     //*** setValue ***
 
-    public void setValue(final Double value) {
-        this.setValue(0, value);
+    public void set(final Double value) {
+        this.set(0, value);
     }
 
-    public void setValue(final int i, final Double value) {
+    public void set(final int i, final Double value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +

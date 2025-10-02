@@ -160,11 +160,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     //*** setValue ***
 
-    public void setValue(final Boolean value) {
-        this.setValue(0, value);
+    public void set(final Boolean value) {
+        this.set(0, value);
     }
 
-    public void setValue(final int i, final Boolean value) {
+    public void set(final int i, final Boolean value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
