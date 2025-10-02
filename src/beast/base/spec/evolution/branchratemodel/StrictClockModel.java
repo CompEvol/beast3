@@ -1,34 +1,30 @@
-package beast.base.evolution.branchratemodel;
+package beast.base.spec.evolution.branchratemodel;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.evolution.tree.Node;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 
 /**
  * @author Alexei Drummond
  */
 
 @Description("Defines a mean rate for each branch in the beast.tree.")
-/**
- * @deprecated use beast.base.spec.evolution.branchratemodel.StrictClockModel instead
- */
-@Deprecated
-public class StrictClockModel extends BranchRateModel.Base {
+public class StrictClockModel extends Base {
 
     //public Input<RealParameter> muParameterInput = new Input<>("clock.rate", "the clock rate (defaults to 1.0)");
 
-    Function muParameter;
+	RealScalar<PositiveReal> muParameter;
 
     @Override
     public void initAndValidate() {
         muParameter = meanRateInput.get();
         if (muParameter != null) {
-        	if (muParameter instanceof RealParameter) { 
-        		RealParameter mu = (RealParameter) muParameter;
+        	if (muParameter instanceof RealScalarParam<PositiveReal> mu) { 
         		mu.setBounds(Math.max(0.0, mu.getLower()), mu.getUpper());
         	}
-            mu = muParameter.getArrayValue();
+            mu = muParameter.get();
         }
     }
 
@@ -39,19 +35,19 @@ public class StrictClockModel extends BranchRateModel.Base {
 
     @Override
     public boolean requiresRecalculation() {
-        mu = muParameter.getArrayValue();
+        mu = muParameter.get();
         return true;
     }
 
     @Override
     protected void restore() {
-        mu = muParameter.getArrayValue();
+        mu = muParameter.get();
         super.restore();
     }
 
     @Override
     protected void store() {
-        mu = muParameter.getArrayValue();
+        mu = muParameter.get();
         super.store();
     }
 

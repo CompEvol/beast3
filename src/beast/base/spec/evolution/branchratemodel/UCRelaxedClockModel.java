@@ -1,4 +1,4 @@
-package beast.base.evolution.branchratemodel;
+package beast.base.spec.evolution.branchratemodel;
 
 
 
@@ -8,7 +8,6 @@ import org.apache.commons.math.MathException;
 
 import beast.base.core.Citation;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Node;
@@ -16,9 +15,15 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
 import beast.base.inference.StateNode;
 import beast.base.inference.distribution.ParametricDistribution;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.IntVector;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
 
 /**
@@ -30,18 +35,15 @@ import beast.base.util.Randomizer;
         "Drummond AJ, Ho SYW, Phillips MJ, Rambaut A (2006) Relaxed Phylogenetics and\n" +
                 "  Dating with Confidence. PLoS Biol 4(5): e88", DOI = "10.1371/journal.pbio.0040088",
         year = 2006, firstAuthorSurname = "drummond")
-/**
- * @deprecated use beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel instead
- */
-public class UCRelaxedClockModel extends BranchRateModel.Base {
+public class UCRelaxedClockModel extends Base {
     final public Input<ParametricDistribution> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
-    final public Input<IntegerParameter> categoryInput = new Input<>("rateCategories", "the rate categories associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.REQUIRED);
+    final public Input<IntVector<NonNegativeInt>> categoryInput = new Input<>("rateCategories", "the rate categories associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.REQUIRED);
     final public Input<Integer> numberOfDiscreteRates = new Input<>("numberOfDiscreteRates", "the number of discrete rates to approximate the rate distribution by. "
     		+ "With category parameterisation, a value <= 0 will cause the number of categories to be set equal to the number of branches in the tree. "
     		+ "With quantile parameterisation, a value <= 1 will calculate rates for every quantile, a value > 1 will approximate the distribution piecewise linearly with specified number of rates. "
     		+ "(default = -1)", -1);
-    final public Input<RealParameter> quantileInput = new Input<>("rateQuantiles", "the rate quantiles associated with nodes in the tree for sampling of individual rates among branches.");
-    final public Input<RealParameter> rateInput = new Input<>("rates", "the rates associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.XOR, categoryInput);
+    final public Input<RealVector<PositiveReal>> quantileInput = new Input<>("rateQuantiles", "the rate quantiles associated with nodes in the tree for sampling of individual rates among branches.");
+    final public Input<RealVector<PositiveReal>> rateInput = new Input<>("rates", "the rates associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.XOR, categoryInput);
     final public Input<Tree> treeInput = new Input<>("tree", "the tree this relaxed clock is associated with.", Input.Validate.REQUIRED);
     final public Input<Boolean> normalizeInput = new Input<>("normalize", "Whether to normalize the average rate (default false).", false);
     // there are three modes to represent the rates on the branches
@@ -52,10 +54,10 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
     }
     Mode mode = Mode.categories;//initialize the mode
     // either categories or quantiles or rateParameter is used
-    RealParameter rateParameter; //when mode=rates
-    IntegerParameter categories; //when mode=categories
-    public IntegerParameter getCategories() {return categories;}
-    RealParameter quantiles; // when mode=quantiles
+    RealVector<PositiveReal> rateParameter; //when mode=rates
+    IntVector<NonNegativeInt> categories; //when mode=categories
+    public IntVector<NonNegativeInt> getCategories() {return categories;}
+    RealVector<PositiveReal> quantiles; // when mode=quantiles
 
     // if using categories, then it is set to be true; otherwise, it is set to be false.
     //boolean usingcategories;
@@ -63,8 +65,8 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
     ParametricDistribution distribution; //the distribution of the rates
     public ParametricDistribution getDistribution() {return distribution;}
 
-    private Function meanRate;
-    public Function getMeanRate() {return meanRate;}
+    private RealScalar<PositiveReal> meanRate;
+    public RealScalar<PositiveReal> getMeanRate() {return meanRate;}
     Tree tree;
     private int branchCount;//the number of branches of the tree
     private boolean normalize = false;//
@@ -128,52 +130,67 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
         //initialize rates in three modes
         switch (mode) {
             case quantiles: {
-                quantiles.setDimension(branchCount);
-                Double[] initialQuantiles = new Double[branchCount];
-                for (int i = 0; i < branchCount; i++) {
-                    initialQuantiles[i] = Randomizer.nextDouble();
-                }
-                RealParameter other = new RealParameter(initialQuantiles);
-                quantiles.assignFromWithoutID(other);
-                quantiles.setLower(0.0);
-                quantiles.setUpper(1.0);
+            	if (quantiles instanceof RealVectorParam<PositiveReal> quantilesParam) { 
+            		quantilesParam.setDimension(branchCount);
+	                double[] initialQuantiles = new double[branchCount];
+	                for (int i = 0; i < branchCount; i++) {
+	                    initialQuantiles[i] = Randomizer.nextDouble();
+	                }
+	                RealVectorParam<PositiveReal>  other = new RealVectorParam<>(initialQuantiles, PositiveReal.INSTANCE);
+	                quantilesParam.assignFromWithoutID(other);
+	                quantilesParam.setLower(0.0);
+	                quantilesParam.setUpper(1.0);
+            	}
                 if (numberOfDiscreteRates.get() > 1) {
                     rates = new double[LATTICE_SIZE_FOR_DISCRETIZED_RATES];
                     storedRates = new double[LATTICE_SIZE_FOR_DISCRETIZED_RATES];
                 }
+            	if (quantiles.size() != branchCount) {
+            		throw new IllegalArgumentException("quantiles has dimension " + categories.size() + " but expected " + branchCount);
+            	}
             }
             break;
             case categories: {
-                categories.setDimension(branchCount);
-                Integer[] initialCategories = new Integer[branchCount];
-                for (int i = 0; i < branchCount; i++) {
-                    initialCategories[i] = Randomizer.nextInt(LATTICE_SIZE_FOR_DISCRETIZED_RATES);
-                }
-                // set initial values of rate categories
-                IntegerParameter other = new IntegerParameter(initialCategories);
-                categories.assignFromWithoutID(other);
-                categories.setLower(0);
-                categories.setUpper(LATTICE_SIZE_FOR_DISCRETIZED_RATES - 1);
+            	if (categories instanceof IntVectorParam<NonNegativeInt> categoriesParam) { 
+            		categoriesParam.setDimension(branchCount);
+	                int[] initialCategories = new int[branchCount];
+	                for (int i = 0; i < branchCount; i++) {
+	                    initialCategories[i] = Randomizer.nextInt(LATTICE_SIZE_FOR_DISCRETIZED_RATES);
+	                }
+	                // set initial values of rate categories
+	                IntVectorParam<NonNegativeInt> other = new IntVectorParam<>(initialCategories, NonNegativeInt.INSTANCE);
+	                categoriesParam.assignFromWithoutID(other);
+	                categoriesParam.setLower(0);
+	                categoriesParam.setUpper(LATTICE_SIZE_FOR_DISCRETIZED_RATES - 1);
+            	}
+            	if (categories.size() != branchCount) {
+            		throw new IllegalArgumentException("categories has dimension " + categories.size() + " but expected " + branchCount);
+            	}
             }
             break;
             case rates: {
-                if (rateParameter.getDimension() != branchCount) {
-                    rateParameter.setDimension(branchCount);
-                    //randomly draw rates from the distribution
-                    Double[][] initialRates0 = null;
-					try {
-						initialRates0 = distribution.sample(branchCount);
-					} catch (MathException e) {
-						e.printStackTrace();
-					}
-                    Double [] initialRates = new Double[branchCount];
-                    for (int i = 0; i < branchCount; i++) {
-                    	initialRates[i] = initialRates0[i][0];
-                    }
-                    RealParameter other = new RealParameter(initialRates);
-                    rateParameter.assignFromWithoutID(other);
+            	if (rateParameter instanceof RealVectorParam<PositiveReal> rateParam) { 
+	                if (rateParam.size() != branchCount) {
+	                	rateParam.setDimension(branchCount);
+	                    //randomly draw rates from the distribution
+	                    Double[][] initialRates0 = null;
+						try {
+							initialRates0 = distribution.sample(branchCount);
+						} catch (MathException e) {
+							e.printStackTrace();
+						}
+	                    double [] initialRates = new double[branchCount];
+	                    for (int i = 0; i < branchCount; i++) {
+	                    	initialRates[i] = initialRates0[i][0];
+	                    }
+		                RealVectorParam<PositiveReal>  other = new RealVectorParam<>(initialRates, PositiveReal.INSTANCE);
+	                    rateParam.assignFromWithoutID(other);
+	                    rateParam.setLower(0.0);
+	                }
                 }
-                rateParameter.setLower(0.0);
+            	if (rateParameter.size() != branchCount) {
+            		throw new IllegalArgumentException("rates has dimension " + categories.size() + " but expected " + branchCount);
+            	}
             }
         }
 
@@ -186,7 +203,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
         normalize = normalizeInput.get();
         meanRate = meanRateInput.get();
         if (meanRate == null) {
-            meanRate = new RealParameter("1.0");
+            meanRate = new RealScalarParam<PositiveReal>(1.0, PositiveReal.INSTANCE);
         }
         try {
             double mean = rateDistInput.get().getMean();
@@ -222,7 +239,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
             }
             renormalize = false;
         }
-        return getRawRate(node) * scaleFactor * meanRate.getArrayValue();
+        return getRawRate(node) * scaleFactor * meanRate.get();
     }
 
     /**
@@ -260,7 +277,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
             // root node has nr less than #categories, so use that nr
             nodeNumber = node.getTree().getRoot().getNr();
         }
-        return rateParameter.getValue(nodeNumber);
+        return rateParameter.get(nodeNumber);
     }
     
     // when mode=categories
@@ -270,7 +287,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
             // root node has nr less than #categories, so use that nr
             nodeNumber = node.getTree().getRoot().getNr();
         }
-        int category = categories.getValue(nodeNumber);
+        int category = categories.get(nodeNumber);
         if (rates[category] == 0.0) {
             try {
                 rates[category] = distribution.inverseCumulativeProbability((category + 0.5) / rates.length);
@@ -291,14 +308,14 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
         }
         if (rates == null) {
 	        try {
-	        	return distribution.inverseCumulativeProbability(quantiles.getValue(nodeNumber));
+	        	return distribution.inverseCumulativeProbability(quantiles.get(nodeNumber));
 	        } catch (MathException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }
 
         // use cached rates
-        double q = quantiles.getValue(nodeNumber);
+        double q = quantiles.get(nodeNumber);
         double v = q * (rates.length - 1);
         int i = (int) v;
         
@@ -364,17 +381,34 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
             return true;
         }
         // NOT processed as trait on the tree, so DO mark as dirty
-        if (categoryInput.get() != null && categoryInput.get().somethingIsDirty()) {
-            //recompute = true;
-            return true;
+        if (categoryInput.get() != null) {
+        	IntVector<NonNegativeInt> c = categoryInput.get();
+        	if (c instanceof StateNode s && s.somethingIsDirty()) {
+                return true;
+        	}
+        	if (c instanceof CalculationNode ca && ca.isDirtyCalculation()) {
+                return true;
+        	}
         }
 
-        if (quantileInput.get() != null && quantileInput.get().somethingIsDirty()) {
-            return true;
+        if (quantileInput.get() != null) {
+        	RealVector<PositiveReal> q = quantileInput.get();
+        	if (q instanceof StateNode s && s.somethingIsDirty()) {
+                return true;
+        	}
+        	if (q instanceof CalculationNode c && c.isDirtyCalculation()) {
+                return true;
+        	}
         }
 
-        if (rateInput.get() != null && rateInput.get().somethingIsDirty()) {
-            return true;
+        if (rateInput.get() != null) {
+        	RealVector<PositiveReal> r = rateInput.get();
+        	if (r instanceof StateNode s && s.somethingIsDirty()) {
+                return true;
+        	}
+        	if (r instanceof CalculationNode c && c.isDirtyCalculation()) {
+                return true;
+        	}
         }
 
         if (InputUtil.isDirty(meanRateInput)) {

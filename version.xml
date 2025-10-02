@@ -190,6 +190,10 @@
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 
+                <provider classname="beast.base.spec.evolution.branchratemodel.RandomLocalClockModel"/>
+                <provider classname="beast.base.spec.evolution.branchratemodel.StrictClockModel"/>
+                <provider classname="beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel"/>
+
                 <provider classname="beast.base.spec.evolution.sitemodel.SiteModel"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.BinaryCovarion"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.ComplexSubstitutionModel"/>
