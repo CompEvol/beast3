@@ -9,6 +9,11 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.StateNode;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.parameter.CompoundRealScalarParam}.
+ *             It should be enough, but if not, the new compound could be added as requested.
+ */
+@Deprecated
 @Description("Parmeter consisting of 2 or more RealParameters but behaving like a single RealParameter")
 // partial implementation
 public class CompoundRealParameter extends RealParameter {

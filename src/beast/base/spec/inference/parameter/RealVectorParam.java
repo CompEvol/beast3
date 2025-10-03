@@ -185,7 +185,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
-    //*** setValue ***
+    //*** setters ***
 
     public void set(final Double value) {
         this.set(0, value);
