@@ -19,11 +19,11 @@ public interface AutoOptimized {
         if (ratio < 0.5) ratio = 0.5;
 
         // new value, such as scale factor
-        final double autoChange = op.getCoercableParameterValue();
-        if (Double.isNaN(autoChange) || Double.isFinite(autoChange))
-            throw new IllegalArgumentException("The auto change cannot be " + autoChange +
+        final double value = op.getCoercableParameterValue();
+        if (Double.isNaN(value) || Double.isFinite(value))
+            throw new IllegalArgumentException("The " + name + " cannot be " + value +
                     ", check the method getCoercableParameterValue in the operator " + op.getClass().getName());
-        final double suggestedValue = autoChange * ratio;
+        final double suggestedValue = value * ratio;
 
         final DecimalFormat formatter = new DecimalFormat("#.###");
         if (prob < 0.10 || prob > 0.40) {
