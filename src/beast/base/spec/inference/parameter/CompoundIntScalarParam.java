@@ -5,26 +5,26 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Real;
-import beast.base.spec.type.RealVector;
+import beast.base.spec.domain.Int;
+import beast.base.spec.type.IntVector;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@Description("Parameter consisting of 2 or more RealScalarParam but behaving like a single RealVectorParam")
+@Description("Parameter consisting of 2 or more IntScalarParam but behaving like a single IntVectorParam")
 // partial implementation
-public class CompoundRealScalarParam<D extends Real> extends StateNode implements RealVector<D> {
+public class CompoundIntScalarParam<D extends Int> extends StateNode implements IntVector<D> {
 
-//TODO Compound RealScalarParam should be enough, but new Compound could be added if required
+//TODO Compound IntScalarParam should be enough, but new Compound could be added if required
 
-    final public Input<List<RealScalarParam<D>>> parameterListInput = new Input<>(
+    final public Input<List<IntScalarParam<D>>> parameterListInput = new Input<>(
             "parameter", "parameters making up the compound parameter",
             new ArrayList<>(), Validate.REQUIRED);
 
     // immutable
-    List<RealScalarParam<D>> parameters = List.of();
+    List<IntScalarParam<D>> parameters = List.of();
 
 	public void initAndValidate() {
 
@@ -41,9 +41,9 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
     }
 
     @Override
-    public List<Double> getElements() {
+    public List<Integer> getElements() {
         return parameters.stream()
-                .map(RealScalarParam::get)
+                .map(IntScalarParam::get)
                 .toList();
     }
 
@@ -53,74 +53,74 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
     }
 
     @Override
-	public Double get(int i) {
+	public Integer get(int i) {
 		return parameters.get(i).get();
 	}
 
-    public double[] getValues() {
+    public int[] getValues() {
         return parameters.stream()
-                .mapToDouble(RealScalarParam::get) // convert to DoubleStream
+                .mapToInt(IntScalarParam::get) // convert to IntStream
                 .toArray();
     }
 
     @Override
-    public Double getLower() {
+    public Integer getLower() {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Double getUpper() {
+    public Integer getUpper() {
         throw new UnsupportedOperationException();
     }
 
-    public Double getLower(int i) {
+    public Integer getLower(int i) {
         return parameters.get(i).getLower();
     }
 
-    public Double getUpper(int i) {
+    public Integer getUpper(int i) {
         return parameters.get(i).getUpper();
     }
 
-    public boolean isValid(int i, Double value) {
+    public boolean isValid(int i, Integer value) {
         return parameters.get(i).isValid(value);
     }
 
     //*** setters ***
 
-    public void set(final Double value) {
+    public void set(final Integer value) {
         this.set(0, value);
     }
 
-	public void set(int i, final Double value) {
+	public void set(int i, final Integer value) {
         parameters.get(i).set(value);
 	}
 
-//	public void setLower(Double lower) {
-//		for (RealScalarParam p : parameters) {
+//	public void setLower(Integer lower) {
+//		for (IntScalarParam p : parameters) {
 //			p.setLower(lower);
 //		}
 //	}
 //
-//	public void setUpper(Double upper) {
-//		for (RealScalarParam p : parameters) {
+//	public void setUpper(Integer upper) {
+//		for (IntScalarParam p : parameters) {
 //			p.setUpper(upper);
 //		}
 //	}
 //
-//	public void setBounds(Double lower, Double upper) {
-//		for (RealScalarParam p : parameters) {
+//	public void setBounds(Integer lower, Integer upper) {
+//		for (IntScalarParam p : parameters) {
 //			p.setBounds(lower, upper);
 //		}
 //	}
 
     @Override
     public void assignFromWithoutID(StateNode other) {
-        if (other instanceof CompoundRealScalarParam otherCompound) {
-            CompoundRealScalarParam other2 = otherCompound;
+        if (other instanceof CompoundIntScalarParam otherCompound) {
+            CompoundIntScalarParam other2 = otherCompound;
             int k = 0;
-            for (RealScalarParam p : parameters) {
-                double v = other2.get(k++);
-                RealScalarParam r = new RealScalarParam(v, p.getDomain());
+            for (IntScalarParam p : parameters) {
+                int v = other2.get(k++);
+                IntScalarParam r = new IntScalarParam(v, p.getDomain());
                 p.assignFrom(r);
             }
         }
@@ -145,7 +145,7 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
 
     @Override
     protected boolean requiresRecalculation() {
-        for (RealScalarParam p : parameters) {
+        for (IntScalarParam p : parameters) {
             if (p.somethingIsDirty()) {
                 hasStartedEditing = true;
                 return true;
@@ -162,26 +162,26 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
     @Override
     public void setEverythingDirty(boolean isDirty) {
         setSomethingIsDirty(isDirty);
-        for (RealScalarParam p : parameters) {
+        for (IntScalarParam p : parameters) {
             p.setEverythingDirty(isDirty);
         }
     }
 
     @Override
     public void init(PrintStream out) {
-        for (RealScalarParam p : parameters)
+        for (IntScalarParam p : parameters)
             p.init(out);
     }
 
     @Override
     public void log(long sample, PrintStream out) {
-        for (RealScalarParam p : parameters)
+        for (IntScalarParam p : parameters)
             p.log(sample, out);
     }
 
     @Override
     public void close(PrintStream out) {
-        for (RealScalarParam p : parameters)
+        for (IntScalarParam p : parameters)
             p.close(out);
     }
 
