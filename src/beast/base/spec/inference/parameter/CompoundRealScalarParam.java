@@ -73,6 +73,18 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
         throw new UnsupportedOperationException();
     }
 
+    public Double getLower(int i) {
+        return parameters.get(i).getLower();
+    }
+
+    public Double getUpper(int i) {
+        return parameters.get(i).getUpper();
+    }
+
+    public boolean isValid(int i, Double value) {
+        return parameters.get(i).isValid(value);
+    }
+
     //*** setters ***
 
     public void set(final Double value) {

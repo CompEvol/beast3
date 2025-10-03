@@ -31,4 +31,20 @@ public interface AutoOptimized {
         } else return "";
     }
 
+    // for DeltaExchangeOperator
+    // set delta to new value according to changeOfValue
+    default void optimizeDelta(double delta, final double changeOfValue, boolean isInteger) {
+//        double _delta = calcDelta(logAlpha);
+//        _delta += Math.log(delta);
+//        delta = Math.exp(_delta);
+
+        delta = Math.exp(changeOfValue + Math.log(delta));
+        if (isInteger) {
+            // when delta < 0.5
+            // Randomizer.nextInt((int) Math.round(delta)) becomes
+            // Randomizer.nextInt(0) which results in an exception
+            delta = Math.max(0.5000000001, delta);
+        }
+    }
+
 }

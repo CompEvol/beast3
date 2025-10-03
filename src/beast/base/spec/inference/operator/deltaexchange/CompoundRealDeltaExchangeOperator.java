@@ -1,19 +1,16 @@
 package beast.base.spec.inference.operator.deltaexchange;
 
-import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.operator.AutoOptimized;
-import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.*;
 
-@Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
-public class RealDeltaExchangeOperator extends KernelOperator implements Weighted, AutoOptimized {
+public class CompoundRealDeltaExchangeOperator extends KernelOperator implements Weighted, AutoOptimized {
 
-    public final Input<RealVectorParam<? extends Real>> parameterInput = new Input<>("parameter",
+    public final Input<CompoundRealScalarParam<? extends Real>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on",
             Input.Validate.REQUIRED, RealVectorParam.class);
 
@@ -54,7 +51,6 @@ public class RealDeltaExchangeOperator extends KernelOperator implements Weighte
     public final double proposal() {
         final int dim = parameterInput.get().size();
         int[] parameterWeights = getWeights(dim);
-//        final int dim = parameterWeights.length;
 
         // Generate indices for the values to be modified
         IntPair dims = getPairedDim(parameterWeights);
@@ -66,11 +62,10 @@ public class RealDeltaExchangeOperator extends KernelOperator implements Weighte
 
         double logq = 0.0;
 
-        RealVectorParam realVectorParam = parameterInput.get();
-
-        // operate on real parameter
-        double scalar1 = realVectorParam.getValue(dim1);
-        double scalar2 = realVectorParam.getValue(dim2);
+        // compound real parameter case
+        CompoundRealScalarParam compoundRealParam = parameterInput.get();
+        double scalar1 = compoundRealParam.get(dim1);
+        double scalar2 = compoundRealParam.get(dim2);
 
         // exchange a random delta
         final double d = getNextDouble(0);
@@ -84,11 +79,11 @@ public class RealDeltaExchangeOperator extends KernelOperator implements Weighte
             scalar2 += d / 2;
         }
 
-        if ( !realVectorParam.isValid(scalar1) ||  ! realVectorParam.isValid(scalar2) ) {
+        if ( !compoundRealParam.isValid(dim1, scalar1) || !compoundRealParam.isValid(dim2, scalar2) ) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            realVectorParam.set(dim1, scalar1);
-            realVectorParam.set(dim2, scalar2);
+            compoundRealParam.set(dim1, scalar1);
+            compoundRealParam.set(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");
@@ -135,4 +130,5 @@ public class RealDeltaExchangeOperator extends KernelOperator implements Weighte
     public final String getPerformanceSuggestion() {
         return getPerformanceSuggestion(this, "delta");
     }
+
 }

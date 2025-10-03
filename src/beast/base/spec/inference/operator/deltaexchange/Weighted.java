@@ -35,21 +35,6 @@ public interface Weighted {
         return weights;
     }
 
-    /**
-     * Find the number of weights that are nonzero
-     * @param weights
-     * @return
-     */
-    default int findNonZeroWeight(int[] weights) {
-        int nonZeroWeights = 0;
-        for (int i: weights) {
-            if (i != 0) {
-                ++nonZeroWeights;
-            }
-        }
-        return nonZeroWeights;
-    }
-
 
     record IntPair(int first, int second) {}
 
@@ -58,8 +43,24 @@ public interface Weighted {
      * @param weights  parameter weights
      * @return  a {@link IntPair} of indices of weights,
      *          and use {@link IntPair#first()} and {@link IntPair#second()} to get the value.
+     *          If it is impossible to select two distinct entries in this case,
+     *          then return null.
      */
-    default IntPair getPairedDim(int nonZeroWeights, int[] weights) {
+    default IntPair getPairedDim(int[] weights) {
+
+        // Find the number of weights that are nonzero
+        int nonZeroWeights = 0;
+        for (int i: weights) {
+            if (i != 0) {
+                ++nonZeroWeights;
+            }
+        }
+
+        if (nonZeroWeights <= 1) {
+            // it is impossible to select two distinct entries in this case, so there is nothing to propose
+            return null;
+        }
+
         final int dim = weights.length;
         // Generate indices for the values to be modified
         int dim1 = Randomizer.nextInt(nonZeroWeights);

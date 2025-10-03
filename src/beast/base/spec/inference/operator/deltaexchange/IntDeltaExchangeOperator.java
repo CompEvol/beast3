@@ -61,28 +61,22 @@ public class IntDeltaExchangeOperator extends Operator implements Weighted, Auto
     public final double proposal() {
         final int dim = intparameterInput.get().size();
         int[] parameterWeights = getWeights(dim);
-//        final int dim = parameterWeights.length;
-
-        // Find the number of weights that are nonzero
-        int nonZeroWeights = findNonZeroWeight(parameterWeights);
-
-        if (nonZeroWeights <= 1) {
-            // it is impossible to select two distinct entries in this case, so there is nothing to propose
-            return 0.0;
-        }
 
         // Generate indices for the values to be modified
-        IntPair dims = getPairedDim(nonZeroWeights, parameterWeights);
+        IntPair dims = getPairedDim(parameterWeights);
+        // it is impossible to select two distinct entries in this case, so there is nothing to propose
+        if (dims == null) return 0.0;
+
         int dim1 = dims.first();
         int dim2 = dims.second();
 
         double logq = 0.0;
 
-        IntVectorParam intparameter = intparameterInput.get();
+        IntVectorParam intVectorParam = intparameterInput.get();
 
         // operate on int parameter
-        int scalar1 = intparameter.getValue(dim1);
-        int scalar2 = intparameter.getValue(dim2);
+        int scalar1 = intVectorParam.getValue(dim1);
+        int scalar2 = intVectorParam.getValue(dim2);
 
         final int d = Randomizer.nextInt((int) Math.round(delta)) + 1;
 
@@ -91,12 +85,11 @@ public class IntDeltaExchangeOperator extends Operator implements Weighted, Auto
         scalar2 = Math.round(scalar2 + d);
 
 
-        if (scalar1 < intparameter.getLower() || scalar1 > intparameter.getUpper() ||
-                scalar2 < intparameter.getLower() || scalar2 > intparameter.getUpper()) {
+        if ( !intVectorParam.isValid(scalar1) ||  !intVectorParam.isValid(scalar2) ) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            intparameter.set(dim1, scalar1);
-            intparameter.set(dim2, scalar2);
+            intVectorParam.set(dim1, scalar1);
+            intVectorParam.set(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");
@@ -117,14 +110,10 @@ public class IntDeltaExchangeOperator extends Operator implements Weighted, Auto
         // must be overridden by operator implementation to have an effect
         if (autoOptimize) {
             double _delta = calcDelta(logAlpha);
-            _delta += Math.log(delta);
-            delta = Math.exp(_delta);
-//            if (isIntegerOperator) {
             // when delta < 0.5
             // Randomizer.nextInt((int) Math.round(delta)) becomes
             // Randomizer.nextInt(0) which results in an exception
-            delta = Math.max(0.5000000001, delta);
-//            }
+            optimizeDelta(delta, _delta, true);
         }
     }
 
