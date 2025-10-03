@@ -63,6 +63,16 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
                 .toArray();
     }
 
+    @Override
+    public Double getLower() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Double getUpper() {
+        throw new UnsupportedOperationException();
+    }
+
     //*** setters ***
 
     public void set(final Double value) {
