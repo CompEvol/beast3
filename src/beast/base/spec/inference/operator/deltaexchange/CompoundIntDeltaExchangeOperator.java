@@ -1,21 +1,15 @@
 package beast.base.spec.inference.operator.deltaexchange;
 
-import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.inference.operator.AutoOptimized;
-import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.CompoundIntScalarParam;
 import beast.base.util.Randomizer;
 
-@Description("Delta exchange operator that proposes through a Bactrian distribution for integer valued parameters")
-public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
+public class CompoundIntDeltaExchangeOperator extends AbstractDeltaExchange {
 
-    public final Input<IntVectorParam<? extends Int>> intparameterInput = new Input<>(
-            "parameter", "if specified, this parameter is operated on",
-            Input.Validate.REQUIRED, IntVectorParam.class);
+    public final Input<CompoundIntScalarParam<? extends Int>> intparameterInput = new Input<>("parameter",
+            "if specified, this parameter is operated on",
+            Input.Validate.REQUIRED, CompoundIntScalarParam.class);
 
     @Override
     int getDimension() {
@@ -46,11 +40,10 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
 
         double logq = 0.0;
 
-        IntVectorParam intVectorParam = intparameterInput.get();
-
-        // operate on int parameter
-        int scalar1 = intVectorParam.getValue(dim1);
-        int scalar2 = intVectorParam.getValue(dim2);
+        // compound real parameter case
+        CompoundIntScalarParam compoundIntParam = intparameterInput.get();
+        int scalar1 = compoundIntParam.get(dim1);
+        int scalar2 = compoundIntParam.get(dim2);
 
         final int d = Randomizer.nextInt((int) Math.round(delta)) + 1;
 
@@ -58,19 +51,17 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         scalar1 = Math.round(scalar1 - d);
         scalar2 = Math.round(scalar2 + d);
 
-
-        if ( !intVectorParam.isValid(scalar1) ||  !intVectorParam.isValid(scalar2) ) {
+        if ( !compoundIntParam.isValid(dim1, scalar1) || !compoundIntParam.isValid(dim2, scalar2) ) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            intVectorParam.set(dim1, scalar1);
-            intVectorParam.set(dim2, scalar2);
+            compoundIntParam.set(dim1, scalar1);
+            compoundIntParam.set(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");
         // symmetrical move so return a zero hasting ratio
         return logq;
     }
-
 
     /**
      * called after every invocation of this operator to see whether
@@ -84,10 +75,7 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         // must be overridden by operator implementation to have an effect
         if (autoOptimize) {
             double _delta = calcDelta(logAlpha);
-            // when delta < 0.5
-            // Randomizer.nextInt((int) Math.round(delta)) becomes
-            // Randomizer.nextInt(0) which results in an exception
-            optimizeDelta(delta, _delta, true);
+            optimizeDelta(delta, _delta, false);
         }
     }
 

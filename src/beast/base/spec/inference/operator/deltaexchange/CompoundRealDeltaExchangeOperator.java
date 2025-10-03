@@ -12,7 +12,7 @@ public class CompoundRealDeltaExchangeOperator extends KernelOperator implements
 
     public final Input<CompoundRealScalarParam<? extends Real>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on",
-            Input.Validate.REQUIRED, RealVectorParam.class);
+            Input.Validate.REQUIRED, CompoundRealScalarParam.class);
 
     public final Input<IntVectorParam<? extends PositiveInt>> parameterWeightsInput = new Input<>(
             "weightvector", "weights on a vector parameter");

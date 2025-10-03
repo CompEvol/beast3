@@ -10,6 +10,8 @@ import beast.base.spec.inference.operator.AutoOptimized;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
+//TODO cannot use AbstractDeltaExchange
+
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
 public class RealDeltaExchangeOperator extends KernelOperator implements Weighted, AutoOptimized {
 
