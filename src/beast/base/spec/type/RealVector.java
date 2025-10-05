@@ -52,6 +52,7 @@ public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<D
     default boolean isValid(Double value) {
         // 1st check domain constraints, 2nd check if value is in the real scalar range
         // Note: these bounds can be the subset of domain bounds.
-        return Vector.super.isValid(value) && withinBounds(value);
+        D d = getDomain();
+        return d.isValid(value) && withinBounds(value);
     }
 }

@@ -68,10 +68,8 @@ public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
         return true;
     }
 
-    @Override
-    default boolean isValid(T value) {
-        D d = getDomain();
-        return d.isValid(value);
+    // Validate ith element
+    default boolean isValid(int i) {
+        return isValid(get(i));
     }
-
 }

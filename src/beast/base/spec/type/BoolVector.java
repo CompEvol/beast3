@@ -16,4 +16,8 @@ public interface BoolVector extends Vector<Bool, Boolean> {
 //        return arr;
 //    }
 
+    @Override
+    default boolean isValid(Boolean value) {
+        return Bool.INSTANCE.isValid(value);
+    }
 }

@@ -51,6 +51,7 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
     default boolean isValid(Integer value) {
         // 1st check domain constraints, 2nd check if value is in the real scalar range
         // Note: these bounds can be the subset of domain bounds.
-        return Vector.super.isValid(value) && withinBounds(value);
+        D d = getDomain();
+        return d.isValid(value) && withinBounds(value);
     }
 }
