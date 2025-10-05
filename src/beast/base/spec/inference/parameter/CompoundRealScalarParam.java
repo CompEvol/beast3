@@ -15,7 +15,7 @@ import java.util.List;
 
 @Description("Parameter consisting of 2 or more RealScalarParam but behaving like a single RealVectorParam")
 // partial implementation
-public class CompoundRealScalarParam<D extends Real> extends StateNode implements RealVector<D> {
+public class CompoundRealScalarParam<D extends Real> extends StateNode implements RealVector<D>, VectorParam<D, Double> {
 
 //TODO Compound RealScalarParam should be enough, but new Compound could be added if required
 
@@ -87,9 +87,9 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
 
     //*** setters ***
 
-    public void set(final Double value) {
-        this.set(0, value);
-    }
+//    public void set(final Double value) {
+//        this.set(0, value);
+//    }
 
 	public void set(int i, final Double value) {
         parameters.get(i).set(value);
@@ -156,7 +156,12 @@ public class CompoundRealScalarParam<D extends Real> extends StateNode implement
 
     @Override
     public int scale(double scale) {
-        throw new UnsupportedOperationException();
+        int sum = 0;
+        for (RealScalarParam p : parameters) {
+            sum += p.scale(scale);
+        }
+        return sum;
+//        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -2,11 +2,7 @@ package beast.base.spec.inference.operator.deltaexchange;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.inference.operator.AutoOptimized;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
@@ -20,6 +16,11 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
     @Override
     int getDimension() {
         return intparameterInput.get().size();
+    }
+
+    @Override
+    double getNextDouble(int i) {
+        throw new IllegalArgumentException();
     }
 
     @Override
@@ -84,10 +85,14 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         // must be overridden by operator implementation to have an effect
         if (autoOptimize) {
             double _delta = calcDelta(logAlpha);
-            // when delta < 0.5
-            // Randomizer.nextInt((int) Math.round(delta)) becomes
-            // Randomizer.nextInt(0) which results in an exception
-            optimizeDelta(delta, _delta, true);
+            _delta += Math.log(delta);
+            delta = Math.exp(_delta);
+//            if (isIntegerOperator) {
+                // when delta < 0.5
+                // Randomizer.nextInt((int) Math.round(delta)) becomes
+                // Randomizer.nextInt(0) which results in an exception
+                delta = Math.max(0.5000000001, delta);
+//            }
         }
     }
 

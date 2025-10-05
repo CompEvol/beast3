@@ -2,12 +2,11 @@ package beast.base.spec.inference.operator.scale;
 
 import beast.base.core.Input;
 import beast.base.inference.operator.kernel.KernelOperator;
-import beast.base.spec.inference.operator.AutoOptimized;
 import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
 
-public abstract class AbstractScale extends KernelOperator implements AutoOptimized {
+public abstract class AbstractScale extends KernelOperator {
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scaling factor: range from 0 to 1. Close to zero is very large jumps, close to 1.0 is very small jumps.", 0.75);
     final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
     final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0 - 1e-8);
@@ -18,6 +17,10 @@ public abstract class AbstractScale extends KernelOperator implements AutoOptimi
     protected double scaleFactor;
     protected double upper;
     protected double lower;
+
+    // default
+    protected final double Target_Acceptance_Probability = 0.3;
+
 
     @Override
     public void initAndValidate() {
@@ -77,12 +80,24 @@ public abstract class AbstractScale extends KernelOperator implements AutoOptimi
 
     @Override
     public double getTargetAcceptanceProbability() {
-        return AutoOptimized.Target_Acceptance_Probability;
+        return Target_Acceptance_Probability;
     }
 
     @Override
     public String getPerformanceSuggestion() {
-        return getPerformanceSuggestion(this, "scaleFactor");
-    }
+        double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
+        double targetProb = getTargetAcceptanceProbability();
 
+        double ratio = prob / targetProb;
+        if (ratio > 2.0) ratio = 2.0;
+        if (ratio < 0.5) ratio = 0.5;
+
+        // new scale factor
+        double newWindowSize = getCoercableParameterValue() * ratio;
+
+        DecimalFormat formatter = new DecimalFormat("#.###");
+        if (prob < 0.10 || prob > 0.40) {
+            return "Try setting scale factor to about " + formatter.format(newWindowSize);
+        } else return "";
+    }
 }

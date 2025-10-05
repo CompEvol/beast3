@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, VectorParam<D, Double> {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
