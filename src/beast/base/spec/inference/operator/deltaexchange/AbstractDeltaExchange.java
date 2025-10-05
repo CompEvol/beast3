@@ -168,6 +168,8 @@ public abstract class AbstractDeltaExchange extends Operator {
 
     abstract double getNextDouble(int i);
 
+    // TODO do we need it?
+//    abstract int getNextInt(int i);
 
     /**
      * called after every invocation of this operator to see whether
