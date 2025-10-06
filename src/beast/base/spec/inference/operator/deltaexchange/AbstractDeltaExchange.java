@@ -6,7 +6,6 @@ import beast.base.inference.Operator;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.VectorParam;
 import beast.base.util.Randomizer;
 

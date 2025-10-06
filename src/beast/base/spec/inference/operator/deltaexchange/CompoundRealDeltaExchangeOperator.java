@@ -1,11 +1,10 @@
 package beast.base.spec.inference.operator.deltaexchange;
 
 import beast.base.core.Input;
-import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.operator.CompoundRealScalarParamHelper;
-import beast.base.spec.inference.parameter.*;
+import beast.base.spec.inference.parameter.RealScalarParam;
 
 import java.util.ArrayList;
 import java.util.List;

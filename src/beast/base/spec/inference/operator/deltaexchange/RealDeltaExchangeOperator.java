@@ -2,11 +2,8 @@ package beast.base.spec.inference.operator.deltaexchange;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.operator.kernel.KernelDistribution;
-import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
 //TODO cannot use AbstractDeltaExchange
