@@ -2,15 +2,23 @@ package beast.base.spec.inference.operator.scale;
 
 import beast.base.core.Input;
 import beast.base.inference.operator.kernel.KernelOperator;
-import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
 
 public abstract class AbstractScale extends KernelOperator {
-    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scaling factor: range from 0 to 1. Close to zero is very large jumps, close to 1.0 is very small jumps.", 0.75);
-    final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
-    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0 - 1e-8);
-    final public Input<Double> scaleLowerLimit = new Input<>("lower", "Lower limit of scale factor", 1e-8);
+
+    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor",
+            "scaling factor: range from 0 to 1. Close to zero is very large jumps, " +
+                    "close to 1.0 is very small jumps.", 0.75);
+    final public Input<Double> scaleUpperLimit = new Input<>("upper",
+            "Upper Limit of scale factor", 1.0 - 1e-8);
+    final public Input<Double> scaleLowerLimit = new Input<>("lower",
+            "Lower limit of scale factor", 1e-8);
+
+    final public Input<Boolean> optimiseInput = new Input<>("optimise",
+            "flag to indicate that the scale factor is automatically changed in order to " +
+                    "achieve a good acceptance rate (default true)", true);
+
     /**
      * shadows input *
      */
@@ -24,23 +32,14 @@ public abstract class AbstractScale extends KernelOperator {
 
     @Override
     public void initAndValidate() {
-
+        super.initAndValidate();
         scaleFactor = scaleFactorInput.get();
-//        m_bIsTreeScaler = (treeInput.get() != null);
+        //TODO why?
+        if (scaleUpperLimit.get() == 1 - 1e-8) {
+            scaleUpperLimit.setValue(10.0, this);
+        }
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
-
-//        final BooleanParameter indicators = indicatorInput.get();
-//        if (indicators != null) {
-//            if (m_bIsTreeScaler) {
-//                throw new IllegalArgumentException("indicator is specified which has no effect for scaling a tree");
-//            }
-//            final int dataDim = parameterInput.get().getDimension();
-//            final int indsDim = indicators.getDimension();
-//            if (!(indsDim == dataDim || indsDim + 1 == dataDim)) {
-//                throw new IllegalArgumentException("indicator dimension not compatible from parameter dimension");
-//            }
-//        }
     }
 
     //TODO replaced by isValid()
@@ -52,8 +51,12 @@ public abstract class AbstractScale extends KernelOperator {
         //return (l != null && value < l || h != null && value > h);
 //    }
 
-    protected double getScaler() {
-        return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
+//    protected double getScaler() {
+//        return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
+//    }
+
+    protected double getScaler(int i, double value) {
+        return kernelDistribution.getScaler(i, value, getCoercableParameterValue());
     }
 
     /**

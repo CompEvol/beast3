@@ -49,37 +49,38 @@ public class ScaleScalarOperator extends AbstractScale {
      */
     @Override
     public double proposal() {
-
         try {
 
-            final RealScalarParam param = parameterInput.get();
+            double hastingsRatio;
 
-            // TODO this would not happened after merge Parameter with Bounded interface
+            final RealScalarParam<? extends PositiveReal> param = parameterInput.get();
+
             assert param.getLower() != null && param.getUpper() != null;
 
             final double oldValue = param.get();
-            // TODO not sure if still required, when validation is working
+
             if (oldValue == 0) {
                 // Error: parameter has value 0 and cannot be scaled
                 return Double.NEGATIVE_INFINITY;
             }
 
-            final double scale = getScaler();
+            // TODO use index 0 for scalar
+            final double scale = getScaler(0, oldValue);
+            // hastings ratio
+            hastingsRatio = Math.log(scale);
+
             final double newValue = scale * oldValue;
 
-            // TODO all validations for a value should be in one place eventually
             if (! param.isValid(newValue)) {
                 // reject out of bounds scales
                 return Double.NEGATIVE_INFINITY;
             }
 
-            // scalar, no index
             param.set(newValue);
             // provides a hook for subclasses
             //cleanupOperation(newValue, oldValue);
 
-            // Hastings Ratio
-            return -Math.log(scale);
+            return hastingsRatio;
 
         } catch (Exception e) {
             // whatever went wrong, we want to abort this operation...
