@@ -35,7 +35,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 public class ScaleScalarOperator extends AbstractScale {
 
     public final Input<RealScalarParam<? extends PositiveReal>> parameterInput = new Input<>(
-            "parameter", "if specified, this parameter is scaled");
+            "parameter", "the scalar parameter is scaled");
 
     @Override
     public void initAndValidate() {

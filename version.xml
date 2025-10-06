@@ -191,7 +191,6 @@
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.scale.ScaleScalarOperator"/>
                 <provider classname="beast.base.spec.inference.operator.scale.ScaleVectorOperator"/>
-<!--                <provider classname="beast.base.spec.inference.operator.scale.ScaleTreeOperator"/>-->
                 <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>
                 <provider classname="beast.base.spec.inference.operator.uniform.IntVectorUniformOperator"/>
 
@@ -215,6 +214,9 @@
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TIM"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TN93"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TVM"/>
+
+                <provider classname="beast.base.spec.evolution.operator.scale.ScaleTreeOperator"/>
+
 
             </service>
 </package>

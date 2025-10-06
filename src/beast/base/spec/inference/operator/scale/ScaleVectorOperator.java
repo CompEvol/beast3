@@ -37,7 +37,7 @@ import beast.base.util.Randomizer;
 public class ScaleVectorOperator extends AbstractScale {
 
     public final Input<RealVectorParam<? extends PositiveReal>> parameterInput = new Input<>(
-            "parameter", "if specified, this parameter is scaled");
+            "parameter", "the vector parameter is scaled");
 
     public final Input<Boolean> scaleAllInput = new Input<>("scaleAll",
             "if true, all elements of a parameter (not beast.tree) are scaled, " +
