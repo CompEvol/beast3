@@ -1,25 +1,36 @@
 package beast.base.spec.inference.operator.deltaexchange;
 
 import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.operator.CompoundRealScalarParamHelper;
 import beast.base.spec.inference.parameter.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class CompoundRealDeltaExchangeOperator extends AbstractDeltaExchange {
 
-    public final Input<CompoundRealScalarParam<? extends Real>> parameterInput = new Input<>("parameter",
+    public final Input<List<RealScalarParam<? extends Real>>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on",
-            Input.Validate.REQUIRED, CompoundRealScalarParam.class);
+            new ArrayList<>(), Input.Validate.REQUIRED, ArrayList.class);
 
     public final Input<KernelDistribution> kernelDistributionInput = new Input<>("kernelDistribution", "provides sample distribution for proposals",
             KernelDistribution.newDefaultKernelDistribution());
 
     protected KernelDistribution kernelDistribution;
 
+    private CompoundRealScalarParamHelper<? extends Real> compoundParameter;
+
     @Override
     public void initAndValidate() {
         kernelDistribution = kernelDistributionInput.get();
+
+        // create single parameter from the list of int-parameters
+        compoundParameter = new CompoundRealScalarParamHelper(parameterInput.get());
+
         super.initAndValidate();
     }
 
@@ -30,7 +41,7 @@ public class CompoundRealDeltaExchangeOperator extends AbstractDeltaExchange {
 
     @Override
     public final double proposal() {
-        return proposeReal(parameterInput.get());
+        return proposeReal(Objects.requireNonNull(compoundParameter));
     }
 
     double getNextDouble(int i) {
