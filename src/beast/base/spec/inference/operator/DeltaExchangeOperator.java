@@ -4,34 +4,33 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.operator.kernel.KernelOperator;
-import beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator;
-import beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator;
-import beast.base.spec.inference.parameter.IntegerParameter;
-import beast.base.spec.inference.parameter.RealParameter;
+import beast.base.spec.Bounded;
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
-/**
- * @deprecated use strong typed op {@link RealDeltaExchangeOperator}, {@link IntDeltaExchangeOperator}
- */
-@Deprecated
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
 public class DeltaExchangeOperator extends KernelOperator {
 
-    public final Input<List<RealParameter>> parameterInput = new Input<>("parameter",
+    public final Input<List<Tensor<Real, Double>>> parameterInput = new Input<>("parameter",
             "if specified, this parameter is operated on", new ArrayList<>());
-    public final Input<List<IntegerParameter>> intparameterInput = new Input<>("intparameter",
+    public final Input<List<Tensor<Int, Integer>>> intparameterInput = new Input<>("intparameter",
             "if specified, this parameter is operated on", new ArrayList<>());
 
     public final Input<Double> deltaInput = new Input<>("delta", "Magnitude of change for two randomly picked values.", 1.0);
     public final Input<Boolean> autoOptimizeiInput =
             new Input<>("autoOptimize", "if true, window size will be adjusted during the MCMC run to improve mixing.", true);
     public final Input<Boolean> integerOperatorInput = new Input<>("integer", "if true, changes are all integers.", false);
-    public final Input<IntegerParameter> parameterWeightsInput = new Input<>("weightvector", "weights on a vector parameter");
+    public final Input<IntVectorParam<?>> parameterWeightsInput = new Input<>("weightvector", "weights on a vector parameter");
 
     
 
@@ -48,13 +47,13 @@ public class DeltaExchangeOperator extends KernelOperator {
 			if (parameterInput.get().isEmpty()) {
 				if (intparameterInput.get().size() > 0) {
 					weights = new int[intparameterInput.get().get(0)
-							.getDimension()];
+							.size()];
 				} else {
 					// happens when BEAUti is setting things up
 					weights = new int[0];
 				}
 			} else {
-				weights = new int[parameterInput.get().get(0).getDimension()];
+				weights = new int[parameterInput.get().get(0).size()];
 			}
 		} else {
 			if (compoundParameter.getDimension() < 1)
@@ -66,7 +65,7 @@ public class DeltaExchangeOperator extends KernelOperator {
 		}
 
 		if (parameterWeightsInput.get() != null) {
-			if (weights.length != parameterWeightsInput.get().getDimension())
+			if (weights.length != parameterWeightsInput.get().size())
 				throw new IllegalArgumentException(
 						"Weights vector should have the same length as parameter dimension");
 
@@ -94,7 +93,7 @@ public class DeltaExchangeOperator extends KernelOperator {
             	for (int i = 0; i < intparameterInput.get().size(); i++) {
             		for (int j = i + 1; j < intparameterInput.get().size(); j++) {
             			if (intparameterInput.get().get(i) == intparameterInput.get().get(j)) {
-            				throw new RuntimeException("Duplicate intparameter (" + intparameterInput.get().get(j).getID() + ") found in operator " + getID());
+            				throw new RuntimeException("Duplicate intparameter (" + ((BEASTInterface)intparameterInput.get().get(j)).getID() + ") found in operator " + getID());
             			}
             		}
             	}
@@ -107,7 +106,7 @@ public class DeltaExchangeOperator extends KernelOperator {
             	for (int i = 0; i < parameterInput.get().size(); i++) {
             		for (int j = i + 1; j < parameterInput.get().size(); j++) {
             			if (parameterInput.get().get(i) == parameterInput.get().get(j)) {
-            				throw new RuntimeException("Duplicate intparameter (" + parameterInput.get().get(j).getID() + ") found in operator " + getID());
+            				throw new RuntimeException("Duplicate intparameter (" + ((BEASTInterface)parameterInput.get().get(j)).getID() + ") found in operator " + getID());
             			}
             		}
             	}
@@ -123,8 +122,8 @@ public class DeltaExchangeOperator extends KernelOperator {
         // dimension sanity check
         int dim = -1;
         if (compoundParameter == null) { // one parameter case
-        	dim = (parameterInput.get().size() > 0 ? parameterInput.get().get(0).getDimension() : 
-        		   intparameterInput.get().size() > 0 ? intparameterInput.get().get(0).getDimension() : 0);
+        	dim = (parameterInput.get().size() > 0 ? parameterInput.get().get(0).size() : 
+        		   intparameterInput.get().size() > 0 ? intparameterInput.get().get(0).size() : 0);
         } else {
             dim = compoundParameter.getDimension();
         }
@@ -183,8 +182,8 @@ public class DeltaExchangeOperator extends KernelOperator {
 
         if (compoundParameter == null) { // one parameter case
             // get two dimensions
-            RealParameter realparameter = null;
-            IntegerParameter intparameter = null;
+            Tensor<Real, Double> realparameter = null;
+            Tensor<Int, Integer> intparameter = null;
 
             if (parameterInput.get().isEmpty()) {
                 intparameter = intparameterInput.get().get(0);
@@ -194,8 +193,8 @@ public class DeltaExchangeOperator extends KernelOperator {
 
             if (intparameter == null) {
                 // operate on real parameter
-                double scalar1 = realparameter.getValue(dim1);
-                double scalar2 = realparameter.getValue(dim2);
+                double scalar1 = realparameter.get(dim1);
+                double scalar2 = realparameter.get(dim2);
 
                 if (isIntegerOperator) {
                     final int d = Randomizer.nextInt((int) Math.round(delta)) + 1;
@@ -233,17 +232,21 @@ public class DeltaExchangeOperator extends KernelOperator {
 
                 }
 
-                if (scalar1 < realparameter.getLower() || scalar1 > realparameter.getUpper() ||
-                        scalar2 < realparameter.getLower() || scalar2 > realparameter.getUpper()) {
+                if (scalar1 < ((Bounded<Double>)realparameter).getLower() || scalar1 > ((Bounded<Double>)realparameter).getUpper() ||
+                        scalar2 < ((Bounded<Double>)realparameter).getLower() || scalar2 > ((Bounded<Double>)realparameter).getUpper()) {
                     logq = Double.NEGATIVE_INFINITY;
                 } else {
-                    realparameter.setValue(dim1, scalar1);
-                    realparameter.setValue(dim2, scalar2);
+                	if (realparameter instanceof RealVectorParam p) {
+                		p.set(dim1, scalar1);
+                		p.set(dim2, scalar2);
+                	} else {
+                		throw new IllegalArgumentException("Expected RealVectorParam as parameter input");
+                	}
                 }
             } else {
                 // operate on int parameter
-                int scalar1 = intparameter.getValue(dim1);
-                int scalar2 = intparameter.getValue(dim2);
+                int scalar1 = intparameter.get(dim1);
+                int scalar2 = intparameter.get(dim2);
 
                 final int d = Randomizer.nextInt((int) Math.round(delta)) + 1;
 
@@ -252,12 +255,16 @@ public class DeltaExchangeOperator extends KernelOperator {
                 scalar2 = Math.round(scalar2 + d);
 
 
-                if (scalar1 < intparameter.getLower() || scalar1 > intparameter.getUpper() ||
-                        scalar2 < intparameter.getLower() || scalar2 > intparameter.getUpper()) {
+                if (scalar1 < ((Bounded<Integer>)intparameter).getLower() || scalar1 > ((Bounded<Integer>)intparameter).getUpper() ||
+                        scalar2 < ((Bounded<Integer>)intparameter).getLower() || scalar2 > ((Bounded<Integer>)intparameter).getUpper()) {
                     logq = Double.NEGATIVE_INFINITY;
                 } else {
-                    intparameter.setValue(dim1, scalar1);
-                    intparameter.setValue(dim2, scalar2);
+                	if (intparameter instanceof IntVectorParam i) {
+                		i.set(dim1, scalar1);
+                		i.set(dim2, scalar2);
+                	} else {
+                		throw new IllegalArgumentException("Expected IntVectorParam as parameter input");
+                	}
                 }
 
             }

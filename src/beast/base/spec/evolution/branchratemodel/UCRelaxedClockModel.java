@@ -381,7 +381,7 @@ public class UCRelaxedClockModel extends Base {
             return true;
         }
         // NOT processed as trait on the tree, so DO mark as dirty
-        if (categoryInput.get() != null) {
+        if (categories != null) {
         	IntVector<NonNegativeInt> c = categoryInput.get();
         	if (c instanceof StateNode s && s.somethingIsDirty()) {
                 return true;
@@ -391,7 +391,7 @@ public class UCRelaxedClockModel extends Base {
         	}
         }
 
-        if (quantileInput.get() != null) {
+        if (quantiles != null) {
         	RealVector<PositiveReal> q = quantileInput.get();
         	if (q instanceof StateNode s && s.somethingIsDirty()) {
                 return true;
@@ -401,7 +401,7 @@ public class UCRelaxedClockModel extends Base {
         	}
         }
 
-        if (rateInput.get() != null) {
+        if (rateParameter != null) {
         	RealVector<PositiveReal> r = rateInput.get();
         	if (r instanceof StateNode s && s.somethingIsDirty()) {
                 return true;
