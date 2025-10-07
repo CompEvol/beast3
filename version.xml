@@ -193,6 +193,8 @@
                 <provider classname="beast.base.spec.inference.operator.scale.ScaleVectorOperator"/>
                 <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>
                 <provider classname="beast.base.spec.inference.operator.uniform.IntVectorUniformOperator"/>
+                <provider classname="beast.base.spec.inference.operator.uniform.ScalarIntervalOperator"/>
+                <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 
