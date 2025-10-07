@@ -80,7 +80,7 @@ public class ScaleVectorOperator extends AbstractScale {
     public double proposal() {
         try {
 
-            double hastingsRatio;
+            double logHR;
 
             // not a tree scaler, so scale a parameter
             final boolean scaleAll = scaleAllInput.get();
@@ -95,7 +95,7 @@ public class ScaleVectorOperator extends AbstractScale {
 
             if (scaleAllIndependently) {
                 // update all dimensions independently.
-                hastingsRatio = 0;
+                logHR = 0;
                 final BoolVectorParam indicators = indicatorInput.get();
                 if (indicators != null) {
                     final int dimCount = indicators.size();
@@ -106,13 +106,13 @@ public class ScaleVectorOperator extends AbstractScale {
                             final double scaleOne = getScaler(i, param.get(i));
                             final double newValue = scaleOne * param.get(i);
 
-                            hastingsRatio += Math.log(scaleOne);
+                            logHR += Math.log(scaleOne);
 
                             if ( ! param.isValid(newValue) ) {
                                 return Double.NEGATIVE_INFINITY;
                             }
 
-                            param.set(i, newValue);
+                            param.setValue(i, newValue);
                         }
                     }
                 }  else {
@@ -122,13 +122,13 @@ public class ScaleVectorOperator extends AbstractScale {
                         final double scaleOne = getScaler(i, param.get(i));
                         final double newValue = scaleOne * param.get(i);
 
-                        hastingsRatio += Math.log(scaleOne);
+                        logHR += Math.log(scaleOne);
 
                         if( ! param.isValid(newValue) ) {
                             return Double.NEGATIVE_INFINITY;
                         }
 
-                        param.set(i, newValue);
+                        param.setValue(i, newValue);
                     }
                 }
             } else if (scaleAll) {
@@ -137,10 +137,10 @@ public class ScaleVectorOperator extends AbstractScale {
                 // for the proof. It is supposed to be somewhere in an Alexei/Nicholes article.
 
                 // all Values assumed independent!
-                final double scale = getScaler(0, param.get(0));
+                final double scale = getScaler(0, param.getValue(0));
                 final int computedDoF = param.scale(scale);
                 final int usedDoF = (specifiedDoF > 0) ? specifiedDoF : computedDoF ;
-                hastingsRatio = usedDoF * Math.log(scale);
+                logHR = usedDoF * Math.log(scale);
             } else {
 
                 // which position to scale
@@ -178,7 +178,7 @@ public class ScaleVectorOperator extends AbstractScale {
                     index = Randomizer.nextInt(dim);
                 }
 
-                final double oldValue = param.get(index);
+                final double oldValue = param.getValue(index);
 
                 if (oldValue == 0) {
                     // Error: parameter has value 0 and cannot be scaled
@@ -187,7 +187,7 @@ public class ScaleVectorOperator extends AbstractScale {
 
                 final double scale = getScaler(index, oldValue);
                 // hastings ratio
-                hastingsRatio = Math.log(scale);
+                logHR = Math.log(scale);
 
                 final double newValue = scale * oldValue;
 
@@ -196,12 +196,12 @@ public class ScaleVectorOperator extends AbstractScale {
                     return Double.NEGATIVE_INFINITY;
                 }
 
-                param.set(index, newValue);
+                param.setValue(index, newValue);
                 // provides a hook for subclasses
                 //cleanupOperation(newValue, oldValue);
             }
 
-            return hastingsRatio;
+            return logHR;
 
         } catch (Exception e) {
             // whatever went wrong, we want to abort this operation...

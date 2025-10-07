@@ -199,6 +199,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public void set(final Double value) {
         setValue(0, value);
     }
+    // when knowing the class, use setValue (fast), otherwise use set (boxed).
     // Fast (no boxing)
     public void setValue(final int i, final double value) {
         startEditing(null);

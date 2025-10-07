@@ -51,23 +51,23 @@ public class ScaleScalarOperator extends AbstractScale {
     public double proposal() {
         try {
 
-            double hastingsRatio;
+            double logHR;
 
             final RealScalarParam<? extends PositiveReal> param = parameterInput.get();
 
             assert param.getLower() != null && param.getUpper() != null;
 
-            final double oldValue = param.get();
+            final double oldValue = param.getValue();
 
             if (oldValue == 0) {
                 // Error: parameter has value 0 and cannot be scaled
                 return Double.NEGATIVE_INFINITY;
             }
 
-            // TODO use index 0 for scalar
+            // use index 0 for scalar
             final double scale = getScaler(0, oldValue);
             // hastings ratio
-            hastingsRatio = Math.log(scale);
+            logHR = Math.log(scale);
 
             final double newValue = scale * oldValue;
 
@@ -76,11 +76,11 @@ public class ScaleScalarOperator extends AbstractScale {
                 return Double.NEGATIVE_INFINITY;
             }
 
-            param.set(newValue);
+            param.setValue(newValue);
             // provides a hook for subclasses
             //cleanupOperation(newValue, oldValue);
 
-            return hastingsRatio;
+            return logHR;
 
         } catch (Exception e) {
             // whatever went wrong, we want to abort this operation...

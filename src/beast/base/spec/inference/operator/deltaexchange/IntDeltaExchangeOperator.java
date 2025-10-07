@@ -63,8 +63,8 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         if ( !intVectorParam.isValid(scalar1) ||  !intVectorParam.isValid(scalar2) ) {
             logq = Double.NEGATIVE_INFINITY;
         } else {
-            intVectorParam.set(dim1, scalar1);
-            intVectorParam.set(dim2, scalar2);
+            intVectorParam.setValue(dim1, scalar1);
+            intVectorParam.setValue(dim2, scalar2);
         }
 
         //System.err.println("apply deltaEx");

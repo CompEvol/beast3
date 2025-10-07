@@ -15,7 +15,7 @@ public class IntScalarUniformOperator extends Operator {
             "parameter", "an integer scalar parameter to sample individual values for",
             Validate.REQUIRED, IntScalarParam.class);
 
-    IntScalarParam parameter;
+    IntScalarParam<? extends Int> parameter;
     int lowerIndex, upperIndex;
 
 //    public IntScalarUniformOperator() {
@@ -34,7 +34,7 @@ public class IntScalarUniformOperator extends Operator {
     public double proposal() {
 
         int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-        parameter.set(newValue);
+        parameter.setValue(newValue);
 
         return 0.0;
     }
