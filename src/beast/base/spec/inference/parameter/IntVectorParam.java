@@ -11,14 +11,17 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
 @Description("A scalar int-valued parameter with domain constraints")
-public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> {
+public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>, VectorParam<D, Integer> {
 
     final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -187,11 +190,15 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     //*** setValue ***
 
-    public void set(final Integer value) {
-        this.set(0, value);
+    public void set(final int i, final Integer value) {
+        setValue(i, value);
     }
 
-    public void set(final int i, final Integer value) {
+    public void set(final int value) {
+        setValue(0, value);
+    }
+    // Fast (no boxing)
+    public void setValue(final int i, final int value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +

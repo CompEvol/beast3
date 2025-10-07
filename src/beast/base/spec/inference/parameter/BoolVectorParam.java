@@ -10,13 +10,16 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector {
+public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector, VectorParam<Bool, Boolean> {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -159,12 +162,8 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     }
 
     //*** setValue ***
-
-    public void set(final Boolean value) {
-        this.set(0, value);
-    }
-
-    public void set(final int i, final Boolean value) {
+    // Fast (no boxing)
+    public void setValue(final int i, final boolean value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -173,6 +172,14 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         values[i] = value;
         isDirty[i] = true;
         lastDirty = i;
+    }
+
+    public void set(final Boolean value) {
+        setValue(0, value);
+    }
+
+    public void set(final int i, final Boolean value) {
+        setValue(i, value);
     }
 
     /**

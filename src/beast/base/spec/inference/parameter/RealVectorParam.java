@@ -3,13 +3,17 @@ package beast.base.spec.inference.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.*;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealVector;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -147,6 +151,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         return getValue(i); // unboxed
     }
 
+    // Fast (no boxing)
     public double getValue(final int i) {
         return values[i];
     }
@@ -187,11 +192,15 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     //*** setters ***
 
-    public void set(final Double value) {
-        this.set(0, value);
+    public void set(final int i, final Double value) {
+        setValue(i, value);
     }
 
-    public void set(final int i, final Double value) {
+    public void set(final Double value) {
+        setValue(0, value);
+    }
+    // Fast (no boxing)
+    public void setValue(final int i, final double value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +

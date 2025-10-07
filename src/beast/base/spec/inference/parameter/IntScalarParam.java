@@ -2,9 +2,10 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.domain.*;
-import beast.base.spec.type.IntScalar;
 import beast.base.inference.StateNode;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Int;
+import beast.base.spec.type.IntScalar;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -76,6 +77,11 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         return value;
     }
 
+    // Fast (no boxing)
+    public int getValue() {
+        return value;
+    }
+
     // Implement Scalar<D> interface methods
     @Override
     public D getDomain() {
@@ -83,8 +89,11 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     //*** setValue ***
-
     public void set(Integer value) {
+        setValue(value);
+    }
+    // Fast (no boxing)
+    public void setValue(int value) {
         startEditing(null);
 
         if (! isValid(value)) {

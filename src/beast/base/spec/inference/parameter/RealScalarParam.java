@@ -2,9 +2,10 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.domain.*;
-import beast.base.spec.type.RealScalar;
 import beast.base.inference.StateNode;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Real;
+import beast.base.spec.type.RealScalar;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -77,6 +78,11 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         return value;
     }
 
+    // Fast (no boxing)
+    public double getValue() {
+        return value;
+    }
+
     // Implement Scalar<D> interface methods
     @Override
     public D getDomain() {
@@ -84,8 +90,12 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     //*** setValue ***
-
     public void set(Double value) {
+        setValue(value);
+    }
+
+    // Fast (no boxing)
+    public void setValue(double value) {
         startEditing(null);
 
         if (! isValid(value)) {

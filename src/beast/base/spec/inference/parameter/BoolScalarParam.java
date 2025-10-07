@@ -85,6 +85,10 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     //*** setValue ***
 
     public void set(Boolean value) {
+        setValue(value);
+    }
+    // Fast (no boxing)
+    public void setValue(boolean value) {
         startEditing(null);
 
         if (!isValid(value)) {
