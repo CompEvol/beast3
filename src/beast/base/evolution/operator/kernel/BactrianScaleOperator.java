@@ -1,7 +1,5 @@
 package beast.base.evolution.operator.kernel;
 
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.operator.ScaleOperator;
@@ -13,6 +11,14 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
+
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.scale.ScaleScalarOperator},
+ * {@link beast.base.spec.inference.operator.scale.ScaleVectorOperator},
+ * and {@link beast.base.spec.evolution.operator.scale.ScaleTreeOperator}
+ */
+@Deprecated
 @Description("Scale operator that finds scale factor according to a Bactrian distribution (Yang & Rodriguez, 2013), "
 		+ "which is a mixture of two Gaussians: p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
 public class BactrianScaleOperator extends ScaleOperator {

@@ -25,8 +25,6 @@
 package beast.base.evolution.operator;
 
 
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.tree.Node;
@@ -37,7 +35,14 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.scale.ScaleScalarOperator},
+ * {@link beast.base.spec.inference.operator.scale.ScaleVectorOperator},
+ * and {@link beast.base.spec.evolution.operator.scale.ScaleTreeOperator}
+ */
+@Deprecated
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
 public class ScaleOperator extends Operator {
 
