@@ -2,14 +2,16 @@ package beast.base.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.inference.Operator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
-
+/**
+ * @deprecated IntUniformOperator is deprecated. Use UniformOperator instead.
+ */
 @Description("A uniform random operator that selects a random dimension of the integer parameter and picks a new random value within the bounds.")
 @Deprecated
 public class IntUniformOperator extends Operator {

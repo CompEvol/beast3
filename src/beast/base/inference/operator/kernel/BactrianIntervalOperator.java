@@ -1,9 +1,6 @@
 package beast.base.inference.operator.kernel;
 
 
-
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -11,7 +8,13 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
 
+/**
+ * @deprecated replaced by
+ * {@link beast.base.spec.inference.operator.uniform.ScalarIntervalOperator},
+ * and {@link beast.base.spec.inference.operator.uniform.VectorIntervalOperator}.
+ */
 @Description("A scale operator that selects a random dimension of the real parameter and scales the value a " +
         "random amount according to a Bactrian distribution such that the parameter remains in its range. "
         + "Supposed to be more efficient than UniformOperator")

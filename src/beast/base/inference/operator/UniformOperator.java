@@ -9,6 +9,13 @@ import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.uniform.IntScalarUniformOperator},
+ * {@link beast.base.spec.inference.operator.uniform.IntVectorUniformOperator},
+ * {@link beast.base.spec.inference.operator.uniform.ScalarIntervalOperator},
+ * and {@link beast.base.spec.inference.operator.uniform.VectorIntervalOperator}.
+ */
+@Deprecated
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
 public class UniformOperator extends Operator {
     final public Input<Parameter<?>> parameterInput = new Input<>("parameter", "a real or integer parameter to sample individual values for", Validate.REQUIRED, Parameter.class);
