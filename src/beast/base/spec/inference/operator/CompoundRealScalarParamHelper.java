@@ -61,6 +61,11 @@ public class CompoundRealScalarParamHelper<D extends Real> implements RealVector
         return getScalarParam(i).get();
     }
 
+    // Fast (no boxing)
+    public double getValue(int i) {
+        return getScalarParam(i).getValue();
+    }
+
     @Override
     public D getDomain() {
         return parameterList.getFirst().getDomain();
@@ -78,6 +83,12 @@ public class CompoundRealScalarParamHelper<D extends Real> implements RealVector
     public void set(final int i, final Double value) {
         final RealScalarParam<D> param = getScalarParam(i);
         param.set(value);
+    }
+
+    // Fast (no boxing)
+    public void setValue(final int i, final double value) {
+        final RealScalarParam<D> param = getScalarParam(i);
+        param.setValue(value);
     }
 
     @Override
