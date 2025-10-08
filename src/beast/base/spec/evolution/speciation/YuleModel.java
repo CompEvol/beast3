@@ -9,8 +9,9 @@ import beast.base.core.Log;
 import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.*;
 import beast.base.inference.State;
+import beast.base.inference.StateNode;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +28,9 @@ import java.util.Random;
 
 @Description("Pure birth model (i.e. no deaths)")
 public class YuleModel extends SpeciesTreeDistribution {
-    final public Input<RealScalarParam<? extends PositiveReal>> birthDiffRateParameterInput =
+    final public Input<RealScalar<? extends PositiveReal>> birthDiffRateParameterInput =
             new Input<>("birthDiffRate", "birth difference rate parameter, lambda - mu in birth/death model (diversification rate)", Validate.REQUIRED);
-    final public Input<RealScalarParam<? extends PositiveReal>> originHeightParameterInput =
+    final public Input<RealScalar<? extends PositiveReal>> originHeightParameterInput =
             new Input<>("originHeight", "the height of the point of origin of the process");
     final public Input<Boolean> conditionalOnRootInput =
             new Input<>("conditionalOnRoot", "Whether to condition on the root (default false)", false);
@@ -67,11 +68,11 @@ public class YuleModel extends SpeciesTreeDistribution {
 
     protected double calculateTreeLogLikelihood(final TreeInterface tree, final double rho, final double a) {
 
-        if (conditionalOnOrigin && tree.getRoot().getHeight() > originHeightParameterInput.get().getValue())
+        if (conditionalOnOrigin && tree.getRoot().getHeight() > originHeightParameterInput.get().get())
             return Double.NEGATIVE_INFINITY;
 
         final int taxonCount = tree.getLeafNodeCount();
-        final double r = birthDiffRateParameterInput.get().getValue();
+        final double r = birthDiffRateParameterInput.get().get();
 
         double logL = logTreeProbability(taxonCount, r, rho, a);
 
@@ -96,7 +97,7 @@ public class YuleModel extends SpeciesTreeDistribution {
     protected double logTreeProbability(final int taxonCount, double r, double rho, double a) {
         double c1 = logCoeff(taxonCount);
         if (conditionalOnOrigin) {
-            final double height = originHeightParameterInput.get().getValue();
+            final double height = originHeightParameterInput.get().get();
             c1 += (taxonCount - 1) * calcLogConditioningTerm(height, r, rho, a);
         } else if (!conditionalOnRoot) {
             c1 += (taxonCount - 1) * Math.log(r * rho) + taxonCount * Math.log(1 - a);
@@ -163,9 +164,20 @@ public class YuleModel extends SpeciesTreeDistribution {
 
     @Override
     protected boolean requiresRecalculation() {
-        return super.requiresRecalculation()
-                || birthDiffRateParameterInput.get().somethingIsDirty()
-                || (conditionalOnOrigin && originHeightParameterInput.get().somethingIsDirty());
+//        return super.requiresRecalculation()
+//                || birthDiffRateParameterInput.get().somethingIsDirty()
+//                || (conditionalOnOrigin && originHeightParameterInput.get().somethingIsDirty());
+        boolean birthDirty = false;
+        boolean originDirty = false;
+
+        if (birthDiffRateParameterInput.get() instanceof StateNode birthDiffRate) {
+            birthDirty = birthDiffRate.somethingIsDirty();
+        }
+        if (conditionalOnOrigin && originHeightParameterInput.get() instanceof StateNode originHeight) {
+            originDirty = originHeight.somethingIsDirty();
+        }
+
+        return super.requiresRecalculation() || birthDirty || (conditionalOnOrigin && originDirty);
     }
 
     @Override
@@ -214,7 +226,7 @@ public class YuleModel extends SpeciesTreeDistribution {
         sampleConditions(state, random);
 
         Tree tree = (Tree) treeInput.get();
-        RealScalarParam<? extends PositiveReal> birthRate = birthDiffRateParameterInput.get();
+        RealScalar<? extends PositiveReal> birthRate = birthDiffRateParameterInput.get();
 
         // Simulate tree conditional on new parameters
 
@@ -231,7 +243,7 @@ public class YuleModel extends SpeciesTreeDistribution {
         double t = 0.0;
         while (activeLineages.size() > 1) {
             int k = activeLineages.size();
-            double a = birthRate.getValue() * k;
+            double a = birthRate.get() * k;
 
             t += -Math.log(random.nextDouble())/a;
 
@@ -258,7 +270,9 @@ public class YuleModel extends SpeciesTreeDistribution {
     @Override
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
-        conditions.add(birthDiffRateParameterInput.get().getID());
+        if (birthDiffRateParameterInput.get() instanceof BEASTInterface beastInterface) {
+            conditions.add(beastInterface.getID());
+        }
 
         return conditions;
     }

@@ -1,12 +1,13 @@
 package beast.base.spec.evolution.tree.coalescent;
 
 
+import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealScalar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
  */
 @Description("coalescent intervals for a constant population")
 public class ConstantPopulation extends PopulationFunction.Abstract {
-    final public Input<RealScalarParam<? extends PositiveReal>> popSizeParameter = new Input<>(
+    final public Input<RealScalar<? extends PositiveReal>> popSizeParameter = new Input<>(
             "popSize", "constant (effective) population size value.",
             Validate.REQUIRED);
 
@@ -31,7 +32,7 @@ public class ConstantPopulation extends PopulationFunction.Abstract {
      * @return initial population size.
      */
     public double getN0() {
-        N0 = popSizeParameter.get().getValue();
+        N0 = popSizeParameter.get().get();
         return N0;
     }
 
@@ -50,8 +51,8 @@ public class ConstantPopulation extends PopulationFunction.Abstract {
     @Override
 	public List<String> getParameterIds() {
     	List<String> ids = new ArrayList<>();
-//    	if (popSizeParameter.get() instanceof BEASTInterface) // TODO why? it is already BEASTInterface
-        ids.add(popSizeParameter.get().getID());
+    	if (popSizeParameter.get() instanceof BEASTInterface beastInterface)
+            ids.add(beastInterface.getID());
         return ids;
     }
 
