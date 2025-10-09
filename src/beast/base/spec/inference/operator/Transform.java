@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.spec.evolution.operator;
+package beast.base.spec.inference.operator;
 
 
 

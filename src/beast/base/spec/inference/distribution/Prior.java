@@ -72,10 +72,12 @@ public class Prior extends Distribution {
         			}
         		}
         	}
+        	String values = "";
     		for (int i = 0; i < vector.size(); i++) {
-    			Constant c = new Constant(vector.get(i)+"");
-    			logP += dist.calcLogP(c);
+    			values += vector.get(i)+" ";
     		}
+			Constant c = new Constant(values);
+			logP += dist.calcLogP(c);
         }
         return logP;
     }

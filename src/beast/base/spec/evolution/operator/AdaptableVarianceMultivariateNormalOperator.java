@@ -45,8 +45,8 @@ import beast.base.inference.StateNode;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.math.matrixalgebra.*;
 import beast.base.spec.type.Tensor;
-
-import beast.base.spec.evolution.operator.Transform.*;
+import beast.base.spec.inference.operator.Transform;
+import beast.base.spec.inference.operator.Transform.*;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;

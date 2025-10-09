@@ -10,6 +10,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
+import beast.base.core.ProgramStatus;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
@@ -66,6 +67,10 @@ public class DeltaExchangeOperator extends KernelOperator {
 
     public void initAndValidate() {
     	super.initAndValidate();
+    	
+    	if (ProgramStatus.name.equals("BEAUti")) {
+    		return;
+    	}
 
         autoOptimize = autoOptimizeiInput.get();
         delta = deltaInput.get();

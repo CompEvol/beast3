@@ -65,7 +65,7 @@
                 <provider classname="beast.base.evolution.operator.kernel.BactrianScaleOperator"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianSubtreeSlide"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianTipDatesRandomWalker"/>
-                
+
                 <provider classname="beast.base.inference.operator.kernel.Transform$Array"/>
                 <provider classname="beast.base.inference.operator.kernel.Transform$Collection"/>
                 <provider classname="beast.base.inference.operator.kernel.Transform$Compose"/>
@@ -198,6 +198,7 @@
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 
+                <provider classname="beast.base.spec.evolution.speciation.YuleModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.RandomLocalClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.StrictClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel"/>
@@ -218,7 +219,26 @@
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TVM"/>
 
                 <provider classname="beast.base.spec.evolution.operator.scale.ScaleTreeOperator"/>
+                <provider classname="beast.base.spec.evolution.operator.AdaptableOperatorSampler"/>
+                <provider classname="beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator"/>
 
+                <provider classname="beast.base.spec.inference.operator.Transform$Array"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$Collection"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$Compose"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$ComposeMultivariable"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$FisherZTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$Inverse"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$InverseMultivariate"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$LogTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$LogitTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$MultivariableTransformWithParameter"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$MultivariateTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$NegateTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$NoTransform"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$NoTransformMultivariable"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$PositiveOrdered"/>
+                <provider classname="beast.base.spec.inference.operator.Transform$PowerTransform"/>
 
             </service>
 </package>
