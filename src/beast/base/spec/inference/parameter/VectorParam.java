@@ -7,4 +7,6 @@ public interface VectorParam<D extends Domain<T>, T> extends Vector<D, T> {
 
     void set(final int i, final T value);
 
+//    void setDimension(final int dimension);
+
 }
