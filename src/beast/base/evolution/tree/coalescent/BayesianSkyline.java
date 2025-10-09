@@ -1,31 +1,28 @@
 package beast.base.evolution.tree.coalescent;
 
 
+import beast.base.core.*;
+import beast.base.core.Input.Validate;
+import beast.base.evolution.tree.IntervalType;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeDistribution;
+import beast.base.evolution.tree.TreeIntervals;
+import beast.base.inference.State;
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.util.Binomial;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import beast.base.core.BEASTObject;
-import beast.base.core.Citation;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import beast.base.core.Log;
-import beast.base.evolution.tree.IntervalType;
-import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.TreeDistribution;
-import beast.base.evolution.tree.TreeIntervals;
-import beast.base.inference.*;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.util.Binomial;
-
 
 
 /**
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.BayesianSkyline}
  * @author Alexei Drummond
  */
+@Deprecated
 @Description("Bayesian skyline: A likelihood function for the generalized skyline plot coalescent.")
 @Citation(value="Drummond, A. J., Rambaut, A., Shapiro, B, & Pybus, O. G. (2005).\n" +
         "Bayesian coalescent inference of past population dynamics from molecular sequences.\n" +
