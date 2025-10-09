@@ -1,13 +1,19 @@
-package beast.base.evolution.tree.coalescent;
+package beast.base.spec.evolution.tree.coalescent;
 
 
+import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.IntervalType;
 import beast.base.evolution.tree.TreeIntervals;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.tree.coalescent.PopulationFunction;
+import beast.base.inference.StateNode;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.BoolVectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.BoolVector;
+import beast.base.spec.type.RealVector;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -16,18 +22,16 @@ import java.util.List;
 
 
 /**
- * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.CompoundPopulationFunction}
  * @author joseph
  *         Date: 26/08/2010
  */
-@Deprecated
-@Description("An effective population size function based on coalecent times from a set of trees.")
+@Description("An effective population size function based on coalescent times from a set of trees.")
 public class CompoundPopulationFunction extends PopulationFunction.Abstract implements Loggable {
 
-    final public Input<RealParameter> popSizeParameterInput = new Input<>("populationSizes",
+    final public Input<RealVector<? extends PositiveReal>> popSizeParameterInput = new Input<>("populationSizes",
             "population value at each point.", Input.Validate.REQUIRED);
 
-    final public Input<BooleanParameter> indicatorsParameterInput = new Input<>("populationIndicators",
+    final public Input<BoolVector> indicatorsParameterInput = new Input<>("populationIndicators",
             "Include/exclude population value from the population function.", Input.Validate.REQUIRED);
 
     final public Input<List<TreeIntervals>> treesInput = new Input<>("itree", "Coalecent intervals of this tree are " +
@@ -41,8 +45,8 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
             "in the middle of the coalescent intervals. By default they are at the beginning.",
             false);
 
-    private RealParameter popSizeParameter;
-    private BooleanParameter indicatorsParameter;
+    private RealVector<? extends PositiveReal> popSizeParameter;
+    private BoolVector indicatorsParameter;
     private List<TreeIntervals> trees;
 
     private Type type;
@@ -69,7 +73,7 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
     private void getParams() {
         popSizeParameter = popSizeParameterInput.get();
         indicatorsParameter = indicatorsParameterInput.get();
-        assert popSizeParameter != null && popSizeParameter.getArrayValue(0) > 0 && indicatorsParameter != null;
+        assert popSizeParameter != null && popSizeParameter.get(0) > 0 && indicatorsParameter != null;
     }
 
     // why do we need this additional level on top of initAndValidate - does not seem to do anything?
@@ -94,18 +98,26 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
 
         events += type == Type.STEPWISE ? 0 : 1;
         try {
-            if (popSizeParameter.getDimension() != events) {
-                final RealParameter p = new RealParameter();
-                p.initByName("value", popSizeParameter.getValue() + "", "upper", popSizeParameter.getUpper(), "lower", popSizeParameter.getLower(), "dimension", events);
-                p.setID(popSizeParameter.getID());
-                popSizeParameter.assignFromWithoutID(p);
+            if (popSizeParameter.size() != events) {
+                final RealVectorParam p = new RealVectorParam();
+                p.initByName("value", popSizeParameter.getElements() + "",
+                        "domain", popSizeParameter.getDomain(),
+                        "upper", popSizeParameter.getUpper(), "lower", popSizeParameter.getLower(),
+                        "dimension", events);
+                if (popSizeParameter instanceof StateNode stateNode) {
+                    p.setID(stateNode.getID());
+                    stateNode.assignFromWithoutID(p);
+                }
             }
 
-            if (indicatorsParameter.getDimension() != events - 1) {
-                final BooleanParameter p = new BooleanParameter();
-                p.initByName("value", "" + indicatorsParameter.getValue(), "dimension", events - 1);
-                p.setID(indicatorsParameter.getID());
-                indicatorsParameter.assignFrom(p);
+            if (indicatorsParameter.size() != events - 1) {
+                final BoolVectorParam p = new BoolVectorParam();
+                p.initByName("value", "" + indicatorsParameter.getElements(),
+                        "domain", indicatorsParameter.getDomain(), "dimension", events - 1);
+                if (indicatorsParameter instanceof StateNode stateNode) {
+                    p.setID(stateNode.getID());
+                    stateNode.assignFrom(p);
+                }
             }
         } catch (Exception e) {
             // what to do?
@@ -125,8 +137,10 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
     @Override
     public List<String> getParameterIds() {
         List<String> paramIDs = new ArrayList<>();
-        paramIDs.add(popSizeParameter.getID());
-        paramIDs.add(indicatorsParameter.getID());
+        if (popSizeParameter instanceof BEASTInterface beastInterface)
+            paramIDs.add(beastInterface.getID());
+        if (indicatorsParameter instanceof BEASTInterface beastInterface)
+            paramIDs.add(beastInterface.getID());
 
         for (TreeIntervals t : trees) {
             // I think this may be wrong, and we need the trees themselves
@@ -501,12 +515,12 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
         // to deal with multiple trees
 
         int tot = 1;
-        final int nd = indicatorsParameter.getDimension();
+        final int nd = indicatorsParameter.size();
 
         assert nd == alltimes.length + (type == Type.STEPWISE ? -1 : 0) :
                 " nd=" + nd + " alltimes.length=" + alltimes.length + " type=" + type;
         for (int k = 0; k < nd; ++k) {
-            if (indicatorsParameter.getValue(k)) {
+            if (indicatorsParameter.get(k)) {
                 ++tot;
             }
         }
@@ -518,15 +532,15 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
         times[0] = 0.0;
         times[tot] = Double.POSITIVE_INFINITY;
 
-        values[0] = popSizeParameter.getValue(0);
+        values[0] = popSizeParameter.get(0);
 
         int n = 0;
         for (int k = 0; k < nd && n + 1 < tot; ++k) {
 
-            if (indicatorsParameter.getValue(k)) {
+            if (indicatorsParameter.get(k)) {
                 times[n + 1] = useMid ? ((alltimes[k] + (k > 0 ? alltimes[k - 1] : 0)) / 2) : alltimes[k];
 
-                values[n + 1] = popSizeParameter.getValue(k + 1);
+                values[n + 1] = popSizeParameter.get(k + 1);
                 intervals[n] = times[n + 1] - times[n];
                 ++n;
             }
@@ -561,9 +575,9 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
             mergeTreeTimes();
             setDemographicArrays();
         } else {
-            if (popSizeParameter.somethingIsDirty() && !indicatorsParameter.somethingIsDirty()) {
-
-            }
+//            if (popSizeParameter.somethingIsDirty() && !indicatorsParameter.somethingIsDirty()) {
+//
+//            }
             shadow.protect_demo();
             setDemographicArrays();
         }
@@ -596,11 +610,12 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
     @Override
     public void log(long sample, PrintStream out) {
         // interval sizes
-        out.print("0:" + popSizeParameter.getArrayValue(0) + "\t");
+        out.print("0:" + popSizeParameter.get(0) + "\t");
         for (int i = 0; i < alltimes.length - (type == Type.STEPWISE ? 1 : 0); i++) {
             out.print(alltimes[i]);
-            if (indicatorsParameter.getArrayValue(i) > 0) {
-                out.print(":" + popSizeParameter.getArrayValue(i + 1));
+//            if (indicatorsParameter.getArrayValue(i) > 0) {
+            if (indicatorsParameter.get(i)) {
+                out.print(":" + popSizeParameter.get(i + 1));
             }
             out.print("\t");
         }
