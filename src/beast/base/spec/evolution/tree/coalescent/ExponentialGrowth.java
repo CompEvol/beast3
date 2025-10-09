@@ -1,28 +1,28 @@
-package beast.base.evolution.tree.coalescent;
+package beast.base.spec.evolution.tree.coalescent;
 
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.evolution.tree.coalescent.PopulationFunction;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
+import beast.base.spec.type.RealScalar;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
 /**
- * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.ExponentialGrowth}
  * @author Andrew Rambaut
  * @author Alexei Drummond
  * @version $Id: ConstantPopulation.java,v 1.9 2005/05/24 20:25:55 rambaut Exp $
  */
-@Deprecated
 @Description("Coalescent intervals for a exponentially growing population.")
 public class ExponentialGrowth extends PopulationFunction.Abstract {
-    final public Input<Function> popSizeParameterInput = new Input<>("popSize",
+    final public Input<RealScalar<? extends PositiveReal>> popSizeParameterInput = new Input<>("popSize",
             "present-day population size (defaults to 1.0). ");
-    final public Input<Function> growthRateParameterInput = new Input<>("growthRate",
+    final public Input<RealScalar<? extends Real>> growthRateParameterInput = new Input<>("growthRate",
             "Growth rate is the exponent of the exponential growth. " +
             "A value of zero represents a constant population size, negative values represent " +
             "decline towards the present, positive numbers represents exponential growth towards " +
@@ -34,10 +34,11 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
 
     @Override
 	public void initAndValidate() {
-        if (popSizeParameterInput.get() != null && popSizeParameterInput.get() instanceof RealParameter) {
-            RealParameter param = (RealParameter) popSizeParameterInput.get();
-            param.setBounds( Math.max(0.0, param.getLower()), param.getUpper());
-        }
+        //TODO this should already done in RealScalarParam
+//        if (popSizeParameterInput.get() != null &&
+//                popSizeParameterInput.get() instanceof RealScalarParam<? extends PositiveReal> realScalarParam) {
+//            realScalarParam.setBounds( Math.max(0.0, realScalarParam.getLower()), realScalarParam.getUpper());
+//        }
 //        if (growthRateParameter.get() != null) {
 //            growthRateParameter.get().setBounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 //        }
@@ -47,7 +48,7 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
      * @return initial population size.
      */
     public double getN0() {
-        return popSizeParameterInput.get().getArrayValue();
+        return popSizeParameterInput.get().get();
     }
 
     /**
@@ -63,7 +64,7 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
      * @return growth rate.
      */
     public final double getGrowthRate() {
-        return growthRateParameterInput.get().getArrayValue();
+        return growthRateParameterInput.get().get();
     }
 
     /**
@@ -137,8 +138,8 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
     @Override
 	public List<String> getParameterIds() {
     	List<String> ids = new ArrayList<>();
-    	if (popSizeParameterInput.get() instanceof BEASTInterface)
-            ids.add(((BEASTInterface)popSizeParameterInput.get()).getID());
+    	if (popSizeParameterInput.get() instanceof BEASTInterface beastInterface)
+            ids.add(beastInterface.getID());
         return ids;
     }
 

@@ -1,23 +1,23 @@
 package beast.base.evolution.tree.coalescent;
 
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.RealParameter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.ConstantPopulation}
  * @author Andrew Rambaut
  * @author Alexei Drummond
  * @version $Id: ConstantPopulation.java,v 1.9 2005/05/24 20:25:55 rambaut Exp $
  */
+@Deprecated
 @Description("coalescent intervals for a constant population")
 public class ConstantPopulation extends PopulationFunction.Abstract {
     final public Input<Function> popSizeParameter = new Input<>("popSize",
