@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution.tree.coalescent;
+package beast.base.spec.evolution.tree.coalescent;
 
 
 import beast.base.core.BEASTInterface;
@@ -37,9 +37,12 @@ import beast.base.evolution.tree.MRCAPrior;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 import beast.base.util.HeapSort;
 import beast.base.util.Randomizer;
 import org.apache.commons.math.MathException;
@@ -47,21 +50,18 @@ import org.apache.commons.math.MathException;
 import java.util.*;
 
 
-/**
- * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.RandomTree}
- */
-@Deprecated
 @Description("This class provides the basic engine for coalescent simulation of a given demographic model over a given time period. ")
 public class RandomTree extends Tree implements StateNodeInitialiser {
     final public Input<Alignment> taxaInput = new Input<>("taxa", "set of taxa to initialise tree specified by alignment");
 
     final public Input<PopulationFunction> populationFunctionInput = new Input<>("populationModel", "population function for generating coalescent???", Validate.REQUIRED);
     final public Input<List<MRCAPrior>> calibrationsInput = new Input<>("constraint", "specifies (monophyletic or height distribution) constraints on internal nodes", new ArrayList<>());
-    final public Input<Double> rootHeightInput = new Input<>("rootHeight", "If specified the tree will be scaled to match the root height, if constraints allow this");
+    final public Input<RealScalar<? extends PositiveReal>> rootHeightInput = new Input<>("rootHeight", "If specified the tree will be scaled to match the root height, if constraints allow this");
 
     // total nr of taxa
     int nrOfTaxa;
 
+    // TODO implement Bounded interface
     class Bound {
         Double upper = Double.POSITIVE_INFINITY;
         Double lower = Double.NEGATIVE_INFINITY;
@@ -327,7 +327,7 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
 
         simulateTree(taxa, popFunction);
         if (rootHeightInput.get() != null) {
-        	scaleToFit(rootHeightInput.get() / root.getHeight(), root);
+        	scaleToFit(rootHeightInput.get().get() / root.getHeight(), root);
         }
 
         nodeCount = 2 * taxa.size() - 1;
@@ -556,7 +556,7 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
      * @param demographic
      * @return the root node of the given array of nodes after simulation of the
      *         coalescent under the given demographic model.
-     * @throws beast.base.evolution.tree.coalescent.RandomTree.ConstraintViolatedException
+     * @throws ConstraintViolatedException
      */
     public Node simulateCoalescentWithMax(final List<Node> nodes, final PopulationFunction demographic,
                                           final double maxHeight) throws ConstraintViolatedException {
