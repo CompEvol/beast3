@@ -1,23 +1,18 @@
 package beast.base.evolution.speciation;
 
 
+import beast.base.core.BEASTInterface;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
+import beast.base.evolution.tree.*;
+import beast.base.inference.State;
+import beast.base.inference.parameter.RealParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.core.Input.Validate;
-import beast.base.evolution.tree.MRCAPrior;
-import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
-import beast.base.evolution.tree.TreeInterface;
-import beast.base.evolution.tree.TreeUtils;
-import beast.base.inference.*;
-import beast.base.inference.parameter.RealParameter;
 
 
 
@@ -28,6 +23,10 @@ import beast.base.inference.parameter.RealParameter;
 //    p *= exp(-lambda*height[i])
 // }
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.speciation.YuleModel}
+ */
+@Deprecated
 @Description("Pure birth model (i.e. no deaths)")
 public class YuleModel extends SpeciesTreeDistribution {
     final public Input<RealParameter> birthDiffRateParameterInput =
