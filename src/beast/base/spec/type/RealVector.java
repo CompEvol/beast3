@@ -7,7 +7,13 @@ import beast.base.spec.domain.Real;
 public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<Double> {
 
 
-    Double get(int i);
+    double get(int i);
+
+    default Double get(int... idx) {
+        if (idx.length != 1)
+            throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);
+        return get(idx[0]);
+    }
 
 //    default double[] getDoubleArray() {
 //        int length = Math.toIntExact(size());

@@ -146,14 +146,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
-    @Override
-    public Double get(int i) {
-        return getValue(i); // unboxed
-    }
-
     // Fast (no boxing)
-    public double getValue(final int i) {
-        return values[i];
+    @Override
+    public double get(int i) {
+        return values[i]; // unboxed
     }
 
     public double getStoredValue(final int i) {
@@ -329,7 +325,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         final RealVectorParam var = (RealVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
-            out.print(var.getValue(value) + "\t");
+            out.print(var.get(value) + "\t");
         }
     }
 

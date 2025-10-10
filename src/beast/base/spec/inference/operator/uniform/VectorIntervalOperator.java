@@ -36,7 +36,7 @@ public class VectorIntervalOperator extends AbstractInterval {
         RealVectorParam<? extends Real> param = parameterInput.get();
 
         int i = Randomizer.nextInt(param.size());
-        double value = param.getValue(i);
+        double value = param.get(i);
         double scale = getScaler(i, value);
 
         // transform value

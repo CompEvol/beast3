@@ -137,7 +137,7 @@ public class ScaleVectorOperator extends AbstractScale {
                 // for the proof. It is supposed to be somewhere in an Alexei/Nicholes article.
 
                 // all Values assumed independent!
-                final double scale = getScaler(0, param.getValue(0));
+                final double scale = getScaler(0, param.get(0));
                 final int computedDoF = param.scale(scale);
                 final int usedDoF = (specifiedDoF > 0) ? specifiedDoF : computedDoF ;
                 logHR = usedDoF * Math.log(scale);
@@ -178,7 +178,7 @@ public class ScaleVectorOperator extends AbstractScale {
                     index = Randomizer.nextInt(dim);
                 }
 
-                final double oldValue = param.getValue(index);
+                final double oldValue = param.get(index);
 
                 if (oldValue == 0) {
                     // Error: parameter has value 0 and cannot be scaled

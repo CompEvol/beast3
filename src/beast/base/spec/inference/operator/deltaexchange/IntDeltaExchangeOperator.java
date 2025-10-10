@@ -50,8 +50,8 @@ public class IntDeltaExchangeOperator extends AbstractDeltaExchange {
         IntVectorParam intVectorParam = intparameterInput.get();
 
         // operate on int parameter
-        int scalar1 = intVectorParam.getValue(dim1);
-        int scalar2 = intVectorParam.getValue(dim2);
+        int scalar1 = intVectorParam.get(dim1);
+        int scalar2 = intVectorParam.get(dim2);
 
         final int d = Randomizer.nextInt((int) Math.round(delta)) + 1;
 

@@ -5,7 +5,13 @@ import beast.base.spec.domain.Bool;
 
 public interface BoolVector extends Vector<Bool, Boolean> {
 
-    Boolean get(int i);
+    boolean get(int i);
+
+    default Boolean get(int... idx) {
+        if (idx.length != 1)
+            throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);
+        return get(idx[0]);
+    }
 
 //    default boolean[] getBooleanArray() {
 //        int length = Math.toIntExact(size());

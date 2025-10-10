@@ -6,7 +6,13 @@ import beast.base.spec.domain.Int;
 
 public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<Integer> {
 
-    Integer get(int i);
+    int get(int i);
+
+    default Integer get(int... idx) {
+        if (idx.length != 1)
+            throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);
+        return get(idx[0]);
+    }
 
 //    default int[] getIntArray() {
 //        int length = Math.toIntExact(size());

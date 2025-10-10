@@ -146,11 +146,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     }
 
     @Override
-    public Integer get(int i) {
-        return getValue(i); // unboxed
-    }
-
-    public int getValue(final int i) {
+    public int get(final int i) {
         return values[i];
     }
 
@@ -326,7 +322,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         final IntVectorParam var = (IntVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
-            out.print(var.getValue(value) + "\t");
+            out.print(var.get(value) + "\t");
         }
     }
 

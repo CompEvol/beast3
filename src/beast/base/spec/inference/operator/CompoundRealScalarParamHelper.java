@@ -57,13 +57,9 @@ public class CompoundRealScalarParamHelper<D extends Real> implements RealVector
     }
 
     @Override
-    public Double get(int i) {
-        return getScalarParam(i).get();
-    }
-
     // Fast (no boxing)
-    public double getValue(int i) {
-        return getScalarParam(i).getValue();
+    public double get(int i) {
+        return getScalarParam(i).get();
     }
 
     @Override

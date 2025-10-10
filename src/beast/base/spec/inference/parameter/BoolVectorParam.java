@@ -119,11 +119,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     }
 
     @Override
-    public Boolean get(int i) {
-        return getValue(i); // unboxed
-    }
-
-    public boolean getValue(final int i) {
+    public boolean get(final int i) {
         return values[i];
     }
 
@@ -276,7 +272,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         final BoolVectorParam var = (BoolVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
-            out.print(var.getValue(value) + "\t");
+            out.print(var.get(value) + "\t");
         }
     }
 

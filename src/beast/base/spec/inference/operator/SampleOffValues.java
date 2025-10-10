@@ -45,10 +45,10 @@ public class SampleOffValues extends Operator {
 
         if( scaleAll.get() ) {
             for (int i = offset; i < idim; ++i) {
-                if( !indicators.getValue(i-offset) ) {
+                if( !indicators.get(i-offset) ) {
                     try {
                         final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
-                        hr += distribution.logDensity(data.getValue(i));
+                        hr += distribution.logDensity(data.get(i));
                         data.setValue(i, val);
                     } catch (Exception e) {
                         // some distributions fail on extreme values - currently gamma
@@ -63,7 +63,7 @@ public class SampleOffValues extends Operator {
             int locIndex = 0;
 
             for (int i = 0; i < idim; ++i) {
-                if( !indicators.getValue(i) ) {
+                if( !indicators.get(i) ) {
                     loc[locIndex] = i + offset;
                     ++locIndex;
                 }
@@ -73,7 +73,7 @@ public class SampleOffValues extends Operator {
                 final int index = loc[Randomizer.nextInt(locIndex)];
                 try {
                     final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
-                    hr = distribution.logDensity(data.getValue(index));
+                    hr = distribution.logDensity(data.get(index));
                     data.setValue(index, val);
                 } catch (Exception e) {
                     // some distributions fail on extreme values - currently gamma
