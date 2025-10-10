@@ -1,4 +1,4 @@
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 
 import beast.base.core.Description;
@@ -7,16 +7,14 @@ import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.TreeDistribution;
 import beast.base.inference.State;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.RealVector;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-/**
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.SpeciesTreePopFunction}
- */
-@Deprecated
 @Description("Species tree prior for *BEAST analysis")
 public class SpeciesTreePopFunction extends TreeDistribution {
 
@@ -25,9 +23,9 @@ public class SpeciesTreePopFunction extends TreeDistribution {
     public final Input<TreePopSizeFunction> popFunctionInput = new Input<>("popFunction", "Population function. " +
             "This can be " + Arrays.toString(TreePopSizeFunction.values()) + " (default 'constant')", TreePopSizeFunction.constant, TreePopSizeFunction.values());
 
-    public final Input<RealParameter> popSizesBottomInput = new Input<>("bottomPopSize", "population size parameter for populations at the bottom of a branch. " +
+    public final Input<RealVector<? extends PositiveReal>> popSizesBottomInput = new Input<>("bottomPopSize", "population size parameter for populations at the bottom of a branch. " +
             "For constant population function, this is the same at the top of the branch.", Validate.REQUIRED);
-    public final Input<RealParameter> popSizesTopInput = new Input<>("topPopSize", "population size parameter at the top of a branch. " +
+    public final Input<RealVector<? extends PositiveReal>> popSizesTopInput = new Input<>("topPopSize", "population size parameter at the top of a branch. " +
             "Ignored for constant population function, but required for linear population function.");
 
     /**
@@ -37,14 +35,24 @@ public class SpeciesTreePopFunction extends TreeDistribution {
 
 
     TreePopSizeFunction popFunction;
-    RealParameter popSizesBottom;
-    RealParameter popSizesTop;
+    //TODO immutable or not?
+    RealVectorParam<? extends PositiveReal> popSizesBottom;
+    RealVectorParam<? extends PositiveReal> popSizesTop;
 
     @Override
     public void initAndValidate() {
         popFunction = popFunctionInput.get();
-        popSizesBottom = popSizesBottomInput.get();
-        popSizesTop = popSizesTopInput.get();
+        // TODO require RealVectorParam because setDimension is called below
+        if (popSizesBottomInput.get() instanceof RealVectorParam<? extends PositiveReal> bottomParam) {
+            popSizesBottom = bottomParam;
+        } else {
+            throw new IllegalArgumentException("popSizesBottomInput must be a RealVectorParam !");
+        }
+        if (popSizesTopInput.get() instanceof RealVectorParam<? extends PositiveReal> topParam) {
+            popSizesTop = topParam;
+        } else {
+            throw new IllegalArgumentException("popSizesTopInput must be a RealVectorParam !");
+        }
 
         // set up sizes of population functions
         final int speciesCount = treeInput.get().getLeafNodeCount();

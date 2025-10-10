@@ -1,4 +1,4 @@
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 
 import beast.base.core.Description;
@@ -7,12 +7,14 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
-import beast.base.evolution.speciation.SpeciesTreePopFunction.TreePopSizeFunction;
+import beast.base.evolution.speciation.TreeTopFinder;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TreeDistribution;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.State;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.speciation.SpeciesTreePopFunction.TreePopSizeFunction;
+import beast.base.spec.type.RealVector;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,10 +22,6 @@ import java.util.PriorityQueue;
 import java.util.Random;
 
 
-/**
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.GeneTreeForSpeciesTreeDistribution}
- */
-@Deprecated
 @Description("Calculates probability of gene tree conditioned on a species tree (multi-species coalescent)")
 public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
     final public Input<TreeInterface> speciesTreeInput =
@@ -31,8 +29,9 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
 
 //    public enum PLOIDY {autosomal_nuclear, X, Y, mitrochondrial};
     
-    final public Input<Double> ploidyInput =
-            new Input<>("ploidy", "ploidy (copy number) for this gene, typically a whole number or half (default 2 for autosomal_nuclear)", 2.0);
+    final public Input<Double> ploidyInput = new Input<>("ploidy",
+            "ploidy (copy number) for this gene, typically a whole number or half (default 2 for autosomal_nuclear)",
+            2.0);
 //    public Input<PLOIDY> m_ploidy =
 //        new Input<>("ploidy", "ploidy for this gene (default X, Possible values: " + PLOIDY.values(), PLOIDY.X, PLOIDY.values());
 
@@ -50,9 +49,9 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
     // maps gene tree leaf nodes to species tree leaf nodes. Indexed by node number.
     protected int[] nrOfLineageToSpeciesMap;
 
-    beast.base.evolution.speciation.SpeciesTreePrior.TreePopSizeFunction isConstantPopFunction;
-    RealParameter popSizesBottom;
-    RealParameter popSizesTop;
+    TreePopSizeFunction isConstantPopFunction;
+    RealVector<? extends PositiveReal> popSizesBottom;
+    RealVector<? extends PositiveReal> popSizesTop;
 
     // Ploidy is a constant - cache value of input here
     private double ploidy;
@@ -221,7 +220,7 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
 
         switch (isConstantPopFunction) {
             case constant:
-                calcConstantPopSizeContribution(lineagesBottom, popSizesBottom.getValue(nodeIndex), times, k);
+                calcConstantPopSizeContribution(lineagesBottom, popSizesBottom.get(nodeIndex), times, k);
                 break;
             case linear:
                 logP += calcLinearPopSizeContributionJH(lineagesBottom, nodeIndex, times, k, node);
@@ -259,7 +258,7 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
         double lp = 0.0;
         final double popSizeBottom;
         if (node.isLeaf()) {
-            popSizeBottom = popSizesBottom.getValue(nodeIndex) * ploidy;
+            popSizeBottom = popSizesBottom.get(nodeIndex) * ploidy;
         } else {
             // use sum of left and right child branches for internal nodes
             popSizeBottom = (getTopPopSize(node.getLeft().getNr()) + getTopPopSize(node.getRight().getNr())) * ploidy;
@@ -290,7 +289,7 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
         double lp = 0.0;
         double popSizeBottom;
         if (node.isLeaf()) {
-            popSizeBottom = popSizesBottom.getValue(nodeIndex);
+            popSizeBottom = popSizesBottom.get(nodeIndex);
         } else {
             // use sum of left and right child branches for internal nodes
             popSizeBottom = (getTopPopSize(node.getLeft().getNr()) + getTopPopSize(node.getRight().getNr()));
@@ -375,10 +374,10 @@ public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
       * and we can use that entry in m_fPopSizesTop for the rogue internal node.
       */
     private double getTopPopSize(final int nodeIndex) {
-        if (nodeIndex < popSizesTop.getDimension()) {
-            return popSizesTop.getArrayValue(nodeIndex);
+        if (nodeIndex < popSizesTop.size()) {
+            return popSizesTop.get(nodeIndex);
         }
-        return popSizesTop.getArrayValue(speciesTreeInput.get().getRoot().getNr());
+        return popSizesTop.get(speciesTreeInput.get().getRoot().getNr());
     }
 
 
