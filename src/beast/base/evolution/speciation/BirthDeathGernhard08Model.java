@@ -26,10 +26,6 @@
 package beast.base.evolution.speciation;
 
 
-import static org.apache.commons.math.special.Gamma.logGamma;
-
-import java.util.Arrays;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -37,7 +33,12 @@ import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.parameter.RealParameter;
 
-/* Ported from Beast 1.6
+import java.util.Arrays;
+
+import static org.apache.commons.math.special.Gamma.logGamma;
+
+/** @deprecated replaced by {@link beast.base.spec.evolution.speciation.BirthDeathGernhard08Model}
+ * Ported from Beast 1.6
  * @author Joseph Heled
  *         Date: 24/02/2008
  */
@@ -53,7 +54,7 @@ import beast.base.inference.parameter.RealParameter;
         DOI = "doi:10.1016/j.jtbi.2008.04.005", // (https://doi.org/10.1016/j.jtbi.2008.04.005)
         year = 2008,
         firstAuthorSurname = "gernhard")
-
+@Deprecated
 public class BirthDeathGernhard08Model extends YuleModel {
 
     final static String[] TYPES = {"unscaled", "timesonly", "oriented", "labeled"};
