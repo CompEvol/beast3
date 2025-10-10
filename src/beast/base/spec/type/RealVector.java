@@ -6,9 +6,18 @@ import beast.base.spec.domain.Real;
 
 public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<Double> {
 
-
+    /**
+     * @param i index
+     * @return the unboxed domain value at ith element, which is faster than boxed.
+     */
     double get(int i);
 
+    /**
+     * Use boxed value T only when required for API or nullability.
+     *
+     * @param idx  index/indices, depending on the dimension.
+     * @return  the boxed domain value at ith element.
+     */
     default Double get(int... idx) {
         if (idx.length != 1)
             throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);

@@ -73,13 +73,9 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     }
 
-    @Override
-    public Double get() {
-        return value;
-    }
-
     // Fast (no boxing)
-    public double getValue() {
+    @Override
+    public double get() {
         return value;
     }
 

@@ -34,7 +34,7 @@ public class ScalarIntervalOperator extends AbstractInterval {
     public double proposal() {
 
         RealScalarParam<? extends Real> param = parameterInput.get();
-        double value = param.getValue();
+        double value = param.get();
         // use index 0 for scalar
         double scale = getScaler(0, value);
 

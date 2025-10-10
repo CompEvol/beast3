@@ -57,7 +57,7 @@ public class ScaleScalarOperator extends AbstractScale {
 
             assert param.getLower() != null && param.getUpper() != null;
 
-            final double oldValue = param.getValue();
+            final double oldValue = param.get();
 
             if (oldValue == 0) {
                 // Error: parameter has value 0 and cannot be scaled

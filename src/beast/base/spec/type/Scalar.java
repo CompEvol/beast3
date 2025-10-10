@@ -4,17 +4,6 @@ import beast.base.spec.domain.Domain;
 
 public interface Scalar<D extends Domain<T>, T> extends Tensor<D, T> {
 
-    /**
-     * Get a single value.
-     *
-     * @return  the domain value with the Java type T.
-     */
-    T get();
-
-    default T get(int... idx) {
-        return get();
-    }
-
     // rank() == 0 but size == 1
 
     /**

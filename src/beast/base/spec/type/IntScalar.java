@@ -5,7 +5,22 @@ import beast.base.spec.domain.Int;
 
 public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<Integer> {
 
-    Integer get();
+    /**
+     * Get a single value.
+     *
+     * @return the unboxed domain value, which is faster than boxed.
+     */
+    int get();
+
+    /**
+     * Use boxed value T only when required for API or nullability.
+     *
+     * @param idx  index/indices, depending on the dimension.
+     * @return  the boxed domain value.
+     */
+    default Integer get(int... idx) {
+        return get();
+    }
 
     @Override
     default Integer getLower() {

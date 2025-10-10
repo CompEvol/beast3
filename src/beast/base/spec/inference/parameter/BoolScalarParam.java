@@ -72,7 +72,7 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     }
 
     @Override
-    public Boolean get() {
+    public boolean get() {
         return value;
     }
 

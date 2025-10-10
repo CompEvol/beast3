@@ -72,13 +72,9 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     }
 
-    @Override
-    public Integer get() {
-        return value;
-    }
-
     // Fast (no boxing)
-    public int getValue() {
+    @Override
+    public int get() {
         return value;
     }
 

@@ -12,6 +12,9 @@ public interface Tensor<D extends Domain<T>, T> {
 
     /**
      * Get the primitive value with the type T.
+     * Primitive numeric types (e.g. double) are typically 10×–50× faster than
+     * boxed types (e.g. Double) in computation and 3×–4× smaller in memory.
+     * Use boxed value T only when required for API or nullability.
      *
      * @param idx  index/indices, depending on the dimension
      * @return  the primitive value with the type T in Java.

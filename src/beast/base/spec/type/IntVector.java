@@ -6,8 +6,18 @@ import beast.base.spec.domain.Int;
 
 public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<Integer> {
 
+    /**
+     * @param i index
+     * @return the unboxed domain value at ith element, which is faster than boxed.
+     */
     int get(int i);
 
+    /**
+     * Use boxed value T only when required for API or nullability.
+     *
+     * @param idx  index/indices, depending on the dimension.
+     * @return  the boxed domain value at ith element.
+     */
     default Integer get(int... idx) {
         if (idx.length != 1)
             throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);

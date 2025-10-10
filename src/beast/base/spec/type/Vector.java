@@ -13,20 +13,6 @@ public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
      */
     List<T> getElements();
 
-    /**
-     * Get the domain value with the type T.
-     *
-     * @param i index/indices, depending on the dimension
-     * @return the domain value with the type T in Java.
-     */
-//    T get(int i);
-
-//    default T get(int... idx) {
-//        if (idx.length != 1)
-//            throw new IndexOutOfBoundsException("Vector access requires exactly 1 index, but got " + idx.length);
-//        return get(idx[0]);
-//    }
-
     // TODO long size() makes programming difficult
     default int size() {
         if (getElements() == null)
