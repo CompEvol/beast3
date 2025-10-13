@@ -198,7 +198,13 @@
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 
+                <provider classname="beast.base.spec.evolution.speciation.BirthDeathGernhard08Model"/>
+                <provider classname="beast.base.spec.evolution.speciation.CalibratedBirthDeathModel"/>
+                <provider classname="beast.base.spec.evolution.speciation.CalibratedYuleInitialTree"/>
+                <provider classname="beast.base.spec.evolution.speciation.CalibratedYuleModel"/>
+                <provider classname="beast.base.spec.evolution.speciation.CalibrationPoint"/>
                 <provider classname="beast.base.spec.evolution.speciation.YuleModel"/>
+
                 <provider classname="beast.base.spec.evolution.branchratemodel.RandomLocalClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.StrictClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel"/>
