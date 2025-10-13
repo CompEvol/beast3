@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.SpeciesTreePrior}
+ * @deprecated  please use star-beast2 or 3
  */
 @Deprecated
 @Description("Species tree prior for *BEAST analysis")

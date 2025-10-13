@@ -1,4 +1,4 @@
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
@@ -8,10 +8,8 @@ import beast.base.inference.distribution.ParametricDistribution;
 
 /**
 * @author Joseph Heled
- *
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.CalibrationPoint}
  */
-@Deprecated
+
 @Description("Specification of a single calibration point of the calibrated Yule.")
 public class CalibrationPoint extends BEASTObject {
     final public Input<TaxonSet> taxonsetInput = new Input<>("taxonset",

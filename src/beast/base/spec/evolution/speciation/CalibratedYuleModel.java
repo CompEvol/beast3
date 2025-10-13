@@ -1,4 +1,4 @@
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 
 import beast.base.core.Citation;
@@ -7,15 +7,18 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.MRCAPrior;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
+import beast.base.inference.StateNode;
 import beast.base.inference.distribution.ParametricDistribution;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
 import org.apache.commons.math.MathException;
 
 import java.io.PrintStream;
@@ -25,10 +28,9 @@ import java.util.List;
 
 /**
  * @author Joseph Heled
- *
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.CalibratedYuleModel}
  */
-@Deprecated
+
+
 @Description("Yule prior with calibrated monophyletic clades. With this prior, the marginal distribution of the" +
         " calibrated nodes (the MRCA of clades) is identical to the specified calibration, but the Yule is not preserved over" +
         " the whole tree space, only among sub-spaces.")
@@ -56,7 +58,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     }
 
     // Q2R does this makes sense, or it has to be a realParameter??
-    final public Input<RealParameter> birthRateInput =
+    final public Input<RealScalar<? extends PositiveReal>> birthRateInput =
             new Input<>("birthRate", "birth rate of splitting a linage into two", Validate.REQUIRED);
 
     final public Input<List<CalibrationPoint>> calibrationsInput =
@@ -392,7 +394,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
     @Override
     public double calculateTreeLogLikelihood(final TreeInterface tree) {
-        final double lam = birthRateInput.get().getArrayValue();
+        final double lam = birthRateInput.get().get();
 
         double logL = calculateYuleLikelihood(tree, lam);
 
@@ -912,7 +914,12 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
     @Override
     protected boolean requiresRecalculation() {
-        return super.requiresRecalculation() || birthRateInput.get().somethingIsDirty();
+        boolean birthDirty = false;
+        if (birthRateInput.get() instanceof StateNode birthRate) {
+            birthDirty = birthRate.somethingIsDirty();
+        }
+        return super.requiresRecalculation() || birthDirty;
+//        return super.requiresRecalculation() || birthRateInput.get().somethingIsDirty();
     }
 
     @Override

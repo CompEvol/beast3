@@ -1,4 +1,4 @@
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 
 import beast.base.core.Citation;
@@ -7,15 +7,18 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.MRCAPrior;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
-import beast.base.inference.distribution.ParametricDistribution;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.inference.StateNode;
 import beast.base.inference.util.RPNcalculator;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.type.RealScalar;
 import org.apache.commons.math.MathException;
 
 import java.io.PrintStream;
@@ -24,21 +27,21 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author Joseph Heled
- *
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.CalibratedYuleModel}
+* @author Joseph Heled
  */
-@Deprecated
-@Description("Yule prior with calibrated monophyletic clades. With this prior, the marginal distribution of the" +
-        " calibrated nodes (the MRCA of clades) is identical to the specified calibration, but the Yule is not preserved over" +
-        " the whole tree space, only among sub-spaces.")
-@Citation(value =
-        "Heled J, Drummond AJ (2012) Calibrated Tree Priors for Relaxed Phylogenetics\n" +
-                "  and Divergence Time Estimation. Systematic Biology 61(1):138-149."
-        , DOI = "10.1093/sysbio/syr087", year = 2012, firstAuthorSurname = "heled")
-public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
-    public enum Type {
+
+@Description("Birth-Death prior with calibrated monophyletic clades. With this prior, " +
+        "the marginal distribution of the" +
+        " calibrated nodes (the root age of the clade) is identical to the specified calibration, " +
+        "and the density ratio between trees with equal calibration values is equal to the ratio under the " +
+        "Birth-Death prior.")
+@Citation(value = "Heled J, Drummond AJ. Calibrated Tree Priors for Relaxed Phylogenetics and Divergence Time " +
+        "Estimation. " +
+        "Syst Biol (2012) 61 (1): 138-149.", DOI = "10.1093/sysbio/syr087")
+public class CalibratedBirthDeathModel extends SpeciesTreeDistribution {
+
+    static enum Type {
         NONE("none"),
         OVER_ALL_TOPOS("full"),
         OVER_RANKED_COUNTS("restricted");
@@ -56,8 +59,18 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     }
 
     // Q2R does this makes sense, or it has to be a realParameter??
-    final public Input<RealParameter> birthRateInput =
-            new Input<>("birthRate", "birth rate of splitting a linage into two", Validate.REQUIRED);
+    final public Input<RealScalar<? extends PositiveReal>> birthRateInput =
+            new Input<>("birthRate", "birth rate - the rate at which new lineages are created as a result of an " +
+                    "existing lineage splitting into two.", Validate.REQUIRED);
+    // 0 ≤ relativeDeathRate < 1  TODO how to deal with it, if do not create a new type ?
+    final public Input<RealScalar<UnitInterval>> deathToBirthRatioInput =
+            new Input<>("relativeDeathRate",
+                    "relative death rate parameter, mu/lambda in birth death model, and its domain is [0, 1)",
+                    Validate.OPTIONAL);
+
+    final public Input<RealScalar<UnitInterval>> sampleProbabilityInput =
+            new Input<>("sampleProbability", "sample probability, rho in birth/death model",
+                    Validate.OPTIONAL);
 
     final public Input<List<CalibrationPoint>> calibrationsInput =
             new Input<>("calibrations", "Set of calibrated nodes", new ArrayList<>());
@@ -65,11 +78,12 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     final public Input<Type> correctionTypeInput = new Input<>("type", "Type of correction: none for no correction " +
             "(same as BEAST1), full for Yule-like over calibrated times, and restricted for Yule-like over calibrated" +
             " times and ranked topology (default 'full'). However, 'full'" +
-            " is generally slow except for in a few special cases, such as a single clade or two nested clades.",
+            " is generally slow except for a few special cases, such as a single clade or two nested clades.",
             Type.OVER_ALL_TOPOS, Type.values());
 
     final public Input<RPNcalculator> userMarInput = new Input<>("logMarginal",
-            "Used provided correction (log of marginal) for special cases.", (RPNcalculator) null);
+            "Use provided formula to compute the (log of) the marginal for special cases.",
+            (RPNcalculator) null);
 
     // Which correction to apply
     private Type type;
@@ -88,10 +102,12 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     RPNcalculator userPDF = null; //Q2R  but would that work propagation-wise
 
     // whether to calculated the contribution of each of the calibrations
-    // should be false, when the calibrations come from MRCA priors of a parent CompoundDistribution 
+    // should be false, when the calibrations come from MRCA priors of a parent CompoundDistribution
     boolean calcCalibrations = true;
 
-    public CalibratedYuleModel() {
+    boolean isYule = false;
+
+    public CalibratedBirthDeathModel() {
     }
 
     @Override
@@ -132,7 +148,6 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                                 final CalibrationPoint cal = new CalibrationPoint();
                                 cal.distInput.setValue(_MRCAPrior.distInput.get(), cal);
                                 cal.taxonsetInput.setValue(_MRCAPrior.taxonsetInput.get(), cal);
-                                cal.forParentInput.setValue(_MRCAPrior.useOriginateInput.get(), cal);
                                 cal.initAndValidate();
                                 cals.add(cal);
                                 taxaSets.add(cal.taxa());
@@ -141,9 +156,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                                 calcCalibrations = false;
                             } else {
                                 if (_MRCAPrior.isMonophyleticInput.get()) {
-                                    Log.warning.println("WARNING: MRCAPriors (" + _MRCAPrior.getID() + ") must have a distribution when monophyletic. Ignored for Calibrated Yule prior");
-                                } else {
-                                	Log.warning.println("WARNING: MRCAPriors (" + _MRCAPrior.getID() + ") found that is not monophyletic. Ignored for Calibrated Yule prior");                                	
+                                    Log.warning.println("WARNING: MRCAPriors must have a distribution when monophyletic for Calibrated Yule prior");
                                 }
                             }
                         }
@@ -153,7 +166,6 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
             xclades = new int[calCount][];
         }
         if (calCount == 0) {
-        	Log.warning.println("WARNING: Calibrated Yule prior could not find any properly configured calibrations. Expect this to crash in a BEAST run.");                                	
             // assume we are in beauti, back off for now
             return;
         }
@@ -164,7 +176,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                 final TaxonSet ti = taxaSets.get(i);
                 if (ti.containsAny(tk)) {
                     if (!(ti.containsAll(tk) || tk.containsAll(ti))) {
-                        throw new IllegalArgumentException("Overlapping taxaSets " + tk.getID() + "  and " + ti.getID() + "??");
+                        throw new IllegalArgumentException("Overlapping taxaSets??");
                     }
                 }
             }
@@ -241,11 +253,20 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
             }
         }
 
+        if (deathToBirthRatioInput.get() != null) {
+            double ratio = deathToBirthRatioInput.get().get();
+            if (ratio >=1 || ratio < 0)
+                throw new IllegalArgumentException("Death to birth ratio must ranges from 0 (inclusive) to 1 (exclusive).");
+        }
+
+        isYule = deathToBirthRatioInput.get() == null && sampleProbabilityInput.get() == null;
+
         userPDF = userMarInput.get();
         if (userPDF == null) {
+            boolean needTables = false;
 
             if (type == Type.OVER_ALL_TOPOS) {
-                if (calCount == 1) {
+                if (calCount == 1 && isYule ) {
                     // closed form formula
                 } else {
                     boolean anyParent = false;
@@ -254,34 +275,41 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                             anyParent = true;
                         }
                     }
-                    if (anyParent) {
+                    if( anyParent ) {
                         throw new IllegalArgumentException("Sorry, not implemented: calibration on parent for more than one clade.");
                     }
-                    if (calCount == 2 && orderedCalibrations[1].taxa().containsAll(orderedCalibrations[0].taxa())) {
+                    if( isYule &&
+                            calCount == 2 && orderedCalibrations[1].taxa().containsAll(orderedCalibrations[0].taxa())) {
                         // closed form formulas
                     } else {
-                        setUpTables(tree.getLeafNodeCount() + 1);
-                        linsIter = new CalibrationLineagesIterator(this.xclades, this.taxaPartialOrder, maximal,
-                                tree.getLeafNodeCount());
+                        needTables = true;
                         lastHeights = new double[calCount];
                     }
                 }
             } else if (type == Type.OVER_RANKED_COUNTS) {
+                //setUpTables(tree.getLeafNodeCount() + 1);
+                needTables = true;
+            }
+
+            if( needTables ) {
                 setUpTables(tree.getLeafNodeCount() + 1);
+                linsIter = new CalibrationLineagesIterator(this.xclades, this.taxaPartialOrder, maximal,
+                        tree.getLeafNodeCount());
             }
         }
 
         final List<Node> leafs = tree.getExternalNodes();
         final double height = leafs.get(0).getHeight();
         for (final Node leaf : leafs) {
-            if (Math.abs(leaf.getHeight() - height) > 1e-8) {
-            	Log.warning.println("WARNING: Calibrated Yule Model cannot handle dated tips. Use for example a coalescent prior instead.");
-                break;
-            }
+        	if (Math.abs(leaf.getHeight() - height) > 1e-8) {
+        		Log.warning.println("WARNING: Calibrated Birth-Death Model does not handle dated tips correctly. " +
+                        "Consider using a coalescent prior instead.");
+        		break;
+        	}
         }
     }
 
-    public Tree compatibleInitialTree() throws MathException {
+    Tree compatibleInitialTree() throws MathException {
         final int calCount = orderedCalibrations.length;
         final double[] lowBound = new double[calCount];
         final double[] cladeHeight = new double[calCount];
@@ -289,9 +317,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         // get lower  bound: max(lower bound of dist , bounds of nested clades)
         for (int k = 0; k < calCount; ++k) {
             final CalibrationPoint cal = orderedCalibrations[k];
-            final ParametricDistribution dist = cal.dist();
-            //final double offset = dist.getOffset();
-            lowBound[k] = dist.inverseCumulativeProbability(0);
+            lowBound[k] = cal.dist().inverseCumulativeProbability(0);
             // those are node heights
             if (lowBound[k] < 0) {
                 lowBound[k] = 0;
@@ -299,10 +325,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
             for (final int i : taxaPartialOrder[k]) {
                 lowBound[k] = Math.max(lowBound[k], lowBound[i]);
             }
-            cladeHeight[k] = dist.inverseCumulativeProbability(1);
-//            if (! Double.isInfinite(cladeHeight[k])) {
-//              cladeHeight[k] += offset;
-//            }
+            cladeHeight[k] = cal.dist().inverseCumulativeProbability(1);
         }
 
         for (int k = calCount - 1; k >= 0; --k) {
@@ -348,7 +371,6 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
             }
             for (final int i : taxaPartialOrder[k]) {
                 sbs.add(subTree[i]);
-                subTree[i] = null;
             }
             final double base = sbs.get(sbs.size() - 1).getHeight();
             final double step = (cladeHeight[k] - base) / (sbs.size() - 1);
@@ -364,13 +386,11 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         Node finalTree = subTree[calCount - 1];
         double h = cladeHeight[calCount - 1];
 
-        for (int k = 0; k < calCount - 1; ++k) {
-            final Node s = subTree[k];
-            if( s != null ) {
-                h = Math.max(h, cladeHeight[k]) + 1;
-                finalTree = Node.connect(finalTree, s, h);
-                finalTree.setNr(++curInternal);
-            }
+        for(int k = 0; k < calCount-1; ++k) {
+          final Node s = subTree[k];
+          h = Math.max(h, cladeHeight[k]) + 1;
+          finalTree = Node.connect(finalTree, s, h);
+          finalTree.setNr(++curInternal);
         }
 
         for (int k = 0; k < used.length; ++k) {
@@ -392,12 +412,52 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
     @Override
     public double calculateTreeLogLikelihood(final TreeInterface tree) {
-        final double lam = birthRateInput.get().getArrayValue();
+        final double lam = birthRateInput.get().get();
 
-        double logL = calculateYuleLikelihood(tree, lam);
+        double logL;
+        if( isYule ) {
+            logL = calculateYuleLikelihood(tree, lam);
+            logL += getCorrection(tree, lam, 0, 1);
+        } else {
+            final RealScalar<UnitInterval> db = deathToBirthRatioInput.get();
+            final double a = db != null ?  db.get() : 0;
+            //TODO cannot use isValid(value), because a is [0,1)
+            assert( a < 1  );
+            final RealScalar<UnitInterval> sp = sampleProbabilityInput.get();
+            final double rho = sp != null ? sp.get() : 1;
+            logL = calculateBDLikelihood(tree, lam, a, rho);
+            logL += getCorrection(tree, lam, a, rho);
+        }
+        //final double mar = getCorrection(tree, lam);
+       // logL += mar;
+        return logL;
+    }
 
-        final double mar = getCorrection(tree, lam);
-        logL += mar;
+    private double calculateBDLikelihood(final TreeInterface tree, final double r, final double a, final double rho) {
+        if( a == 0 && rho == 1.0 ) {
+            return calculateYuleLikelihood(tree, r);
+        }
+
+        final int taxonCount = tree.getLeafNodeCount();
+
+        // add all lambda multipliers here
+        double logL = lfactorials[taxonCount] + (taxonCount - 1) * Math.log(r * rho);
+        final Node[] nodes = tree.getNodesAsArray();
+
+        logL += taxonCount * Math.log(1 - a);
+
+        for (int i = taxonCount; i < nodes.length; i++) {
+            final Node node = nodes[i];                   assert (!node.isLeaf());
+            final double height = node.getHeight();
+            final double mrh = -r * height;
+            final double z = Math.log(rho + ((1-rho) - a) * Math.exp(mrh));
+            double l = -2 * z + mrh;
+            if( node.isRoot() ) {
+                l += mrh - z;
+            }
+            logL += l;
+        }
+
         return logL;
     }
 
@@ -410,8 +470,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
         final Node[] nodes = tree.getNodesAsArray();
         for (int i = taxonCount; i < nodes.length; i++) {
-            final Node node = nodes[i];
-            assert (!node.isLeaf());
+            final Node node = nodes[i];                     assert (!node.isLeaf());
             final double height = node.getHeight();
             final double mrh = -lam * height;
             logL += mrh + (node.isRoot() ? mrh : 0);
@@ -419,13 +478,9 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         return logL;
     }
 
-    public double getCorrection(final TreeInterface tree, final double lam) {
+    public double getCorrection(final TreeInterface tree, final double lam, final double a, final double rho) {
         double logL = 0.0;
 
-        if (orderedCalibrations == null) {
-        	Log.warning.println("WARNING: Calibrated Yule prior could not find any properly configured calibrations. Add a calibration to make this a valid analysis.");                                	
-        	return 0;
-        }
         final int calCount = orderedCalibrations.length;
         final double[] hs = new double[calCount];
 
@@ -469,14 +524,15 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         }
 
         if (userPDF == null) {
+            final int taxonCount = tree.getLeafNodeCount();
             switch (type) {
                 case OVER_ALL_TOPOS: {
-                    if (calCount == 1) {
-                        logL -= logMarginalDensity(lam, tree.getLeafNodeCount(), hs[0], xclades[0].length,
+                    if (calCount == 1 && isYule ) {
+                        logL -= logMarginalDensity(lam, taxonCount, hs[0], xclades[0].length,
                                 orderedCalibrations[0].forParent());
-                    } else if (calCount == 2 && taxaPartialOrder[1].length == 1) {
+                    } else if (calCount == 2 && taxaPartialOrder[1].length == 1 && isYule) {
                         //assert !forParent[0] && !forParent[1];
-                        logL -= logMarginalDensity(lam, tree.getLeafNodeCount(), hs[0], xclades[0].length,
+                        logL -= logMarginalDensity(lam, taxonCount, hs[0], xclades[0].length,
                                 hs[1], xclades[1].length);
                     } else {
 
@@ -497,11 +553,11 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                         final int[] ranks = new int[hs.length];
                         for (int k = 0; k < hs.length; ++k) {
                             int r = 0;
-                            for (int j = 0; j < k; ++j) {
-                                r += (hs[j] <= hs[k]) ? 1 : 0;
+                            for(int j = 0; j < k; ++j) {
+                              r += (hs[j] <= hs[k]) ? 1 : 0;
                             }
-                            for (int j = k + 1; j < hs.length; ++j) {
-                                r += (hs[j] < hs[k]) ? 1 : 0;
+                            for(int j = k+1; j < hs.length; ++j) {
+                              r += (hs[j] < hs[k]) ? 1 : 0;
                             }
 //                            for (final double h : hs) {
 //                                r += (h < hs[k]) ? 1 : 0;
@@ -519,6 +575,20 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                 }
 
                 case OVER_RANKED_COUNTS: {
+                    final int[] ranks = new int[hs.length];
+                    for (int k = 0; k < hs.length; ++k) {
+                        int r = 0;
+                        for(int j = 0; j < k; ++j) {
+                            r += (hs[j] <= hs[k]) ? 1 : 0;
+                        }
+                        for(int j = k+1; j < hs.length; ++j) {
+                            r += (hs[j] < hs[k]) ? 1 : 0;
+                        }
+                        ranks[k] = r + 1;
+                    }
+                    final double nt = countTrees(ranks, linsIter);
+                    logL -= nt;
+
                     Arrays.sort(hs);
                     final int[] cs = new int[calCount + 1];
                     for (final Node n : tree.getInternalNodes()) {
@@ -538,20 +608,63 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
                         }
                     }
 
-                    double ll = 0;
+                    if( isYule ) {
+                        double ll = 0;
 
-                    ll += cs[0] * Math.log1p(-Math.exp(-lam * hs[0])) - lam * hs[0] - lfactorials[cs[0]];
-                    for (int i = 1; i < cs.length - 1; ++i) {
-                        final int c = cs[i];
-                        if( c > 0 ) {
-                        	ll += c * (Math.log1p(-Math.exp(-lam * (hs[i] - hs[i - 1]))) - lam * hs[i - 1]);
+                        ll += cs[0] * Math.log1p(-Math.exp(-lam * hs[0])) - lam * hs[0] - lfactorials[cs[0]];
+                        for (int i = 1; i < cs.length - 1; ++i) {
+                            final int c = cs[i];
+                            ll += c * (Math.log1p(-Math.exp(-lam * (hs[i] - hs[i - 1]))) - lam * hs[i - 1]);
+                            ll += -lam * hs[i] - lfactorials[c];
                         }
-                        ll += -lam * hs[i] - lfactorials[c];
-                    }
-                    ll += -lam * (cs[calCount] + 1) * hs[calCount - 1] - lfactorials[cs[calCount] + 1];
-                    ll += Math.log(lam) * calCount;
+                        ll += -lam * (cs[calCount] + 1) * hs[calCount - 1] - lfactorials[cs[calCount] + 1];
+                        ll += Math.log(lam) * calCount;
 
-                    logL -= ll;
+                        logL -= ll;
+                    } else {
+                        assert( a < 1 );
+                        // We try to minimize the effects of numerical unstability,
+                        // so the evaluations look different than the nice equations in the MS.
+
+                        final double r = lam;
+
+                        final double ia = 1 - a;
+                        final double ira = ia-rho;
+                        final double v = (ia*ia)/r;
+
+                        // accumulate terms here
+                        double ll = 0;
+                        for (int i = 0; i < cs.length - 1; ++i) {
+                            final int c = cs[i];
+                            final double mrh = -r * hs[i];
+                            final double mrh1 = (i>0) ? -r * hs[i-1] : 0;
+
+                            ll -= lfactorials[c];
+                            //double xx =  Math.log(1 - Math.exp(mrh - mrh1));
+                            // can we have accurate  log(1+e^x) ??
+                            final double xxo = Math.log1p(-Math.exp(mrh - mrh1));
+
+                            final double xx1 = rho + ira*Math.exp(mrh);
+                            final double xx2 = rho + ira*Math.exp(mrh1);
+                            ll += c * (mrh1 + xxo + Math.log(v/(xx1*xx2)));
+
+                            // contribution of  calibration point
+
+                            final double z = Math.log(ia / (rho + ira * Math.exp(mrh)));
+                            ll += 2 * z + mrh;
+                        }
+
+                        // from last calibration to oo contribution
+                        final double xu = ia/(rho + ira * Math.exp(-r*hs[calCount - 1]));
+                        final int n2 = cs[calCount];                 assert n2 > 0;  // fixme
+
+                        final double rhoia = rho / ia;
+                        ll += -lfactorials[n2 + 1] - (n2) * Math.log(r * rhoia)
+                                - (n2+1) * r * hs[calCount - 1] + (n2+1) * Math.log(xu);
+                        // non-node terms
+                        ll += lfactorials[taxonCount] + (taxonCount - 1) * Math.log(r*rhoia);
+                        logL -= ll;
+                    }
                     break;
                 }
 			default:
@@ -642,7 +755,8 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         }
 
         // assert maxRank == len(sit)
-        final boolean noRoot = ni == lehs.length;
+        //final boolean noRoot = ni == lehs.length;
+        final boolean noRoot = ! cli.isRootCalibrated();
 
         final int levels = heights + (noRoot ? 1 : 0);
 
@@ -665,13 +779,9 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         boolean first = true;
 
         int[][] linsInLevels;
-        int ccc = 0;
+        //int ccc = 0;
         while ((linsInLevels = cli.next()) != null) {
-            ccc++;
-            if( ccc > 30000000 ) {
-                issueSlowWarning();
-                //return Double.POSITIVE_INFINITY;
-            }
+            //ccc++;
             double v = countRankedTrees(levels, linsInLevels, joiners, linsAtLevel);
             // 1 for root formula, 1 for kludge in iterator which sets root as 2 lineages
             if (noRoot) {
@@ -716,7 +826,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         }
 
         if (!noRoot) {
-            // we dont have an iterator for 0 free lineages
+            // we don't have an iterator for 0 free lineages
             logc2 += 1 * lehs[heights];
         }
 
@@ -728,16 +838,39 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         return val;
     }
 
-    private boolean warningIssued = false;
-    private void issueSlowWarning() {
-        if( ! warningIssued )
-        Log.warning("This calibrated Yule analysis with " + orderedCalibrations.length + " calibrations will take a looong time.\n"
-                +"Possibly will never complete even a single step. You can change the type of the calibration to 'none' (type=\"none\"\n"
-                + "in the XML) and get the non-calibrated Yule just like in BEAST1, or set type to \"restricted\", a variant of the\n" +
-                "calibrated Yule which runs faster and where the proterior distribution of the node times is more similar to the\n" +
-                "actual calibration than the \"none\" case. In both cases test to see how far your posterior calibrations are from the " +
-                "specifications.");
-        warningIssued = true;
+    // should cache those for (say) up to 6 (6!=720) values. need rank permutation to index function
+    //
+    private double countTrees(final int[] ranks, final CalibrationLineagesIterator cli) {
+        final int ni = cli.setup(ranks);
+        final boolean noRoot = ! cli.isRootCalibrated();
+
+        final int[] linsAtLevel = new int[ni];
+
+        final int[][] joiners = cli.allJoiners();
+
+        double val = 0;
+        boolean first = true;
+        int[][] linsInLevels;
+
+        while ((linsInLevels = cli.next()) != null) {
+            double v = countRankedTrees(ni, linsInLevels, joiners, linsAtLevel);
+            // 1 for root formula, 1 for kludge in iterator which sets root as 2 lineages
+            if (noRoot) {
+                final int ll = linsAtLevel[ni - 1] + 2;
+                v -= lc2[ll] + lg2;
+            }
+            if (first) {
+                val = v;
+                first = false;
+            } else {
+                if (val > v) {
+                    val += Math.log1p(Math.exp(v - val));
+                } else {
+                    val = v + Math.log1p(Math.exp(val - v));
+                }
+            }
+        }
+        return val;
     }
 
     private double
@@ -862,7 +995,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     /**
      * Count number of leaves in subtree whose root is node.
      *
-     * @param node
+     * @param node   subtree root
      * @return the number of leaves under this node.
      */
     public static int getLeafCount(final Node node) {
@@ -912,13 +1045,35 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
 
     @Override
     protected boolean requiresRecalculation() {
-        return super.requiresRecalculation() || birthRateInput.get().somethingIsDirty();
-    }
+        boolean birthDirty = false;
+        if (birthRateInput.get() instanceof StateNode birthRate) {
+            birthDirty = birthRate.somethingIsDirty();
+        }
+        if( super.requiresRecalculation() || birthDirty ) {
+            return true;
+        }
 
-    @Override
-    public boolean canHandleTipDates() {
+        boolean deathToBirthRatioDirty = false;
+        boolean sampleProbabilityDirty = false;
+        if( !isYule ) {
+            if (deathToBirthRatioInput.get() instanceof StateNode deathToBirthRatio) {
+                deathToBirthRatioDirty = deathToBirthRatio.somethingIsDirty();
+            }
+            if( deathToBirthRatioDirty ) {
+                return true;
+            }
+            if (sampleProbabilityInput.get() instanceof StateNode sampleProbability) {
+                sampleProbabilityDirty = sampleProbability.somethingIsDirty();
+            }
+            if( sampleProbabilityDirty ) {
+                return true;
+            }
+        }
         return false;
     }
-
-
+    
+    @Override
+    public boolean canHandleTipDates() {
+		return false;
+	}
 }

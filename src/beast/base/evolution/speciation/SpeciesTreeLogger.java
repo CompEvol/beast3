@@ -1,14 +1,6 @@
 package beast.base.evolution.speciation;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.speciation.SpeciesTreePopFunction.TreePopSizeFunction;
 import beast.base.evolution.tree.Node;
@@ -16,8 +8,15 @@ import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
+/**
+ * @deprecated  please use star-beast2 or 3
+ */
+@Deprecated
 @Description("Logs tree annotated with metadata in StarBeast format")
 public class SpeciesTreeLogger extends BEASTObject implements Loggable {
     final public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);

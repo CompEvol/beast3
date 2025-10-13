@@ -1,18 +1,11 @@
 package beast.base.evolution.speciation;
 
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.commons.math.MathException;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.tree.MRCAPrior;
 import beast.base.evolution.tree.Node;
@@ -22,12 +15,19 @@ import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
+import org.apache.commons.math.MathException;
+
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
 * @author Joseph Heled
+ *
+ * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.CalibratedBirthDeathModel}
  */
-
-
+@Deprecated
 @Description("Birth-Death prior with calibrated monophyletic clades. With this prior, " +
         "the marginal distribution of the" +
         " calibrated nodes (the root age of the clade) is identical to the specified calibration, " +

@@ -1,7 +1,5 @@
 package beast.base.evolution.speciation;
 
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -10,8 +8,13 @@ import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.evolution.tree.coalescent.RandomTree;
 
+import java.util.List;
 
 
+/**
+ * @deprecated  please use star-beast2 or 3
+ */
+@Deprecated
 @Description("Generates a random gene tree conditioned on a species tree, such " +
         "that the root of the species tree is lower than any coalescent events in " +
         "the gene tree")

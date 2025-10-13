@@ -21,7 +21,7 @@ import java.util.Random;
 
 
 /**
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.GeneTreeForSpeciesTreeDistribution}
+ * @deprecated  please use star-beast2 or 3
  */
 @Deprecated
 @Description("Calculates probability of gene tree conditioned on a species tree (multi-species coalescent)")

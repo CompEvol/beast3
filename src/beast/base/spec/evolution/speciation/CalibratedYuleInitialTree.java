@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution.speciation;
+package beast.base.spec.evolution.speciation;
 
 
 import beast.base.core.Description;
@@ -38,10 +38,8 @@ import java.util.List;
 
 /**
 * @author Joseph Heled
- *
- * @deprecated  replaced by {@link beast.base.spec.evolution.speciation.CalibratedYuleInitialTree}
  */
-@Deprecated
+
 @Description("A tree compatible with a set of monophyletic clades and hard limits on the clade root.")
 public class CalibratedYuleInitialTree extends Tree implements StateNodeInitialiser {
 
@@ -63,7 +61,7 @@ public class CalibratedYuleInitialTree extends Tree implements StateNodeInitiali
 
         final List<CalibrationPoint> cals = calibrationsInput.get();
 
-        final CalibratedYuleModel cym = new CalibratedYuleModel();
+        final beast.base.evolution.speciation.CalibratedYuleModel cym = new beast.base.evolution.speciation.CalibratedYuleModel();
         for( final CalibrationPoint cal : cals ) {
           cym.setInputValue("calibrations", cal);
         }

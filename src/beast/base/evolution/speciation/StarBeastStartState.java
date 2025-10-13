@@ -1,19 +1,5 @@
 package beast.base.evolution.speciation;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.math.MathException;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Function;
@@ -30,13 +16,21 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.evolution.tree.coalescent.RandomTree;
-import beast.base.inference.*;
+import beast.base.inference.StateNode;
+import beast.base.inference.StateNodeInitialiser;
 import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.MathException;
+
+import java.util.*;
+
+import static java.lang.Math.*;
 
 /**
 * @author Joseph Heled
+*
+ * @deprecated  please use star-beast2 or 3
  */
-
+@Deprecated
 @Description("Set a starting point for a *BEAST analysis from gene alignment data.")
 public class StarBeastStartState extends Tree implements StateNodeInitialiser {
 
