@@ -12,14 +12,13 @@ import org.w3c.dom.Node;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector, VectorParam<Bool, Boolean> {
+public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector{ //VectorParam<Bool, Boolean> {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -52,24 +51,19 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public BoolVectorParam() {
     }
 
-    // TODO Boolean?
     public BoolVectorParam(final boolean[] values) {
         this.values = values.clone();
         this.storedValues = values.clone();
         isDirty = new boolean[values.length];
 
-        // validate value after domain and bounds are set
-        for (Boolean value : values) {
-            if (! isValid(value))
-                throw new IllegalArgumentException("Value " + value +
-                        " is not valid for domain " + getDomain().getClass().getName());
-
-            valuesInput.get().add(value);
-        }
+        // always validate in initAndValidate()
     }
 
     @Override
     public void initAndValidate() {
+        // keys
+        super.initAndValidate();
+
         // allow value=true dimension=4 to create a vector of four true
         List<Boolean> valuesList = valuesInput.get();
         boolean[] valuesString = new boolean[valuesList.size()];
@@ -86,17 +80,15 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         this.storedValues = values.clone();
         isDirty = new boolean[dimension];
 
-        // keys
-        if (keysInput.get() != null) {
-            String[] keysArr = keysInput.get().split(" ");
-            // unmodifiable list : UnsupportedOperationException if attempting to modify
-            List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
 
-            if (keys.size() != this.size())
-                throw new IllegalArgumentException("For vector, keys must have the same length as dimension ! " +
-                        "Dimension = " + this.size() + ", but keys.size() = " + keys.size());
-            initKeys(keys);
-        }
+        // validate value after domain and bounds are set
+//        for (Boolean value : values) {
+//            if (! isValid(value))
+//                throw new IllegalArgumentException("Value " + value +
+//                        " is not valid for domain " + getDomain().getClass().getName());
+//
+//            valuesInput.get().add(value);
+//        }
 
         // Validate against domain and bounds constraints
         if (! isValid()) {
@@ -159,7 +151,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     //*** setValue ***
     // Fast (no boxing)
-    public void setValue(final int i, final boolean value) {
+    public void set(final int i, final boolean value) {
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -170,12 +162,8 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         lastDirty = i;
     }
 
-    public void set(final Boolean value) {
-        setValue(0, value);
-    }
-
-    public void set(final int i, final Boolean value) {
-        setValue(i, value);
+    public void set(final boolean value) {
+        set(0, value);
     }
 
     /**

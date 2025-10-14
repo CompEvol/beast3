@@ -40,36 +40,46 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     protected D domain;
 
     // default
-    protected Double lower = Double.NEGATIVE_INFINITY;
-    protected Double upper = Double.POSITIVE_INFINITY;
+    protected double lower = Double.NEGATIVE_INFINITY;
+    protected double upper = Double.POSITIVE_INFINITY;
 
 
     public RealScalarParam() { }
 
     public RealScalarParam(double value, D domain) {
+        this.value = value;
         setDomain(domain); // this set Input as well
-        set(value); // contain validation, and set value after domain and bounds are set
     }
 
-    public RealScalarParam(double value, D domain, Double lower, Double upper) {
-        setDomain(domain); // this set Input as well
+    public RealScalarParam(double value, D domain, double lower, double upper) {
+        this(value, domain); // this set Input as well
+
         // adjust bound to the Domain range
-        setBounds(Math.max(lower, domain.getLower()),
-                Math.min(upper, domain.getUpper()));
-        set(value); // contain validation, and set value after domain and bounds are set
+        setLower(Math.max(lower, domain.getLower()));
+        setUpper(Math.min(upper, domain.getUpper()));
+
+        // always validate in initAndValidate()
     }
 
     @Override
     public void initAndValidate() {
+        this.value = valuesInput.get();
+        this.storedValue = value;
+        // Initialize domain from input
+        this.domain = (D) domainTypeInput.get();
 
-        // Initialize domain based on type or bounds
-        setDomain((D) domainTypeInput.get());
+        if (lowerValueInput.get() != null)
+            this.lower = lowerValueInput.get();
+        if (upperValueInput.get() != null)
+            this.upper = upperValueInput.get();
         // adjust bound to the Domain range
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
-        // contain validation, and set value after domain and bounds are set
-        set(valuesInput.get());
+        if (!isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + getDomain().getClass().getName());
+        }
 
     }
 
@@ -85,13 +95,20 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         return domain;
     }
 
-    //*** setValue ***
-    public void set(Double value) {
-        setValue(value);
+    @Override
+    public Double getLower() {
+        return lower;
     }
 
+    @Override
+    public Double getUpper() {
+        return upper;
+    }
+
+    //*** setters ***
+
     // Fast (no boxing)
-    public void setValue(double value) {
+    public void set(double value) {
         startEditing(null);
 
         if (! isValid(value)) {
@@ -106,7 +123,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         domainTypeInput.setValue(domain, this);
     }
 
-    public void setLower(Double lower) {
+    public void setLower(double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -114,7 +131,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(Double upper) {
+    public void setUpper(double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -122,7 +139,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         upperValueInput.setValue(upper, this);
     }
 
-    public void setBounds(Double lower, Double upper) {
+    public void setBounds(double lower, double upper) {
         //TODO ? setLower(Math.max(getLower(), domain.getLower()));
         //       setUpper(Math.min(getUpper(), domain.getUpper()));
         setLower(lower);

@@ -42,7 +42,7 @@ public class IntVectorUniformOperator extends Operator {
             int index = Randomizer.nextInt(parameter.size());
 
             int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-            parameter.setValue(index, newValue);
+            parameter.set(index, newValue);
         }
         return 0.0;
     }

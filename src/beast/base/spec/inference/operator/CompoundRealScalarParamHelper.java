@@ -5,7 +5,6 @@ import beast.base.core.Description;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.parameter.VectorParam;
 import beast.base.spec.type.RealVector;
 
 import java.util.List;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @Description("A temporary helper class to solve compound state nodes for operators, " +
         "but it cannot be used as input, before the framework is modified.")
-public class CompoundRealScalarParamHelper<D extends Real> implements RealVector<D>, VectorParam<D,Double> {
+public class CompoundRealScalarParamHelper<D extends Real> implements RealVector<D> {
 
     final List<RealScalarParam<D>> parameterList;
 
@@ -75,16 +74,10 @@ public class CompoundRealScalarParamHelper<D extends Real> implements RealVector
         return getScalarParam(i).getUpper();
     }
 
-    @Override
-    public void set(final int i, final Double value) {
+    // Fast (no boxing)
+    public void set(final int i, final double value) {
         final RealScalarParam<D> param = getScalarParam(i);
         param.set(value);
-    }
-
-    // Fast (no boxing)
-    public void setValue(final int i, final double value) {
-        final RealScalarParam<D> param = getScalarParam(i);
-        param.setValue(value);
     }
 
     @Override

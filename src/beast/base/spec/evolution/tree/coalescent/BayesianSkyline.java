@@ -116,8 +116,13 @@ public class BayesianSkyline extends TreeDistribution {
                 // if (type == EXPONENTIAL_TYPE || type == LINEAR_TYPE) {
                 // lowers[0] = 2.0;
                 // }
-                IntSimplexParam parameter = new IntSimplexParam(values, groupSizes.getDomain());
-                parameter.setBounds(1, Integer.MAX_VALUE);
+
+                // constructor has no validation
+                IntSimplexParam parameter = new IntSimplexParam(values, groupSizes.getDomain(),
+                        events, 1, Integer.MAX_VALUE);
+                // always validate in initAndValidate()
+                parameter.initAndValidate();
+//                parameter.setBounds(1, Integer.MAX_VALUE);
                 if (groupSizes instanceof StateNode stateNode) {
                     // groupSizes.assignFromWithoutID(parameter);
                     stateNode.assignFromWithoutID(parameter);

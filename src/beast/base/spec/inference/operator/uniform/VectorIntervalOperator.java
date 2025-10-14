@@ -51,7 +51,7 @@ public class VectorIntervalOperator extends AbstractInterval {
         // Ensure that the value is not sitting on the limit (due to numerical issues for example)
         if (!inclusive && (newValue == lower || newValue == upper)) return Double.NEGATIVE_INFINITY;
 
-        param.setValue(i, newValue);
+        param.set(i, newValue);
 
         double logHR = Math.log(scale) + 2.0 * Math.log((newValue - lower)/(value - lower));
         return logHR;

@@ -76,7 +76,7 @@ public class ScaleScalarOperator extends AbstractScale {
                 return Double.NEGATIVE_INFINITY;
             }
 
-            param.setValue(newValue);
+            param.set(newValue);
             // provides a hook for subclasses
             //cleanupOperation(newValue, oldValue);
 

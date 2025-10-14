@@ -21,6 +21,23 @@ public abstract class KeyVectorParam<T> extends StateNode {
      */
     public abstract int size();
 
+    @Override
+    public void initAndValidate() {
+
+        // keys
+        if (keysInput.get() != null) {
+            String[] keysArr = keysInput.get().split(" ");
+            // unmodifiable list : UnsupportedOperationException if attempting to modify
+            List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
+
+            if (keys.size() != this.size())
+                throw new IllegalArgumentException("For vector, keys must have the same length as dimension ! " +
+                        "Dimension = " + this.size() + ", but keys.size() = " + keys.size());
+            initKeys(keys);
+        }
+
+    }
+
     protected void initKeys(List<String> keys) {
         this.keys = keys;
 

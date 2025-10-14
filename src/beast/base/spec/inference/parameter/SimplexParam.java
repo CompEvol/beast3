@@ -6,11 +6,10 @@ import beast.base.spec.type.Simplex;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class SimplexParam extends RealVectorParam<UnitInterval> implements Simplex, VectorParam<UnitInterval, Double> {
+public class SimplexParam extends RealVectorParam<UnitInterval> implements Simplex { // VectorParam<UnitInterval, Double> {
 
     public SimplexParam() {
         super();
-//TODO        domainTypeInput.setRule(Input.Validate.FORBIDDEN);
         super.setDomain(UnitInterval.INSTANCE); // must set Input as well
     }
 
@@ -18,13 +17,14 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
         super(values, UnitInterval.INSTANCE);
     }
 
-    public SimplexParam(double[] values, Double lower, Double upper) {
+    public SimplexParam(double[] values, double lower, double upper) {
         super(values, UnitInterval.INSTANCE, lower, upper);
+
+        // always validate in initAndValidate()
     }
 
     @Override
     public void initAndValidate() {
-        super.setDomain(UnitInterval.INSTANCE); // fix domain to UnitInterval
         super.initAndValidate();
     }
 

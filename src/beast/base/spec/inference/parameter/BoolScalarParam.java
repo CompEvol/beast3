@@ -66,9 +66,13 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     @Override
     public void initAndValidate() {
-        // contain validation, and it must be after domain and bounds are set
-        set(valuesInput.get());
+        this.value = valuesInput.get();
+        this.storedValue = value;
 
+        if (!isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + getDomain().getClass().getName());
+        }
     }
 
     @Override
@@ -84,11 +88,8 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     //*** setValue ***
 
-    public void set(Boolean value) {
-        setValue(value);
-    }
     // Fast (no boxing)
-    public void setValue(boolean value) {
+    public void set(boolean value) {
         startEditing(null);
 
         if (!isValid(value)) {

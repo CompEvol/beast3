@@ -3,10 +3,11 @@ package beast.base.spec.inference.operator.deltaexchange;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.inference.Operator;
-import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.inference.operator.CompoundRealScalarParamHelper;
 import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.VectorParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
@@ -122,7 +123,8 @@ public abstract class AbstractDeltaExchange extends Operator {
         return new IntPair(dim1, dim2);
     }
 
-    protected <D extends Domain<Double>> double proposeReal(VectorParam<D,Double> realVectorParam) {
+    // realParam can be RealVector or CompoundRealScalarParamHelper
+    protected double proposeReal(RealVector<?> realParam) {
         final int dim = getDimension();
         int[] parameterWeights = getWeights(dim);
 //        final int dim = parameterWeights.length;
@@ -138,8 +140,8 @@ public abstract class AbstractDeltaExchange extends Operator {
         double logq = 0.0;
 
         // operate on real parameter
-        double scalar1 = realVectorParam.get(dim1);
-        double scalar2 = realVectorParam.get(dim2);
+        double scalar1 = realParam.get(dim1);
+        double scalar2 = realParam.get(dim2);
 
         // exchange a random delta
         final double d = getNextDouble(0);
@@ -153,12 +155,16 @@ public abstract class AbstractDeltaExchange extends Operator {
             scalar2 += d / 2;
         }
 
-        if ( !realVectorParam.isValid(scalar1) ||  ! realVectorParam.isValid(scalar2) ) {
+        if ( !realParam.isValid(scalar1) ||  ! realParam.isValid(scalar2) ) {
             logq = Double.NEGATIVE_INFINITY;
-        } else {
+        } else if (realParam instanceof RealVectorParam<?> realVectorParam) {
             realVectorParam.set(dim1, scalar1);
             realVectorParam.set(dim2, scalar2);
-        }
+        } else if (realParam instanceof CompoundRealScalarParamHelper<?> compoundRealScalar) {
+            compoundRealScalar.set(dim1, scalar1);
+            compoundRealScalar.set(dim2, scalar2);
+        } else
+            throw new IllegalArgumentException("Cannot recognise parameters of type " + realParam.getClass() + " !");
 
         //System.err.println("apply deltaEx");
         // symmetrical move so return a zero hasting ratio

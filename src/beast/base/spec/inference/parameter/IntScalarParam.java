@@ -40,8 +40,8 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     protected D domain;
 
     // default
-    protected Integer lower = Integer.MIN_VALUE + 1;
-    protected Integer upper = Integer.MAX_VALUE - 1;
+    protected int lower = Integer.MIN_VALUE + 1;
+    protected int upper = Integer.MAX_VALUE - 1;
 
 
     public IntScalarParam() {
@@ -52,23 +52,34 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         setDomain(domain); // must set Input as well
     }
 
-    public IntScalarParam(int value, D domain, Integer lower, Integer upper) {
+    public IntScalarParam(int value, D domain, int lower, int upper) {
         this(value, domain);
-        setLower(lower);
-        setUpper(upper);
+        // adjust bound to the Domain range
+        setLower(Math.max(lower, domain.getLower()));
+        setUpper(Math.min(upper, domain.getUpper()));
+
+        // always validate in initAndValidate()
     }
 
     @Override
     public void initAndValidate() {
+        this.value = valuesInput.get();
+        this.storedValue = value;
+        // Initialize domain from input
+        this.domain = (D) domainTypeInput.get();
 
-        // Initialize domain based on type or bounds
-        setDomain((D) domainTypeInput.get());
+        if (lowerValueInput.get() != null)
+            this.lower = lowerValueInput.get();
+        if (upperValueInput.get() != null)
+            this.upper = upperValueInput.get();
         // adjust bound to the Domain range
         setBounds(Math.max(getLower(), domain.getLower()),
                 Math.min(getUpper(), domain.getUpper()));
 
-        // contain validation, and it must be after domain and bounds are set
-        set(valuesInput.get());
+        if (!isValid(value)) {
+            throw new IllegalArgumentException("Value " + value +
+                    " is not valid for domain " + getDomain().getClass().getName());
+        }
 
     }
 
@@ -84,12 +95,20 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         return domain;
     }
 
-    //*** setValue ***
-    public void set(Integer value) {
-        setValue(value);
+    @Override
+    public Integer getLower() {
+        return lower;
     }
+
+    @Override
+    public Integer getUpper() {
+        return upper;
+    }
+
+    //*** setValue ***
+
     // Fast (no boxing)
-    public void setValue(int value) {
+    public void set(int value) {
         startEditing(null);
 
         if (! isValid(value)) {
@@ -104,7 +123,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         domainTypeInput.setValue(domain, this);
     }
 
-    public void setLower(Integer lower) {
+    public void setLower(int lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -112,7 +131,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(Integer upper) {
+    public void setUpper(int upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -120,7 +139,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         upperValueInput.setValue(upper, this);
     }
 
-    public void setBounds(Integer lower, Integer upper) {
+    public void setBounds(int lower, int upper) {
         setLower(lower);
         setUpper(upper);
     }

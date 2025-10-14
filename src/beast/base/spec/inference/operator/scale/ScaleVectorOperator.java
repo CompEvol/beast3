@@ -112,7 +112,7 @@ public class ScaleVectorOperator extends AbstractScale {
                                 return Double.NEGATIVE_INFINITY;
                             }
 
-                            param.setValue(i, newValue);
+                            param.set(i, newValue);
                         }
                     }
                 }  else {
@@ -128,7 +128,7 @@ public class ScaleVectorOperator extends AbstractScale {
                             return Double.NEGATIVE_INFINITY;
                         }
 
-                        param.setValue(i, newValue);
+                        param.set(i, newValue);
                     }
                 }
             } else if (scaleAll) {
@@ -196,7 +196,7 @@ public class ScaleVectorOperator extends AbstractScale {
                     return Double.NEGATIVE_INFINITY;
                 }
 
-                param.setValue(index, newValue);
+                param.set(index, newValue);
                 // provides a hook for subclasses
                 //cleanupOperation(newValue, oldValue);
             }

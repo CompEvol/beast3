@@ -34,7 +34,7 @@ public class IntScalarUniformOperator extends Operator {
     public double proposal() {
 
         int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-        parameter.setValue(newValue);
+        parameter.set(newValue);
 
         return 0.0;
     }

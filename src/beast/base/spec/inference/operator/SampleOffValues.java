@@ -49,7 +49,7 @@ public class SampleOffValues extends Operator {
                     try {
                         final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
                         hr += distribution.logDensity(data.get(i));
-                        data.setValue(i, val);
+                        data.set(i, val);
                     } catch (Exception e) {
                         // some distributions fail on extreme values - currently gamma
                         return Double.NEGATIVE_INFINITY;
@@ -74,7 +74,7 @@ public class SampleOffValues extends Operator {
                 try {
                     final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
                     hr = distribution.logDensity(data.get(index));
-                    data.setValue(index, val);
+                    data.set(index, val);
                 } catch (Exception e) {
                     // some distributions fail on extreme values - currently gamma
                     return Double.NEGATIVE_INFINITY;
