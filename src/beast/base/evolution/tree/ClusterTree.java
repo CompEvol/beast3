@@ -25,11 +25,6 @@
 package beast.base.evolution.tree;
 
 
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.*;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -39,13 +34,19 @@ import beast.base.evolution.distance.JukesCantorDistance;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
+
 
 
 
 
 /**
  * Adapted from Weka's HierarchicalClustering class *
+ * @deprecated replaced by {@link beast.base.spec.evolution.ClusterTree}
  */
+@Deprecated
 @Description("Create initial beast.tree by hierarchical clustering, either through one of the classic link methods " +
         "or by neighbor joining. The following link methods are supported: " +
         "<br/>o single link, " +
