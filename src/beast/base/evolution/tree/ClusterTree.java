@@ -44,7 +44,7 @@ import java.util.*;
 
 /**
  * Adapted from Weka's HierarchicalClustering class *
- * @deprecated replaced by {@link beast.base.spec.evolution.ClusterTree}
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.ClusterTree}
  */
 @Deprecated
 @Description("Create initial beast.tree by hierarchical clustering, either through one of the classic link methods " +
