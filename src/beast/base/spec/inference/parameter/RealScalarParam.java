@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D> {
+public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, BoundedParam<Double> {
 
     final public Input<Double> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -53,10 +53,8 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     public RealScalarParam(double value, D domain, double lower, double upper) {
         this(value, domain); // this set Input as well
-
-        // adjust bound to the Domain range
-        setLower(Math.max(lower, domain.getLower()));
-        setUpper(Math.min(upper, domain.getUpper()));
+        // adjust bounds to the Domain range
+        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
 
         // always validate in initAndValidate()
     }
@@ -68,13 +66,19 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         // Initialize domain from input
         this.domain = (D) domainTypeInput.get();
 
-        if (lowerValueInput.get() != null)
-            this.lower = lowerValueInput.get();
-        if (upperValueInput.get() != null)
-            this.upper = upperValueInput.get();
-        // adjust bound to the Domain range
-        setBounds(Math.max(getLower(), domain.getLower()),
-                Math.min(getUpper(), domain.getUpper()));
+//        if (lowerValueInput.get() != null)
+//            this.lower = lowerValueInput.get();
+//        if (upperValueInput.get() != null)
+//            this.upper = upperValueInput.get();
+//        // adjust bound to the Domain range
+//        setBounds(Math.max(getLower(), domain.getLower()),
+//                Math.min(getUpper(), domain.getUpper()));
+//        Bounded<Double> bounded = ParameterUtils.initBounds(lowerValueInput, upperValueInput,
+//                domain, lower, upper);
+//        lower = bounded.getLower();
+//        upper = bounded.getUpper();
+
+        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         if (!isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -123,7 +127,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         domainTypeInput.setValue(domain, this);
     }
 
-    public void setLower(double lower) {
+    public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -131,19 +135,12 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(double upper) {
+    public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
-    }
-
-    public void setBounds(double lower, double upper) {
-        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
-        //       setUpper(Math.min(getUpper(), domain.getUpper()));
-        setLower(lower);
-        setUpper(upper);
     }
 
     //*** StateNode methods ***

@@ -64,4 +64,83 @@ public interface Bounded<T extends Comparable<T>> {
         return lowerBracket + getLower() + "," + getUpper() + upperBracket;
     }
 
+//    class BoundedReal implements Bounded<Double> {
+//
+//        final double lower;
+//        final double upper;
+//        final boolean lowerInclusive;
+//        final boolean upperInclusive;
+//
+//        public BoundedReal(double lower, double upper) {
+//            this(lower, upper, true, true);
+//        }
+//
+//        public BoundedReal(double lower, double upper, boolean lowerInclusive, boolean upperInclusive) {
+//            this.lower = lower;
+//            this.upper = upper;
+//            this.lowerInclusive = lowerInclusive;
+//            this.upperInclusive = upperInclusive;
+//        }
+//
+//        @Override
+//        public Double getLower() {
+//            return lower;
+//        }
+//
+//        @Override
+//        public Double getUpper() {
+//            return upper;
+//        }
+//
+//        @Override
+//        public boolean lowerInclusive() {
+//            return lowerInclusive;
+//        }
+//
+//        @Override
+//        public boolean upperInclusive() {
+//            return upperInclusive;
+//        }
+//    }
+//
+//    class BoundedInt implements Bounded<Integer> {
+//
+//        final int lower;
+//        final int upper;
+//        final boolean lowerInclusive;
+//        final boolean upperInclusive;
+//
+//        public BoundedInt(int lower, int upper) {
+//            this(lower, upper, true, true);
+//        }
+//
+//        public BoundedInt(int lower, int upper, boolean lowerInclusive, boolean upperInclusive) {
+//            this.lower = lower;
+//            this.upper = upper;
+//            this.lowerInclusive = lowerInclusive;
+//            this.upperInclusive = upperInclusive;
+//        }
+//
+//        @Override
+//        public Integer getLower() {
+//            return lower;
+//        }
+//
+//        @Override
+//        public Integer getUpper() {
+//            return upper;
+//        }
+//
+//        @Override
+//        public boolean lowerInclusive() {
+//            return lowerInclusive;
+//        }
+//
+//        @Override
+//        public boolean upperInclusive() {
+//            return upperInclusive;
+//        }
+//    }
+
+
 }

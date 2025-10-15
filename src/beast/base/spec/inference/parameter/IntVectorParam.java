@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 
 @Description("A scalar int-valued parameter with domain constraints")
-public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>{ //VectorParam<D, Integer> {
+public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>, BoundedParam<Integer> { //VectorParam<D, Integer> {
 
     final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -74,10 +74,8 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     public IntVectorParam(final int[] values, D domain, int lower, int upper) {
         this(values, domain);
-
         // adjust bound to the Domain range
-        setLower(Math.max(lower, domain.getLower()));
-        setUpper(Math.min(upper, domain.getUpper()));
+        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
 
         // always validate in initAndValidate()
     }
@@ -105,14 +103,15 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         // Initialize domain from input
         this.domain = (D) domainTypeInput.get();
 
-        if (lowerValueInput.get() != null)
-            this.lower = lowerValueInput.get();
-        if (upperValueInput.get() != null)
-            this.upper = upperValueInput.get();
-        // adjust bound to the Domain range
-        setBounds(Math.max(getLower(), domain.getLower()),
-                Math.min(getUpper(), domain.getUpper()));
+//        if (lowerValueInput.get() != null)
+//            this.lower = lowerValueInput.get();
+//        if (upperValueInput.get() != null)
+//            this.upper = upperValueInput.get();
+//        // adjust bound to the Domain range
+//        setBounds(Math.max(getLower(), domain.getLower()),
+//                Math.min(getUpper(), domain.getUpper()));
 
+        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         // validate value after domain and bounds are set
 //        for (Integer value : values) {
@@ -242,7 +241,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         }
     }
 
-    public void setLower(int lower) {
+    public void setLower(Integer lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + domain.getClass().getName());
@@ -250,19 +249,12 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(int upper) {
+    public void setUpper(Integer upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + domain.getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
-    }
-
-    public void setBounds(int lower, int upper) {
-        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
-        //       setUpper(Math.min(getUpper(), domain.getUpper()));
-        setLower(lower);
-        setUpper(upper);
     }
 
     //*** StateNode methods ***

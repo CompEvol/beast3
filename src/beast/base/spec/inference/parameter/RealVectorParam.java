@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>{ //VectorParam<D, Double> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, BoundedParam<Double> { //VectorParam<D, Double> {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -77,8 +77,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public RealVectorParam(final double[] values, D domain, double lower, double upper) {
         this(values, domain);
         // adjust bound to the Domain range
-        setLower(Math.max(lower, domain.getLower()));
-        setUpper(Math.min(upper, domain.getUpper()));
+        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
 
         // always validate in initAndValidate()
     }
@@ -105,13 +104,15 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         // Initialize domain based on type or bounds
         domain = (D) domainTypeInput.get();
 
-        if (lowerValueInput.get() != null)
-            this.lower = lowerValueInput.get();
-        if (upperValueInput.get() != null)
-            this.upper = upperValueInput.get();
-        // adjust bound to the Domain range
-        setBounds(Math.max(getLower(), domain.getLower()),
-                Math.min(getUpper(), domain.getUpper()));
+//        if (lowerValueInput.get() != null)
+//            this.lower = lowerValueInput.get();
+//        if (upperValueInput.get() != null)
+//            this.upper = upperValueInput.get();
+//        // adjust bound to the Domain range
+//        setBounds(Math.max(getLower(), domain.getLower()),
+//                Math.min(getUpper(), domain.getUpper()));
+
+        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         // validate value after domain and bounds are set
 //        for (Double value : values) {
@@ -243,7 +244,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
-    public void setLower(double lower) {
+    public void setLower(Double lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -251,19 +252,12 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(double upper) {
+    public void setUpper(Double upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
-    }
-
-    public void setBounds(double lower, double upper) {
-        //TODO ? setLower(Math.max(getLower(), domain.getLower()));
-        //       setUpper(Math.min(getUpper(), domain.getUpper()));
-        setLower(lower);
-        setUpper(upper);
     }
 
     //*** StateNode methods ***

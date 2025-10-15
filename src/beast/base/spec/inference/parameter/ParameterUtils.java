@@ -1,9 +1,7 @@
 package beast.base.spec.inference.parameter;
 
-import beast.base.spec.Bounded;
 import beast.base.inference.StateNode;
 import beast.base.spec.type.Scalar;
-import beast.base.spec.type.Tensor;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -50,5 +48,31 @@ public class ParameterUtils {
         return buf.toString();
     }
 
+
+
+
+//    public static <D extends Real>Bounded<Double> initBounds(
+//            Input<Double> lowerInput, Input<Double> upperInput,
+//            D domain, double currentLower, double currentUpper) {
+//        double lower = (lowerInput.get() != null) ? lowerInput.get() : currentLower;
+//        double upper = (upperInput.get() != null) ? upperInput.get() : currentUpper;
+//
+//        lower = Math.max(lower, domain.getLower());
+//        upper = Math.min(upper, domain.getUpper());
+//
+//        return new Bounded.BoundedReal(lower, upper);
+//    }
+//
+//    public static <D extends Int>Bounded<Integer> initBounds(
+//            Input<Integer> lowerInput, Input<Integer> upperInput,
+//            D domain, int currentLower, int currentUpper) {
+//        int lower = (lowerInput.get() != null) ? lowerInput.get() : currentLower;
+//        int upper = (upperInput.get() != null) ? upperInput.get() : currentUpper;
+//
+//        lower = Math.max(lower, domain.getLower());
+//        upper = Math.min(upper, domain.getUpper());
+//
+//        return new Bounded.BoundedInt(lower, upper);
+//    }
 
 }

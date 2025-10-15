@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D> {
+public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D>, BoundedParam<Integer> {
 
     final public Input<Integer> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -55,8 +55,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     public IntScalarParam(int value, D domain, int lower, int upper) {
         this(value, domain);
         // adjust bound to the Domain range
-        setLower(Math.max(lower, domain.getLower()));
-        setUpper(Math.min(upper, domain.getUpper()));
+        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
 
         // always validate in initAndValidate()
     }
@@ -68,13 +67,15 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         // Initialize domain from input
         this.domain = (D) domainTypeInput.get();
 
-        if (lowerValueInput.get() != null)
-            this.lower = lowerValueInput.get();
-        if (upperValueInput.get() != null)
-            this.upper = upperValueInput.get();
-        // adjust bound to the Domain range
-        setBounds(Math.max(getLower(), domain.getLower()),
-                Math.min(getUpper(), domain.getUpper()));
+//        if (lowerValueInput.get() != null)
+//            this.lower = lowerValueInput.get();
+//        if (upperValueInput.get() != null)
+//            this.upper = upperValueInput.get();
+//        // adjust bound to the Domain range
+//        setBounds(Math.max(getLower(), domain.getLower()),
+//                Math.min(getUpper(), domain.getUpper()));
+
+        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         if (!isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -123,7 +124,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         domainTypeInput.setValue(domain, this);
     }
 
-    public void setLower(int lower) {
+    public void setLower(Integer lower) {
         if (lower < domain.getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
@@ -131,17 +132,12 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         lowerValueInput.setValue(lower, this);
     }
 
-    public void setUpper(int upper) {
+    public void setUpper(Integer upper) {
         if (upper > domain.getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
-    }
-
-    public void setBounds(int lower, int upper) {
-        setLower(lower);
-        setUpper(upper);
     }
 
     //*** StateNode methods ***
