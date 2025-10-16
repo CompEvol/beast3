@@ -6,12 +6,9 @@ import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealScalar;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Description("A scalar real-valued parameter with domain constraints")
 public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, BoundedParam<Double> {
@@ -178,45 +175,6 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     @Override
-    public void fromXML(Node node) {
-//        ParameterUtils.parseScalarParameter(node, this);
-
-        //TODO this need to sync with toString
-
-        final NamedNodeMap atts = node.getAttributes();
-        setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
-        // need to sync with toString
-        Pattern pattern = Pattern.compile(".*[\\[(](.*),(.*)[\\])]: (.*) ");
-        // (?: ... )? makes the whole bracketed section optional.
-//        Pattern pattern = Pattern.compile(".*(?:[\\[(](.*),(.*)[\\])] )?: (.*) ");
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.matches()) {
-//            final String dimension = matcher.group(1);
-            final String lower = matcher.group(1);
-            final String upper = matcher.group(2);
-            final String valuesAsString = matcher.group(3);
-//            final String[] values = valuesAsString.split(" ");
-//            minorDimension = 0;
-            fromXML(valuesAsString, lower, upper);
-        } else {
-            throw new RuntimeException("String could not be parsed to parameter : " + str);
-        }
-    }
-
-    public void fromXML(final String valuesString, final String lower, final String upper) {
-        set(Double.parseDouble(valuesString));
-        setLower(Double.parseDouble(lower));
-        setUpper(Double.parseDouble(upper));
-    }
-
-    @Override
-    public String toString() {
-//        return ParameterUtils.scalarParamToString(this);
-        return getID() + boundsToString() + ": " + get() + " ";
-    }
-
-    @Override
     public int scale(double scale) {
 //        return 1;
         throw new UnsupportedOperationException();
@@ -265,6 +223,27 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         setBounds(source.getLower(), source.getUpper());
         set(source.get());
         storedValue = source.storedValue;
+    }
+
+    //*** for resume ***
+
+    @Override
+    public void fromXML(Node node) {
+        ParameterUtils.parseParameter(node, this);
+    }
+
+    @Override
+    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
+        setLower(Double.parseDouble(lower));
+        setUpper(Double.parseDouble(upper));
+        if (shape != null)
+            throw new IllegalArgumentException("Shape not supported for Scalar ! " + shape);
+        set(Double.parseDouble(valuesStr[0]));
+    }
+
+    @Override
+    public String toString() {
+        return ParameterUtils.paramToString(this);
     }
 
 }

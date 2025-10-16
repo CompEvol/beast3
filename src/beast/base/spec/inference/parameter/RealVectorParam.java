@@ -6,15 +6,12 @@ import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealVector;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
@@ -351,22 +348,6 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     }
 
     /**
-     * Note that changing toString means fromXML needs to be changed as
-     * well, since it parses the output of toString back into a parameter.
-     */
-    @Override
-    public String toString() {
-        final StringBuilder buf = new StringBuilder();
-        buf.append(getID()).append("[").append(values.length);
-        buf.append("] ");
-        buf.append(boundsToString()).append(": ");
-        for (final double value : values) {
-            buf.append(value).append(" ");
-        }
-        return buf.toString();
-    }
-
-    /**
      * @return a deep copy of this node in the state.
      *         This will generally be called only for stochastic nodes.
      */
@@ -429,53 +410,39 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         Arrays.fill(isDirty, false);
     }
 
+    //*** for resume ***
+
     /**
-     * StateNode implementation *
+     * Note that changing toString means fromXML needs to be changed as
+     * well, since it parses the output of toString back into a parameter.
      */
     @Override
-    public void fromXML(final Node node) {
-
-        //TODO
-
-        final NamedNodeMap atts = node.getAttributes();
-        setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
-        Pattern pattern = Pattern.compile(".*\\[(.*) (.*)\\].*\\((.*),(.*)\\): (.*) ");
-        Matcher matcher = pattern.matcher(str);
-
-        if (matcher.matches()) {
-            final String dimension = matcher.group(1);
-            final String stride = matcher.group(2);
-            final String lower = matcher.group(3);
-            final String upper = matcher.group(4);
-            final String valuesAsString = matcher.group(5);
-            final String[] values = valuesAsString.split(" ");
-//            minorDimension = Integer.parseInt(stride);
-            fromXML(Integer.parseInt(dimension), lower, upper, values);
-        } else {
-            pattern = Pattern.compile(".*\\[(.*)\\].*\\((.*),(.*)\\): (.*) ");
-            matcher = pattern.matcher(str);
-            if (matcher.matches()) {
-                final String dimension = matcher.group(1);
-                final String lower = matcher.group(2);
-                final String upper = matcher.group(3);
-                final String valuesAsString = matcher.group(4);
-                final String[] values = valuesAsString.split(" ");
-//                minorDimension = 0;
-                fromXML(Integer.parseInt(dimension), lower, upper, values);
-            } else {
-                throw new RuntimeException("parameter could not be parsed");
-            }
-        }
+    public String toString() {
+        return ParameterUtils.paramToString(this);
     }
 
-    //TODO
-    void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
+    @Override
+    public void fromXML(final Node node) {
+        ParameterUtils.parseParameter(node, this);
+    }
+
+    @Override
+    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
         setLower(Double.parseDouble(lower));
         setUpper(Double.parseDouble(upper));
-        values = new double[dimension];
-        for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Double.parseDouble(valuesString[i]);
+        // validate shape
+        try {
+            int dim = Integer.parseInt(shape);
+            if (dim != valuesStr.length)
+                throw new IllegalArgumentException("The dimension " + dim +
+                        " must equal to the size of values " + valuesStr.length + " !");
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Illegal size " + shape + " for vector " + this);
+        }
+        // this may change dimension
+        values = new double[valuesStr.length];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = Double.parseDouble(valuesStr[i]);
         }
     }
 

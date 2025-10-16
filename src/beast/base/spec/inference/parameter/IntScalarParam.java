@@ -6,12 +6,9 @@ import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Description("A scalar real-valued parameter with domain constraints")
 public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D>, BoundedParam<Integer> {
@@ -158,45 +155,6 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     @Override
-    public void fromXML(Node node) {
-//        ParameterUtils.parseScalarParameter(node, this);
-
-        //TODO this need to sync with toString
-
-        final NamedNodeMap atts = node.getAttributes();
-        setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
-        // need to sync with toString
-        Pattern pattern = Pattern.compile(".*[\\[(](.*),(.*)[\\])]: (.*) ");
-        // (?: ... )? makes the whole bracketed section optional.
-//        Pattern pattern = Pattern.compile(".*(?:[\\[(](.*),(.*)[\\])] )?: (.*) ");
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.matches()) {
-//            final String dimension = matcher.group(1);
-            final String lower = matcher.group(1);
-            final String upper = matcher.group(2);
-            final String valuesAsString = matcher.group(3);
-//            final String[] values = valuesAsString.split(" ");
-//            minorDimension = 0;
-            fromXML(valuesAsString, lower, upper);
-        } else {
-            throw new RuntimeException("String could not be parsed to parameter : " + str);
-        }
-    }
-
-    public void fromXML(final String valuesString, final String lower, final String upper) {
-        set(Integer.parseInt(valuesString));
-        setLower(Integer.parseInt(lower));
-        setUpper(Integer.parseInt(upper));
-    }
-
-    @Override
-    public String toString() {
-//        return ParameterUtils.scalarParamToString(this);
-        return getID() + boundsToString() + ": " + get() + " ";
-    }
-
-    @Override
     public int scale(double scale) {
 //        return 1;
         throw new UnsupportedOperationException();
@@ -258,6 +216,27 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         storedValue = source.storedValue;
         setDomain(source.getDomain());
         setBounds(source.getLower(), source.getUpper());
+    }
+
+    //*** for resume ***
+
+    @Override
+    public void fromXML(Node node) {
+        ParameterUtils.parseParameter(node, this);
+    }
+
+    @Override
+    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
+        setLower(Integer.parseInt(lower));
+        setUpper(Integer.parseInt(upper));
+        if (shape != null)
+            throw new IllegalArgumentException("Shape not supported for Scalar ! " + shape);
+        set(Integer.parseInt(valuesStr[0]));
+    }
+
+    @Override
+    public String toString() {
+        return ParameterUtils.paramToString(this);
     }
 
 }

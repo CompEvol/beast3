@@ -189,6 +189,7 @@
                 <provider classname="beast.base.spec.inference.operator.BitFlipOperator"/>
                 <provider classname="beast.base.spec.inference.operator.IntRandomWalkOperator"/>
                 <provider classname="beast.base.spec.inference.operator.RealRandomWalkOperator"/>
+                <provider classname="beast.base.spec.inference.operator.SampleOffValues"/>
                 <provider classname="beast.base.spec.inference.operator.SwapOperator"/>
                 <provider classname="beast.base.spec.inference.operator.UpDownOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.CompoundRealDeltaExchangeOperator"/>
@@ -202,7 +203,15 @@
                 <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
-                
+
+                <provider classname="beast.base.spec.evolution.tree.ClusterTree"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.BayesianSkyline"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.CompoundPopulationFunction"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.ConstantPopulation"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.ExponentialGrowth"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.RandomTree"/>
+                <provider classname="beast.base.spec.evolution.tree.coalescent.ScaledPopulationFunction"/>
+
                 <provider classname="beast.base.spec.evolution.speciation.BirthDeathGernhard08Model"/>
                 <provider classname="beast.base.spec.evolution.speciation.CalibratedBirthDeathModel"/>
                 <provider classname="beast.base.spec.evolution.speciation.CalibratedYuleInitialTree"/>

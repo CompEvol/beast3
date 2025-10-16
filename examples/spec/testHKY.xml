@@ -63,12 +63,12 @@
 
     <tree id='tree'/>
 
-    <tree spec='beast.base.evolution.tree.ClusterTree' id='upgmatree' clusterType='upgma' initial='@tree'>
+    <tree spec='beast.base.spec.evolution.tree.ClusterTree' id='upgmatree' clusterType='upgma' initial='@tree'>
         <taxa idref='alignment'/>
     </tree>
-    <tree spec='beast.base.evolution.tree.coalescent.RandomTree' id='coalescentSimulator' initial='@tree' taxa='@alignment'>
-        <populationModel spec='ConstantPopulation'>
-            <popSize spec='parameter.RealParameter' value='1'/>
+    <tree spec='beast.base.spec.evolution.tree.coalescent.RandomTree' id='coalescentSimulator' initial='@tree' taxa='@alignment'>
+        <populationModel spec='beast.base.spec.evolution.tree.coalescent.ConstantPopulation'>
+            <popSize spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value='1'/>
         </populationModel>
     </tree>
 
@@ -84,10 +84,11 @@
         </distribution>
 
 <!-- beast.base.inference.operator.ScaleOperator is strong typing op  -->
-        <operator id='kappaScaler' spec='ScaleScalarOperator'
+        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.scale.ScaleScalarOperator'
                   scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
 <!--        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
-
+        <operator id="deltaExchange" spec="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"
+                  delta="0.25" weight="2" parameter="@freqs"/>
 
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
         <operator id='subtreeSlide' spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>
@@ -96,16 +97,16 @@
         <operator id='wide' spec='Exchange' isNarrow='false' weight="1" tree="@tree"/>
         <operator id='wilsonBalding' spec='WilsonBalding' weight="1" tree="@tree"/>
 
-        <logger logEvery="10000" fileName="test.$(seed).log">
+        <logger logEvery="10000" fileName="testHKY.log">
             <model idref='likelihood'/>
             <log idref="likelihood"/>
             <log idref='hky.kappa'/>
             <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
         </logger>
-        <logger logEvery="10000" fileName="test.$(seed).trees">
+        <logger logEvery="10000" fileName="testHKY.trees">
             <log idref="tree"/>
         </logger>
-        <logger logEvery="10000">
+        <logger logEvery="100000">
             <model idref='likelihood'/>
             <log idref="likelihood"/>
             <ESS spec='ESS' name='log' arg="@likelihood"/>

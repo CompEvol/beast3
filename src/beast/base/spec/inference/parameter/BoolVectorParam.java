@@ -6,15 +6,12 @@ import beast.base.core.Log;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
 import beast.base.spec.type.BoolVector;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
@@ -279,19 +276,6 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         return 0;
     }
 
-    /**
-     * Note that changing toString means fromXML needs to be changed as
-     * well, since it parses the output of toString back into a parameter.
-     */
-    @Override
-    public String toString() {
-        final StringBuilder buf = new StringBuilder();
-        buf.append(getID()).append("[").append(values.length);
-        buf.append("] ").append(": ");
-        for (final boolean value : values)
-            buf.append(value).append(" ");
-        return buf.toString();
-    }
 
     /**
      * @return a deep copy of this node in the state.
@@ -351,51 +335,23 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         Arrays.fill(isDirty, false);
     }
 
-    /**
-     * StateNode implementation *
-     */
+    //*** resume ***
+
+    @Override
+    public String toString() {
+        return ParameterUtils.paramToString(this);
+    }
+
     @Override
     public void fromXML(final Node node) {
-
-        //TODO
-
-        final NamedNodeMap atts = node.getAttributes();
-        setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
-        Pattern pattern = Pattern.compile(".*\\[(.*) (.*)\\].*\\((.*),(.*)\\): (.*) ");
-        Matcher matcher = pattern.matcher(str);
-
-        if (matcher.matches()) {
-            final String dimension = matcher.group(1);
-            final String stride = matcher.group(2);
-            final String lower = matcher.group(3);
-            final String upper = matcher.group(4);
-            final String valuesAsString = matcher.group(5);
-            final String[] values = valuesAsString.split(" ");
-//            minorDimension = Integer.parseInt(stride);
-            fromXML(Integer.parseInt(dimension), lower, upper, values);
-        } else {
-            pattern = Pattern.compile(".*\\[(.*)\\].*\\((.*),(.*)\\): (.*) ");
-            matcher = pattern.matcher(str);
-            if (matcher.matches()) {
-                final String dimension = matcher.group(1);
-                final String lower = matcher.group(2);
-                final String upper = matcher.group(3);
-                final String valuesAsString = matcher.group(4);
-                final String[] values = valuesAsString.split(" ");
-//                minorDimension = 0;
-                fromXML(Integer.parseInt(dimension), lower, upper, values);
-            } else {
-                throw new RuntimeException("parameter could not be parsed");
-            }
-        }
+        ParameterUtils.parseParameter(node, this);
     }
 
     //TODO
-    void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
-        values = new boolean[dimension];
-        for (int i = 0; i < valuesString.length; i++) {
-            values[i] = Boolean.parseBoolean(valuesString[i]);
+    void fromXML(final String[] valuesStr) {
+        values = new boolean[valuesStr.length];
+        for (int i = 0; i < valuesStr.length; i++) {
+            values[i] = Boolean.parseBoolean(valuesStr[i]);
         }
     }
 

@@ -30,12 +30,9 @@ import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
 import beast.base.spec.type.BoolScalar;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 import java.io.PrintStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 /**
@@ -123,43 +120,6 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     }
 
     @Override
-    public void fromXML(Node node) {
-//        ParameterUtils.parseScalarParameter(node, this);
-
-        //TODO this need to sync with toString
-
-        final NamedNodeMap atts = node.getAttributes();
-        setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
-        // need to sync with toString
-        Pattern pattern = Pattern.compile(".*[\\[(](.*),(.*)[\\])]: (.*) ");
-        // (?: ... )? makes the whole bracketed section optional.
-//        Pattern pattern = Pattern.compile(".*(?:[\\[(](.*),(.*)[\\])] )?: (.*) ");
-        Matcher matcher = pattern.matcher(str);
-        if (matcher.matches()) {
-//            final String dimension = matcher.group(1);
-            final String lower = matcher.group(1);
-            final String upper = matcher.group(2);
-            final String valuesAsString = matcher.group(3);
-//            final String[] values = valuesAsString.split(" ");
-//            minorDimension = 0;
-            fromXML(valuesAsString);
-        } else {
-            throw new RuntimeException("String could not be parsed to parameter : " + str);
-        }
-    }
-
-    public void fromXML(final String valuesString) {
-        set(Boolean.parseBoolean(valuesString));
-    }
-
-    @Override
-    public String toString() {
-//        return ParameterUtils.scalarParamToString(this);
-        return getID() + ": " + get() + " ";
-    }
-
-    @Override
     public int scale(double scale) {
 //        return 1;
         throw new UnsupportedOperationException();
@@ -215,6 +175,22 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
         setID(source.getID());
         set(source.get());
         storedValue = source.storedValue;
+    }
+
+    //*** resume ***
+
+    @Override
+    public void fromXML(Node node) {
+        ParameterUtils.parseParameter(node, this);
+    }
+
+    void fromXML(final String valueStr) {
+        set(Boolean.parseBoolean(valueStr));
+    }
+
+    @Override
+    public String toString() {
+        return ParameterUtils.paramToString(this);
     }
 
 }
