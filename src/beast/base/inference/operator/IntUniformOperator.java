@@ -9,10 +9,10 @@ import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
+@Description("A uniform random operator that selects a random dimension of the integer parameter and picks a new random value within the bounds.")
 /**
  * @deprecated IntUniformOperator is deprecated. Use UniformOperator instead.
  */
-@Description("A uniform random operator that selects a random dimension of the integer parameter and picks a new random value within the bounds.")
 @Deprecated
 public class IntUniformOperator extends Operator {
     final public Input<IntegerParameter> parameterInput = new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);

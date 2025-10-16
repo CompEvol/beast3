@@ -186,6 +186,11 @@
                 <provider classname="beast.base.spec.inference.parameter.RealVectorParam"/>
                 <provider classname="beast.base.spec.inference.parameter.SimplexParam"/>
 
+                <provider classname="beast.base.spec.inference.operator.BitFlipOperator"/>
+                <provider classname="beast.base.spec.inference.operator.IntRandomWalkOperator"/>
+                <provider classname="beast.base.spec.inference.operator.RealRandomWalkOperator"/>
+                <provider classname="beast.base.spec.inference.operator.SwapOperator"/>
+                <provider classname="beast.base.spec.inference.operator.UpDownOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.CompoundRealDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"/>

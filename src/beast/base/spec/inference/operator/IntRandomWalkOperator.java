@@ -1,24 +1,19 @@
-package beast.base.inference.operator;
+package beast.base.spec.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.inference.util.InputUtil;
+import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 
 @Description("A random walk operator that selects a random dimension of the integer parameter and perturbs the value a " +
         "random amount within +/- windowSize.")
-/**
- * @deprecated Use beast.base.spec.inference.operator.IntRandomWalkOperator instead.
- */
-@Deprecated
 public class IntRandomWalkOperator extends Operator {
     final public Input<Integer> windowSizeInput =
             new Input<>("windowSize", "the size of the window both up and down", Validate.REQUIRED);
-    final public Input<IntegerParameter> parameterInput =
+    final public Input<IntVectorParam<?>> parameterInput =
             new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
 
     int windowSize = 1;
@@ -35,10 +30,10 @@ public class IntRandomWalkOperator extends Operator {
     @Override
     public double proposal() {
 
-        final IntegerParameter param = (IntegerParameter) InputUtil.get(parameterInput,this);
+        final IntVectorParam<?> param = parameterInput.get();
 
-        final int i = Randomizer.nextInt(param.getDimension());
-        final int value = param.getValue(i);
+        final int i = Randomizer.nextInt(param.size());
+        final int value = param.get(i);
         final int newValue = value + Randomizer.nextInt(2 * windowSize + 1) - windowSize;
 
         if (newValue < param.getLower() || newValue > param.getUpper()) {

@@ -1,4 +1,4 @@
-package beast.base.inference.operator;
+package beast.base.spec.inference.operator;
 
 
 import java.text.DecimalFormat;
@@ -10,22 +10,17 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
-import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
+import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
 
-@Description("This element represents an operator that scales two parameters in different directions. " +
-        "Each operation involves selecting a scale uniformly at random between scaleFactor and 1/scaleFactor. " +
-        "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
-/**
- * @deprecated Use beast.base.spec.inference.operator.UpDownOperator instead.
- */
-@Deprecated
-public class UpDownOperator extends Operator {
-
+@Description("Like the UpDownOperator, this element represents an operator that scales "
+		+ "two (or more) parameters in different directions, but uses a Bactrian proposal distribution for the scale value. "
+        + "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
+public class UpDownOperator extends KernelOperator {
     final public Input<Double> scaleFactorInput = new Input<>("scaleFactor",
             "magnitude factor used for scaling", Validate.REQUIRED);
     final public Input<List<StateNode>> upInput = new Input<>("up",
@@ -34,16 +29,18 @@ public class UpDownOperator extends Operator {
             "zero or more items to scale downwards", new ArrayList<>());
     final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
     final public Input<Boolean> elementWiseInput = new Input<>("elementWise", "flag to indicate that the scaling is applied to a random index in multivariate parameters (default false)", false);
-    final public Input<Boolean> differentRandomIndexInput = new Input<>("differentRandomIndex", "flag to indicate if a different random index should be chosen for each parameter (default false); only applicable if elementWise is set to true", false);
 
-    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0);
+    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 10.0);
     final public Input<Double> scaleLowerLimit = new Input<>("lower", "Lower limit of scale factor", 0.0);
 
     double scaleFactor;
     private double upper,lower;
 
+
+
     @Override
     public void initAndValidate() {
+    	super.initAndValidate();
         scaleFactor = scaleFactorInput.get();
         // sanity checks
         if (upInput.get().size() + downInput.get().size() == 0) {
@@ -55,6 +52,11 @@ public class UpDownOperator extends Operator {
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
     }
+    
+	protected double getScaler(int i) {
+		return kernelDistribution.getScaler(i, Double.NaN, getCoercableParameterValue());
+	}
+    
 
     /**
      * override this for proposals,
@@ -65,7 +67,7 @@ public class UpDownOperator extends Operator {
     @Override
     public final double proposal() {
 
-        final double scale = (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
+        final double scale = getScaler(0);
         int goingUp = 0, goingDown = 0;
 
 
@@ -97,9 +99,6 @@ public class UpDownOperator extends Operator {
                 if (outsideBounds(up)) {
                     return Double.NEGATIVE_INFINITY;
                 }
-                if (differentRandomIndexInput.get()){
-                    index = Randomizer.nextInt(size);
-                }
             }
 
             for (StateNode down : downInput.get()) {
@@ -109,9 +108,6 @@ public class UpDownOperator extends Operator {
                 }
                 if (outsideBounds(down)) {
                     return Double.NEGATIVE_INFINITY;
-                }
-                if (differentRandomIndexInput.get()){
-                    index = Randomizer.nextInt(size);
                 }
             }
         } else {
@@ -145,7 +141,7 @@ public class UpDownOperator extends Operator {
                 return Double.NEGATIVE_INFINITY;
             }
         }
-        return (goingUp - goingDown - 2) * Math.log(scale);
+        return (goingUp - goingDown) * Math.log(scale);
     }
 
     private boolean outsideBounds(final StateNode node) {
@@ -166,11 +162,13 @@ public class UpDownOperator extends Operator {
      */
     @Override
     public void optimize(final double logAlpha) {
-        if (optimiseInput.get()) {
-            double delta = calcDelta(logAlpha);
-            delta += Math.log(1.0 / scaleFactor - 1.0);
-            setCoercableParameterValue(1.0 / (Math.exp(delta) + 1.0) );
-        }
+    	if (optimiseInput.get()) {
+	        double delta = calcDelta(logAlpha);
+	        double scaleFactor = getCoercableParameterValue();
+	        delta += Math.log(scaleFactor);
+	        scaleFactor = Math.exp(delta);
+	        setCoercableParameterValue(scaleFactor);
+    	}
     }
 
     @Override
@@ -184,22 +182,26 @@ public class UpDownOperator extends Operator {
     }
 
     @Override
+    public double getTargetAcceptanceProbability() {
+    	return 0.3;
+    }
+
+    @Override
     public String getPerformanceSuggestion() {
-        final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
-        final double targetProb = getTargetAcceptanceProbability();
+        double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
+        double targetProb = getTargetAcceptanceProbability();
 
         double ratio = prob / targetProb;
         if (ratio > 2.0) ratio = 2.0;
         if (ratio < 0.5) ratio = 0.5;
 
         // new scale factor
-        final double sf = Math.pow(scaleFactor, ratio);
+        double newWindowSize = getCoercableParameterValue() * ratio;
 
-        final DecimalFormat formatter = new DecimalFormat("#.###");
-        if (prob < 0.10) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
-        } else if (prob > 0.40) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
+        DecimalFormat formatter = new DecimalFormat("#.###");
+        if (prob < 0.10 || prob > 0.40) {
+            return "Try setting scale factor to about " + formatter.format(newWindowSize);
         } else return "";
     }
+    
 } // class UpDownOperator

@@ -1,4 +1,4 @@
-package beast.base.inference.operator.kernel;
+package beast.base.spec.inference.operator;
 
 
 
@@ -7,20 +7,17 @@ import java.text.DecimalFormat;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.RealParameter;
-import beast.base.inference.util.InputUtil;
+import beast.base.inference.operator.kernel.KernelOperator;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
 
 @Description("A random walk operator that selects a random dimension of the real parameter and perturbs the value a " +
         "random amount according to a Bactrian distribution (Yang & Rodriguez, 2013), which is a mixture of two Gaussians:"
         + "p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
-/**
- * @deprecated Use beast.base.spec.inference.operator.RealRandomWalkOperator instead.
- */
-@Deprecated
-public class BactrianRandomWalkOperator extends KernelOperator {
-    final public Input<RealParameter> parameterInput = new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
+public class RealRandomWalkOperator extends KernelOperator {
+    final public Input<RealVectorParam<Real>> parameterInput = new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "deprecated -- use windowSize instead");
     public final Input<Double> windowSizeInput = new Input<>("windowSize", "window size: larger means more bold proposals");
     final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
@@ -44,17 +41,17 @@ public class BactrianRandomWalkOperator extends KernelOperator {
     @Override
     public double proposal() {
 
-        RealParameter param = (RealParameter)InputUtil.get(parameterInput, this);
+    	RealVectorParam<Real> param = parameterInput.get();
 
-        int i = Randomizer.nextInt(param.getDimension());
-        double value = param.getValue(i);
+        int i = Randomizer.nextInt(param.size());
+        double value = param.get(i);
         double newValue = value + kernelDistribution.getRandomDelta(i, value, windowSize);
         
         if (newValue < param.getLower() || newValue > param.getUpper()) {
             return Double.NEGATIVE_INFINITY;
         }
 
-        param.setValue(i, newValue);
+        param.set(i, newValue);
 
         return 0;
     }

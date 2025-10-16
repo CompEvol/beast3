@@ -630,12 +630,12 @@ public interface Transform {
     		super.initAndValidate();
     		for (Tensor<?,?> f : parameter) {
     			if (f instanceof Bounded p) {
-    				if (p.getLower().compareTo(0) <= 0) {
+    				if (p.getLower().compareTo(0.0) < 0) {
     					Log.warning("\n\nWarning: parameter " + ((BEASTInterface)p).getID() + " has lower bound < 0, which is not appropriate for a LogTransform\n");
     				}
     			}
     			for (int i = 0; i < f.size(); i++) {
-    				if (((Comparable)f.get(i)).compareTo(0) <= 0) {
+    				if (((Comparable)f.get(i)).compareTo(0.0) <= 0) {
     					Log.warning("\n\nWarning:" + f.getClass().getSimpleName() + " "
 							+ (f instanceof BEASTInterface ? ((BEASTInterface)f).getID() : "") + 
 							" has initial value <= 0, which is not appropriate for a LogTransform\n");
@@ -751,12 +751,12 @@ public interface Transform {
 			}
     		for (Tensor<?,?> f : parameter) {
     			if (f instanceof Bounded p) {
-    				if (p.getLower().compareTo(0) <= 0) {
+    				if (p.getLower().compareTo(0.0) < 0) {
     					Log.warning("\n\nWarning: parameter " + ((BEASTInterface)p).getID() + " has lower bound < 0, which is not appropriate for a LogConstrainedSumTransform\n");
     				}
     			}
     			for (int i = 0; i < f.size(); i++) {
-    				if (((Comparable)f.get(i)).compareTo(0) <= 0) {
+    				if (((Comparable)f.get(i)).compareTo(0.0) <= 0) {
     					Log.warning("\n\nWarning:" + f.getClass().getSimpleName() + " "
     						+ (f instanceof BEASTInterface ? ((BEASTInterface)f).getID() : "") + 
     						" has initial value <= 0, which is not appropriate for a LogConstrainedSumTransform\n");
@@ -777,7 +777,7 @@ public interface Transform {
             	for (Tensor<?,?> p : parameter) {
             		try {
             			// make sure the paramter is initialised
-            			p.get();
+            			p.get(0);
             		} catch (NullPointerException e) {
             			((BEASTObject)p).initAndValidate();
             		}

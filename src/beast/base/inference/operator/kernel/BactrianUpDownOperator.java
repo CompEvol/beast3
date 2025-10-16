@@ -19,6 +19,10 @@ import beast.base.util.Randomizer;
 @Description("Like the UpDownOperator, this element represents an operator that scales "
 		+ "two (or more) parameters in different directions, but uses a Bactrian proposal distribution for the scale value. "
         + "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
+/**
+ * @deprecated Use beast.base.spec.inference.operator.UpDownOperator instead.
+ */
+@Deprecated
 public class BactrianUpDownOperator extends KernelOperator {
     final public Input<Double> scaleFactorInput = new Input<>("scaleFactor",
             "magnitude factor used for scaling", Validate.REQUIRED);

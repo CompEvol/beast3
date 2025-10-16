@@ -15,6 +15,10 @@ import beast.base.util.Randomizer;
 
 @Description("A random walk operator that selects a random dimension of the real parameter and perturbs the value a " +
         "random amount within +/- windowSize.")
+/**
+ * @deprecated Use beast.base.spec.inference.operator.RealRandomWalkOperator instead.
+ */
+@Deprecated
 public class RealRandomWalkOperator extends Operator {
     final public Input<Double> windowSizeInput =
             new Input<>("windowSize", "the size of the window both up and down when using uniform interval OR standard deviation when using Gaussian", Input.Validate.REQUIRED);

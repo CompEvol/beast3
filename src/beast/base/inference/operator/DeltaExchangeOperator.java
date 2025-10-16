@@ -27,6 +27,10 @@ import beast.base.util.Randomizer;
  *         Migrated to BEAST 2 by CHW and Walter
  */
 @Description("A generic operator for use with a sum-constrained (possibly weighted) vector parameter.")
+/**
+ * @deprecated Use beast.base.spec.inference.operator.DeltaExchangeOperator instead.
+ */
+@Deprecated
 public class DeltaExchangeOperator extends Operator {
     //public Input<Tree> m_pTree = new Input<>("tree", "if specified, all beast.tree branch length are scaled");
 

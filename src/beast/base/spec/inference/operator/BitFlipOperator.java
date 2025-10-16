@@ -22,7 +22,7 @@
 * Boston, MA  02110-1301  USA
 */
 
-package beast.base.inference.operator;
+package beast.base.spec.inference.operator;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -30,6 +30,7 @@ import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.util.InputUtil;
+import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.util.Randomizer;
 
 /**
@@ -38,15 +39,11 @@ import beast.base.util.Randomizer;
 
 @Description("Flip one bit in an array of boolean bits. The hastings ratio is designed so that all subsets of vectors with the" +
         " same number of 'on' bits are equiprobable.")
-/**
- * @deprecated Use beast.base.spec.inference.operator.BitFlipOperator instead.
- */
-@Deprecated
 public class BitFlipOperator extends Operator {
     final public Input<Boolean> uniformInput = new Input<>("uniform", "when on, total probability of combinations with k" +
             " 'on' bits is equal. Otherwise uniform on all combinations (default true)", true);
 
-    final public Input<BooleanParameter> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
+    final public Input<BoolVectorParam> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
 
     private boolean usesPriorOnSum = true;
 
@@ -68,20 +65,20 @@ public class BitFlipOperator extends Operator {
     @Override
     public double proposal() {
 
-        final BooleanParameter p = (BooleanParameter) InputUtil.get(parameterInput , this);
+        final BoolVectorParam p = parameterInput.get();
 
-        final int dim = p.getDimension();
+        final int dim = p.size();
 
         double sum = 0.0;
         if (usesPriorOnSum) {
             for (int i = 0; i < dim; i++) {
-                if (p.getValue(i)) sum += 1;
+                if (p.get(i)) sum += 1;
             }
         }
 
         final int pos = Randomizer.nextInt(dim);
 
-        final boolean value = p.getValue(pos);
+        final boolean value = p.get(pos);
 
         double logq = 0.0;
         if (!value) {

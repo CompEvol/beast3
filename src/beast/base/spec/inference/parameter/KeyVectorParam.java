@@ -80,4 +80,13 @@ public abstract class KeyVectorParam<T> extends StateNode {
         }
         return Collections.unmodifiableList(keys);
     }
+    
+    /**
+     * swap values of element i1 and i2
+     *
+     * @param i1   index one
+     * @param i2   index two
+     */
+    abstract public void swap(final int i1, final int i2);
+
 }
