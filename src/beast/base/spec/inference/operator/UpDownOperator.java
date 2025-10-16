@@ -9,11 +9,12 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.evolution.tree.TreeInterface;
 import beast.base.core.Input.Validate;
 import beast.base.inference.StateNode;
 import beast.base.inference.operator.kernel.KernelOperator;
-import beast.base.inference.parameter.Parameter;
-import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
 
@@ -51,6 +52,22 @@ public class UpDownOperator extends KernelOperator {
         }
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
+        
+        // check for trees
+        boolean treeFound = false;
+        for (StateNode s : upInput.get()) {
+        	if (s instanceof TreeInterface) {
+        		treeFound = true;
+        	}
+        }
+        for (StateNode s : downInput.get()) {
+        	if (s instanceof TreeInterface) {
+        		treeFound = true;
+        	}
+        }
+        if (treeFound) {
+        	Log.warning("WARNING: tree found in input -- consider using the more efficient IntervalScaleOperator instead");
+        }
     }
     
 	protected double getScaler(int i) {
@@ -92,9 +109,8 @@ public class UpDownOperator extends KernelOperator {
             int index = Randomizer.nextInt(size);
 
             for (StateNode up : upInput.get()) {
-                if (up instanceof RealParameter) {
-                    RealParameter p = (RealParameter) up;
-                    p.setValue(index, p.getValue(index) * scale);
+                if (up instanceof RealVectorParam<?> p) {
+                    p.set(index, p.get(index) * scale);
                 }
                 if (outsideBounds(up)) {
                     return Double.NEGATIVE_INFINITY;
@@ -102,9 +118,8 @@ public class UpDownOperator extends KernelOperator {
             }
 
             for (StateNode down : downInput.get()) {
-                if (down instanceof RealParameter) {
-                    RealParameter p = (RealParameter) down;
-                    p.setValue(index, p.getValue(index) / scale);
+                if (down instanceof RealVectorParam<?> p) {
+                    p.set(index, p.get(index) / scale);
                 }
                 if (outsideBounds(down)) {
                     return Double.NEGATIVE_INFINITY;
@@ -145,13 +160,16 @@ public class UpDownOperator extends KernelOperator {
     }
 
     private boolean outsideBounds(final StateNode node) {
-        if (node instanceof Parameter<?>) {
-            final Parameter<?> p = (Parameter<?>) node;
-            final Double lower = (Double) p.getLower();
-            final Double upper = (Double) p.getUpper();
-            final Double value = (Double) p.getValue();
-            if (value < lower || value > upper) {
-                return true;
+        if (node instanceof RealScalarParam<?> p) {
+            if (!p.withinBounds(p.get())) {
+            	return true;
+            }
+        }
+        if (node instanceof RealVectorParam<?> p) {
+        	for (int i = 0; i < p.size(); i++) {
+        		if (!p.withinBounds(p.get(i))) {
+        			return true;
+        		}
             }
         }
         return false;

@@ -9,6 +9,8 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 
 @Description("Scales tree skewing parts to take tip dates in account")
+//@deprecated use beast.base.spec.evolution.operator.IntervalScaleOperator instead
+@Deprecated
 public class TreeStretchOperator extends EpochFlexOperator {
     final public Input<RealParameter> meanRateInput = new Input<>("meanRate", "mean clock rate -- inversely scaled if specified");
 	// TODO: make up/down version that takes clock rates in account

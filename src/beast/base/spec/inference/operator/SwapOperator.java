@@ -12,7 +12,6 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.KeyVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;

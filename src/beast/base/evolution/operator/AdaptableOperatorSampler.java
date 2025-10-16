@@ -35,6 +35,8 @@ import beast.base.inference.parameter.CompoundRealParameter;
 "After a learning period, AdaptableOperatorSampler should pick the operator which is giving the best results n a particular data set")
 @Citation(value="Douglas J, Zhang R, Bouckaert R. Adaptive dating and fast proposals: Revisiting the phylogenetic relaxed clock model. PLoS computational biology. 2021 Feb 2;17(2):e1008322.", 
 	DOI="10.1371/journal.pcbi.1008322")
+//@deprecated use beast.base.spec.evolution.operator.AdaptableOperatorSampler instead
+@Deprecated
 public class AdaptableOperatorSampler extends Operator {
 	
 	
