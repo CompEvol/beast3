@@ -2,6 +2,7 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, BoundedParam<Double> { //VectorParam<D, Double> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, BoundedParam<Double>, Scalable { //VectorParam<D, Double> {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -330,6 +331,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      */
     @Override
     public int scale(final double scale) {
+    	startEditing(null);
         int nScaled = 0;
 
         for (int i = 0; i < values.length; i++) {
@@ -345,6 +347,12 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
 
         return nScaled;
+    }
+
+    @Override
+    public void scaleOne(int i, double scale) {
+    	startEditing(null);
+    	values[i] *= scale;
     }
 
     /**

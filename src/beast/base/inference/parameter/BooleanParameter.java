@@ -100,16 +100,6 @@ public class BooleanParameter extends Parameter.Base<java.lang.Boolean> {
         }
     }
 
-    /**
-     * StateNode methods *
-     */
-    @Override
-    public int scale(double scale) {
-        // nothing to do
-        Log.warning.println("Attempt to scale Boolean parameter " + getID() + "  has no effect");
-        return 0;
-    }
-
     @Override
     void fromXML(int dimension, String lower, String upper, String[] valueStrings) {
         values = new Boolean[dimension];

@@ -10,6 +10,7 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
@@ -118,7 +119,7 @@ public class BactrianUpDownOperator extends KernelOperator {
             try {
                 for (StateNode up : upInput.get()) {
                     up = up.getCurrentEditable(this);
-                    goingUp += up.scale(scale);
+                    goingUp += ((Scalable)up).scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
@@ -132,7 +133,7 @@ public class BactrianUpDownOperator extends KernelOperator {
 
                 for (StateNode down : downInput.get()) {
                     down = down.getCurrentEditable(this);
-                    goingDown += down.scale(1.0 / scale);
+                    goingDown += ((Scalable)down).scale(1.0 / scale);
                 }
                 for (StateNode down : downInput.get()) {
                     if (outsideBounds(down)) {

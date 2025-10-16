@@ -166,18 +166,6 @@ public abstract class StateNode extends CalculationNode implements Loggable, Clo
 //
 //    boolean isStochastic = true;
 
-    /**
-     * Scale StateNode with amount scale and
-     *
-     * @param scale scaling factor
-     * @return the number of degrees of freedom used in this operation. This number varies
-     *         for the different types of StateNodes. For example, for real
-     *         valued n-dimensional parameters, it is n, for a tree it is the
-     *         number of internal nodes being scaled.
-     * @throws IllegalArgumentException when StateNode become not valid, e.g. has
-     *                   values outside bounds or negative branch lengths.
-     */
-    abstract public int scale(double scale);
 
     /**
      * Pointer to state, null if not part of a State.

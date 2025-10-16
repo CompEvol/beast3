@@ -154,11 +154,6 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         // nothing to do
     }
 
-    @Override
-    public int scale(double scale) {
-//        return 1;
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     protected void store() {

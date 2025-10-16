@@ -177,7 +177,6 @@
                 <provider classname="beast.base.inference.util.RPNcalculator"/>
 
 <!--   in dev   -->
-
                 <provider classname="beast.base.spec.inference.parameter.BoolScalarParam"/>
                 <provider classname="beast.base.spec.inference.parameter.BoolVectorParam"/>
                 <provider classname="beast.base.spec.inference.parameter.InScalarParam"/>
@@ -192,6 +191,8 @@
                 <provider classname="beast.base.spec.inference.operator.SampleOffValues"/>
                 <provider classname="beast.base.spec.inference.operator.SwapOperator"/>
                 <provider classname="beast.base.spec.inference.operator.UpDownOperator"/>
+
+                <provider classname="beast.base.spec.inference.operator.DeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.CompoundRealDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"/>

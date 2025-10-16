@@ -933,12 +933,6 @@ public class Alignment extends StateNode {
 	}
 
 	@Override
-	public int scale(double scale) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	@Override
 	protected void store() {
 	}
 

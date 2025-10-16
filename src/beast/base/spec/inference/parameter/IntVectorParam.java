@@ -322,15 +322,6 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         // nothing to do
     }
 
-    /**
-     * StateNode methods *
-     */
-    @Override
-    public int scale(final double scale) {
-        // nothing to do
-        Log.warning.println("Attempt to scale Integer parameter " + getID() + "  has no effect");
-        return 0;
-    }
 
     /**
      * @return a deep copy of this node in the state.

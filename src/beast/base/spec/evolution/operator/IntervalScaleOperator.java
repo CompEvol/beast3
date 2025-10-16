@@ -11,6 +11,7 @@ import beast.base.core.Input;
 import beast.base.evolution.operator.TreeOperator;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
@@ -37,9 +38,9 @@ public class IntervalScaleOperator extends TreeOperator {
 			"flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)",
 			true);
 
-	public Input<List<StateNode>> downInput = new Input<>("down", "down parameter to scale", new ArrayList<>());
+	public Input<List<Scalable>> downInput = new Input<>("down", "down parameter to scale", new ArrayList<>());
 
-	public Input<List<StateNode>> upInput = new Input<>("up", "up parameter to scale", new ArrayList<>());
+	public Input<List<Scalable>> upInput = new Input<>("up", "up parameter to scale", new ArrayList<>());
 
 	public Input<Boolean> scaleAllNodesIndependentlyInput = new Input<>("scaleAllNodesIndependently",
 			"if true, all nodes are scaled with a different factor, otherwise a single factor is used", false);
@@ -72,11 +73,11 @@ public class IntervalScaleOperator extends TreeOperator {
 			
 			double logHR = Math.log(scaler) * (numbers - 2);
 
-			for (StateNode down : downInput.get()) {
+			for (Scalable down : downInput.get()) {
 				int dim = down.scale(1.0/actualScaler);//setValue(down.getValue() / actualScaler);
 				logHR -= dim * Math.log(actualScaler);
 			}
-			for (StateNode up : upInput.get()) {
+			for (Scalable up : upInput.get()) {
 				int dim = up.scale(actualScaler);//setValue(up.getValue() * actualScaler);
 				logHR += dim * Math.log(actualScaler);
 			}

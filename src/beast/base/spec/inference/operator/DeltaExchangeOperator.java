@@ -24,30 +24,27 @@ import beast.base.util.Randomizer;
 
 @Description("A generic operator for use with a sum-constrained (possibly weighted) parameter.")
 public class DeltaExchangeOperator extends KernelOperator {
-	
-	public class G extends DeltaExchangeOperator {
-		public final Input<List<Tensor<?,?>>> parameterInput = new Input<>("parameter",
+	public final Input<List<Tensor<?,?>>> parameterInput = new Input<>("parameter",
             "one or more parameters to be operated on by exchanging values so the sum remains the same", new ArrayList<>());
-		
-		@Override
-		List<Tensor<?,?>> getParameters() {
-			return parameterInput.get();
-		}
-	}
-
-	public class RV extends DeltaExchangeOperator {
-		public final Input<RealVectorParam<?>> parameterInput = new Input<>("parameter",
+	public final Input<RealVectorParam<?>> rvparameterInput = new Input<>("rvparameter",
             "real vector parameter to be operated on", Validate.REQUIRED);
-		
-		@Override
-		List<Tensor<?,?>> getParameters() {
-			List<Tensor<?,?>> list = new ArrayList<>();
-			list.add(parameterInput.get());
-			return list; 
-		}
-	}
+	public final Input<IntVectorParam<?>> ivparameterInput = new Input<>("ivparameter",
+            "int vector parameter to be operated on", Validate.REQUIRED);
+	public final Input<List<RealScalarParam<?>>> rsparameterInput = new Input<>("rsparameter",
+            "real sclara parameters to be operated on", Validate.REQUIRED);
+	public final Input<List<IntScalarParam<?>>> isparameterInput = new Input<>("isparameter",
+            "int scalar parameters to be operated on", Validate.REQUIRED);
 
-	List<Tensor<?,?>> getParameters() {return null;}
+
+	List<Tensor<?,?>> getParameters() {
+		List<Tensor<?,?>> list = new ArrayList<>();
+		list.addAll(parameterInput.get());
+		list.add(rvparameterInput.get());
+		list.add(ivparameterInput.get());
+		list.addAll(rsparameterInput.get());
+		list.addAll(isparameterInput.get());
+		return list;
+	}
 
 	
     public final Input<Double> deltaInput = new Input<>("delta", "Magnitude of change for two randomly picked values.", 1.0);

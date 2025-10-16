@@ -2,6 +2,7 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
@@ -11,7 +12,7 @@ import org.w3c.dom.Node;
 import java.io.PrintStream;
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, BoundedParam<Double> {
+public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, BoundedParam<Double>, Scalable {
 
     final public Input<Double> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -176,8 +177,15 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     @Override
     public int scale(double scale) {
-//        return 1;
-        throw new UnsupportedOperationException();
+    	startEditing(null);
+    	value *= scale;
+        return 1;
+    }
+
+    @Override
+    public void scaleOne(int i, double scale) {
+    	startEditing(null);
+    	value *= scale;
     }
 
     /**

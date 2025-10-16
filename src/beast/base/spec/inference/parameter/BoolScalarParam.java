@@ -120,12 +120,6 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     }
 
     @Override
-    public int scale(double scale) {
-//        return 1;
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     protected void store() {
         storedValue = value;
     }

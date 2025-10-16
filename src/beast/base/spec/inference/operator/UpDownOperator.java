@@ -11,6 +11,7 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.core.Input.Validate;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -24,9 +25,9 @@ import beast.base.util.Randomizer;
 public class UpDownOperator extends KernelOperator {
     final public Input<Double> scaleFactorInput = new Input<>("scaleFactor",
             "magnitude factor used for scaling", Validate.REQUIRED);
-    final public Input<List<StateNode>> upInput = new Input<>("up",
+    final public Input<List<Scalable>> upInput = new Input<>("up",
             "zero or more items to scale upwards", new ArrayList<>());
-    final public Input<List<StateNode>> downInput = new Input<>("down",
+    final public Input<List<Scalable>> downInput = new Input<>("down",
             "zero or more items to scale downwards", new ArrayList<>());
     final public Input<Boolean> optimiseInput = new Input<>("optimise", "flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)", true);
     final public Input<Boolean> elementWiseInput = new Input<>("elementWise", "flag to indicate that the scaling is applied to a random index in multivariate parameters (default false)", false);
@@ -55,12 +56,12 @@ public class UpDownOperator extends KernelOperator {
         
         // check for trees
         boolean treeFound = false;
-        for (StateNode s : upInput.get()) {
+        for (Scalable s : upInput.get()) {
         	if (s instanceof TreeInterface) {
         		treeFound = true;
         	}
         }
-        for (StateNode s : downInput.get()) {
+        for (Scalable s : downInput.get()) {
         	if (s instanceof TreeInterface) {
         		treeFound = true;
         	}
@@ -90,7 +91,7 @@ public class UpDownOperator extends KernelOperator {
 
         if (elementWiseInput.get()) {
             int size = 0;
-            for (StateNode up : upInput.get()) {
+            for (Scalable up : upInput.get()) {
                 if (size == 0) size = ((Function)up).getDimension();
                 if (size > 0 && ((Function)up).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
@@ -98,7 +99,7 @@ public class UpDownOperator extends KernelOperator {
                 goingUp += 1;
             }
 
-            for (StateNode down : downInput.get()) {
+            for (Scalable down : downInput.get()) {
                 if (size == 0) size = ((Function)down).getDimension();
                 if (size > 0 && ((Function)down).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
@@ -108,7 +109,7 @@ public class UpDownOperator extends KernelOperator {
 
             int index = Randomizer.nextInt(size);
 
-            for (StateNode up : upInput.get()) {
+            for (Scalable up : upInput.get()) {
                 if (up instanceof RealVectorParam<?> p) {
                     p.set(index, p.get(index) * scale);
                 }
@@ -117,7 +118,7 @@ public class UpDownOperator extends KernelOperator {
                 }
             }
 
-            for (StateNode down : downInput.get()) {
+            for (Scalable down : downInput.get()) {
                 if (down instanceof RealVectorParam<?> p) {
                     p.set(index, p.get(index) / scale);
                 }
@@ -128,25 +129,25 @@ public class UpDownOperator extends KernelOperator {
         } else {
 
             try {
-                for (StateNode up : upInput.get()) {
-                    up = up.getCurrentEditable(this);
+                for (Scalable up : upInput.get()) {
+                    up = (Scalable) ((StateNode)up).getCurrentEditable(this);
                     goingUp += up.scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
                 // so not currently a problem, but this became a problem in BEAST1 so this is preemptive strike.
                 // Same below for down
-                for (StateNode up : upInput.get()) {
+                for (Scalable up : upInput.get()) {
                     if (outsideBounds(up)) {
                         return Double.NEGATIVE_INFINITY;
                     }
                 }
 
-                for (StateNode down : downInput.get()) {
-                    down = down.getCurrentEditable(this);
+                for (Scalable down : downInput.get()) {
+                    down = (Scalable) ((StateNode)down).getCurrentEditable(this);
                     goingDown += down.scale(1.0 / scale);
                 }
-                for (StateNode down : downInput.get()) {
+                for (Scalable down : downInput.get()) {
                     if (outsideBounds(down)) {
                         return Double.NEGATIVE_INFINITY;
                     }
@@ -159,7 +160,7 @@ public class UpDownOperator extends KernelOperator {
         return (goingUp - goingDown) * Math.log(scale);
     }
 
-    private boolean outsideBounds(final StateNode node) {
+    private boolean outsideBounds(final Scalable node) {
         if (node instanceof RealScalarParam<?> p) {
             if (!p.withinBounds(p.get())) {
             	return true;

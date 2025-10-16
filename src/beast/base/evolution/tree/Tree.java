@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.math3.geometry.partitioning.NodesSet;
+
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -17,7 +19,7 @@ import beast.pkgmgmt.BEASTClassLoader;
 @Description("Tree (the T in BEAST) representing gene beast.tree, species"
         + " beast.tree, language history, or other time-beast.tree"
         + " relationships among sequence data.")
-public class Tree extends StateNode implements TreeInterface, Function {
+public class Tree extends StateNode implements TreeInterface, Function, Scalable {
     final public Input<Tree> m_initial = new Input<>("initial", "tree to start with");
     final public Input<List<TraitSet>> m_traitList = new Input<>("trait",
             "trait information for initializing traits (like node dates) in the tree",
@@ -644,6 +646,22 @@ public class Tree extends StateNode implements TreeInterface, Function {
     @Override
     public int scale(final double scale) {
         return root.scale(scale);
+    }
+
+    @Override
+    public void scaleOne(int i, final double scale) {
+    	startEditing(null);
+    	double h = m_nodes[i].getHeight();
+    	double newHeight = h * scale;
+    	for (Node child : m_nodes[i].children) {
+    		if (newHeight < child.getHeight()) {
+    			throw new IllegalArgumentException("scale sets nodes below child result in negative branch length");
+    		}
+    	}
+    	if (!m_nodes[i].isRoot() && newHeight > m_nodes[i].getParent().getHeight()) {
+			throw new IllegalArgumentException("scale sets nodes above parent result in negative branch length");
+    	}
+        m_nodes[i].setHeight(newHeight);
     }
 
 

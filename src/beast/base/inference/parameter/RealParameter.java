@@ -3,6 +3,7 @@ package beast.base.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.inference.Scalable;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
@@ -15,7 +16,7 @@ import java.io.PrintStream;
 @Deprecated
 @Description("A real-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
-public class RealParameter extends Parameter.Base<Double> {
+public class RealParameter extends Parameter.Base<Double> implements Scalable {
     final public Input<Double> lowerValueInput = new Input<>("lower", "lower value for this parameter (default -infinity)");
     final public Input<Double> upperValueInput = new Input<>("upper", "upper value for this parameter (default +infinity)");
 
@@ -113,6 +114,11 @@ public class RealParameter extends Parameter.Base<Double> {
         return nScaled;
     }
 
+	@Override
+	public void scaleOne(int i, double scale) {
+        values[i] *= scale;
+	}
+
 
     @Override
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
@@ -123,6 +129,7 @@ public class RealParameter extends Parameter.Base<Double> {
             values[i] = Double.parseDouble(valuesString[i]);
         }
     }
+
 
 }
 

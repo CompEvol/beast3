@@ -96,15 +96,6 @@ public class IntegerParameter extends Parameter.Base<Integer> {
         }
     }
 
-    /**
-     * StateNode methods *
-     */
-    @Override
-    public int scale(double scale) {
-        // nothing to do
-        Log.warning.println("Attempt to scale Integer parameter " + getID() + "  has no effect");
-        return 0;
-    }
 
     @Override
     void fromXML(int dimension, String lower, String upper, String[] valueStrings) {

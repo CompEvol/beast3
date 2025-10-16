@@ -266,16 +266,6 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         // nothing to do
     }
 
-    /**
-     * StateNode methods *
-     */
-    @Override
-    public int scale(final double scale) {
-        // nothing to do
-        Log.warning.println("Attempt to scale Boolean parameter " + getID() + "  has no effect");
-        return 0;
-    }
-
 
     /**
      * @return a deep copy of this node in the state.
