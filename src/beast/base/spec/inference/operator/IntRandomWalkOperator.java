@@ -45,7 +45,7 @@ public class IntRandomWalkOperator extends Operator {
             return Double.NEGATIVE_INFINITY;
         }
 
-        param.setValue(i, newValue);
+        param.set(i, newValue);
 
         return 0.0;
     }

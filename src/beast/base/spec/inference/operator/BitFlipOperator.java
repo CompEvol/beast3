@@ -82,7 +82,7 @@ public class BitFlipOperator extends Operator {
 
         double logq = 0.0;
         if (!value) {
-            p.setValue(pos, true);
+            p.set(pos, true);
 
             if (usesPriorOnSum) {
                 logq = -Math.log((dim - sum) / (sum + 1));
@@ -91,7 +91,7 @@ public class BitFlipOperator extends Operator {
         } else {
             //assert value;
 
-            p.setValue(pos, false);
+            p.set(pos, false);
             if (usesPriorOnSum) {
                 logq = -Math.log(sum / (dim - sum + 1));
             }
