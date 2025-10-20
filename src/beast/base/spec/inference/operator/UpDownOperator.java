@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Scalable;
@@ -16,6 +16,7 @@ import beast.base.inference.StateNode;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
 
@@ -39,6 +40,8 @@ public class UpDownOperator extends KernelOperator {
     private double upper,lower;
 
 
+    private List<TreeInterface> treesUp, treesDown;
+    private List<Scalable> otherUp, otherDown;
 
     @Override
     public void initAndValidate() {
@@ -54,20 +57,33 @@ public class UpDownOperator extends KernelOperator {
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
         
-        // check for trees
-        boolean treeFound = false;
+        // separate out trees from other Scalables
+        treesUp = new ArrayList<>();
+        treesDown = new ArrayList<>();
+        otherUp = new ArrayList<>();
+        otherDown = new ArrayList<>();
         for (Scalable s : upInput.get()) {
-        	if (s instanceof TreeInterface) {
-        		treeFound = true;
+        	if (s instanceof TreeInterface t) {
+        		treesUp.add(t);
+        	} else {
+        		otherUp.add(s);
         	}
         }
         for (Scalable s : downInput.get()) {
-        	if (s instanceof TreeInterface) {
-        		treeFound = true;
+        	if (s instanceof TreeInterface t) {
+        		treesDown.add(t);
+        	} else {
+        		otherDown.add(s);
         	}
         }
-        if (treeFound) {
-        	Log.warning("WARNING: tree found in input -- consider using the more efficient IntervalScaleOperator instead");
+        
+        if (treesUp.size() + treesDown.size() > 0) {
+        	if(elementWiseInput.get()) {
+        		throw new IllegalArgumentException("Cannot do element wise scaling of trees");
+        	}
+        	if (treesUp.size() > 0 && treesDown.size() > 0) {
+            	Log.warning("WARNING: trees found in up and down input -- usually");
+        	}
         }
     }
     
@@ -85,23 +101,24 @@ public class UpDownOperator extends KernelOperator {
     @Override
     public final double proposal() {
 
-        final double scale = getScaler(0);
+        double scale = getScaler(0);
         int goingUp = 0, goingDown = 0;
 
+        double logHR = 0;        
 
         if (elementWiseInput.get()) {
             int size = 0;
             for (Scalable up : upInput.get()) {
-                if (size == 0) size = ((Function)up).getDimension();
-                if (size > 0 && ((Function)up).getDimension() != size) {
+                if (size == 0) size = ((Tensor<?,?>)up).size();
+                if (size > 0 && ((Tensor<?,?>)up).size() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
                 goingUp += 1;
             }
 
             for (Scalable down : downInput.get()) {
-                if (size == 0) size = ((Function)down).getDimension();
-                if (size > 0 && ((Function)down).getDimension() != size) {
+                if (size == 0) size = ((Tensor<?,?>)down).size();
+                if (size > 0 && ((Tensor<?,?>)down).size() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
                 goingDown += 1;
@@ -126,28 +143,53 @@ public class UpDownOperator extends KernelOperator {
                     return Double.NEGATIVE_INFINITY;
                 }
             }
+            logHR = (goingUp - goingDown) * Math.log(scale);
         } else {
 
             try {
-                for (Scalable up : upInput.get()) {
-                    up = (Scalable) ((StateNode)up).getCurrentEditable(this);
-                    goingUp += up.scale(scale);
+            	if (treesUp.size() > 0) {
+            		
+            		// scale trees up and adjust scale factor
+	            	double lengthBefore =0, lenghtAfter = 0;
+	                for (TreeInterface up : treesUp) {
+	                	lengthBefore += treeLength(up);
+	                	logHR += scaleTree(up, scale);
+	                	lenghtAfter += treeLength(up);
+	                }
+	                scale = lenghtAfter / lengthBefore;
+	                
+            	} else if (treesDown.size() > 0) {
+            		
+            		// scale trees down and adjust scale factor
+	            	double lengthBefore =0, lenghtAfter = 0;
+	                for (TreeInterface down : treesDown) {
+	                	lengthBefore += treeLength(down);
+	                	logHR += scaleTree(down, 1.0 / scale);
+	                	lenghtAfter += treeLength(down);
+	                }
+	                scale = 1.0/(lenghtAfter / lengthBefore);
+	                
+            	}
+                
+                for (Scalable up : otherUp) {
+                	up = (Scalable) ((StateNode) up).getCurrentEditable(this);
+                	goingUp += up.scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
                 // so not currently a problem, but this became a problem in BEAST1 so this is preemptive strike.
                 // Same below for down
-                for (Scalable up : upInput.get()) {
+                for (Scalable up : otherUp) {
                     if (outsideBounds(up)) {
                         return Double.NEGATIVE_INFINITY;
                     }
                 }
 
-                for (Scalable down : downInput.get()) {
-                    down = (Scalable) ((StateNode)down).getCurrentEditable(this);
-                    goingDown += down.scale(1.0 / scale);
+                for (Scalable down : otherDown) {
+            		down = (Scalable) ((StateNode) down).getCurrentEditable(this);
+            		goingDown += down.scale(1.0 / scale);
                 }
-                for (Scalable down : downInput.get()) {
+                for (Scalable down : otherDown) {
                     if (outsideBounds(down)) {
                         return Double.NEGATIVE_INFINITY;
                     }
@@ -156,10 +198,51 @@ public class UpDownOperator extends KernelOperator {
                 // scale resulted in invalid StateNode, abort proposal
                 return Double.NEGATIVE_INFINITY;
             }
+            logHR += (goingUp - goingDown) * Math.log(scale);
         }
-        return (goingUp - goingDown) * Math.log(scale);
+        return logHR;
     }
+    
+	private double treeLength(TreeInterface tree) {
+		double length = 0;
+		for (Node node : tree.getNodesAsArray()) {
+			length += node.getLength();
+		}
+		return length;
+	}
 
+
+	private double scaleTree(TreeInterface tree, double scale) {
+		int dim = resampleNodeHeight(tree.getRoot(), scale);
+		return dim * Math.log(scale);
+	}
+
+	private int resampleNodeHeight(Node node, double scaler) {
+		if (node.isLeaf()) {
+			return 0;
+		}
+		
+		if (node.isFake()) {
+			if (node.getLeft().isDirectAncestor()) {
+				return resampleNodeHeight(node.getRight(), scaler);
+			} else {
+				return resampleNodeHeight(node.getLeft(), scaler);
+			}
+		}
+		
+		double oldHeights = node.getHeight() - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
+		int scaledNodeCount = 1;
+		scaledNodeCount += resampleNodeHeight(node.getLeft(), scaler);
+		scaledNodeCount += resampleNodeHeight(node.getRight(), scaler);
+
+		// resample the height
+		double minHeight = Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
+		double newHeight = oldHeights * scaler;
+		node.setHeight(newHeight + minHeight);
+		
+		return scaledNodeCount;
+	}
+	
     private boolean outsideBounds(final Scalable node) {
         if (node instanceof RealScalarParam<?> p) {
             if (!p.withinBounds(p.get())) {

@@ -12,9 +12,8 @@ import beast.base.evolution.operator.TreeOperator;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.Scalable;
-import beast.base.inference.StateNode;
+import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.inference.util.InputUtil;
-import beast.base.util.Randomizer;
 
 
 /**
@@ -28,6 +27,11 @@ import beast.base.util.Randomizer;
  */
 @Description("Performs a scale move on the intervals between nodes.")
 public class IntervalScaleOperator extends TreeOperator {
+    public final Input<KernelDistribution> kernelDistributionInput = new Input<>("kernelDistribution", "provides sample distribution for proposals", 
+    		KernelDistribution.newDefaultKernelDistribution());
+
+    protected KernelDistribution kernelDistribution;
+
 
     final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0 - 1e-8);
     final public Input<Double> scaleLowerLimit = new Input<>("lower", "Lower limit of scale factor", 1e-8);
@@ -41,9 +45,6 @@ public class IntervalScaleOperator extends TreeOperator {
 	public Input<List<Scalable>> downInput = new Input<>("down", "down parameter to scale", new ArrayList<>());
 
 	public Input<List<Scalable>> upInput = new Input<>("up", "up parameter to scale", new ArrayList<>());
-
-	public Input<Boolean> scaleAllNodesIndependentlyInput = new Input<>("scaleAllNodesIndependently",
-			"if true, all nodes are scaled with a different factor, otherwise a single factor is used", false);
 	
     private double scaleFactor;
 
@@ -54,110 +55,94 @@ public class IntervalScaleOperator extends TreeOperator {
         scaleFactor = scaleFactorInput.get();
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
+
+        kernelDistribution = kernelDistributionInput.get();
 	}
 
 	@Override
 	public double proposal() {
 		
 		final Tree tree = (Tree) InputUtil.get(treeInput, this);
-		if (scaleAllNodesIndependentlyInput.get()) {
-			double logHR = resampleNodeHeight(tree.getRoot());			
-			return logHR;
-		}else {
 
-			double scaler = getScaler();
-			double lengthBefore = getTreeLength(tree.getRoot());
-			int numbers = resampleNodeHeight(tree.getRoot(), scaler);
-			double lengthAfter = getTreeLength(tree.getRoot());
-			double actualScaler = lengthAfter / lengthBefore;
-			
-			double logHR = Math.log(scaler) * (numbers - 2);
+		double scaler = getScaler();
+		double lengthBefore = getTreeLength(tree);
+		int numbers = resampleNodeHeight(tree.getRoot(), scaler);
+		double lengthAfter = getTreeLength(tree);
+		double actualScaler = lengthAfter / lengthBefore;
+		
+		double logHR = Math.log(scaler) * (numbers);
 
-			for (Scalable down : downInput.get()) {
-				int dim = down.scale(1.0/actualScaler);//setValue(down.getValue() / actualScaler);
-				logHR -= dim * Math.log(actualScaler);
-			}
-			for (Scalable up : upInput.get()) {
-				int dim = up.scale(actualScaler);//setValue(up.getValue() * actualScaler);
-				logHR += dim * Math.log(actualScaler);
-			}
-			return logHR;
+		for (Scalable down : downInput.get()) {
+			int dim = down.scale(1.0/actualScaler);//setValue(down.getValue() / actualScaler);
+			logHR -= dim * Math.log(actualScaler);
 		}
+		for (Scalable up : upInput.get()) {
+			int dim = up.scale(actualScaler);//setValue(up.getValue() * actualScaler);
+			logHR += dim * Math.log(actualScaler);
+		}
+		return logHR;
 	}
 
 	private int resampleNodeHeight(Node node, double scaler) {
 		if (node.isLeaf()) {
 			return 0;
 		}
+		
+		// deal with sampled ancestors
+		if (node.isFake()) {
+			if (node.getLeft().isDirectAncestor()) {
+				return resampleNodeHeight(node.getRight(), scaler);
+			} else {
+				// node.getRight() must be direct ancestor
+				return resampleNodeHeight(node.getLeft(), scaler);
+			}
+		}
+		
 		double oldHeights = node.getHeight() - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		int logHR = 1;
-		logHR += resampleNodeHeight(node.getLeft(), scaler);
-		logHR += resampleNodeHeight(node.getRight(), scaler);
+		int scaledNodeCount = 1;
+		scaledNodeCount += resampleNodeHeight(node.getLeft(), scaler);
+		scaledNodeCount += resampleNodeHeight(node.getRight(), scaler);
 
 		// resample the height
 		double minHeight = Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
 		double newHeight = oldHeights * scaler;
 		node.setHeight(newHeight + minHeight);
-		return logHR;
+		
+		return scaledNodeCount;
 	}
 	
-	private double resampleNodeHeight(Node node) {
-		if (node.isLeaf()) {
-			return 0.0;
-		}
-		double oldHeights = node.getHeight() - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		double logHR = 0.0;
-		logHR += resampleNodeHeight(node.getLeft());
-		logHR += resampleNodeHeight(node.getRight());
-			
-
-		// resample the height
-		double scaler = getScalerExp();
-		double minHeight = Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		double newHeight = oldHeights * scaler;
-		node.setHeight(newHeight + minHeight);
-		logHR += Math.log(scaler);
-		return logHR;
-	}
-
-	private double getTreeLength(Node node) {
+	private double getTreeLength(Tree tree) {
 		double length = 0;
-		if (!node.isRoot()) {
-			length = node.getLength();
+		for (Node node : tree.getNodesAsArray()) {
+			length += node.getLength();
 		}
-		if (!node.isLeaf()) {
-			length += getTreeLength(node.getLeft());
-			length += getTreeLength(node.getRight());
-		}
-
 		return length;
 	}
 	
-	
-	protected double getScalerExp(double mutl_factor) {
-		return Math.exp(Randomizer.nextGaussian()*(1-scaleFactor)*mutl_factor);
-	}
-
-	
-	protected double getScalerExp() {
-		return Math.exp(Randomizer.nextGaussian()*(1-scaleFactor));
-	}
-
-    protected double getScaler() {
-        return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
+	private double getScaler() {
+    	return kernelDistribution.getScaler(0, getCoercableParameterValue());
     }
 
     /**
      * automatic parameter tuning *
      */
     @Override
-    public void optimize(final double logAlpha) {
-        if (optimiseInput.get()) {
-            double delta = calcDelta(logAlpha);
-            delta += Math.log(1.0 / scaleFactor - 1.0);
-            setCoercableParameterValue(1.0 / (Math.exp(delta) + 1.0));
-        }
+    public void optimize(double logAlpha) {
+        // must be overridden by operator implementation to have an effect
+    	if (optimiseInput.get()) {
+	        double delta = calcDelta(logAlpha);
+	        double scaleFactor = getCoercableParameterValue();
+	        delta += Math.log(scaleFactor);
+	        scaleFactor = Math.exp(delta);
+	        setCoercableParameterValue(scaleFactor);
+    	}
     }
+    
+    @Override
+    public double getTargetAcceptanceProbability() {
+    	return 0.3;
+    }
+    
 
     @Override
     public double getCoercableParameterValue() {
@@ -169,23 +154,23 @@ public class IntervalScaleOperator extends TreeOperator {
         scaleFactor = Math.max(Math.min(value, upper), lower);
     }
 
+
     @Override
     public String getPerformanceSuggestion() {
-        final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
-        final double targetProb = getTargetAcceptanceProbability();
+        double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
+        double targetProb = getTargetAcceptanceProbability();
 
         double ratio = prob / targetProb;
         if (ratio > 2.0) ratio = 2.0;
         if (ratio < 0.5) ratio = 0.5;
 
         // new scale factor
-        final double sf = Math.pow(scaleFactor, ratio);
+        double newWindowSize = getCoercableParameterValue() * ratio;
 
-        final DecimalFormat formatter = new DecimalFormat("#.###");
-        if (prob < 0.10) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
-        } else if (prob > 0.40) {
-            return "Try setting scaleFactor to about " + formatter.format(sf);
+        DecimalFormat formatter = new DecimalFormat("#.###");
+        if (prob < 0.10 || prob > 0.40) {
+            return "Try setting scale factor to about " + formatter.format(newWindowSize);
         } else return "";
     }
+
 }
