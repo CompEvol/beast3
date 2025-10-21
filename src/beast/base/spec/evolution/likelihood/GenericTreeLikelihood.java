@@ -1,4 +1,4 @@
-package beast.base.evolution.likelihood;
+package beast.base.spec.evolution.likelihood;
 
 
 import java.util.List;
@@ -8,7 +8,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.Distribution;
@@ -25,10 +25,6 @@ import beast.base.inference.State;
 //
 // TODO: This could contain a generic traverse() method that takes dirty trees in account.
 //
-/**
- * @deprecated use beast.base.spec.evolution.likelihood.GenericTreeLikelihood instead
- */
-@Deprecated
 public class GenericTreeLikelihood extends Distribution {
     
     final public Input<Alignment> dataInput = new Input<>("data", "sequence data for the beast.tree", Validate.REQUIRED);
@@ -37,7 +33,7 @@ public class GenericTreeLikelihood extends Distribution {
 
     final public Input<SiteModelInterface> siteModelInput = new Input<>("siteModel", "site model for leafs in the beast.tree", Validate.REQUIRED);
     
-    final public Input<BranchRateModel.Base> branchRateModelInput = new Input<>("branchRateModel",
+    final public Input<Base> branchRateModelInput = new Input<>("branchRateModel",
             "A model describing the rates on the branches of the beast.tree.");
 
     

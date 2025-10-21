@@ -213,6 +213,11 @@
                 <provider classname="beast.base.spec.evolution.tree.coalescent.RandomTree"/>
                 <provider classname="beast.base.spec.evolution.tree.coalescent.ScaledPopulationFunction"/>
 
+                <provider classname="beast.base.spec.evolution.likelihood.BeagleTreeLikelihood"/>
+                <provider classname="beast.base.spec.evolution.likelihood.GenericTreeLikelihood"/>
+                <provider classname="beast.base.spec.evolution.likelihood.ThreadedTreeLikelihood"/>
+                <provider classname="beast.base.spec.evolution.likelihood.TreeLikelihood"/>
+
                 <provider classname="beast.base.spec.evolution.speciation.BirthDeathGernhard08Model"/>
                 <provider classname="beast.base.spec.evolution.speciation.CalibratedBirthDeathModel"/>
                 <provider classname="beast.base.spec.evolution.speciation.CalibratedYuleInitialTree"/>

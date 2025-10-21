@@ -24,7 +24,7 @@
 */
 
 
-package beast.base.evolution.likelihood;
+package beast.base.spec.evolution.likelihood;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -33,24 +33,22 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.evolution.branchratemodel.StrictClockModel;
-import beast.base.evolution.sitemodel.SiteModel;
-import beast.base.evolution.substitutionmodel.Frequencies;
+import beast.base.evolution.likelihood.BeerLikelihoodCore;
+import beast.base.evolution.likelihood.BeerLikelihoodCore4;
+import beast.base.evolution.likelihood.LikelihoodCore;
+import beast.base.spec.evolution.sitemodel.SiteModel;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.State;
+import beast.base.spec.evolution.branchratemodel.Base;
 import beast.pkgmgmt.BEASTClassLoader;
 
 @Description("Calculates the probability of sequence data on a beast.tree given a site and substitution model using " +
         "a variant of the 'peeling algorithm'. For details, see" +
         "Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
-/**
- * @deprecated use beast.base.spec.evolution.likelihood.TreeLikelihood instead
- */
-@Deprecated
 public class TreeLikelihood extends GenericTreeLikelihood {
 
     final public Input<Boolean> m_useAmbiguities = new Input<>("useAmbiguities", "flag to indicate that sites containing ambiguous states should be handled instead of ignored (the default)", false);
@@ -78,7 +76,7 @@ public class TreeLikelihood extends GenericTreeLikelihood {
      */
     protected SubstitutionModel substitutionModel;
     protected SiteModel.Base m_siteModel;
-    protected BranchRateModel.Base branchRateModel;
+    protected Base branchRateModel;
 
     public SubstitutionModel getSubstitutionModel() {return substitutionModel;}
     /**
@@ -202,7 +200,7 @@ public class TreeLikelihood extends GenericTreeLikelihood {
         if (branchRateModelInput.get() != null) {
             branchRateModel = branchRateModelInput.get();
         } else {
-            branchRateModel = new StrictClockModel();
+            branchRateModel = new beast.base.spec.evolution.branchratemodel.StrictClockModel();
         }
         m_branchLengths = new double[nodeCount];
         storedBranchLengths = new double[nodeCount];

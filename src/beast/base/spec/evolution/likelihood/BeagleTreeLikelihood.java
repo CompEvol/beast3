@@ -23,7 +23,7 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution.likelihood;
+package beast.base.spec.evolution.likelihood;
 
 
 import java.util.ArrayList;
@@ -41,8 +41,8 @@ import beagle.ResourceDetails;
 import beast.base.core.Description;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.branchratemodel.StrictClockModel;
-import beast.base.evolution.sitemodel.SiteModel;
+import beast.base.spec.evolution.branchratemodel.StrictClockModel;
+import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
@@ -59,10 +59,6 @@ import beast.base.inference.CalculationNode;
  */
 
 @Description("Uses Beagle library to calculate Tree likelihood")
-/**
- * @deprecated use beast.base.spec.evolution.likelihood.BeagleTreeLikelihood instead
- */
-@Deprecated
 public class BeagleTreeLikelihood extends TreeLikelihood {
 
     // This property is a comma-delimited list of resource numbers (0 == CPU) to

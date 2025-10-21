@@ -25,7 +25,7 @@
 
 
 
-package beast.base.evolution.likelihood;
+package beast.base.spec.evolution.likelihood;
 
 
 
@@ -48,8 +48,8 @@ import beast.base.core.Log;
 import beast.base.core.ProgramStatus;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.FilteredAlignment;
-import beast.base.evolution.sitemodel.SiteModel;
-import beast.base.evolution.substitutionmodel.Frequencies;
+import beast.base.spec.evolution.sitemodel.SiteModel;
+import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.inference.State;
 
@@ -57,10 +57,6 @@ import beast.base.inference.State;
 @Description("Calculates the likelihood of sequence data on a beast.tree given a site and substitution model using " +
 		"a variant of the 'peeling algorithm'. For details, see" +
 		"Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
-/**
- * @deprecated use beast.base.spec.evolution.likelihood.ThreadedTreeLikelihood instead
- */
-@Deprecated
 public class ThreadedTreeLikelihood extends GenericTreeLikelihood {
     final public Input<Boolean> useAmbiguitiesInput = new Input<>("useAmbiguities", "flag to indicate leafs that sites containing ambiguous states should be handled instead of ignored (the default)", false);
     
