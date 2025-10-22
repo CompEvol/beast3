@@ -8,24 +8,19 @@ import java.util.List;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
-import beast.base.inference.parameter.Parameter;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.spec.evolution.branchratemodel.Base;
-import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
 
 @Description("Logs tree annotated with metadata and/or rates")
 public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
     final public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);
-    // TODO: make this input a list of valuables
     final public Input<List<Tensor<?, ?>>> parameterInput = new Input<>("metadata", "meta data to be logged with the tree nodes",new ArrayList<>());
     final public Input<Base> clockModelInput = new Input<>("branchratemodel", "rate to be logged with branches of the tree");
     final public Input<Boolean> substitutionsInput = new Input<>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
@@ -75,14 +70,15 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
         // make sure we get the current version of the inputs
         Tree tree = (Tree) treeInput.get().getCurrent();
         List<Tensor<?,?>> metadata = parameterInput.get();
-//        for (int i = 0; i < metadata.size(); i++) {
-//        	if (metadata.get(i) instanceof StateNode) {
-//        		Object o = ((StateNode) metadata.get(i)).getCurrent();
-//        		if (o instanceof Function) {
-//        			metadata.set(i, (Function) o);
-//        		}
-//        	}
-//        }
+        List<Tensor<?,?>> currentmetadata = new ArrayList<>();
+
+        for (int i = 0; i < metadata.size(); i++) {
+        	if (metadata.get(i) instanceof StateNode sn) {
+        		currentmetadata.add((Tensor<?,?>) sn.getCurrent());
+        	} else {
+        		currentmetadata.add(metadata.get(i));
+        	}
+        }
         Base branchRateModel = clockModelInput.get();
         // write out the log tree with meta data
         out.print("tree STATE_" + sample + " = ");
@@ -91,8 +87,7 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
             tree.getRoot().sort();
         }
 
-        out.print(toNewick(tree.getRoot(), metadata, branchRateModel));
-        //out.print(tree.getRoot().toShortNewick(false));
+        out.print(toNewick(tree.getRoot(), currentmetadata, branchRateModel));
         out.print(";");
     }
 
@@ -132,6 +127,7 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
 				boolean needsComma = false;
 				for (Tensor<?,?> metadata : metadataList) {
 					if (metadata instanceof Vector) {
+						// TODO: deal with matrices
 //						Vector p = (Vector) metadata;
 //						int dim = p.size();
 //						if (p.getMinorDimension2() > node.getNr()) {

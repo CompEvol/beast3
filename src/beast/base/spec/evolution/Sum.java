@@ -11,7 +11,6 @@ import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
-import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
@@ -145,7 +144,7 @@ public class Sum extends CalculationNode implements RealScalar<Real>, Loggable {
 	        }
         }
         if (mode == Mode.integer_mode) {
-            out.print((int) sum + "\t");
+            out.print((int) (sum + 0.5) + "\t");
         } else {
             out.print(sum + "\t");
         }
