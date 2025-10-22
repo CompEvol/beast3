@@ -1,4 +1,4 @@
-package beast.base.evolution;
+package beast.base.spec.evolution;
 
 import java.io.PrintStream;
 import java.math.RoundingMode;
@@ -12,23 +12,22 @@ import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.branchratemodel.BranchRateModel;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.evolution.branchratemodel.Base;
+import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Tensor;
+import beast.base.spec.type.Vector;
 
 @Description("Logs tree annotated with metadata and/or rates")
-/**
- * @deprecated use beast.base.spec.evolution.TreeWithMetaDataLogger instead
- */
-@Deprecated
 public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
     final public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);
     // TODO: make this input a list of valuables
-    final public Input<List<Function>> parameterInput = new Input<>("metadata", "meta data to be logged with the tree nodes",new ArrayList<>());
-    final public Input<BranchRateModel.Base> clockModelInput = new Input<>("branchratemodel", "rate to be logged with branches of the tree");
+    final public Input<List<Tensor<?, ?>>> parameterInput = new Input<>("metadata", "meta data to be logged with the tree nodes",new ArrayList<>());
+    final public Input<Base> clockModelInput = new Input<>("branchratemodel", "rate to be logged with branches of the tree");
     final public Input<Boolean> substitutionsInput = new Input<>("substitutions", "report branch lengths as substitutions (branch length times clock rate for the branch)", false);
     final public Input<Integer> decimalPlacesInput = new Input<>("dp", "the number of decimal places to use writing branch lengths, rates and real-valued metadata, use -1 for full precision (default = full precision)", -1);
     final public Input<Boolean> sortTreeInput = new Input<>("sort", "whether to sort the tree before logging.", true);
@@ -75,16 +74,16 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
     public void log(long sample, PrintStream out) {
         // make sure we get the current version of the inputs
         Tree tree = (Tree) treeInput.get().getCurrent();
-        List<Function> metadata = parameterInput.get();
-        for (int i = 0; i < metadata.size(); i++) {
-        	if (metadata.get(i) instanceof StateNode) {
-        		Object o = ((StateNode) metadata.get(i)).getCurrent();
-        		if (o instanceof Function) {
-        			metadata.set(i, (Function) o);
-        		}
-        	}
-        }
-        BranchRateModel.Base branchRateModel = clockModelInput.get();
+        List<Tensor<?,?>> metadata = parameterInput.get();
+//        for (int i = 0; i < metadata.size(); i++) {
+//        	if (metadata.get(i) instanceof StateNode) {
+//        		Object o = ((StateNode) metadata.get(i)).getCurrent();
+//        		if (o instanceof Function) {
+//        			metadata.set(i, (Function) o);
+//        		}
+//        	}
+//        }
+        Base branchRateModel = clockModelInput.get();
         // write out the log tree with meta data
         out.print("tree STATE_" + sample + " = ");
 
@@ -113,7 +112,7 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
         }
     }
 
-    String toNewick(Node node, List<Function> metadataList, BranchRateModel.Base branchRateModel) {
+    String toNewick(Node node, List<Tensor<?,?>> metadataList, Base branchRateModel) {
         StringBuffer buf = new StringBuffer();
         if (node.getLeft() != null) {
             buf.append("(");
@@ -131,50 +130,49 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
 			buf2.append("[&");
 			if (metadataList.size() > 0) {
 				boolean needsComma = false;
-				for (Function metadata : metadataList) {
-					if (metadata instanceof Parameter<?>) {
-						Parameter<?> p = (Parameter<?>) metadata;
-						int dim = p.getMinorDimension1();
-						if (p.getMinorDimension2() > node.getNr()) {
-							if (needsComma) {
-								buf2.append(",");
-							}
-							buf2.append(((BEASTObject) metadata).getID());
-							buf2.append('=');
-							if (dim > 1) {
-								buf2.append('{');
-								for (int i = 0; i < dim; i++) {
-									if (metadata instanceof RealParameter) {
-										RealParameter rp = (RealParameter) metadata;
-										appendDouble(buf2, rp.getMatrixValue(node.getNr(), i));
-									} else {
-										buf2.append(p.getMatrixValue(node.getNr(), i));
-									}
-									if (i < dim - 1) {
-										buf2.append(',');
-									}
-								}
-								buf2.append('}');
-							} else {
-								if (metadata instanceof RealParameter) {
-									RealParameter rp = (RealParameter) metadata;
-									appendDouble(buf2, rp.getArrayValue(node.getNr()));
-								} else {
-									buf2.append(metadata.getArrayValue(node.getNr()));
-								}
-							}
+				for (Tensor<?,?> metadata : metadataList) {
+					if (metadata instanceof Vector) {
+//						Vector p = (Vector) metadata;
+//						int dim = p.size();
+//						if (p.getMinorDimension2() > node.getNr()) {
+//							if (needsComma) {
+//								buf2.append(",");
+//							}
+//							buf2.append(((BEASTObject) metadata).getID());
+//							buf2.append('=');
+//							if (dim > 1) {
+//								buf2.append('{');
+//								for (int i = 0; i < dim; i++) {
+//									if (metadata instanceof RealParameter) {
+//										RealParameter rp = (RealParameter) metadata;
+//										appendDouble(buf2, rp.getMatrixValue(node.getNr(), i));
+//									} else {
+//										buf2.append(p.getMatrixValue(node.getNr(), i));
+//									}
+//									if (i < dim - 1) {
+//										buf2.append(',');
+//									}
+//								}
+//								buf2.append('}');
+//							} else {
+//								if (metadata instanceof RealVector rp) {
+//									appendDouble(buf2, rp.get(node.getNr()));
+//								} else {
+									buf2.append(metadata.get(node.getNr()));
+//								}
+//							}
 							needsComma = true;
-						} else {
-						
-						}
+//						} else {
+//						
+//						}
 					} else {
-						if (metadata.getDimension() > node.getNr()) {
+						if (metadata.size() > node.getNr()) {
 							if (needsComma) {
 								buf2.append(",");
 							}
 							buf2.append(((BEASTObject) metadata).getID());
 							buf2.append('=');
-							buf2.append(metadata.getArrayValue(node.getNr()));
+							buf2.append(metadata.get(node.getNr()));
 							needsComma = true;
 						}
 					}

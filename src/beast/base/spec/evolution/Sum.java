@@ -1,4 +1,4 @@
-package beast.base.evolution;
+package beast.base.spec.evolution;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -6,23 +6,21 @@ import java.util.List;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
-import beast.base.inference.parameter.BooleanParameter;
-import beast.base.inference.parameter.IntegerParameter;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Real;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Tensor;
 
 
 @Description("calculates sum of a valuable")
-/**
- * @deprecated use beast.base.spec.evolution.Sum instead
- */
-@Deprecated
-public class Sum extends CalculationNode implements Function, Loggable {
-    final public Input<List<Function>> functionInput = new Input<>("arg", "argument to be summed", new ArrayList<>(), Validate.REQUIRED);
+public class Sum extends CalculationNode implements RealScalar<Real>, Loggable {
+    final public Input<List<Tensor<?,?>>> functionInput = new Input<>("arg", "argument to be summed", new ArrayList<>(), Validate.REQUIRED);
 
     final public Input<Tree> treeInput = new Input<>("tree", "the tree corresponding to the function to be summed, indexing by node numbers assumed.", Validate.OPTIONAL);
 
@@ -41,10 +39,10 @@ public class Sum extends CalculationNode implements Function, Loggable {
 
     @Override
     public void initAndValidate() {
-        List<Function> valuable = functionInput.get();
+        List<Tensor<?,?>> valuable = functionInput.get();
         mode = Mode.integer_mode;
-        for (Function v : valuable) {
-	        if (!(v instanceof IntegerParameter || v instanceof BooleanParameter)) {
+        for (Tensor<?,?> v : valuable) {
+	        if (v instanceof RealScalar<?> || v instanceof RealVector<?>) {
 	            mode = Mode.double_mode;
 	        }
         }
@@ -53,12 +51,12 @@ public class Sum extends CalculationNode implements Function, Loggable {
     }
 
     @Override
-    public int getDimension() {
+    public int size() {
         return 1;
     }
 
     @Override
-    public double getArrayValue() {
+    public double get() {
         if (needsRecompute) {
             compute();
         }
@@ -71,30 +69,35 @@ public class Sum extends CalculationNode implements Function, Loggable {
     void compute() {
         sum = 0;
         if (tree != null && ignoreZeroBranchLengths) {
-            for (Function v : functionInput.get()) {
-                for (int i = 0; i < v.getDimension(); i++) {
+            for (Tensor<?,?> v : functionInput.get()) {
+                for (int i = 0; i < v.size(); i++) {
                     if (!tree.getNode(i).isDirectAncestor()) {
-                        sum += v.getArrayValue(i);
+                    	Object o = v.get(i);
+                    	if (o instanceof Double x) {
+                    		sum += x;
+                    	} else if (o instanceof Integer x) {
+                    		sum += x;
+                    	} else if (o instanceof Boolean x) {
+                    		sum += x ? 1 : 0;
+                    	}
                     }
                 }
             }
         } else {
-
-            for (Function v : functionInput.get()) {
-                for (int i = 0; i < v.getDimension(); i++) {
-                    sum += v.getArrayValue(i);
+            for (Tensor<?,?> v : functionInput.get()) {
+                for (int i = 0; i < v.size(); i++) {
+                	Object o = v.get(i);
+                	if (o instanceof Double x) {
+                		sum += x;
+                	} else if (o instanceof Integer x) {
+                		sum += x;
+                	} else if (o instanceof Boolean x) {
+                		sum += x ? 1 : 0;
+                	}
                 }
             }
         }
         needsRecompute = false;
-    }
-
-    @Override
-    public double getArrayValue(int dim) {
-        if (dim == 0) {
-            return getArrayValue();
-        }
-        return Double.NaN;
     }
 
     /**
@@ -129,9 +132,16 @@ public class Sum extends CalculationNode implements Function, Loggable {
     @Override
     public void log(long sampleNr, PrintStream out) {
         double sum = 0;
-        for (Function v : functionInput.get()) {
-	        for (int i = 0; i < v.getDimension(); i++) {
-	            sum += v.getArrayValue(i);
+        for (Tensor<?,?> v : functionInput.get()) {
+	        for (int i = 0; i < v.size(); i++) {
+            	Object o = v.get(i);
+            	if (o instanceof Double x) {
+            		sum += x;
+            	} else if (o instanceof Integer x) {
+            		sum += x;
+            	} else if (o instanceof Boolean x) {
+            		sum += x ? 1 : 0;
+            	}
 	        }
         }
         if (mode == Mode.integer_mode) {
@@ -145,5 +155,10 @@ public class Sum extends CalculationNode implements Function, Loggable {
     public void close(PrintStream out) {
         // nothing to do
     }
+
+	@Override
+	public Real getDomain() {
+		return Real.INSTANCE;
+	}
 
 } // class Sum
