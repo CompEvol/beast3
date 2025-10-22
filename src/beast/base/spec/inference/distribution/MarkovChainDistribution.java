@@ -1,4 +1,4 @@
-package beast.base.inference.distribution;
+package beast.base.spec.inference.distribution;
 
 
 import java.util.List;
@@ -9,12 +9,15 @@ import org.apache.commons.math.distribution.GammaDistributionImpl;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.inference.*;
+import beast.base.inference.distribution.LogNormalDistributionModel;
 import beast.base.inference.distribution.LogNormalDistributionModel.LogNormalImpl;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 
 
 
@@ -26,10 +29,6 @@ import beast.base.inference.distribution.LogNormalDistributionModel.LogNormalImp
 		"If useLogNormal is set, a log normal distribution is used instead of a Gamma. " +
         "If a Jeffrey's prior is used, the first value is assumed to be distributed as 1/x, otherwise it is assumed to be uniform. " +
         "Handy for population parameters. ")
-/**
- * @deprecated use beast.base.spec.inference.distribution.MarkovChainDistribution instead
- */
-@Deprecated
 public class MarkovChainDistribution extends Distribution {
 
     final public Input<Boolean> isJeffreysInput = new Input<>("jeffreys", "use Jeffrey's prior (default false)", false);
@@ -37,17 +36,17 @@ public class MarkovChainDistribution extends Distribution {
     final public Input<Boolean> useLogInput = new Input<>("uselog", "use logarithm of parameter values (default false)", false);
     final public Input<Double> shapeInput = new Input<>("shape", "shape parameter of the Gamma distribution (default 1.0 = exponential distribution) " +
     		" or precision parameter if the log normal is used.", 1.0);
-    final public Input<Function> parameterInput = new Input<>("parameter", "chain parameter to calculate distribution over", Validate.REQUIRED);
+    final public Input<RealVector<PositiveReal>> parameterInput = new Input<>("parameter", "chain parameter to calculate distribution over", Validate.REQUIRED);
 
-    final public Input<Function> initialMeanInput = new Input<>("initialMean", "the mean of the prior distribution on the first element. This is an alternative boundary condition to Jeffrey's on the first value.", Validate.OPTIONAL);
+    final public Input<RealScalar<PositiveReal>> initialMeanInput = new Input<>("initialMean", "the mean of the prior distribution on the first element. This is an alternative boundary condition to Jeffrey's on the first value.", Validate.OPTIONAL);
 
     final public Input<Boolean> useLogNormalInput = new Input<>("useLogNormal", "use Log Normal distribution instead of Gamma (default false)", false);
   
     // **************************************************************
     // Private instance variables
     // **************************************************************
-    private Function chainParameter = null;
-    private Function initialMean = null;
+    private RealVector<PositiveReal> chainParameter = null;
+    private RealScalar<PositiveReal> initialMean = null;
     private boolean jeffreys = false;
     private boolean reverse = false;
     private boolean uselog = false;
@@ -80,6 +79,7 @@ public class MarkovChainDistribution extends Distribution {
      *
      * @return the log likelihood.
      */
+    @SuppressWarnings("deprecation")
 	@Override
     public double calculateLogP() {
         logP = 0.0;
@@ -90,7 +90,7 @@ public class MarkovChainDistribution extends Distribution {
         int first = 1;
         if (initialMean != null) first = 0;
 
-        for (int i = first; i < chainParameter.getDimension(); i++) {
+        for (int i = first; i < chainParameter.size(); i++) {
             final double mean = getChainValue(i - 1);
             final double x = getChainValue(i);
 
@@ -120,22 +120,22 @@ public class MarkovChainDistribution extends Distribution {
     private double getChainValue(int i) {
         if (i == -1) {
             if (initialMean != null){
-                return initialMean.getArrayValue();
+                return initialMean.get();
             } else {
                 throw new IllegalArgumentException("index must be non-negative unless intial value provided.");
             }
         }
 
         if (uselog) {
-            return Math.log(chainParameter.getArrayValue(index(i)));
+            return Math.log(chainParameter.get(index(i)));
         } else {
-            return chainParameter.getArrayValue(index(i));
+            return chainParameter.get(index(i));
         }
     }
 
     private int index(int i) {
         if (reverse)
-            return chainParameter.getDimension() - i - 1;
+            return chainParameter.size() - i - 1;
         else
             return i;
     }

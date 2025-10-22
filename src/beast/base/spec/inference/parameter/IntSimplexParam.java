@@ -2,7 +2,10 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.IntSimplex;
 
 
@@ -11,6 +14,11 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
 
     final public Input<Integer> sumInput = new Input<>("sum",
             "the expected sum of a simplex of integers, default to the size");
+
+    public IntSimplexParam() {
+        super();
+        super.setDomain((D)PositiveInt.INSTANCE); // must set Input as well
+    }
 
     public IntSimplexParam(int[] values, D domain, int expectedSum) {
         super(values, domain);

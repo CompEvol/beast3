@@ -27,13 +27,13 @@ public class DeltaExchangeOperator extends KernelOperator {
 	public final Input<List<Tensor<?,?>>> parameterInput = new Input<>("parameter",
             "one or more parameters to be operated on by exchanging values so the sum remains the same", new ArrayList<>());
 	public final Input<RealVectorParam<?>> rvparameterInput = new Input<>("rvparameter",
-            "real vector parameter to be operated on", Validate.REQUIRED);
+            "real vector parameter to be operated on");
 	public final Input<IntVectorParam<?>> ivparameterInput = new Input<>("ivparameter",
-            "int vector parameter to be operated on", Validate.REQUIRED);
+            "int vector parameter to be operated on");
 	public final Input<List<RealScalarParam<?>>> rsparameterInput = new Input<>("rsparameter",
-            "real sclara parameters to be operated on", Validate.REQUIRED);
+            "real sclara parameters to be operated on", new ArrayList<>());
 	public final Input<List<IntScalarParam<?>>> isparameterInput = new Input<>("isparameter",
-            "int scalar parameters to be operated on", Validate.REQUIRED);
+            "int scalar parameters to be operated on", new ArrayList<>());
 
 
 	List<Tensor<?,?>> getParameters() {

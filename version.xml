@@ -184,6 +184,8 @@
                 <provider classname="beast.base.spec.inference.parameter.RealScalarParam"/>
                 <provider classname="beast.base.spec.inference.parameter.RealVectorParam"/>
                 <provider classname="beast.base.spec.inference.parameter.SimplexParam"/>
+                <provider classname="beast.base.spec.inference.parameter.IntSimplexParam"/>
+
 
                 <provider classname="beast.base.spec.inference.operator.BitFlipOperator"/>
                 <provider classname="beast.base.spec.inference.operator.IntRandomWalkOperator"/>
@@ -204,6 +206,7 @@
                 <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
+                <provider classname="beast.base.spec.inference.distribution.MarkovChainDistribution"/>
 
                 <provider classname="beast.base.spec.evolution.Sum"/>
                 <provider classname="beast.base.spec.evolution.TreeWithMetaDataLogger"/>
@@ -245,6 +248,13 @@
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TIM"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TN93"/>
                 <provider classname="beast.base.spec.evolution.substitutionmodel.TVM"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.Blosum62"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.CPREV"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.MTREV"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.Dayhoff"/>
+                <provider classname="beast.base.spec.evolution.substitutionmodel.WAG"/>
+
+
 
                 <provider classname="beast.base.spec.evolution.operator.scale.ScaleTreeOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableOperatorSampler"/>
