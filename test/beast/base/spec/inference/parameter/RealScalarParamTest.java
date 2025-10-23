@@ -1,11 +1,11 @@
-package beast.base.spec.parameter;
+package beast.base.spec.inference.parameter;
 
 import beast.base.parser.XMLProducer;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RealScalarParamTest {
 
