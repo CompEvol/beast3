@@ -187,14 +187,23 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 //            throw new IllegalArgumentException();
 //    }
 
+    /**
+     * If the new dimension > current, then use the current values to supplement the rest empty elements.
+     * If the new dimension < current, then cut the current values.
+     * @param dimension
+     */
     public void setDimension(final int dimension) {
         startEditing(null);
 
         if (this.size() != dimension) {
-            values = new boolean[dimension];
-            storedValues = new boolean[dimension];
-            isDirty = new boolean[dimension];
+            final boolean[] values2 = new boolean[dimension];
+            for (int i = 0; i < dimension; i++) {
+                values2[i] = values[i % this.size()];
+            }
+            values = values2;
+            //storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), dimension);
         }
+        isDirty = new boolean[dimension];
         try {
             dimensionInput.setValue(dimension, this);
         } catch (Exception e) {

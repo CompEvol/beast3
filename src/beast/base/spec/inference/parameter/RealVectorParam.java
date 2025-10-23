@@ -127,7 +127,8 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         // Validate against domain and bounds constraints
         if (! isValid()) {
             throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is either not valid for domain " + domain.getClass().getName() +
+                    " or bounds " + boundsToString());
         }
     }
 
@@ -230,14 +231,23 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         domainTypeInput.setValue(domain, this);
     }
 
+    /**
+     * If the new dimension > current, then use the current values to supplement the rest empty elements.
+     * If the new dimension < current, then cut the current values.
+     * @param dimension
+     */
     public void setDimension(final int dimension) {
         startEditing(null);
 
         if (this.size() != dimension) {
-            values = new double[dimension];
-            storedValues = new double[dimension];
-            isDirty = new boolean[dimension];
+            final double[] values2 = new double[dimension];
+            for (int i = 0; i < dimension; i++) {
+                values2[i] = values[i % this.size()];
+            }
+            values = values2;
+            //storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), dimension);
         }
+        isDirty = new boolean[dimension];
         try {
             dimensionInput.setValue(dimension, this);
         } catch (Exception e) {
