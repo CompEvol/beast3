@@ -46,6 +46,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     public RealScalarParam(double value, D domain) {
         this.value = value;
+        valuesInput.setValue(value, this);
         setDomain(domain); // this set Input as well
     }
 

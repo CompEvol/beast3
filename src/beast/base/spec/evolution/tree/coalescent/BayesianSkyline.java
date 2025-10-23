@@ -122,11 +122,7 @@ System.err.println(Arrays.toString(values));
                 IntSimplexParam parameter = new IntSimplexParam(values, groupSizes.getDomain(),
                         events, 1, Integer.MAX_VALUE);
                 // always validate in initAndValidate()
-                try {
-                	parameter.initAndValidate();
-                } catch (Throwable e) {
-                	e.printStackTrace();
-                }
+                parameter.initAndValidate();
 //                parameter.setBounds(1, Integer.MAX_VALUE);
                 if (groupSizes instanceof StateNode stateNode) {
                     // groupSizes.assignFromWithoutID(parameter);

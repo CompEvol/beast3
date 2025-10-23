@@ -2,7 +2,6 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Int;
@@ -14,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @Description("A scalar int-valued parameter with domain constraints")
@@ -65,6 +65,8 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     public IntVectorParam(final int[] values, D domain) {
         this.values = values.clone();
         this.storedValues = values.clone();
+        // need to update input
+        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
         setDomain(domain); // must set Input as well
         isDirty = new boolean[values.length];
     }

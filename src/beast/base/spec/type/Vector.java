@@ -53,9 +53,4 @@ public interface Vector<D extends Domain<T>, T> extends Tensor<D, T> {
                 return false;
         return true;
     }
-
-    // Validate ith element
-    default boolean isValid(int i) {
-        return isValid(get(i));
-    }
 }

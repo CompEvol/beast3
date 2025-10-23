@@ -80,8 +80,16 @@ public class CompoundRealScalarParamHelper<D extends Real> implements RealVector
         param.set(value);
     }
 
+//    @Override
+//    public boolean isValid(int i, final double value) {
+//        return getScalarParam(i).isValid(value);
+//    }
+
     @Override
-    public boolean isValid(int i) {
-        return getScalarParam(i).isValid(get(i));
+    public boolean isValid() {
+        for (int i = 0; i < size(); i++)
+            if ( ! getScalarParam(i).isValid(get(i)))
+                return false;
+        return true;
     }
 }

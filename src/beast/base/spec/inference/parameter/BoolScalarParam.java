@@ -59,6 +59,7 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     public BoolScalarParam(boolean value) {
         this.value = value;
+        valuesInput.setValue(value, this);
     }
 
     @Override

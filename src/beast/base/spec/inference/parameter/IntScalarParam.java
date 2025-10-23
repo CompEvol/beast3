@@ -46,6 +46,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     public IntScalarParam(int value, D domain) {
         this.value = value;
+        valuesInput.setValue(value, this);
         setDomain(domain); // must set Input as well
     }
 

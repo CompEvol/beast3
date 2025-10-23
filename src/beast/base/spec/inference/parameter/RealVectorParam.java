@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 
 @Description("A scalar real-valued parameter with domain constraints")
@@ -68,6 +69,8 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public RealVectorParam(final double[] values, D domain) {
         this.values = values.clone();
         this.storedValues = values.clone();
+        // need to update input
+        valuesInput.setValue(DoubleStream.of(values).boxed().toList(), this);
         setDomain(domain); // must set Input as well
         isDirty = new boolean[values.length];
     }

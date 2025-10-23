@@ -2,7 +2,6 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
 import beast.base.spec.type.BoolVector;
@@ -51,6 +50,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public BoolVectorParam(final boolean[] values) {
         this.values = values.clone();
         this.storedValues = values.clone();
+        // need to update input
+        List<Boolean> boolList = new ArrayList<>();
+        for (boolean v : values)
+            boolList.add(v);
+        valuesInput.setValue(boolList, this);
         isDirty = new boolean[values.length];
 
         // always validate in initAndValidate()
