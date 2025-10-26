@@ -208,6 +208,7 @@
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
                 <provider classname="beast.base.spec.inference.distribution.MarkovChainDistribution"/>
 
+                <provider classname="beast.base.spec.FunctionOfTensor"/>
                 <provider classname="beast.base.spec.evolution.Sum"/>
                 <provider classname="beast.base.spec.evolution.TreeWithMetaDataLogger"/>
                 <provider classname="beast.base.spec.evolution.tree.ClusterTree"/>
