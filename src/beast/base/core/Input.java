@@ -25,7 +25,9 @@
 package beast.base.core;
 
 
-import beast.base.spec.domain.*;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.DomainRegister;
+import beast.base.spec.domain.Real;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Vector;
 
@@ -626,7 +628,22 @@ public class Input<T> {
                             			return;
                             		}
                             	}
-                                theClass = (Class<?>) o;
+                                if (o instanceof Class<?> clazz) {
+                                    theClass = clazz;
+                                } else if (o instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> clazz) {
+                                    // e.g. Input<ParamDist<T>> distInput
+                                    theClass = clazz;
+                                } else if (o instanceof WildcardType wt) {
+                                    // e.g. Input<? extends Tensor<D, T>> tensorInput
+                                    Type[] upperBounds = wt.getUpperBounds();
+                                    if (upperBounds.length > 0 && upperBounds[0] instanceof ParameterizedType pt
+                                            && pt.getRawType() instanceof Class<?> clazz) {
+                                        theClass = clazz;
+                                    } else {
+                                        throw new IllegalArgumentException("Unsupported wildcard type: " + o);
+                                    }
+                                } else
+                                    throw new IllegalArgumentException("Cannot determine class : " + o);
                             } catch (Exception e) {
                                 // resolve ID
                                 String id = "";

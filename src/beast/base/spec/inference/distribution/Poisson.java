@@ -10,33 +10,39 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
-import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.math3.distribution.IntegerDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.statistics.distribution.DiscreteDistribution;
+import org.apache.commons.statistics.distribution.PoissonDistribution;
 
 
 @Description("Poisson distribution, used as prior  f(k; lambda)=\\frac{lambda^k e^{-lambda}}{k!}  " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Poisson<D extends NonNegativeInt> extends AbstractDiscreteDistribution<D> {
-    final public Input<RealScalar<? extends PositiveReal>> lambdaInput = new Input<>("lambda", "rate parameter, defaults to 1");
+public class Poisson<D extends NonNegativeInt> extends IntTensorDistribution<D> {
 
-    private PoissonDistribution dist = new PoissonDistribution(1);
+    final public Input<RealScalar<? extends PositiveReal>> lambdaInput = new Input<>(
+            "lambda", "rate parameter, defaults to 1");
 
+    private PoissonDistribution dist = PoissonDistribution.of(1.0);
 
     // Must provide empty constructor for construction by XML. Note that this constructor DOES NOT call initAndValidate();
     public Poisson() {
     }
 
-    public Poisson(RealScalar<? extends PositiveReal> lambda) {
+    public Poisson(IntScalar<D> tensor, RealScalar<? extends PositiveReal> lambda) {
 
         try {
-            initByName("lambda", lambda);
+            initByName("tensor", tensor, "lambda", lambda);
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to initByName lambda parameter when constructing Poisson instance.");
         }
+    }
+
+    @Override
+    DiscreteDistribution getDistribution() {
+        refresh();
+        return dist;
     }
 
     @Override
@@ -61,43 +67,17 @@ public class Poisson<D extends NonNegativeInt> extends AbstractDiscreteDistribut
         // math3 PoissonDistribution is immutable
         // only update if not same
         if (lambda != dist.getMean())
-            dist = new PoissonDistribution(lambda);
-    }
-
-//TODO    @Override
-    public double calcLogP(IntScalar<D> scalar) {
-        return super.calcLogP(scalar);
-    }
-
-//TODO    @Override
-    public double calcLogP(IntVector<D> vector) {
-        return super.calcLogP(vector);
-    }
-
-    @Override
-    public IntegerDistribution getDistribution() {
-        refresh();
-        return dist;
-    }
-    
-    @Override
-    public double getMeanWithoutOffset() {
-    	return lambdaInput.get().get();
-    }
-
-    @Override
-    public double getMean() {
-        throw  new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double getVariance() {
-        throw  new UnsupportedOperationException("Not supported yet.");
+            dist = PoissonDistribution.of(lambda);
     }
 
     public static void main(String[] args) {
-        RealScalar<PositiveReal> lambda = new RealScalarParam<>(5.0, PositiveReal.INSTANCE);
-        Poisson poisson = new Poisson(lambda);
+        RealScalarParam<PositiveReal> lambda = new RealScalarParam<>(5.0, PositiveReal.INSTANCE);
+        lambda.initAndValidate();
+        IntScalarParam<NonNegativeInt> tensor = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
+        tensor.initAndValidate();
+        Poisson<NonNegativeInt> poisson = new Poisson<>(tensor, lambda);
+
+        System.out.println("tensor = " + tensor + ", logP =" + poisson.calculateLogP());
 
         /*
 k	P(X=k)	log P(X=k)

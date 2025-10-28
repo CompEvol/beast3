@@ -58,4 +58,7 @@ public interface Tensor<D extends Domain<T>, T> {
      * @return true if this instance is valid according to its type constraints, false otherwise
      */
     boolean isValid(T value);
+
+
+    default boolean isValid(){ return isValid(get()); }
 }
