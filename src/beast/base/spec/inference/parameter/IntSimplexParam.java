@@ -2,10 +2,8 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.IntSimplex;
 
 
@@ -17,19 +15,20 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
 
     public IntSimplexParam() {
         super();
-        super.setDomain((D)PositiveInt.INSTANCE); // must set Input as well
+        super.setDomain((D)PositiveInt.INSTANCE); // correct domain using setter
     }
 
     public IntSimplexParam(int[] values, D domain, int expectedSum) {
-        super(values, domain);
-        sumInput.setValue(expectedSum, this);
+        // use Domain bounds
+        this(values, domain, expectedSum,domain.getLower(), domain.getUpper());
     }
 
     public IntSimplexParam(int[] values, D domain, int expectedSum, int lower, int upper) {
-        super(values, domain, lower, upper);
+        setInputsNoValidation(values, domain, lower, upper);
         sumInput.setValue(expectedSum, this);
 
-        // always validate in initAndValidate()
+        // always validate
+        initAndValidate();
     }
 
     @Override

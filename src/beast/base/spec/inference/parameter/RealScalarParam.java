@@ -19,7 +19,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             0.0, Input.Validate.REQUIRED, Double.class);
 
     // Additional input to specify the domain type
-    public final Input<Domain> domainTypeInput = new Input<>("domain",
+    public final Input<? extends Real> domainTypeInput = new Input<>("domain",
             "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
                     "specifies the permissible range of values.", Real.INSTANCE);
 
@@ -45,17 +45,29 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     public RealScalarParam() { }
 
     public RealScalarParam(double value, D domain) {
-        this.value = value;
-        valuesInput.setValue(value, this);
-        setDomain(domain); // this set Input as well
+        // default bounds
+        this(value, domain, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
     }
 
+    /**
+     * This constructor centralizes logic in one place,
+     * and guarantees initAndValidate() runs once.
+     * @param value    scalar value
+     * @param domain   scalar {@link Domain}
+     * @param lower    lower bound
+     * @param upper    upper bound
+     */
     public RealScalarParam(double value, D domain, double lower, double upper) {
-        this(value, domain); // this set Input as well
-        // adjust bounds to the Domain range
-        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+        // Note set value to Input which will assign value in initAndValidate()
+        valuesInput.setValue(value, this);
+        setDomain(domain); // this set Input as well
 
-        // always validate in initAndValidate()
+        if (this.lower != lower || this.upper != upper)
+            // adjust bounds to the Domain range
+            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+
+        // always validate
+        initAndValidate();
     }
 
     @Override
@@ -64,18 +76,6 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         this.storedValue = value;
         // Initialize domain from input
         this.domain = (D) domainTypeInput.get();
-
-//        if (lowerValueInput.get() != null)
-//            this.lower = lowerValueInput.get();
-//        if (upperValueInput.get() != null)
-//            this.upper = upperValueInput.get();
-//        // adjust bound to the Domain range
-//        setBounds(Math.max(getLower(), domain.getLower()),
-//                Math.min(getUpper(), domain.getUpper()));
-//        Bounded<Double> bounded = ParameterUtils.initBounds(lowerValueInput, upperValueInput,
-//                domain, lower, upper);
-//        lower = bounded.getLower();
-//        upper = bounded.getUpper();
 
         initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
@@ -95,6 +95,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     // Implement Scalar<D> interface methods
     @Override
     public D getDomain() {
+        if (domain == null) return (D) domainTypeInput.get(); // used before init
         return domain;
     }
 
@@ -127,7 +128,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     public void setLower(Double lower) {
-        if (lower < domain.getLower())
+        if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
@@ -135,7 +136,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     }
 
     public void setUpper(Double upper) {
-        if (upper > domain.getUpper())
+        if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;

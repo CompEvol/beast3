@@ -23,7 +23,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
             "starting value for this real scalar parameter.",
             new ArrayList<>(), Input.Validate.REQUIRED, Integer.class);
     // Additional input to specify the domain type
-    public final Input<Domain> domainTypeInput = new Input<>("domain",
+    public final Input<? extends Int> domainTypeInput = new Input<>("domain",
             "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
                     "specifies the permissible range of values.", Int.INSTANCE);
     public final Input<Integer> dimensionInput = new Input<>("dimension",
@@ -63,21 +63,37 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     }
 
     public IntVectorParam(final int[] values, D domain) {
-        this.values = values.clone();
-        this.storedValues = values.clone();
-        // need to update input
-        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
-        setDomain(domain); // must set Input as well
-        isDirty = new boolean[values.length];
+        // default bounds
+        this(values, domain, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
     }
 
+    /**
+     * This constructor centralizes logic in one place,
+     * and guarantees initAndValidate() runs once.
+     * @param values   vector values
+     * @param domain   vector {@link Domain}
+     * @param lower    lower bound
+     * @param upper    upper bound
+     */
     public IntVectorParam(final int[] values, D domain, int lower, int upper) {
-        this(values, domain);
-        // adjust bound to the Domain range
-        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+        setInputsNoValidation(values, domain, lower, upper);
 
-        // always validate in initAndValidate()
+        // always validate
+        initAndValidate();
     }
+
+    // this is only used by inherited class
+    protected void setInputsNoValidation(final int[] values, D domain, int lower, int upper) {
+        // Note set value to Input which will assign value in initAndValidate()
+        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
+        domainTypeInput.setValue(domain, this);
+        isDirty = new boolean[values.length];
+
+        if (this.lower != lower || this.upper != upper)
+            // adjust bounds to the Domain range
+            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+    }
+
 
     @Override
     public void initAndValidate() {
@@ -130,6 +146,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     @Override
     public D getDomain() {
+        if (domain == null) return (D) domainTypeInput.get(); // used before init
         return domain;
     }
 
@@ -250,7 +267,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     }
 
     public void setLower(Integer lower) {
-        if (lower < domain.getLower())
+        if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + domain.getClass().getName());
         this.lower = lower;
@@ -258,7 +275,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     }
 
     public void setUpper(Integer upper) {
-        if (upper > domain.getUpper())
+        if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + domain.getClass().getName());
         this.upper = upper;

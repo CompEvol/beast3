@@ -48,16 +48,15 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     }
 
     public BoolVectorParam(final boolean[] values) {
-        this.values = values.clone();
-        this.storedValues = values.clone();
-        // need to update input
+        // Note set value to Input which will assign value in initAndValidate()
         List<Boolean> boolList = new ArrayList<>();
         for (boolean v : values)
             boolList.add(v);
         valuesInput.setValue(boolList, this);
         isDirty = new boolean[values.length];
 
-        // always validate in initAndValidate()
+        // always validate
+        initAndValidate();
     }
 
     @Override

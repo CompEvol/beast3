@@ -18,7 +18,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
             0, Input.Validate.REQUIRED, Integer.class);
 
     // Additional input to specify the domain type
-    public final Input<Domain> domainTypeInput = new Input<>("domain",
+    public final Input<? extends Int> domainTypeInput = new Input<>("domain",
             "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
                     "specifies the permissible range of values.", Int.INSTANCE);
 
@@ -45,18 +45,31 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     public IntScalarParam(int value, D domain) {
-        this.value = value;
-        valuesInput.setValue(value, this);
-        setDomain(domain); // must set Input as well
+        // default bounds
+        this(value, domain, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
     }
 
+    /**
+     * This constructor centralizes logic in one place,
+     * and guarantees initAndValidate() runs once.
+     * @param value    scalar value
+     * @param domain   scalar {@link Domain}
+     * @param lower    lower bound
+     * @param upper    upper bound
+     */
     public IntScalarParam(int value, D domain, int lower, int upper) {
-        this(value, domain);
-        // adjust bound to the Domain range
-        adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+        // Note sync Input which will assign value in initAndValidate()
+        valuesInput.setValue(value, this);
+        setDomain(domain); // this set Input as well
 
-        // always validate in initAndValidate()
+        if (this.lower != lower || this.upper != upper)
+            // adjust bounds to the Domain range
+            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+
+        // always validate
+        initAndValidate();
     }
+
 
     @Override
     public void initAndValidate() {
@@ -91,6 +104,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     // Implement Scalar<D> interface methods
     @Override
     public D getDomain() {
+        if (domain == null) return (D) domainTypeInput.get(); // used before init
         return domain;
     }
 
@@ -123,7 +137,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     public void setLower(Integer lower) {
-        if (lower < domain.getLower())
+        if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
@@ -131,7 +145,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     }
 
     public void setUpper(Integer upper) {
-        if (upper > domain.getUpper())
+        if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;

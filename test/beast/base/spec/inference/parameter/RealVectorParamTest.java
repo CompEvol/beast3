@@ -43,10 +43,10 @@ public class RealVectorParamTest {
     public void testInitAndValidate() {
 
         double[] x = {1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
-        RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE, 2.0, 6.0);
-        assertEquals(6, parameter.size());
         try {
-            parameter.initAndValidate();
+            RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE, 2.0, 6.0);
+            assertEquals(6, parameter.size());
+
             fail("Expected IllegalArgumentException not thrown");
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage();
@@ -54,10 +54,10 @@ public class RealVectorParamTest {
         }
 
         x = new double[]{-1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
-        // if using constructor, validation is in initAndValidate()
-        parameter = new RealVectorParam(x, PositiveReal.INSTANCE);
+
         try {
-            parameter.initAndValidate();
+            // if using constructor, validation is in initAndValidate()
+            RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE);
             fail("Expected IllegalArgumentException not thrown");
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage();

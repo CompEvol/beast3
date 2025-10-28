@@ -10,17 +10,19 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     public SimplexParam() {
         super();
-        super.setDomain(UnitInterval.INSTANCE); // must set Input as well
+        super.setDomain(UnitInterval.INSTANCE); // correct domain using setter
     }
 
     public SimplexParam(final double[] values) {
-        super(values, UnitInterval.INSTANCE);
+        // use Domain bounds
+        this(values, UnitInterval.INSTANCE.getLower(), UnitInterval.INSTANCE.getUpper());
     }
 
     public SimplexParam(double[] values, double lower, double upper) {
-        super(values, UnitInterval.INSTANCE, lower, upper);
+        setInputsNoValidation(values, UnitInterval.INSTANCE, lower, upper);
 
-        // always validate in initAndValidate()
+        // always validate
+        initAndValidate();
     }
 
     @Override

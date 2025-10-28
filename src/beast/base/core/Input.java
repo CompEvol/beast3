@@ -636,11 +636,15 @@ public class Input<T> {
                                     // e.g. Input<ParamDist<T>> distInput
                                     theClass = clazz;
                                 } else if (o instanceof WildcardType wt) {
-                                    // e.g. Input<? extends Tensor<D, T>> tensorInput
                                     Type[] upperBounds = wt.getUpperBounds();
-                                    if (upperBounds.length > 0 && upperBounds[0] instanceof ParameterizedType pt
-                                            && pt.getRawType() instanceof Class<?> clazz) {
-                                        theClass = clazz;
+                                    if (upperBounds.length > 0) {
+                                        if  (upperBounds[0] instanceof Class<?> clazz)
+                                            // e.g. Input<? extends Real> domainTypeInput
+                                            theClass = clazz;
+                                        else if (upperBounds[0] instanceof ParameterizedType pt
+                                                && pt.getRawType() instanceof Class<?> clazz)
+                                            // e.g. Input<? extends Tensor<D, T>> tensorInput
+                                            theClass = clazz;
                                     } else {
                                         throw new IllegalArgumentException("Unsupported wildcard type: " + o);
                                     }

@@ -58,8 +58,11 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     }
 
     public BoolScalarParam(boolean value) {
-        this.value = value;
+        // Note sync Input which will assign value in initAndValidate()
         valuesInput.setValue(value, this);
+
+        // always validate
+        initAndValidate();
     }
 
     @Override
