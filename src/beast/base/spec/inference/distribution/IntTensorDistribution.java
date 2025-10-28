@@ -7,8 +7,11 @@ import beast.base.spec.domain.Int;
 import beast.base.util.Randomizer;
 import org.apache.commons.statistics.distribution.DiscreteDistribution;
 
-
-@Description("The BEAST Distribution over a tensor.")
+/**
+ * The BEAST Distribution over an Int tensor.
+ * @param <D> domain extends {@link Int}
+ */
+@Description("The BEAST Distribution over an Int tensor.")
 public abstract class IntTensorDistribution<D extends Int> extends TensorDistribution<D, Integer> {
 
     public final Input<Integer> offsetInput = new Input<>("offset",
@@ -41,6 +44,8 @@ public abstract class IntTensorDistribution<D extends Int> extends TensorDistrib
     public double logProb(Integer x) {
         return this.logProbability(x);
     }
+
+    //*** wrap Apache Stats methods to handle offset ***//
 
     public double probability(int x) {
         x -= getOffset();

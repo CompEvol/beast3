@@ -9,19 +9,24 @@ import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Domain;
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
-import org.apache.commons.math3.exception.OutOfRangeException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
+/**
+ * Strong typed {@link Distribution} for {@link Tensor}.
+ * @param <D> the domain for sampled value, which extends either {@link Real} or {@link Int}.
+ * @param <T> the Java primitive type for sampled value, either Double or Integer.
+ */
 @Description("The BEAST Distribution over a tensor.")
 public abstract class TensorDistribution<D extends Domain<T>, T> extends Distribution {
 
@@ -40,10 +45,19 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
         calculateLogP();
     }
 
-    public double calcLogP(Tensor<D, T> tensor) {
-        tensorInput.setValue(tensor, this);
-        return calculateLogP();
-    }
+    //*** abstract methods ***//
+
+    public abstract double logProb(final T x);
+
+    public abstract T[][] sample(int size);
+
+    /**
+     * @return  offset of distribution.
+     */
+    public abstract T getOffset();
+
+
+    //*** Override Distribution methods ***//
 
     @Override
     public double calculateLogP() {
@@ -68,16 +82,6 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
         }
         return logP;
     }
-
-    public abstract double logProb(final T x);
-
-    /**
-     * @return  offset of distribution.
-     */
-    public abstract T getOffset();
-
-
-    public abstract T[][] sample(int size);
 
     @Override
     public void sample(State state, Random random) {
@@ -120,7 +124,7 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
                 default -> throw new IllegalStateException("Unexpected tensor type");
             }
 
-        } catch (OutOfRangeException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to sample!");
         }
@@ -143,6 +147,11 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
         return arguments;
     }
 
+    // used by unit test
+    public double calcLogP(Tensor<D, T> tensor) {
+        tensorInput.setValue(tensor, this);
+        return calculateLogP();
+    }
 
 }
 

@@ -7,8 +7,11 @@ import beast.base.spec.domain.Real;
 import beast.base.util.Randomizer;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
-
-@Description("The BEAST Distribution over a tensor.")
+/**
+ * The BEAST Distribution over a Real tensor.
+ * @param <D> domain extends {@link Real}
+ */
+@Description("The BEAST Distribution over a Real tensor.")
 public abstract class RealTensorDistribution<D extends Real> extends TensorDistribution<D, Double> {
 
     public final Input<Double> offsetInput = new Input<>("offset",
@@ -41,6 +44,8 @@ public abstract class RealTensorDistribution<D extends Real> extends TensorDistr
     public double logProb(Double x) {
         return this.logDensity(x);
     }
+
+    //*** wrap Apache Stats methods to handle offset ***//
 
     public double density(int x) {
         x -= getOffset();

@@ -628,6 +628,8 @@ public class Input<T> {
                             			return;
                             		}
                             	}
+
+                                //*** handle more code using ParameterizedType and WildcardType in Input ***//
                                 if (o instanceof Class<?> clazz) {
                                     theClass = clazz;
                                 } else if (o instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> clazz) {
