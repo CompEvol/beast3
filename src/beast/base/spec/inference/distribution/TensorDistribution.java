@@ -30,6 +30,8 @@ import java.util.Random;
 @Description("The BEAST Distribution over a tensor.")
 public abstract class TensorDistribution<D extends Domain<T>, T> extends Distribution {
 
+    public static final double EPS = 1e-12;
+
     final public Input<? extends Tensor<D, T>> tensorInput = new Input<>("tensor",
             "point at which the density is calculated", Validate.REQUIRED);
 
@@ -99,6 +101,7 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
         try {
             newx = sample(1)[0];
 
+            tensor = tensorInput.get();
             switch (tensor) {
                 case Scalar<D, T> scalar -> {
                     if (scalar instanceof Bounded b) {

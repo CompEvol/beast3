@@ -3,44 +3,48 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.statistics.distribution.DiscreteDistribution;
 import org.apache.commons.statistics.distribution.PoissonDistribution;
 
 
 @Description("Poisson distribution, used as prior  f(k; lambda)=\\frac{lambda^k e^{-lambda}}{k!}  " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Poisson<D extends NonNegativeInt> extends IntTensorDistribution<D> {
+public class Poisson extends IntTensorDistribution<NonNegativeInt> {
 
-    final public Input<RealScalar<? extends PositiveReal>> lambdaInput = new Input<>(
+    // allow 0
+    final public Input<RealScalar<NonNegativeReal>> lambdaInput = new Input<>(
             "lambda", "rate parameter, defaults to 1");
 
     private PoissonDistribution dist = PoissonDistribution.of(1.0);
 
-    // Must provide empty constructor for construction by XML. Note that this constructor DOES NOT call initAndValidate();
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
     public Poisson() {
     }
 
-    public Poisson(IntScalar<D> tensor, RealScalar<? extends PositiveReal> lambda) {
+    public Poisson(IntScalar<NonNegativeInt> tensor, RealScalar<NonNegativeReal> lambda) {
 
         try {
             initByName("tensor", tensor, "lambda", lambda);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to initByName lambda parameter when constructing Poisson instance.");
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
         }
     }
 
     @Override
-    DiscreteDistribution getDistribution() {
+    PoissonDistribution getDistribution() {
         refresh();
         return dist;
     }
@@ -55,27 +59,27 @@ public class Poisson<D extends NonNegativeInt> extends IntTensorDistribution<D> 
      */
     @SuppressWarnings("deprecation")
 	void refresh() {
-        double lambda;
-        if (lambdaInput.get() == null) {
-            lambda = 1;
-        } else {
+        double lambda = 1;
+        if (lambdaInput.get() != null) {
             lambda = lambdaInput.get().get();
             if (lambda < 0) {
+                Log.err.println("Poisson::lambda should be positive not " + lambda + ". Assign it to the default value.");
                 lambda = 1;
             }
         }
-        // math3 PoissonDistribution is immutable
+        // PoissonDistribution is immutable
         // only update if not same
         if (lambda != dist.getMean())
             dist = PoissonDistribution.of(lambda);
     }
 
     public static void main(String[] args) {
-        RealScalarParam<PositiveReal> lambda = new RealScalarParam<>(5.0, PositiveReal.INSTANCE);
-        lambda.initAndValidate();
-        IntScalarParam<NonNegativeInt> tensor = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
-        tensor.initAndValidate();
-        Poisson<NonNegativeInt> poisson = new Poisson<>(tensor, lambda);
+        // in
+        RealScalar<NonNegativeReal> lambda = new RealScalarParam<>(5.0, NonNegativeReal.INSTANCE);
+        // out
+        IntScalar<NonNegativeInt> tensor = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
+        // include initAndValidate
+        Poisson poisson = new Poisson(tensor, lambda);
 
         System.out.println("tensor = " + tensor + ", logP =" + poisson.calculateLogP());
 

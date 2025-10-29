@@ -37,8 +37,9 @@ public abstract class RealTensorDistribution<D extends Real> extends TensorDistr
 
     /**
      * Used by BEAST {@link #calculateLogP()}
+     *
      * @param x Point at which the PMF is evaluated.
-     * @return  the logarithm of the value of the probability mass function at x after offset.
+     * @return the logarithm of the value of the probability mass function at x after offset.
      */
     @Override
     public double logProb(Double x) {
@@ -91,12 +92,14 @@ public abstract class RealTensorDistribution<D extends Real> extends TensorDistr
         return getDistribution().getMean();
     }
 
-    /** returns mean of distribution, if implemented **/
+    /**
+     * returns mean of distribution, if implemented
+     **/
     public double getMean() {
         return getMeanWithoutOffset() + getOffset();
     }
 
-    public double getVariance(){
+    public double getVariance() {
         return getDistribution().getVariance();
     }
 
