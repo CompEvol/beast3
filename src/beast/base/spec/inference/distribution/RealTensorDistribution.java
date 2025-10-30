@@ -21,7 +21,7 @@ public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D exte
     public final Input<Double> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0.0);
 
-    abstract ContinuousDistribution getDistribution();
+    public abstract ContinuousDistribution getDistribution();
 
     protected abstract S valueToTensor(double value);
 

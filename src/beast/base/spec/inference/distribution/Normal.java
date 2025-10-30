@@ -7,7 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.NormalDistribution;
 
 
@@ -49,7 +48,7 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public NormalDistribution getDistribution() {
         refresh();
         return dist;
     }

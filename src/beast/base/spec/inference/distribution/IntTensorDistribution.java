@@ -21,7 +21,7 @@ public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D exte
     public final Input<Integer> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0);
 
-    abstract DiscreteDistribution getDistribution();
+    public abstract DiscreteDistribution getDistribution();
 
     protected abstract S valueToTensor(int value);
 

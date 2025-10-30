@@ -6,7 +6,6 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
 
@@ -50,7 +49,7 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public LogNormalDistribution getDistribution() {
         refresh();
         return dist;
     }
