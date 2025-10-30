@@ -4,6 +4,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.BetaDistribution;
 
@@ -12,14 +13,14 @@ import org.apache.commons.statistics.distribution.BetaDistribution;
         "where B() is the beta function. " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Beta extends RealTensorDistribution<UnitInterval> {
+public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitInterval> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "first shape parameter, defaults to 1");
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
             "the other shape parameter, defaults to 1");
 
-    private BetaDistribution dist = BetaDistribution.of(1, 1);
+    protected BetaDistribution dist = BetaDistribution.of(1, 1);
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -46,7 +47,6 @@ public class Beta extends RealTensorDistribution<UnitInterval> {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
         double beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
@@ -60,6 +60,11 @@ public class Beta extends RealTensorDistribution<UnitInterval> {
     public BetaDistribution getDistribution() {
         refresh();
         return dist;
+    }
+
+    @Override
+    protected RealScalar<UnitInterval> valueToTensor(double value) {
+        return new RealScalarParam<>(value, UnitInterval.INSTANCE);
     }
 
     @Override

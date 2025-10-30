@@ -14,9 +14,9 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.Scalar;
-import beast.base.spec.type.Tensor;
-import beast.base.spec.type.Vector;
+import beast.base.spec.type.*;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.rng.simple.RandomSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,18 +24,24 @@ import java.util.Random;
 
 /**
  * Strong typed {@link Distribution} for {@link Tensor}.
+ * @param <S> the shape for sampled value, which could be {@link Scalar} or {@link Vector}
  * @param <D> the domain for sampled value, which extends either {@link Real} or {@link Int}.
  * @param <T> the Java primitive type for sampled value, either Double or Integer.
  */
 @Description("The BEAST Distribution over a tensor.")
-public abstract class TensorDistribution<D extends Domain<T>, T> extends Distribution {
+public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain<T>, T> extends Distribution {
 
     public static final double EPS = 1e-12;
 
-    final public Input<? extends Tensor<D, T>> tensorInput = new Input<>("tensor",
-            "point at which the density is calculated", Validate.REQUIRED);
+    // TODO how to change RNG ?
+    // MT is reproducible scientific RNG
+    protected static UniformRandomProvider rng = RandomSource.MT.create();
 
-    protected Tensor<D, T> tensor;
+    // Note this is the same tensor used for the sampled values defined in the class types.
+    final public Input<S> tensorInput = new Input<>("tensor",
+            "point at which the density is calculated", Validate.REQUIRED, Tensor.class);
+
+    protected S tensor;
 
     @Override
     public void initAndValidate() {
@@ -51,7 +57,11 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
 
     public abstract double logProb(final T x);
 
-    public abstract T[][] sample(int size);
+    public abstract List<S> sample(int size);
+
+    public S sample() {
+        return sample(1).getFirst();
+    }
 
     /**
      * @return  offset of distribution.
@@ -67,16 +77,16 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
 
         tensor = tensorInput.get();
         switch (tensor) {
-            case Scalar<D, T> scalar -> {
+            case Scalar scalar -> {
                 if (!scalar.isValid(scalar.get())) return Double.NEGATIVE_INFINITY;
-                final T x = scalar.get();
+                final T x = (T) scalar.get();
                 logP += logProb(x);
             }
-            case Vector<D, T> vector -> {
+            case Vector vector -> {
                 if (!vector.isValid())
                     return Double.NEGATIVE_INFINITY;
                 for (int i = 0; i < vector.size(); i++) {
-                    final T x = vector.get(i);
+                    final T x = (T) vector.get(i);
                     logP += logProb(x);
                 }
             }
@@ -97,28 +107,28 @@ public abstract class TensorDistribution<D extends Domain<T>, T> extends Distrib
         sampleConditions(state, random);
 
         // sample distribution parameters
-        T[] newx;
+        S newx;
         try {
-            newx = sample(1)[0];
+            newx = sample();
 
             tensor = tensorInput.get();
             switch (tensor) {
-                case Scalar<D, T> scalar -> {
+                case Scalar scalar -> {
                     if (scalar instanceof Bounded b) {
-                        while (!b.withinBounds((Comparable) newx[0])) {
-                            newx = sample(1)[0];
+                        while (!b.withinBounds((Comparable) newx)) {
+                            newx = sample();
                         }
                     }
                     if (scalar instanceof RealScalarParam rs)
-                        rs.set((double) newx[0]);
+                        rs.set( ((RealScalar) newx).get() );
                     else if (scalar instanceof IntScalarParam is)
-                        is.set((int) newx[0]);
+                        is.set( ((IntScalar) newx).get() );
                     else if (scalar instanceof BoolScalarParam bs)
-                        bs.set((boolean) newx[0]);
+                        bs.set( ((BoolScalar) newx).get() );
 
                     throw new RuntimeException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
                 }
-                case Vector<D, T> vector -> {
+                case Vector vector -> {
 
                     //TODO
 

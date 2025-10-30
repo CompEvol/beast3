@@ -4,20 +4,26 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.Real;
-import beast.base.util.Randomizer;
+import beast.base.spec.type.Tensor;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The BEAST Distribution over a Real tensor.
  * @param <D> domain extends {@link Real}
  */
 @Description("The BEAST Distribution over a Real tensor.")
-public abstract class RealTensorDistribution<D extends Real> extends TensorDistribution<D, Double> {
+public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D extends Real>
+        extends TensorDistribution<S, D, Double> {
 
     public final Input<Double> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0.0);
 
     abstract ContinuousDistribution getDistribution();
+
+    protected abstract S valueToTensor(double value);
 
     /*
      * This implementation is only suitable for univariate distributions.
@@ -25,14 +31,14 @@ public abstract class RealTensorDistribution<D extends Real> extends TensorDistr
      * @size sample size = number of samples to produce
      */
     @Override
-    public Double[][] sample(final int size) {
-        final Double[][] sample = new Double[size][];
-        for (int i = 0; i < sample.length; i++) {
-            final int p = Randomizer.nextInt();
-            sample[i] = new Double[]{inverseCumulativeProbability(p)};
+    public List<S> sample(final int size) {
+        ContinuousDistribution.Sampler sampler = getDistribution().createSampler(rng);
+        List<S> samples = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            final double x = sampler.sample() + getOffset();
+            samples.add(valueToTensor(x));
         }
-        return sample;
-
+        return samples;
     }
 
     /**

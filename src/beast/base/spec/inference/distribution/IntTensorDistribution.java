@@ -4,20 +4,26 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.Int;
-import beast.base.util.Randomizer;
+import beast.base.spec.type.Tensor;
 import org.apache.commons.statistics.distribution.DiscreteDistribution;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The BEAST Distribution over an Int tensor.
  * @param <D> domain extends {@link Int}
  */
 @Description("The BEAST Distribution over an Int tensor.")
-public abstract class IntTensorDistribution<D extends Int> extends TensorDistribution<D, Integer> {
+public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D extends Int>
+        extends TensorDistribution<S, D, Integer> {
 
     public final Input<Integer> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0);
 
     abstract DiscreteDistribution getDistribution();
+
+    protected abstract S valueToTensor(int value);
 
     /*
      * This implementation is only suitable for univariate distributions.
@@ -25,14 +31,14 @@ public abstract class IntTensorDistribution<D extends Int> extends TensorDistrib
      * @size sample size = number of samples to produce
      */
     @Override
-    public Integer[][] sample(final int size) {
-        final Integer[][] sample = new Integer[size][];
-        for (int i = 0; i < sample.length; i++) {
-            final int p = Randomizer.nextInt();
-            sample[i] = new Integer[]{inverseCumulativeProbability(p)};
+    public List<S> sample(final int size) {
+        DiscreteDistribution.Sampler sampler = getDistribution().createSampler(rng);
+        List<S> samples = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            final int x = sampler.sample() + getOffset();
+            samples.add(valueToTensor(x));
         }
-        return sample;
-
+        return samples;
     }
 
     /**
