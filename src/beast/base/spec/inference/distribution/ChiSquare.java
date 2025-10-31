@@ -22,6 +22,23 @@ public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal
 
     protected ChiSquaredDistribution dist = ChiSquaredDistribution.of(1);
 
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public ChiSquare() {
+    }
+
+    public ChiSquare(RealScalar<NonNegativeReal> param, RealScalar<PositiveReal> df) {
+
+        try {
+            initByName("param", param, "df", df);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
     public void initAndValidate() {
         refresh();

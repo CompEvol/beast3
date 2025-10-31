@@ -22,6 +22,23 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
 
     protected LaplaceDistribution dist = LaplaceDistribution.of(0, 1);
 
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public Laplace() {}
+
+    public Laplace(RealScalar<Real> param,
+                   RealScalar<Real> mu, RealScalar<PositiveReal> scale) {
+
+        try {
+            initByName("param", param, "mu", mu, "scale", scale);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
     public void initAndValidate() {
         refresh();

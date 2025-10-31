@@ -20,6 +20,24 @@ public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeRe
 
     protected ExponentialDistribution dist = ExponentialDistribution.of(1);
 
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public Exponential() {
+    }
+
+    public Exponential(RealScalar<NonNegativeReal> param, RealScalar<PositiveReal> mean) {
+
+        try {
+            initByName("param", param, "mean", mean);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
+
     @Override
     public void initAndValidate() {
         refresh();

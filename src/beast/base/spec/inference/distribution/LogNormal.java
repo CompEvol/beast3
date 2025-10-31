@@ -28,6 +28,28 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
     protected boolean hasMeanInRealSpace;
     protected LogNormalDistribution dist = LogNormalDistribution.of(0, 1);
 
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public LogNormal() {}
+
+    public LogNormal(RealScalar<PositiveReal> param,
+                     RealScalar<Real> M, RealScalar<PositiveReal> S) {
+        this(param, M, S, false);
+    }
+
+    public LogNormal(RealScalar<PositiveReal> param,
+                     RealScalar<Real> M, RealScalar<PositiveReal> S, boolean meanInRealSpace) {
+
+        try {
+            initByName("param", param, "M", M, "S", S, "meanInRealSpace", meanInRealSpace);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
 	public void initAndValidate() {
         hasMeanInRealSpace = hasMeanInRealSpaceInput.get();

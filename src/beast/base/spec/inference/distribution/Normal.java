@@ -25,6 +25,25 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
 
     protected NormalDistribution dist = NormalDistribution.of(0, 1);
 
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public Normal() {
+    }
+
+    public Normal(RealScalar<PositiveReal> param,
+                  RealScalar<Real> mean, RealScalar<PositiveReal> sigma) {
+
+        try {
+            initByName("param", param, "mean", mean, "sigma", sigma);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
+
     @Override
     public void initAndValidate() {
         refresh();

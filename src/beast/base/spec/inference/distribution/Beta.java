@@ -28,11 +28,11 @@ public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitI
      */
     public Beta() {}
 
-    public Beta(RealScalar<UnitInterval> tensor,
+    public Beta(RealScalar<UnitInterval> param,
                 RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> beta) {
 
         try {
-            initByName("tensor", tensor, "alpha", alpha, "beta", beta);
+            initByName("param", param, "alpha", alpha, "beta", beta);
         } catch (Exception e) {
             throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
                     " via initByName in constructor.", e );

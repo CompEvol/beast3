@@ -31,10 +31,10 @@ public class Poisson extends IntTensorDistribution<IntScalar<NonNegativeInt>, No
     public Poisson() {
     }
 
-    public Poisson(IntScalar<NonNegativeInt> tensor, RealScalar<NonNegativeReal> lambda) {
+    public Poisson(IntScalar<NonNegativeInt> param, RealScalar<NonNegativeReal> lambda) {
 
         try {
-            initByName("tensor", tensor, "lambda", lambda);
+            initByName("param", param, "lambda", lambda);
         } catch (Exception e) {
             throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
                     " via initByName in constructor.", e );
@@ -73,11 +73,11 @@ public class Poisson extends IntTensorDistribution<IntScalar<NonNegativeInt>, No
         // in
         RealScalar<NonNegativeReal> lambda = new RealScalarParam<>(5.0, NonNegativeReal.INSTANCE);
         // out
-        IntScalar<NonNegativeInt> tensor = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
+        IntScalar<NonNegativeInt> param = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
         // include initAndValidate
-        Poisson poisson = new Poisson(tensor, lambda);
+        Poisson poisson = new Poisson(param, lambda);
 
-        System.out.println("tensor = " + tensor + ", logP =" + poisson.calculateLogP());
+        System.out.println("param = " + param + ", logP =" + poisson.calculateLogP());
 
         /*
 k	P(X=k)	log P(X=k)

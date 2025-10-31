@@ -38,17 +38,17 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     protected static UniformRandomProvider rng = RandomSource.MT.create();
 
     // Note this is the same tensor used for the sampled values defined in the class types.
-    final public Input<S> tensorInput = new Input<>("tensor",
+    final public Input<S> paramInput = new Input<>("param",
             "point at which the density is calculated", Validate.REQUIRED, Tensor.class);
 
-    protected S tensor;
+    protected S param;
 
     @Override
     public void initAndValidate() {
-        tensor = tensorInput.get();
+        param = paramInput.get();
 
-        if (! tensor.isValid())
-            throw new IllegalArgumentException("Tensor is not valid ! " + tensor);
+        if (! param.isValid())
+            throw new IllegalArgumentException("Tensor param is not valid ! " + param);
 
         calculateLogP();
     }
@@ -75,8 +75,8 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     public double calculateLogP() {
         logP = 0;
 
-        tensor = tensorInput.get();
-        switch (tensor) {
+        param = paramInput.get();
+        switch (param) {
             case Scalar scalar -> {
                 if (!scalar.isValid(scalar.get())) return Double.NEGATIVE_INFINITY;
                 final T x = (T) scalar.get();
@@ -111,8 +111,8 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         try {
             newx = sample();
 
-            tensor = tensorInput.get();
-            switch (tensor) {
+            param = paramInput.get();
+            switch (param) {
                 case Scalar scalar -> {
                     if (scalar instanceof Bounded b) {
                         while (!b.withinBounds((Comparable) newx)) {
@@ -155,14 +155,14 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     public List<String> getArguments() {
         List<String> arguments = new ArrayList<>();
         // TODO safe cast ?
-        String id = ((BEASTInterface) tensor).getID();
+        String id = ((BEASTInterface) param).getID();
         arguments.add(id);
         return arguments;
     }
 
     // used by unit test
     public double calcLogP(Tensor<D, T> tensor) {
-        tensorInput.setValue(tensor, this);
+        paramInput.setValue(tensor, this);
         return calculateLogP();
     }
 
