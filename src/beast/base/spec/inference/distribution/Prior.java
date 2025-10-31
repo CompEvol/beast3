@@ -1,28 +1,29 @@
 	package beast.base.spec.inference.distribution;
 
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+    import beast.base.core.BEASTInterface;
+    import beast.base.core.Description;
+    import beast.base.core.Input;
+    import beast.base.core.Input.Validate;
+    import beast.base.inference.Distribution;
+    import beast.base.inference.State;
+    import beast.base.inference.distribution.ParametricDistribution;
+    import beast.base.spec.Bounded;
+    import beast.base.spec.inference.parameter.IntScalarParam;
+    import beast.base.spec.inference.parameter.RealScalarParam;
+    import beast.base.spec.type.RealScalar;
+    import beast.base.spec.type.RealVector;
+    import org.apache.commons.math.MathException;
 
-import org.apache.commons.math.MathException;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import beast.base.inference.*;
-import beast.base.inference.distribution.ParametricDistribution;
-import beast.base.spec.Bounded;
-import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.RealVector;
+    import java.util.ArrayList;
+    import java.util.List;
+    import java.util.Random;
 
 
 @Description("Produces prior (log) probability of value x." +
         "If x is multidimensional, the components of x are assumed to be independent, " +
         "so the sum of log probabilities of all elements of x is returned as the prior.")
+@Deprecated
 public class Prior extends Distribution {
     final public Input<RealScalar<?>> scalarInput = new Input<>("scalar", "point at which the density is calculated");
     final public Input<RealVector<?>> vectorInput = new Input<>("vector", "point at which the density is calculated");

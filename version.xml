@@ -206,9 +206,25 @@
                 <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Prior"/>
-                <provider classname="beast.base.spec.inference.distribution.MarkovChainDistribution"/>
 
+                <provider classname="beast.base.spec.inference.distribution.IntTensorDistribution"/>
+                <provider classname="beast.base.spec.inference.distribution.RealTensorDistribution"/>
+                <provider classname="beast.base.spec.inference.distribution.TensorDistribution"/>
+
+                <provider classname="beast.base.spec.inference.distribution.Beta"/>
+                <provider classname="beast.base.spec.inference.distribution.ChiSquare"/>
+                <provider classname="beast.base.spec.inference.distribution.Dirichlet"/>
+                <provider classname="beast.base.spec.inference.distribution.Exponential"/>
+                <provider classname="beast.base.spec.inference.distribution.Gamma"/>
+                <provider classname="beast.base.spec.inference.distribution.InverseGamma"/>
+                <provider classname="beast.base.spec.inference.distribution.Laplace"/>
+                <provider classname="beast.base.spec.inference.distribution.LogNormal"/>
+                <provider classname="beast.base.spec.inference.distribution.MarkovChainDistribution"/>
+                <provider classname="beast.base.spec.inference.distribution.Normal"/>
+                <provider classname="beast.base.spec.inference.distribution.OneOnX"/>
                 <provider classname="beast.base.spec.inference.distribution.Poisson"/>
+                <provider classname="beast.base.spec.inference.distribution.Uniform"/>
+
 
                 <provider classname="beast.base.spec.FunctionOfTensor"/>
                 <provider classname="beast.base.spec.evolution.Sum"/>
