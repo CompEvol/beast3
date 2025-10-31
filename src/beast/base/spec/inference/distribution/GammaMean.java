@@ -9,9 +9,7 @@ import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
 
-@Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
-        "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
-        "separate independent component.")
+@Description("Gamma distribution using a different parameterization.")
 public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
