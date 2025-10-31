@@ -57,7 +57,7 @@ public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitI
     }
 
     @Override
-    public BetaDistribution getDistribution() {
+    protected BetaDistribution getDistribution() {
         refresh();
         return dist;
     }

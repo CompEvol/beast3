@@ -57,7 +57,7 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
     }
 
     @Override
-    public LaplaceDistribution getDistribution() {
+    protected LaplaceDistribution getDistribution() {
         refresh();
         return dist;
     }

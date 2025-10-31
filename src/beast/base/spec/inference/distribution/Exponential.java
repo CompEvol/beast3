@@ -55,7 +55,7 @@ public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeRe
     }
 
     @Override
-    public ExponentialDistribution getDistribution() {
+    protected ExponentialDistribution getDistribution() {
         refresh();
         return dist;
     }

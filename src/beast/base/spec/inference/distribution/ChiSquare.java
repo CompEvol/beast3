@@ -54,7 +54,7 @@ public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal
     }
 
     @Override
-    public ChiSquaredDistribution getDistribution() {
+    protected ChiSquaredDistribution getDistribution() {
         refresh();
         return dist;
     }

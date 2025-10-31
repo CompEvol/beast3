@@ -42,7 +42,7 @@ public class Poisson extends IntTensorDistribution<IntScalar<NonNegativeInt>, No
     }
 
     @Override
-    public PoissonDistribution getDistribution() {
+    protected PoissonDistribution getDistribution() {
         refresh();
         return dist;
     }

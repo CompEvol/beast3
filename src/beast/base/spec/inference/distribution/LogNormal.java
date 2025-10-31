@@ -71,7 +71,7 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    public LogNormalDistribution getDistribution() {
+    protected LogNormalDistribution getDistribution() {
         refresh();
         return dist;
     }

@@ -67,7 +67,7 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
     }
 
     @Override
-    public NormalDistribution getDistribution() {
+    protected NormalDistribution getDistribution() {
         refresh();
         return dist;
     }
