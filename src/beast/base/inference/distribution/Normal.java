@@ -1,17 +1,19 @@
 package beast.base.inference.distribution;
 
 
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.NormalDistributionImpl;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.math.distribution.NormalDistributionImpl;
 
 
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Normal}
+ */
+@Deprecated
 @Description("Normal distribution.  f(x) = frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{ -\\frac{(x-\\mu)^2}{2\\sigma^2} } " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

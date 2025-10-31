@@ -1,15 +1,17 @@
 package beast.base.inference.distribution;
 
 
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.IntegerParameter;
+import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
+import org.apache.commons.math.distribution.ContinuousDistribution;
 
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.ChiSquare}
+ */
+@Deprecated
 @Description("Chi square distribution, f(x; k) = \\frac{1}{2^{k/2}Gamma(k/2)} x^{k/2-1} e^{-x/2} " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

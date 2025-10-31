@@ -1,14 +1,16 @@
 package beast.base.inference.distribution;
 
 
-import org.apache.commons.math.distribution.PoissonDistributionImpl;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.distribution.PoissonDistributionImpl;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Poisson}
+ */
+@Deprecated
 @Description("Poisson distribution, used as prior  f(k; lambda)=\\frac{lambda^k e^{-lambda}}{k!}  " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

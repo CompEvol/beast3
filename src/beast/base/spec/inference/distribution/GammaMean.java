@@ -12,40 +12,28 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 @Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
-            "shape parameter, defaults to 2");
-    final public Input<RealScalar<PositiveReal>> thetaInput = new Input<>("theta",
-            "scale parameter for Shape–Scale form, defaults to 2.", Input.Validate.XOR);
-    final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
-            "rate parameter for Shape–Rate form, defaults to 2.", Input.Validate.XOR);
+            "shape parameter, defaults to 2", Input.Validate.REQUIRED);
+    final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
+            "the expected mean of Gamma distribution, which equals shape * scale. " +
+                    "If it is not given, then use mean = 1.0 (default) which is equivalent to ignoring scale parameter.",
+            Input.Validate.OPTIONAL);
 
-    protected GammaDistribution dist = GammaDistribution.of(2.0, 2.0);
+    protected GammaDistribution dist = GammaDistribution.of(2.0, 0.5);
 
     /**
      * Must provide empty constructor for construction by XML.
      * Note that this constructor DOES NOT call initAndValidate();
      */
-    public Gamma() {}
+    public GammaMean() {}
 
     // default to use theta
-    public Gamma(RealScalar<PositiveReal> param,
-                 RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> theta) {
-        this(param, alpha, theta, null);
-    }
-
-    public Gamma(RealScalar<PositiveReal> param,
-                 RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> theta,
-                 RealScalar<PositiveReal> beta) {
-
+    public GammaMean(RealScalar<PositiveReal> param,
+                     RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> mean) {
         try {
-            if (theta != null && beta == null) {
-                initByName("param", param, "alpha", alpha, "theta", theta);
-            } else if (beta != null && theta == null) {
-                initByName("param", param, "alpha", alpha, "beta", beta);
-            } else
-                throw new IllegalArgumentException("Must have either theta or beta ! ");
+            initByName("param", param, "alpha", alpha, "mean", mean);
         } catch (Exception e) {
             throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
                     " via initByName in constructor.", e );
@@ -62,19 +50,9 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
      */
 	void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 2.0;
+        double mean = (meanInput.get() != null) ? meanInput.get().get() : 1.0; // default
 
-        double scale = 2.0; // default
-        if (thetaInput.get() != null && betaInput.get()  == null) {
-            // θ provided directly
-            scale  = thetaInput.get().get();
-        } else if (betaInput.get() != null && thetaInput.get()  == null) {
-            // β provided : θ = 1 / β
-            scale  = 1.0 / betaInput.get().get() ;
-
-        } else if (thetaInput.get() == null && betaInput.get()  == null) {
-            // both null, use default
-        } else
-            throw new IllegalArgumentException("Must have either theta or beta ! ");
+        double scale = mean / alpha;
 
         // Floating point comparison
         if (Math.abs(dist.getShape() - alpha) > EPS ||  Math.abs(dist.getScale() - scale) > EPS)

@@ -1,14 +1,17 @@
 package beast.base.inference.distribution;
 
 
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.math.distribution.GammaDistributionImpl;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Gamma}
+ * and
+ */
+@Deprecated
 @Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

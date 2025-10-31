@@ -1,15 +1,15 @@
 package beast.base.inference.distribution;
 
-import org.apache.commons.math.distribution.BetaDistributionImpl;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.distribution.BetaDistributionImpl;
+import org.apache.commons.math.distribution.ContinuousDistribution;
 
-
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Beta}
+ */
+@Deprecated
 @Description("Beta distribution, used as prior.  p(x;alpha,beta) = \frac{x^{alpha-1}(1-x)^{beta-1}} {B(alpha,beta)} " +
         "where B() is the beta function. " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +

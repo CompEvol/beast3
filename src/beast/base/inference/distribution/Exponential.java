@@ -1,16 +1,17 @@
 package beast.base.inference.distribution;
 
 
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.ExponentialDistributionImpl;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.math.distribution.ExponentialDistributionImpl;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Exponential}
+ */
+@Deprecated
 @Description("Exponential distribution.  f(x;\\lambda) = 1/\\lambda e^{-x/\\lambda}, if x >= 0 " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

@@ -216,6 +216,7 @@
                 <provider classname="beast.base.spec.inference.distribution.Dirichlet"/>
                 <provider classname="beast.base.spec.inference.distribution.Exponential"/>
                 <provider classname="beast.base.spec.inference.distribution.Gamma"/>
+                <provider classname="beast.base.spec.inference.distribution.GammaMean"/>
                 <provider classname="beast.base.spec.inference.distribution.InverseGamma"/>
                 <provider classname="beast.base.spec.inference.distribution.Laplace"/>
                 <provider classname="beast.base.spec.inference.distribution.LogNormal"/>

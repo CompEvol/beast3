@@ -1,13 +1,15 @@
 package beast.base.inference.distribution;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.inference.parameter.RealParameter;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.ContinuousDistribution;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Laplace}
+ */
+@Deprecated
 @Description("Laplace distribution.    f(x|\\mu,b) = \\frac{1}{2b} \\exp \\left( -\\frac{|x-\\mu|}{b} \\right)" +
         "The probability density function of the Laplace distribution is also reminiscent of the normal distribution; " +
         "however, whereas the normal distribution is expressed in terms of the squared difference from the mean ?, " +

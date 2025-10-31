@@ -25,10 +25,6 @@
 
 package beast.base.inference.distribution;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.IntegerDistribution;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -36,6 +32,9 @@ import beast.base.inference.CalculationNode;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.math.distribution.IntegerDistribution;
 
 /**
  * A class that describes a parametric distribution
@@ -46,6 +45,10 @@ import beast.base.util.Randomizer;
  * @version $Id: ParametricDistributionModel.java,v 1.4 2005/05/24 20:25:59 rambaut Exp $
  */
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.TensorDistribution}
+ */
+@Deprecated
 @Description("A class that describes a parametric distribution, that is, a distribution that takes some " +
         "parameters/valuables as inputs and can produce (cumulative) densities and inverse " +
         "cumulative densities.")
