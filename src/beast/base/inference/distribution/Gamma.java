@@ -9,7 +9,7 @@ import org.apache.commons.math.distribution.GammaDistributionImpl;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Gamma}
- * and
+ * and {@link beast.base.spec.inference.distribution.GammaMean}
  */
 @Deprecated
 @Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
