@@ -222,7 +222,7 @@
                 <provider classname="beast.base.spec.inference.distribution.LogNormal"/>
                 <provider classname="beast.base.spec.inference.distribution.MarkovChainDistribution"/>
                 <provider classname="beast.base.spec.inference.distribution.Normal"/>
-                <provider classname="beast.base.spec.inference.distribution.OneOnX"/>
+<!--OneOnX not migrated, it is not a distribution-->
                 <provider classname="beast.base.spec.inference.distribution.Poisson"/>
                 <provider classname="beast.base.spec.inference.distribution.Uniform"/>
 

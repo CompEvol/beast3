@@ -15,13 +15,13 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
-            "shape parameter, defaults to 2");
+            "shape parameter, defaults to 1");
     final public Input<RealScalar<PositiveReal>> thetaInput = new Input<>("theta",
-            "scale parameter for Shape–Scale form, defaults to 2.", Input.Validate.XOR);
+            "scale parameter for Shape–Scale form, defaults to 1.", Input.Validate.XOR);
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
-            "rate parameter for Shape–Rate form, defaults to 2.", Input.Validate.XOR);
+            "rate parameter for Shape–Rate form, defaults to 1.", Input.Validate.XOR);
 
-    protected GammaDistribution dist = GammaDistribution.of(2.0, 2.0);
+    protected GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -61,9 +61,9 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
      * make sure internal state is up to date *
      */
 	void refresh() {
-        double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 2.0;
+        double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
 
-        double scale = 2.0; // default
+        double scale = 1.0; // default
         if (thetaInput.get() != null && betaInput.get()  == null) {
             // θ provided directly
             scale  = thetaInput.get().get();
@@ -93,7 +93,7 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
     }
 
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
     	refresh();
     	return dist.getShape() * dist.getScale();
     }

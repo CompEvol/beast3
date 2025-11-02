@@ -54,7 +54,7 @@ public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D exte
 
     //*** wrap Apache Stats methods to handle offset ***//
 
-    public double density(int x) {
+    public double density(double x) {
         x -= getOffset();
         return getDistribution().density(x);
     }
@@ -94,7 +94,7 @@ public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D exte
         return offsetInput.get();
     }
 
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
         return getDistribution().getMean();
     }
 

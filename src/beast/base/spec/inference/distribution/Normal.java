@@ -78,7 +78,7 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
     }
 
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
         return (meanInput.get() != null) ? meanInput.get().get() : 0.0;
     }
 } // class Normal

@@ -55,8 +55,19 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
     //*** abstract methods ***//
 
+    /**
+     * It must be implemented, and it is used to compute the normalized probability (density)
+     * for this distribution in {@link #calculateLogP()}.
+     * @param x  parameter value
+     * @return   the normalized probability (density)
+     */
     public abstract double logProb(final T x);
 
+    /**
+     * It is used to sample values from this distribution.
+     * @param size  how many samples
+     * @return      the list of samples
+     */
     public abstract List<S> sample(int size);
 
     public S sample() {

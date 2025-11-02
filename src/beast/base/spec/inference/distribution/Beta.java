@@ -68,7 +68,7 @@ public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitI
     }
 
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
     	return dist.getAlpha() / (dist.getAlpha() + dist.getBeta());
     }
 } // class Beta

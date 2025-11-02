@@ -13,13 +13,13 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
-            "shape parameter, defaults to 2", Input.Validate.REQUIRED);
+            "shape parameter, defaults to 1", Input.Validate.REQUIRED);
     final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
             "the expected mean of Gamma distribution, which equals shape * scale. " +
-                    "If it is not given, then use mean = 1.0 (default) which is equivalent to ignoring scale parameter.",
+                    "If it is not given, then use mean = 1.0 (default).",
             Input.Validate.OPTIONAL);
 
-    protected GammaDistribution dist = GammaDistribution.of(2.0, 0.5);
+    protected GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -69,7 +69,7 @@ public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
     	refresh();
     	return dist.getShape() * dist.getScale();
     }

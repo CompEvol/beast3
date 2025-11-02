@@ -82,7 +82,7 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
     	if (hasMeanInRealSpace) {
             return (MParameterInput.get() != null) ? MParameterInput.get().get() : 0.0;
     	} else {

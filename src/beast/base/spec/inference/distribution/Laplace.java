@@ -68,7 +68,7 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
     }
     
     @Override
-    public double getMeanWithoutOffset() {
+    protected double getMeanWithoutOffset() {
     	return (muInput.get() != null) ? muInput.get().get() : 0.0;
     }
 
