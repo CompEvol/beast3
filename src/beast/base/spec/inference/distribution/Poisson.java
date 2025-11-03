@@ -55,6 +55,7 @@ public class Poisson extends IntTensorDistribution<IntScalar<NonNegativeInt>, No
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**

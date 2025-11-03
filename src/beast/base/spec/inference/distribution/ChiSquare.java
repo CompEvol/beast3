@@ -42,6 +42,7 @@ public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**

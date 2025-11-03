@@ -15,9 +15,8 @@ public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1", Input.Validate.REQUIRED);
     final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
-            "the expected mean of Gamma distribution, which equals shape * scale. " +
-                    "If it is not given, then use mean = 1.0 (default).",
-            Input.Validate.OPTIONAL);
+            "the expected mean of Gamma distribution, which equals shape * scale, default to 1.",
+            Input.Validate.REQUIRED);
 
     protected GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
 
@@ -41,6 +40,7 @@ public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, 
     @Override
     public void initAndValidate() {
     	refresh();
+        super.initAndValidate();
     }
 
     /**

@@ -54,6 +54,7 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
 	public void initAndValidate() {
         hasMeanInRealSpace = hasMeanInRealSpaceInput.get();
         refresh();
+        super.initAndValidate();
     }
 
     /**

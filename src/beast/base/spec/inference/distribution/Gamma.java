@@ -55,6 +55,7 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
     @Override
     public void initAndValidate() {
     	refresh();
+        super.initAndValidate();
     }
 
     /**

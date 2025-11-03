@@ -47,6 +47,7 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**

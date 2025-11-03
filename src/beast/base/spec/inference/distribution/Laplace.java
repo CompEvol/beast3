@@ -42,6 +42,7 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**

@@ -41,6 +41,7 @@ public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeRe
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**

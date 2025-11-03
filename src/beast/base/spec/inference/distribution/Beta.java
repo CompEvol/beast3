@@ -42,6 +42,7 @@ public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitI
     @Override
     public void initAndValidate() {
         refresh();
+        super.initAndValidate();
     }
 
     /**
