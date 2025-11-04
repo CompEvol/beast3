@@ -49,19 +49,9 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
         if (! param.isValid())
             throw new IllegalArgumentException("Tensor param is not valid ! " + param);
-
-        calculateLogP();
     }
 
     //*** abstract methods ***//
-
-    /**
-     * It must be implemented, and it is used to compute the normalized probability (density)
-     * for this distribution in {@link #calculateLogP()}.
-     * @param x  parameter value
-     * @return   the normalized probability (density)
-     */
-    public abstract double logProb(final T x);
 
     /**
      * It is used to sample values from this distribution.
@@ -74,6 +64,10 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         return sample(1).getFirst();
     }
 
+    public int dimension() {
+        return param.size();
+    }
+
     /**
      * @return  offset of distribution.
      */
@@ -81,30 +75,6 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
 
     //*** Override Distribution methods ***//
-
-    @Override
-    public double calculateLogP() {
-        logP = 0;
-
-        param = paramInput.get();
-        switch (param) {
-            case Scalar scalar -> {
-                if (!scalar.isValid(scalar.get())) return Double.NEGATIVE_INFINITY;
-                final T x = (T) scalar.get();
-                logP += logProb(x);
-            }
-            case Vector vector -> {
-                if (!vector.isValid())
-                    return Double.NEGATIVE_INFINITY;
-                for (int i = 0; i < vector.size(); i++) {
-                    final T x = (T) vector.get(i);
-                    logP += logProb(x);
-                }
-            }
-            default -> throw new IllegalStateException("Unexpected tensor type");
-        }
-        return logP;
-    }
 
     @Override
     public void sample(State state, Random random) {

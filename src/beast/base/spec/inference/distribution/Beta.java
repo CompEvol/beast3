@@ -64,8 +64,8 @@ public class Beta extends RealTensorDistribution<RealScalar<UnitInterval>, UnitI
     }
 
     @Override
-    protected RealScalar<UnitInterval> valueToTensor(double value) {
-        return new RealScalarParam<>(value, UnitInterval.INSTANCE);
+    protected RealScalar<UnitInterval> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], UnitInterval.INSTANCE);
     }
 
     @Override

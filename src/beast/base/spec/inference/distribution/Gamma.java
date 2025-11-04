@@ -89,8 +89,8 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double value) {
-        return new RealScalarParam<>(value, PositiveReal.INSTANCE);
+    protected RealScalar<PositiveReal> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
     }
 
     @Override

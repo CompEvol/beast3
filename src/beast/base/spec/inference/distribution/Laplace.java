@@ -64,8 +64,8 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
     }
 
     @Override
-    protected RealScalar<Real> valueToTensor(double value) {
-        return new RealScalarParam<>(value, Real.INSTANCE);
+    protected RealScalar<Real> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], Real.INSTANCE);
     }
     
     @Override

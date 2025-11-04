@@ -61,8 +61,8 @@ public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal
     }
 
     @Override
-    protected RealScalar<NonNegativeReal> valueToTensor(double value) {
-        return new RealScalarParam<>(value, NonNegativeReal.INSTANCE);
+    protected RealScalar<NonNegativeReal> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], NonNegativeReal.INSTANCE);
     }
 
 } // class ChiSquare

@@ -48,8 +48,8 @@ public class Poisson extends IntTensorDistribution<IntScalar<NonNegativeInt>, No
     }
 
     @Override
-    protected IntScalar<NonNegativeInt> valueToTensor(int value) {
-        return new IntScalarParam<>(value, NonNegativeInt.INSTANCE);
+    protected IntScalar<NonNegativeInt> valueToTensor(int... value) {
+        return new IntScalarParam<>(value[0], NonNegativeInt.INSTANCE);
     }
 
     @Override

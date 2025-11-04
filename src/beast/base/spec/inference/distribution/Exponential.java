@@ -62,8 +62,8 @@ public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeRe
     }
 
     @Override
-    protected RealScalar<NonNegativeReal> valueToTensor(double value) {
-        return new RealScalarParam<>(value, NonNegativeReal.INSTANCE);
+    protected RealScalar<NonNegativeReal> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], NonNegativeReal.INSTANCE);
     }
 
 } // class Exponential

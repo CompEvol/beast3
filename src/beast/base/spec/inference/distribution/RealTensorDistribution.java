@@ -4,7 +4,9 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.Real;
+import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
+import beast.base.spec.type.Vector;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 import java.util.ArrayList;
@@ -21,9 +23,43 @@ public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D exte
     public final Input<Double> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0.0);
 
+    @Override
+    public void initAndValidate() {
+        super.initAndValidate();
+        calculateLogP();
+    }
+
     protected abstract ContinuousDistribution getDistribution();
 
-    protected abstract S valueToTensor(double value);
+    protected abstract S valueToTensor(double... value);
+
+    /**
+     * Override {@link beast.base.inference.Distribution#calculateLogP()}.
+     * Parameter value is wrapped by tensor S.
+     * @return the normalized probability (density) for this distribution.
+     */
+    @Override
+    public double calculateLogP() {
+        logP = 0;
+        param = paramInput.get();
+        switch (param) {
+            case Scalar scalar -> {
+                if (!scalar.isValid(scalar.get())) return Double.NEGATIVE_INFINITY;
+                final double x = ((S) scalar).get();
+                logP += this.logDensity(x);
+            }
+            case Vector vector -> {
+                if (!vector.isValid())
+                    return Double.NEGATIVE_INFINITY;
+                for (int i = 0; i < vector.size(); i++) {
+                    final double x = ((S) vector).get(i);
+                    logP += this.logDensity(x);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected tensor type");
+        }
+        return logP;
+    }
 
     /*
      * This implementation is only suitable for univariate distributions.
@@ -32,63 +68,76 @@ public abstract class RealTensorDistribution<S extends Tensor<D, Double>, D exte
      */
     @Override
     public List<S> sample(final int size) {
+        param = paramInput.get();
         ContinuousDistribution.Sampler sampler = getDistribution().createSampler(rng);
         List<S> samples = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            final double x = sampler.sample() + getOffset();
-            samples.add(valueToTensor(x));
-        }
+
+        for (int s = 0; s < size; s++) {
+            switch (param) {
+                case Scalar scalar -> {
+                    final double x = sampler.sample() + getOffset();
+                    if (!scalar.isValid(x))
+                        throw new IllegalStateException("Invalid sample value : " + x);
+                    samples.add(valueToTensor(x));
+                }
+                case Vector vector -> {
+                    final double[] x = new double[vector.size()];
+                    for (int i = 0; i < vector.size(); i++) {
+                        x[i] = sampler.sample() + getOffset();
+                        if (!vector.isValid(x))
+                            throw new IllegalStateException("Invalid sample value : " + x[i] +
+                                    " at " + i);
+                    }
+                    samples.add(valueToTensor(x));
+                }
+                default -> throw new IllegalStateException("Unexpected tensor type");
+            }
+        } // end for loop
         return samples;
     }
 
-    /**
-     * Used by BEAST {@link #calculateLogP()}
-     *
-     * @param x Point at which the PMF is evaluated.
-     * @return the logarithm of the value of the probability mass function at x after offset.
-     */
-    @Override
-    public double logProb(Double x) {
-        return this.logDensity(x);
-    }
 
     //*** wrap Apache Stats methods to handle offset ***//
 
-    public double density(double x) {
-        x -= getOffset();
-        return getDistribution().density(x);
+    public double density(double... x) {
+        double logPdf = logDensity(x);
+        return Math.exp(logPdf);
     }
 
-    public double probability(double x0, double x1) {
-        x0 -= getOffset();
-        x1 -= getOffset();
-        return getDistribution().probability(x0, x1);
+    public double logDensity(double... x) {
+        double logP = 0;
+        for (int i = 0; i < x.length; i++) {
+            x[i] -= getOffset();
+            logP += getDistribution().logDensity(x[i]);
+        }
+        return logP;
     }
 
-    public double logDensity(double x) {
-        x -= getOffset();
-        return getDistribution().logDensity(x);
-    }
-
-    public double cumulativeProbability(double x) {
-        x -= getOffset();
-        return getDistribution().cumulativeProbability(x);
-    }
-
-    public double survivalProbability(double x) {
-        x -= getOffset();
-        return getDistribution().survivalProbability(x);
-    }
-
-    public double inverseCumulativeProbability(double p) {
-        double offset = getOffset();
-        return offset + getDistribution().inverseCumulativeProbability(p);
-    }
-
-    public double inverseSurvivalProbability(double p) {
-        double offset = getOffset();
-        return offset + getDistribution().inverseSurvivalProbability(p);
-    }
+//    public double probability(double x0, double x1) {
+//        x0 -= getOffset();
+//        x1 -= getOffset();
+//        return getDistribution().probability(x0, x1);
+//    }
+//
+//    public double cumulativeProbability(double x) {
+//        x -= getOffset();
+//        return getDistribution().cumulativeProbability(x);
+//    }
+//
+//    public double survivalProbability(double x) {
+//        x -= getOffset();
+//        return getDistribution().survivalProbability(x);
+//    }
+//
+//    public double inverseCumulativeProbability(double p) {
+//        double offset = getOffset();
+//        return offset + getDistribution().inverseCumulativeProbability(p);
+//    }
+//
+//    public double inverseSurvivalProbability(double p) {
+//        double offset = getOffset();
+//        return offset + getDistribution().inverseSurvivalProbability(p);
+//    }
 
     public Double getOffset() {
         return offsetInput.get();

@@ -4,7 +4,9 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.Int;
+import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
+import beast.base.spec.type.Vector;
 import org.apache.commons.statistics.distribution.DiscreteDistribution;
 
 import java.util.ArrayList;
@@ -21,9 +23,15 @@ public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D exte
     public final Input<Integer> offsetInput = new Input<>("offset",
             "offset of origin (defaults to 0)", 0);
 
+    @Override
+    public void initAndValidate() {
+        super.initAndValidate();
+        calculateLogP();
+    }
+
     protected abstract DiscreteDistribution getDistribution();
 
-    protected abstract S valueToTensor(int value);
+    protected abstract S valueToTensor(int... value);
 
     /*
      * This implementation is only suitable for univariate distributions.
@@ -42,13 +50,31 @@ public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D exte
     }
 
     /**
-     * Used by BEAST {@link #calculateLogP()}
-     * @param x Point at which the PMF is evaluated.
-     * @return  the logarithm of the value of the probability mass function at x after offset.
+     * Override {@link beast.base.inference.Distribution#calculateLogP()}.
+     * Parameter value is wrapped by tensor S.
+     * @return the normalized probability (density) for this distribution.
      */
     @Override
-    public double logProb(Integer x) {
-        return this.logProbability(x);
+    public double calculateLogP() {
+        logP = 0;
+        param = paramInput.get();
+        switch (param) {
+            case Scalar scalar -> {
+                if (!scalar.isValid(scalar.get())) return Double.NEGATIVE_INFINITY;
+                final int x = ((S) scalar).get();
+                logP += this.logProbability(x);
+            }
+            case Vector vector -> {
+                if (!vector.isValid())
+                    return Double.NEGATIVE_INFINITY;
+                for (int i = 0; i < vector.size(); i++) {
+                    final int x = ((S) vector).get(i);
+                    logP += this.logProbability(x);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected tensor type");
+        }
+        return logP;
     }
 
     //*** wrap Apache Stats methods to handle offset ***//

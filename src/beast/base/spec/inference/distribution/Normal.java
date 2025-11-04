@@ -6,6 +6,7 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.NormalDistribution;
 
@@ -74,8 +75,8 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double value) {
-        return null;
+    protected RealScalar<PositiveReal> valueToTensor(double... value) {
+        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
     }
 
     @Override
