@@ -84,6 +84,14 @@ public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D exte
         return Math.exp(logPdf);
     }
 
+    /**
+     * This is used by {@link #calculateLogP()}, which overrides the method
+     * in {@link beast.base.inference.Distribution}.
+     * @param x   value of scalar or vector
+     * @return    the natural logarithm of the probability density function (PDF)
+     *            of this distribution evaluated at the specified point x.
+     *            If the offset is given, this will be log-density after taking offset from x.
+     */
     public double logProbability(int... x) {
         double logP = 0;
         for (int i = 0; i < x.length; i++) {

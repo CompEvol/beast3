@@ -1,18 +1,20 @@
 package beast.base.inference.distribution;
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.math.distribution.Distribution;
 
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Dirichlet}
+ */
+@Deprecated
 @Description("Dirichlet distribution.  p(x_1,...,x_n;alpha_1,...,alpha_n) = 1/B(alpha) prod_{i=1}^K x_i^{alpha_i - 1} " +
         "where B() is the beta function B(alpha) = prod_{i=1}^K Gamma(alpha_i)/ Gamma(sum_{i=1}^K alpha_i}. ")
 public class Dirichlet extends ParametricDistribution {

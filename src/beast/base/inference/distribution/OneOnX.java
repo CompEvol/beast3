@@ -1,14 +1,16 @@
 package beast.base.inference.distribution;
 
 
+import beast.base.core.Description;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ContinuousDistribution;
 import org.apache.commons.math.distribution.Distribution;
 
-import beast.base.core.Description;
 
-
-
+/**
+ * @deprecated 1/x can be simulated. Use other distributions.
+ */
+@Deprecated
 @Description("OneOnX distribution.  f(x) = C/x for some normalizing constant C. " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
