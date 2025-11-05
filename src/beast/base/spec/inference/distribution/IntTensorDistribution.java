@@ -79,41 +79,46 @@ public abstract class IntTensorDistribution<S extends Tensor<D, Integer>, D exte
 
     //*** wrap Apache Stats methods to handle offset ***//
 
-    public double probability(int x) {
-        x -= getOffset();
-        return getDistribution().probability(x);
+    public double probability(int... x) {
+        double logPdf = logProbability(x);
+        return Math.exp(logPdf);
     }
 
-    public double probability(int x0, int x1) {
-        x0 -= getOffset();
-        x1 -= getOffset();
-        return getDistribution().probability(x0, x1);
+    public double logProbability(int... x) {
+        double logP = 0;
+        for (int i = 0; i < x.length; i++) {
+            x[i] -= getOffset();
+            logP += getDistribution().logProbability(x[i]);
+        }
+        return logP;
     }
 
-    public double logProbability(int x) {
-        x -= getOffset();
-        return getDistribution().logProbability(x);
-    }
 
-    public double cumulativeProbability(int x) {
-        x -= getOffset();
-        return getDistribution().cumulativeProbability(x);
-    }
-
-    public double survivalProbability(int x) {
-        x -= getOffset();
-        return getDistribution().survivalProbability(x);
-    }
-
-    public int inverseCumulativeProbability(double p) {
-        int offset = getOffset();
-        return offset + getDistribution().inverseCumulativeProbability(p);
-    }
-
-    public int inverseSurvivalProbability(double p) {
-        int offset = getOffset();
-        return offset + getDistribution().inverseSurvivalProbability(p);
-    }
+//    public double probability(int x0, int x1) {
+//        x0 -= getOffset();
+//        x1 -= getOffset();
+//        return getDistribution().probability(x0, x1);
+//    }
+//
+//    public double cumulativeProbability(int x) {
+//        x -= getOffset();
+//        return getDistribution().cumulativeProbability(x);
+//    }
+//
+//    public double survivalProbability(int x) {
+//        x -= getOffset();
+//        return getDistribution().survivalProbability(x);
+//    }
+//
+//    public int inverseCumulativeProbability(double p) {
+//        int offset = getOffset();
+//        return offset + getDistribution().inverseCumulativeProbability(p);
+//    }
+//
+//    public int inverseSurvivalProbability(double p) {
+//        int offset = getOffset();
+//        return offset + getDistribution().inverseSurvivalProbability(p);
+//    }
 
     public Integer getOffset() {
         return offsetInput.get();
