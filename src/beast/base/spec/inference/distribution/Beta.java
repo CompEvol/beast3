@@ -7,6 +7,7 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.BetaDistribution;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 import java.util.List;
 
@@ -40,15 +41,15 @@ public class Beta extends TensorDistribution<RealScalar<UnitInterval>, UnitInter
         }
     }
 
-    public Beta(List<RealScalar<UnitInterval>> iidparam,
-                RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> beta) {
-        try {
-            initByName("iidparam", iidparam, "alpha", alpha, "beta", beta);
-        } catch (Exception e) {
-            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
-                    " via initByName in constructor.", e );
-        }
-    }
+//    public Beta(List<RealScalar<UnitInterval>> iidparam,
+//                RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> beta) {
+//        try {
+//            initByName("iidparam", iidparam, "alpha", alpha, "beta", beta);
+//        } catch (Exception e) {
+//            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+//                    " via initByName in constructor.", e );
+//        }
+//    }
 
     @Override
     public void initAndValidate() {
@@ -58,29 +59,29 @@ public class Beta extends TensorDistribution<RealScalar<UnitInterval>, UnitInter
         super.initAndValidate();
     }
 
-    @Override
-    protected double calcLogP(Double value) {
-        return dist.logDensity(value);
-    }
-
-    @Override
-    protected List<RealScalar<UnitInterval>> sample() {
-        BetaDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<UnitInterval> param = new RealScalarParam<>(x, UnitInterval.INSTANCE);
-        return List.of(param);
-    }
-
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
         double beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
 
         // Floating point comparison
         if (Math.abs(dist.getAlpha() - alpha) > EPS ||  Math.abs(dist.getBeta() - beta) > EPS)
             dist = BetaDistribution.of(alpha, beta);
+    }
+
+    @Override
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
+    }
+
+    @Override
+    protected List<RealScalar<UnitInterval>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<UnitInterval> param = new RealScalarParam<>(x, UnitInterval.INSTANCE);
+        return List.of(param);
     }
 
 } // class Beta

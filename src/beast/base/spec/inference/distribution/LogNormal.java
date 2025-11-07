@@ -6,14 +6,17 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
+
+import java.util.List;
 
 
 /**
  * @author Alexei Drummond
  */
 @Description("A log-normal distribution with mean and variance parameters.")
-public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class LogNormal extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
 
     final public Input<RealScalar<Real>> MParameterInput = new Input<>("M",
             "M parameter of lognormal distribution. " +
@@ -72,26 +75,16 @@ public class LogNormal extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    protected LogNormalDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
-    }
-
-    @Override
-    protected double getMeanWithoutOffset() {
-    	if (hasMeanInRealSpace) {
-            return (MParameterInput.get() != null) ? MParameterInput.get().get() : 0.0;
-    	} else {
-    		double s = (SParameterInput.get() != null) ? SParameterInput.get().get() : 1.0;
-    		double m = (MParameterInput.get() != null) ? MParameterInput.get().get() : 0.0;
-    		return Math.exp(m + s * s/2.0);
-    		//throw new RuntimeException("Not implemented yet");
-    	}
+    protected List<RealScalar<PositiveReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
+        return List.of(param);
     }
 
 }

@@ -6,13 +6,16 @@ import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
+
+import java.util.List;
 
 
 @Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class Gamma extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
@@ -83,20 +86,16 @@ public class Gamma extends RealTensorDistribution<RealScalar<PositiveReal>, Posi
     }
 
     @Override
-    protected GammaDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
-    }
-
-    @Override
-    protected double getMeanWithoutOffset() {
-    	refresh();
-    	return dist.getShape() * dist.getScale();
+    protected List<RealScalar<PositiveReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
+        return List.of(param);
     }
 
 } // class Gamma

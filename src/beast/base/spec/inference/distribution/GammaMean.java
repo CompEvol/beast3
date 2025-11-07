@@ -6,11 +6,14 @@ import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
+
+import java.util.List;
 
 
 @Description("Gamma distribution using a different parameterization.")
-public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class GammaMean extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1", Input.Validate.REQUIRED);
@@ -58,20 +61,17 @@ public class GammaMean extends RealTensorDistribution<RealScalar<PositiveReal>, 
     }
 
     @Override
-    protected GammaDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
+    protected List<RealScalar<PositiveReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
+        return List.of(param);
     }
 
-    @Override
-    protected double getMeanWithoutOffset() {
-    	refresh();
-    	return dist.getShape() * dist.getScale();
-    }
 
 } // class Gamma

@@ -7,13 +7,16 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.ExponentialDistribution;
+
+import java.util.List;
 
 
 @Description("Exponential distribution.  f(x;\\theta) = 1/\\theta e^{-x/\\theta}, if x >= 0 " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal> {
+public class Exponential extends TensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal, Double> {
 
     final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
             "mean parameter, defaults to 1");
@@ -56,14 +59,16 @@ public class Exponential extends RealTensorDistribution<RealScalar<NonNegativeRe
     }
 
     @Override
-    protected ExponentialDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<NonNegativeReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], NonNegativeReal.INSTANCE);
+    protected List<RealScalar<NonNegativeReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<NonNegativeReal> param = new RealScalarParam<>(x, NonNegativeReal.INSTANCE);
+        return List.of(param);
     }
 
 } // class Exponential

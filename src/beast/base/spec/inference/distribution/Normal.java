@@ -8,13 +8,16 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.NormalDistribution;
+
+import java.util.List;
 
 
 @Description("Normal distribution.  f(x) = frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{ -\\frac{(x-\\mu)^2}{2\\sigma^2} } " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class Normal extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
 
     final public Input<RealScalar<Real>> meanInput = new Input<>("mean",
             "mean of the normal distribution, defaults to 0");
@@ -67,20 +70,17 @@ public class Normal extends RealTensorDistribution<RealScalar<PositiveReal>, Pos
         if (Math.abs(dist.getMean() - mean) > EPS ||  Math.abs(dist.getStandardDeviation() - sd) > EPS)
             dist = NormalDistribution.of(mean, sd);
     }
-
     @Override
-    protected NormalDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<PositiveReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
+    protected List<RealScalar<PositiveReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
+        return List.of(param);
     }
 
-    @Override
-    protected double getMeanWithoutOffset() {
-        return (meanInput.get() != null) ? meanInput.get().get() : 0.0;
-    }
 } // class Normal

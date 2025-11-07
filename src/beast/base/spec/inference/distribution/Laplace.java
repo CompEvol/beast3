@@ -6,14 +6,17 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.LaplaceDistribution;
+
+import java.util.List;
 
 @Description("Laplace distribution.    f(x|\\mu,b) = \\frac{1}{2b} \\exp \\left( -\\frac{|x-\\mu|}{b} \\right)" +
         "The probability density function of the Laplace distribution is also reminiscent of the normal distribution; " +
         "however, whereas the normal distribution is expressed in terms of the squared difference from the mean ?, " +
         "the Laplace density is expressed in terms of the absolute difference from the mean. Consequently the Laplace " +
         "distribution has fatter tails than the normal distribution.")
-public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
+public class Laplace extends TensorDistribution<RealScalar<Real>, Real, Double> {
 
     final public Input<RealScalar<Real>> muInput = new Input<>("mu",
             "location parameter, defaults to 0");
@@ -58,19 +61,16 @@ public class Laplace extends RealTensorDistribution<RealScalar<Real>, Real> {
     }
 
     @Override
-    protected LaplaceDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<Real> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], Real.INSTANCE);
-    }
-    
-    @Override
-    protected double getMeanWithoutOffset() {
-    	return (muInput.get() != null) ? muInput.get().get() : 0.0;
+    protected List<RealScalar<Real>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<Real> param = new RealScalarParam<>(x, Real.INSTANCE);
+        return List.of(param);
     }
 
 } // class

@@ -40,25 +40,25 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
     // Note this is the same tensor used for the sampled values defined in the class types.
     final public Input<S> paramInput = new Input<>("param",
-            "point at which the density is calculated", Validate.XOR, Tensor.class);
-    final public Input<List<S>> iidparamInput = new Input<>("iidparam",
-            "multiple point at which the density is calculated using IID", Validate.XOR, List.class);
+            "point at which the density is calculated", Validate.OPTIONAL, Tensor.class);
+//    final public Input<List<S>> iidparamInput = new Input<>("iidparam",
+//            "multiple point at which the density is calculated using IID", Validate.XOR, List.class);
 
     protected S param;
-    protected List<S> iidparam;
+//    protected List<S> iidparam;
 
     @Override
     public void initAndValidate() {
         param = paramInput.get();
-        iidparam = iidparamInput.get();
-        if (param == null && iidparam == null || param != null && iidparam != null)
-            throw new IllegalArgumentException("Only one of param and iidparam input can be specified !");
+//        iidparam = iidparamInput.get();
+//        if (param == null && iidparam == null || param != null && iidparam != null)
+//            throw new IllegalArgumentException("Only one of param and iidparam input can be specified !");
         if (param != null && !param.isValid())
             throw new IllegalArgumentException("Tensor param is not valid ! " + param);
-        if (iidparam != null)
-            for (S s : iidparam)
-                if (s != null && !s.isValid())
-                    throw new IllegalArgumentException("Param in IID is not valid ! " + s);
+//        if (iidparam != null)
+//            for (S s : iidparam)
+//                if (s != null && !s.isValid())
+//                    throw new IllegalArgumentException("Param in IID is not valid ! " + s);
     }
 
     //*** abstract methods ***//
@@ -76,18 +76,19 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
             List<T> values = getTensorValue(param);
             for (T value : values)
                 logP += calcLogP(value);
-        } else if (iidparam != null) {
-            // if IID
-            for (S s : iidparam) {
-                List<T> values = getTensorValue(s);
-                for (T value : values)
-                    logP += calcLogP(value);
-            }
+//        } else if (iidparam != null) {
+//            // if IID
+//            for (S s : iidparam) {
+//                List<T> values = getTensorValue(s);
+//                for (T value : values)
+//                    logP += calcLogP(value);
+//            }
         }
         return logP;
     }
 
     // unwrap values
+    @Deprecated
     private List<T> getTensorValue(Tensor<D,T> tensor) {
         if (tensor instanceof Scalar<D,T> scalar)
             return List.of(scalar.get());
@@ -102,7 +103,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
      * @param value T in Java type
      * @return  the normalized probability (density) for this distribution.
      */
-    protected abstract double calcLogP(T value);
+    protected abstract double calcLogP(T... value);
 
     /**
      * It is used to sample one data point from this distribution.
@@ -112,7 +113,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     protected abstract List<S> sample();
 
     public int dimension() {
-        return param != null ? param.size() : iidparam.size();
+        return param != null ? param.size() : 0; //iidparam.size();
     }
 
     //*** Override Distribution methods ***//
@@ -135,9 +136,9 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
             if (param != null) {
                 param = paramInput.get();
                 setNewValue(param, newListX.getFirst());
-            } else if (iidparam != null) {
-                iidparam = iidparamInput.get();
-                setNewValue(iidparam, newListX);
+//            } else if (iidparam != null) {
+//                iidparam = iidparamInput.get();
+//                setNewValue(iidparam, newListX);
             }
 
         } catch (Exception e) {

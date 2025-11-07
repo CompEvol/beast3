@@ -8,12 +8,15 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ChiSquaredDistribution;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+
+import java.util.List;
 
 
 @Description("Chi square distribution, f(x; k) = \\frac{1}{2^{k/2}Gamma(k/2)} x^{k/2-1} e^{-x/2} " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal> {
+public class ChiSquare extends TensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal, Double> {
 
     // Note Apache Commons Statistics uses double for Chi-squared degrees of freedom,
     // because it is a special case of the Gamma distribution.
@@ -55,14 +58,16 @@ public class ChiSquare extends RealTensorDistribution<RealScalar<NonNegativeReal
     }
 
     @Override
-    protected ChiSquaredDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<NonNegativeReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], NonNegativeReal.INSTANCE);
+    protected List<RealScalar<NonNegativeReal>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<NonNegativeReal> param = new RealScalarParam<>(x, NonNegativeReal.INSTANCE);
+        return List.of(param);
     }
 
 } // class ChiSquare

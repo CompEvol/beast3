@@ -10,17 +10,15 @@ import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import org.apache.commons.math3.special.Gamma;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.DoubleStream;
 
 
 @Description("Dirichlet distribution.  p(x_1,...,x_n;alpha_1,...,alpha_n) = 1/B(alpha) prod_{i=1}^K x_i^{alpha_i - 1} " +
         "where B() is the beta function B(alpha) = prod_{i=1}^K Gamma(alpha_i)/ Gamma(sum_{i=1}^K alpha_i}. ")
-public class Dirichlet extends RealTensorDistribution<Simplex, UnitInterval> {
+public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double> {
 
     final public Input<RealVector<PositiveReal>> alphaInput = new Input<>("alpha",
             "coefficients of the Dirichlet distribution", Validate.REQUIRED);
@@ -55,67 +53,48 @@ public class Dirichlet extends RealTensorDistribution<Simplex, UnitInterval> {
     }
 
     @Override
-    public double logDensity(double[] x) {
+    protected double calcLogP(Double[] value) {
         List<Double> alpha = alphaInput.get().getElements();
-        if (alpha.size() != x.length)
+        if (alpha.size() != value.length)
             throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +
-                    "but dim(alpha)=" + alpha.size() + " and dim(x)=" + x.length);
+                    "but dim(alpha)=" + alpha.size() + " and dim(x)=" + value.length);
 
         double logP = 0;
-        for (int i = 0; i < x.length; i++) {
-            logP += (alpha.get(i) - 1) * Math.log(x[i]);
+        for (int i = 0; i < value.length; i++) {
+            logP += (alpha.get(i) - 1) * Math.log(value[i]);
             logP -= Gamma.logGamma(alpha.get(i));
         }
         double alphaSum = alpha.stream().mapToDouble(Double::doubleValue).sum();
         logP += Gamma.logGamma(alphaSum);
 
         // area = sumX^(dim-1)
-        double sumX = DoubleStream.of(x).sum();
+        double sumX = Arrays.stream(value)       // Stream<Double>
+                .mapToDouble(Double::doubleValue) // unbox to double
+                .sum();
         if (Math.abs(sumX - expectedSum) > 1e-6) {
             Log.trace("sum of values (" + sumX +") differs significantly from the expected sum of values (" + expectedSum +")");
             return Double.NEGATIVE_INFINITY;
         }
-        logP -= (x.length - 1) * Math.log(sumX);
+        logP -= (value.length - 1) * Math.log(sumX);
 
         return logP;
     }
 
     @Override
-    public List<Simplex> sample(final int size) {
-        final int dim = alphaInput.get().size();
-        List<Simplex> samples = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            double[] dirichletSample = new double[dim];
-            double sum = 0.0;
-            for (int j = 0; j < dim; j++) {
-                dirichletSample[j] = gammas[i].createSampler(null).sample();
-                sum += dirichletSample[j];
-            }
-            // Normalize
-            for (int j = 0; j < dim; j++) {
-                // if expectedSum != 1, then adjust the sum to it
-                dirichletSample[j] = (dirichletSample[j] / sum) * expectedSum;
-            }
-            samples.add(valueToTensor(dirichletSample));
+    public List<Simplex> sample() {
+        double[] dirichletSample = new double[dimension()];
+        double sum = 0.0;
+        for (int i = 0; i < dimension(); i++) {
+            dirichletSample[i] = gammas[i].createSampler(null).sample();
+            sum += dirichletSample[i];
         }
-        return samples;
+        // Normalize
+        for (int i = 0; i < dimension(); i++) {
+            // if expectedSum != 1, then adjust the sum to it
+            dirichletSample[i] = (dirichletSample[i] / sum); //* expectedSum;
+        }
+        Simplex simplexParam = new SimplexParam(dirichletSample);
+        return List.of(simplexParam);
     }
-
-
-    @Override
-    public ContinuousDistribution getDistribution() {
-        throw new UnsupportedOperationException("It is not supported by apache statistics !");
-    }
-
-    @Override
-    protected Simplex valueToTensor(double[] value) {
-        return new SimplexParam(value);
-    }
-
-    @Override
-    public Double getOffset() {
-        throw new UnsupportedOperationException("It is not supported !");
-    }
-
 
 }

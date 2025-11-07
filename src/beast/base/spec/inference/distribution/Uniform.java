@@ -6,11 +6,14 @@ import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
+
+import java.util.List;
 
 
 @Description("Uniform distribution over a given interval (including lower and upper values)")
-public class Uniform extends RealTensorDistribution<RealScalar<Real>, Real>
+public class Uniform extends TensorDistribution<RealScalar<Real>, Real, Double>
         implements Bounded<Double> {
 
     final public Input<RealScalar<Real>> lowerInput = new Input<>("lower",
@@ -59,14 +62,16 @@ public class Uniform extends RealTensorDistribution<RealScalar<Real>, Real>
     }
 
     @Override
-    protected UniformContinuousDistribution getDistribution() {
-        refresh();
-        return dist;
+    protected double calcLogP(Double... value) {
+        return dist.logDensity(value[0]); // scalar
     }
 
     @Override
-    protected RealScalar<Real> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], Real.INSTANCE);
+    protected List<RealScalar<Real>> sample() {
+        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+        double x = sampler.sample();
+        RealScalarParam<Real> param = new RealScalarParam<>(x, Real.INSTANCE);
+        return List.of(param);
     }
 
     @Override
