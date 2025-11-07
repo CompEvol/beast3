@@ -10,14 +10,13 @@ import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
-import java.util.ArrayList;
 import java.util.List;
 
 // TODO need to test
 @Description("Inverse Gamma distribution, used as prior.    for x>0  f(x; alpha, beta) = \frac{beta^alpha}{Gamma(alpha)} (1/x)^{alpha + 1}exp(-beta/x) " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class InverseGamma extends RealTensorDistribution<RealScalar<PositiveReal>, PositiveReal> {
+public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
@@ -62,19 +61,27 @@ public class InverseGamma extends RealTensorDistribution<RealScalar<PositiveReal
 
     }
 
-    @Override
-    public double density(double x) {
+    private double density(double x) {
 //        double logP = logDensity(x);
 //        return Math.exp(logP);
-        x -= getOffset();
+//        x -= getOffset();
         // TODO check : This uses the change-of-variable formula for PDFs.
         return (x > 0) ? gamma.density(1.0 / x) / (x * x) : 0.0;
     }
 
     @Override
-    public double logDensity(double x) {
+    protected double calcLogP(Double... value) {
         // If x is positive zero or negative zero, then the result is negative infinity.
-        return Math.log(this.density(x));
+        return Math.log(this.density(value[0])); // scalar
+    }
+
+    @Override
+    protected List<RealScalar<PositiveReal>> sample() {
+        ContinuousDistribution.Sampler sampler = gamma.createSampler(rng);
+        final double y = sampler.sample();  // sample from Gamma
+        final double x = 1.0 / y; // sample from Gamma
+        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
+        return List.of(param);
     }
 
     //        @Override
@@ -89,38 +96,6 @@ public class InverseGamma extends RealTensorDistribution<RealScalar<PositiveReal
 //            double logP = -(m_fAlpha + 1.0) * Math.log(x) - (m_fBeta / x) + C;
 //            return logP;
 //        }
-
-    @Override
-    public List<RealScalar<PositiveReal>> sample(int size) {
-        ContinuousDistribution.Sampler sampler = gamma.createSampler(rng);
-        List<RealScalar<PositiveReal>> samples = new ArrayList<>(size);
-        for (int i = 0; i < size; i++) {
-            final double y = sampler.sample();  // sample from Gamma
-            final double x = 1.0 / y + getOffset(); // invert to get InverseGamma with offset
-            samples.add(valueToTensor(x));
-        }
-        return samples;
-    }
-
-    //TODO rest all @Override and throw new UnsupportedOperationException ?
-
-    @Override
-    public ContinuousDistribution getDistribution() {
-        throw new UnsupportedOperationException("It is not supported by apache statistics !");
-    }
-
-    @Override
-    protected RealScalar<PositiveReal> valueToTensor(double... value) {
-        return new RealScalarParam<>(value[0], PositiveReal.INSTANCE);
-    }
-
-    @Override
-    public double getMeanWithoutOffset() {
-        //TODO need to check : beta / alpha
-        return 1.0 / ( gamma.getShape() * gamma.getScale() );
-    }
-
-
 
 //    public class InverseGammaDistribution implements ContinuousDistribution {
 //        private final double alpha; // shape
