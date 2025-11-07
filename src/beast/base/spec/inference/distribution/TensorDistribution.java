@@ -29,7 +29,8 @@ import java.util.Random;
  * @param <T> the Java primitive type for sampled value, either Double or Integer.
  */
 @Description("The BEAST Distribution over a tensor.")
-public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain<T>, T> extends Distribution {
+public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain<T>, T>
+        extends Distribution {
 
     public static final double EPS = 1e-12;
 
@@ -39,40 +40,80 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
     // Note this is the same tensor used for the sampled values defined in the class types.
     final public Input<S> paramInput = new Input<>("param",
-            "point at which the density is calculated", Validate.REQUIRED, Tensor.class);
+            "point at which the density is calculated", Validate.XOR, Tensor.class);
+    final public Input<List<S>> iidparamInput = new Input<>("iidparam",
+            "multiple point at which the density is calculated using IID", Validate.XOR, List.class);
 
     protected S param;
+    protected List<S> iidparam;
 
     @Override
     public void initAndValidate() {
         param = paramInput.get();
-
-        if (! param.isValid())
+        iidparam = iidparamInput.get();
+        if (param == null && iidparam == null || param != null && iidparam != null)
+            throw new IllegalArgumentException("Only one of param and iidparam input can be specified !");
+        if (param != null && !param.isValid())
             throw new IllegalArgumentException("Tensor param is not valid ! " + param);
+        if (iidparam != null)
+            for (S s : iidparam)
+                if (s != null && !s.isValid())
+                    throw new IllegalArgumentException("Param in IID is not valid ! " + s);
     }
 
     //*** abstract methods ***//
 
     /**
-     * It is used to sample values from this distribution.
-     * @param size  how many samples
-     * @return      the list of samples
+     * Override {@link beast.base.inference.Distribution#calculateLogP()}.
+     * Parameter value is wrapped by tensor S.
+     * @return the normalized probability (density) for this distribution.
      */
-    public abstract List<S> sample(int size);
-
-    public S sample() {
-        return sample(1).getFirst();
+    @Override
+    public double calculateLogP() {
+        logP = 0;
+        if (param != null) {
+            param = paramInput.get();
+            List<T> values = getTensorValue(param);
+            for (T value : values)
+                logP += calcLogP(value);
+        } else if (iidparam != null) {
+            // if IID
+            for (S s : iidparam) {
+                List<T> values = getTensorValue(s);
+                for (T value : values)
+                    logP += calcLogP(value);
+            }
+        }
+        return logP;
     }
 
-    public int dimension() {
-        return param.size();
+    // unwrap values
+    private List<T> getTensorValue(Tensor<D,T> tensor) {
+        if (tensor instanceof Scalar<D,T> scalar)
+            return List.of(scalar.get());
+        else if (tensor instanceof Vector<D,T> vector)
+            return vector.getElements();
+        else
+            throw new IllegalStateException("Unexpected tensor type");
     }
 
     /**
-     * @return  offset of distribution.
+     * Implement this case by case to compute the log-density or log-probability.
+     * @param value T in Java type
+     * @return  the normalized probability (density) for this distribution.
      */
-    public abstract T getOffset();
+    protected abstract double calcLogP(T value);
 
+    /**
+     * It is used to sample one data point from this distribution.
+     * @return  the sampled value, if S is scalar and no IID then only 1 element in the list.
+     *          if S is scalar and using IID then the list size == iidparam size.
+     */
+    protected abstract List<S> sample();
+
+    public int dimension() {
+        return param != null ? param.size() : iidparam.size();
+    }
 
     //*** Override Distribution methods ***//
 
@@ -87,35 +128,16 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         // Cause conditional parameters to be sampled
         sampleConditions(state, random);
 
-        // sample distribution parameters
-        S newx;
         try {
-            newx = sample();
+            // sample distribution parameters
+            List<S> newListX = sample();
 
-            param = paramInput.get();
-            switch (param) {
-                case Scalar scalar -> {
-                    if (scalar instanceof Bounded b) {
-                        while (!b.withinBounds((Comparable) newx)) {
-                            newx = sample();
-                        }
-                    }
-                    if (scalar instanceof RealScalarParam rs)
-                        rs.set( ((RealScalar) newx).get() );
-                    else if (scalar instanceof IntScalarParam is)
-                        is.set( ((IntScalar) newx).get() );
-                    else if (scalar instanceof BoolScalarParam bs)
-                        bs.set( ((BoolScalar) newx).get() );
-
-                    throw new RuntimeException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
-                }
-                case Vector vector -> {
-
-                    //TODO
-
-                    throw new UnsupportedOperationException("sample is not implemented yet for vector parameters");
-                }
-                default -> throw new IllegalStateException("Unexpected tensor type");
+            if (param != null) {
+                param = paramInput.get();
+                setNewValue(param, newListX.getFirst());
+            } else if (iidparam != null) {
+                iidparam = iidparamInput.get();
+                setNewValue(iidparam, newListX);
             }
 
         } catch (Exception e) {
@@ -124,10 +146,44 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         }
     }
 
+    private void setNewValue(S param, S newx) {
+        switch (param) {
+            case Scalar scalar -> {
+                if (param instanceof Bounded b) {
+                    while (!b.withinBounds((Comparable) newx.get())) {
+                        newx = sample().getFirst();
+                    }
+                }
+                switch (scalar) {
+                    case RealScalarParam rs -> rs.set(((RealScalar) newx).get());
+                    case IntScalarParam is -> is.set(((IntScalar) newx).get());
+                    case BoolScalarParam bs -> bs.set(((BoolScalar) newx).get());
+                    default -> {
+                        throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
+                    }
+                }
+            }
+            case Vector vector -> {
+
+                //TODO
+
+                throw new UnsupportedOperationException("sample is not implemented yet for vector parameters");
+            }
+            default -> throw new IllegalStateException("Unexpected tensor type");
+        }
+    }
+
+    private void setNewValue(List<S> iidparam, List<S> newListX) {
+        assert iidparam.size() == newListX.size();
+        for (int i = 0; i < iidparam.size(); i++) {
+            setNewValue(iidparam.get(i), newListX.get(i));
+        }
+    }
+
     @Override
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
-        // dist.getID()
+        // TODO check
         conditions.add(getID());
         return conditions;
     }
@@ -135,16 +191,10 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     @Override
     public List<String> getArguments() {
         List<String> arguments = new ArrayList<>();
-        // TODO safe cast ?
-        String id = ((BEASTInterface) param).getID();
+        // TODO id for IID ?
+        String id = param != null ? ((BEASTInterface) param).getID() : null;
         arguments.add(id);
         return arguments;
-    }
-
-    // used by unit test
-    public double calcLogP(Tensor<D, T> tensor) {
-        paramInput.setValue(tensor, this);
-        return calculateLogP();
     }
 
 }
