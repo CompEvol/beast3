@@ -18,6 +18,7 @@ import beast.base.spec.type.*;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -73,9 +74,16 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         logP = 0;
         if (param != null) {
             param = paramInput.get();
-            List<T> values = getTensorValue(param);
-            for (T value : values)
-                logP += calcLogP(value);
+            if (param instanceof Scalar scalar)
+                // T
+                logP += calcLogP((T) scalar.get());
+            else if (param instanceof Vector vector) {
+                @SuppressWarnings("unchecked")
+                T[] vals = (T[]) Array.newInstance(vector.get(0).getClass(), vector.size());
+                // T[]
+                logP += calcLogP(vals);
+            } else
+                throw new IllegalStateException("Unexpected tensor type");
 //        } else if (iidparam != null) {
 //            // if IID
 //            for (S s : iidparam) {
@@ -87,23 +95,12 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         return logP;
     }
 
-    // unwrap values
-    @Deprecated
-    private List<T> getTensorValue(Tensor<D,T> tensor) {
-        if (tensor instanceof Scalar<D,T> scalar)
-            return List.of(scalar.get());
-        else if (tensor instanceof Vector<D,T> vector)
-            return vector.getElements();
-        else
-            throw new IllegalStateException("Unexpected tensor type");
-    }
-
     /**
      * Implement this case by case to compute the log-density or log-probability.
      * @param value T in Java type
      * @return  the normalized probability (density) for this distribution.
      */
-    protected abstract double calcLogP(T... value);
+    protected abstract double calcLogP(T... value); // use S param not working here
 
     /**
      * It is used to sample one data point from this distribution.
@@ -115,6 +112,17 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     public int dimension() {
         return param != null ? param.size() : 0; //iidparam.size();
     }
+
+    // unwrap values
+    @Deprecated
+//    private List<T> getTensorValue(Tensor<D,T> tensor) {
+//        if (tensor instanceof Scalar<D,T> scalar)
+//            return List.of(scalar.get());
+//        else if (tensor instanceof Vector<D,T> vector)
+//            return vector.getElements();
+//        else
+//            throw new IllegalStateException("Unexpected tensor type");
+//    }
 
     //*** Override Distribution methods ***//
 
@@ -174,12 +182,12 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         }
     }
 
-    private void setNewValue(List<S> iidparam, List<S> newListX) {
-        assert iidparam.size() == newListX.size();
-        for (int i = 0; i < iidparam.size(); i++) {
-            setNewValue(iidparam.get(i), newListX.get(i));
-        }
-    }
+//    private void setNewValue(List<S> iidparam, List<S> newListX) {
+//        assert iidparam.size() == newListX.size();
+//        for (int i = 0; i < iidparam.size(); i++) {
+//            setNewValue(iidparam.get(i), newListX.get(i));
+//        }
+//    }
 
     @Override
     public List<String> getConditions() {
