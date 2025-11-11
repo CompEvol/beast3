@@ -6,7 +6,6 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.NormalDistribution;
@@ -27,7 +26,8 @@ public class Normal extends TensorDistribution<RealScalar<PositiveReal>, Positiv
     final public Input<RealScalar<PositiveReal>> tauInput = new Input<>("tau",
             "precision of the normal distribution, defaults to 1", Validate.XOR, sdInput);
 
-    protected NormalDistribution dist = NormalDistribution.of(0, 1);
+    private NormalDistribution dist = NormalDistribution.of(0, 1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -67,20 +67,25 @@ public class Normal extends TensorDistribution<RealScalar<PositiveReal>, Positiv
             sd = Math.sqrt(1.0 / tauInput.get().get());
         }
 
-        if (Math.abs(dist.getMean() - mean) > EPS ||  Math.abs(dist.getStandardDeviation() - sd) > EPS)
+        // Floating point comparison:
+        if (isNotEqual(dist.getMean(), mean) || isNotEqual(dist.getStandardDeviation(), sd) ) {
             dist = NormalDistribution.of(mean, sd);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<PositiveReal>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
+
 
 } // class Normal

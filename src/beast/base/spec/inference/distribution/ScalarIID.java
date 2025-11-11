@@ -41,25 +41,25 @@ public class ScalarIID<V extends Vector<D, T>,
 //        domain = dist.
         // param
         super.initAndValidate();
-        if (param == null && param.size() <= 1)
+        if (param == null || param.size() <= 1)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
 
     }
 
     @Override
-    protected double calcLogP(T... value) {
-        // value should be array
-        if (value.length != param.size())
+    protected double calcLogP(List<T> value) {
+        // value dim == param dim
+        if (value.size() != param.size())
             throw new IllegalArgumentException("Value dim does not match param size ! ");
         double logP = 0.0;
         for (T t : value) {
-            logP += dist.calcLogP(t);
+            logP += dist.calcLogP(List.of(t));
         }
         return logP;
     }
 
     @Override
-    protected List<V> sample() {
+    protected List<T> sample() {
         throw new UnsupportedOperationException("Directly use sample(State state, Random random)");
     }
 
@@ -81,13 +81,13 @@ public class ScalarIID<V extends Vector<D, T>,
             // sample at each dim();
             for (int i = 0; i < dimension(); i++) {
                 // scalar
-                S newx = dist.sample().getFirst();
+                T newx = dist.sample().getFirst();
                 if (param instanceof Bounded b) {
                     while (!b.withinBounds((Comparable) newx)) {
                         newx = dist.sample().getFirst();
                     }
                 }
-                newListX.add(newx.get());
+                newListX.add(newx);
             }
 
             if (this.param.size() != newListX.size())

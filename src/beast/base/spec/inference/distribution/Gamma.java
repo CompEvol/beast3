@@ -4,7 +4,6 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
@@ -24,7 +23,8 @@ public class Gamma extends TensorDistribution<RealScalar<PositiveReal>, Positive
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
             "rate parameter for Shape–Rate form, defaults to 1.", Input.Validate.XOR);
 
-    protected GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
+    private GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -81,21 +81,24 @@ public class Gamma extends TensorDistribution<RealScalar<PositiveReal>, Positive
             throw new IllegalArgumentException("Must have either theta or beta ! ");
 
         // Floating point comparison
-        if (Math.abs(dist.getShape() - alpha) > EPS ||  Math.abs(dist.getScale() - scale) > EPS)
+        if (isNotEqual(dist.getShape(), alpha) ||  isNotEqual(dist.getScale(), scale)) {
             dist = GammaDistribution.of(alpha, scale);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<PositiveReal>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
 
 } // class Gamma

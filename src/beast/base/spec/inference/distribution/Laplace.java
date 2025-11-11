@@ -4,7 +4,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.LaplaceDistribution;
@@ -23,7 +22,8 @@ public class Laplace extends TensorDistribution<RealScalar<Real>, Real, Double> 
     final public Input<RealScalar<PositiveReal>> scaleInput = new Input<>("scale",
             "scale parameter, defaults to 1");
 
-    protected LaplaceDistribution dist = LaplaceDistribution.of(0, 1);
+    private LaplaceDistribution dist = LaplaceDistribution.of(0, 1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -56,21 +56,24 @@ public class Laplace extends TensorDistribution<RealScalar<Real>, Real, Double> 
         double scale  = (scaleInput.get()  != null) ? scaleInput.get().get()  : 1.0;
 
         // Floating point comparison
-        if (Math.abs(dist.getLocation() - mu) > EPS ||  Math.abs(dist.getScale() - scale) > EPS)
+        if (isNotEqual(dist.getLocation(), mu) ||  isNotEqual(dist.getScale(), scale)) {
             dist = LaplaceDistribution.of(mu, scale);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<Real>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<Real> param = new RealScalarParam<>(x, Real.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
 
 } // class

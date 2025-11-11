@@ -14,11 +14,12 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.*;
+import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Tensor;
+import beast.base.spec.type.Vector;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -33,7 +34,7 @@ import java.util.Random;
 public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain<T>, T>
         extends Distribution {
 
-    public static final double EPS = 1e-12;
+    protected static final double EPS = 1e-12;
 
     // TODO how to change RNG ?
     // MT is reproducible scientific RNG
@@ -74,13 +75,15 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         logP = 0;
         if (param != null) {
             param = paramInput.get();
-            if (param instanceof Scalar scalar)
-                // T
-                logP += calcLogP((T) scalar.get());
-            else if (param instanceof Vector vector) {
-                @SuppressWarnings("unchecked")
-                T[] vals = (T[]) Array.newInstance(vector.get(0).getClass(), vector.size());
-                // T[]
+            if (param instanceof Scalar scalar) {
+                // single value
+                T val = (T) scalar.get();
+                logP += calcLogP(List.of(val));
+
+            } else if (param instanceof Vector vector) {
+//                @SuppressWarnings("unchecked")
+//                T[] vals = (T[]) Array.newInstance(vector.get(0).getClass(), vector.size());
+                List<T> vals = vector.getElements();
                 logP += calcLogP(vals);
             } else
                 throw new IllegalStateException("Unexpected tensor type");
@@ -100,14 +103,17 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
      * @param value T in Java type
      * @return  the normalized probability (density) for this distribution.
      */
-    protected abstract double calcLogP(T... value); // use S param not working here
+    protected abstract double calcLogP(List<T> value);
+    //TODO difficult to handle T... value, because varargs are actually T[] at runtime.
+    // easy to get ClassCastException
 
     /**
      * It is used to sample one data point from this distribution.
-     * @return  the sampled value, if S is scalar and no IID then only 1 element in the list.
-     *          if S is scalar and using IID then the list size == iidparam size.
+     * @return  Use <code>List.of</code> to an immutable list in Java type T containing sample point,
+     *          if S is scalar then only 1 element in the list.
+     *
      */
-    protected abstract List<S> sample();
+    protected abstract List<T> sample();
 
     public int dimension() {
         return param != null ? param.size() : 0; //iidparam.size();
@@ -139,7 +145,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
         try {
             // sample distribution parameters
-            List<S> newListX = sample();
+            List<T> newListX = sample();
 
             if (param != null) {
                 param = paramInput.get();
@@ -155,18 +161,18 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         }
     }
 
-    private void setNewValue(S param, S newx) {
+    private void setNewValue(S param, T newx) {
         switch (param) {
             case Scalar scalar -> {
                 if (param instanceof Bounded b) {
-                    while (!b.withinBounds((Comparable) newx.get())) {
+                    while (!b.withinBounds((Comparable) newx)) {
                         newx = sample().getFirst();
                     }
                 }
                 switch (scalar) {
-                    case RealScalarParam rs -> rs.set(((RealScalar) newx).get());
-                    case IntScalarParam is -> is.set(((IntScalar) newx).get());
-                    case BoolScalarParam bs -> bs.set(((BoolScalar) newx).get());
+                    case RealScalarParam rs -> rs.set((Double) newx);
+                    case IntScalarParam is -> is.set((Integer) newx);
+                    case BoolScalarParam bs -> bs.set((Boolean) newx);
                     default -> {
                         throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
                     }
@@ -204,6 +210,16 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         String id = param != null ? ((BEASTInterface) param).getID() : null;
         arguments.add(id);
         return arguments;
+    }
+
+    /**
+     * Floating point comparison. Make it public for other packages to use
+     * @param a
+     * @param b
+     * @return   if the two double numbers are equal.
+     */
+    public static boolean isNotEqual(double a, double b) {
+        return Math.abs(a - b) > EPS;
     }
 
 }

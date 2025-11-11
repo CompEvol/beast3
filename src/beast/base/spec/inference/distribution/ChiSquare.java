@@ -5,7 +5,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ChiSquaredDistribution;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
@@ -23,7 +22,8 @@ public class ChiSquare extends TensorDistribution<RealScalar<NonNegativeReal>, N
     final public Input<RealScalar<PositiveReal>> dfInput = new Input<>("df",
             "Degrees of freedom, defaults to 1");
 
-    protected ChiSquaredDistribution dist = ChiSquaredDistribution.of(1);
+    private ChiSquaredDistribution dist = ChiSquaredDistribution.of(1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -51,23 +51,27 @@ public class ChiSquare extends TensorDistribution<RealScalar<NonNegativeReal>, N
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    void refresh() {
         double dF = (dfInput.get() != null) ? dfInput.get().get() : 1;
-        if (dist.getDegreesOfFreedom() != dF)
+
+        if (dist.getDegreesOfFreedom() != dF) {
             dist = ChiSquaredDistribution.of(dF);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<NonNegativeReal>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<NonNegativeReal> param = new RealScalarParam<>(x, NonNegativeReal.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
 
 } // class ChiSquare

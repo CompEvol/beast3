@@ -24,7 +24,8 @@ public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNe
     final public Input<RealScalar<NonNegativeReal>> lambdaInput = new Input<>(
             "lambda", "rate parameter, defaults to 1");
 
-    protected PoissonDistribution dist = PoissonDistribution.of(1.0); // mean = lambda
+    private PoissonDistribution dist = PoissonDistribution.of(1.0); // mean = lambda
+    private DiscreteDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -50,16 +51,14 @@ public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNe
     }
 
     @Override
-    protected double calcLogP(Integer... value) {
-        return dist.logProbability(value[0]); // scalar
+    protected double calcLogP(List<Integer> value) {
+        return dist.logProbability(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<IntScalar<NonNegativeInt>> sample() {
-        DiscreteDistribution.Sampler sampler = dist.createSampler(rng);
-        int x = sampler.sample();
-        IntScalarParam<NonNegativeInt> param = new IntScalarParam<>(x, NonNegativeInt.INSTANCE);
-        return List.of(param);
+    protected List<Integer> sample() {
+        final int x = sampler.sample();
+        return List.of(x);
     }
 
     /**
@@ -69,9 +68,14 @@ public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNe
         double lambda = (lambdaInput.get() != null) ? lambdaInput.get().get() : 1.0;
 
         // Floating point comparison:
-        if (Math.abs(dist.getMean() - lambda) > EPS)
+        if (isNotEqual(dist.getMean(), lambda)) {
             // The expected number of events (E[X]) in Poisson equals lambda
             dist = PoissonDistribution.of(lambda);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     public static void main(String[] args) {
@@ -94,13 +98,12 @@ Sum of logP for [0,1,2,3] ≈ -12.831
          */
 
         for (int i = 0; i < 4; i++) {
-            System.out.println("i = " + i + ", logP =" + poisson.calcLogP(i));
+            System.out.println("i = " + i + ", logP =" + poisson.calcLogP(List.of(i)));
         }
 
-        // TODO calculateLogP() allows to sum the logP of each scalar,
-        //  this is interesting, but cannot do through Input and constructor
+        // TODO IID of 0, 1, 2, 3
 
-        System.out.println(poisson.calcLogP(0, 1, 2, 3));
+//Not working now :   System.out.println(poisson.calcLogP(List.of(0, 1, 2, 3)));
     }
 
 } // class Poisson

@@ -4,7 +4,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
@@ -28,8 +27,9 @@ public class LogNormal extends TensorDistribution<RealScalar<PositiveReal>, Posi
             "Whether the M parameter is in real space, or in log-transformed space. " +
                     "Default false = log-transformed.", false);
 
-    protected boolean hasMeanInRealSpace;
-    protected LogNormalDistribution dist = LogNormalDistribution.of(0, 1);
+    private boolean hasMeanInRealSpace;
+    private LogNormalDistribution dist = LogNormalDistribution.of(0, 1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -70,21 +70,25 @@ public class LogNormal extends TensorDistribution<RealScalar<PositiveReal>, Posi
         if (hasMeanInRealSpace)
             mean = Math.log(mean) - (0.5 * sigma * sigma);
 
-        if (Math.abs(dist.getMean() - mean) > EPS ||  Math.abs(dist.getSigma() - sigma) > EPS)
+        // Floating point comparison:
+        if (isNotEqual(dist.getMean(), mean) ||  isNotEqual(dist.getSigma(), sigma) ) {
             dist = LogNormalDistribution.of(mean, sigma);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<PositiveReal>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
 
 }

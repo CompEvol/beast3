@@ -6,13 +6,11 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
-import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import org.apache.commons.math3.special.Gamma;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -53,48 +51,48 @@ public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double>
     }
 
     @Override
-    protected double calcLogP(Double[] value) {
+    protected double calcLogP(List<Double> value) {
         List<Double> alpha = alphaInput.get().getElements();
-        if (alpha.size() != value.length)
+        if (alpha.size() != value.size())
             throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +
-                    "but dim(alpha)=" + alpha.size() + " and dim(x)=" + value.length);
+                    "but dim(alpha)=" + alpha.size() + " and dim(x)=" + value.size());
 
         double logP = 0;
-        for (int i = 0; i < value.length; i++) {
-            logP += (alpha.get(i) - 1) * Math.log(value[i]);
+        for (int i = 0; i < value.size(); i++) {
+            logP += (alpha.get(i) - 1) * Math.log(value.get(i));
             logP -= Gamma.logGamma(alpha.get(i));
         }
         double alphaSum = alpha.stream().mapToDouble(Double::doubleValue).sum();
         logP += Gamma.logGamma(alphaSum);
 
         // area = sumX^(dim-1)
-        double sumX = Arrays.stream(value)       // Stream<Double>
+        double sumX = value.stream()              // Stream<Double>
                 .mapToDouble(Double::doubleValue) // unbox to double
                 .sum();
         if (Math.abs(sumX - expectedSum) > 1e-6) {
             Log.trace("sum of values (" + sumX +") differs significantly from the expected sum of values (" + expectedSum +")");
             return Double.NEGATIVE_INFINITY;
         }
-        logP -= (value.length - 1) * Math.log(sumX);
+        logP -= (value.size() - 1) * Math.log(sumX);
 
         return logP;
     }
 
     @Override
-    public List<Simplex> sample() {
-        double[] dirichletSample = new double[dimension()];
+    public List<Double> sample() {
+        Double[] dirichletSample = new Double[dimension()];
         double sum = 0.0;
         for (int i = 0; i < dimension(); i++) {
             dirichletSample[i] = gammas[i].createSampler(null).sample();
-            sum += dirichletSample[i];
+            sum += dirichletSample[i]; // use primitive double for speed
         }
         // Normalize
         for (int i = 0; i < dimension(); i++) {
             // if expectedSum != 1, then adjust the sum to it
             dirichletSample[i] = (dirichletSample[i] / sum); //* expectedSum;
         }
-        Simplex simplexParam = new SimplexParam(dirichletSample);
-        return List.of(simplexParam);
+        // Returning an immutable result
+        return List.of(dirichletSample);
     }
 
 }

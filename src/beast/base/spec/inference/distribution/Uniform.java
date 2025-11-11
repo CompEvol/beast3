@@ -4,7 +4,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
@@ -23,7 +22,8 @@ public class Uniform extends TensorDistribution<RealScalar<Real>, Real, Double>
 
     // if (!Double.isFinite(upper - lower)) {
     //    throw new DistributionException("Range %s is not finite", upper - lower);
-    protected UniformContinuousDistribution dist = UniformContinuousDistribution.of(0.0, 1.0);
+    private UniformContinuousDistribution dist = UniformContinuousDistribution.of(0.0, 1.0);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -56,22 +56,25 @@ public class Uniform extends TensorDistribution<RealScalar<Real>, Real, Double>
         double upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 1.0;
 
         // Floating point comparison
-        if (Math.abs(dist.getSupportLowerBound() - lower) > EPS
-                || Math.abs(dist.getSupportUpperBound() - upper) > EPS)
+        if (isNotEqual(dist.getSupportLowerBound(), lower)
+                || isNotEqual(dist.getSupportUpperBound(), upper)) {
             dist = UniformContinuousDistribution.of(lower, upper);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<Real>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
+    protected List<Double> sample() {
         double x = sampler.sample();
-        RealScalarParam<Real> param = new RealScalarParam<>(x, Real.INSTANCE);
-        return List.of(param);
+        return List.of(x);
     }
 
     @Override

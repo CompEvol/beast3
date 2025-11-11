@@ -5,7 +5,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.ExponentialDistribution;
@@ -21,7 +20,8 @@ public class Exponential extends TensorDistribution<RealScalar<NonNegativeReal>,
     final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
             "mean parameter, defaults to 1");
 
-    protected ExponentialDistribution dist = ExponentialDistribution.of(1);
+    private ExponentialDistribution dist = ExponentialDistribution.of(1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -54,21 +54,24 @@ public class Exponential extends TensorDistribution<RealScalar<NonNegativeReal>,
         double mean = (meanInput.get() != null) ? meanInput.get().get() : 1.0;
 
         // Floating point comparison:
-        if (Math.abs(dist.getMean() - mean) > EPS)
+        if (isNotEqual(dist.getMean(), mean)) {
             dist = ExponentialDistribution.of(mean);
+            sampler = dist.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        return dist.logDensity(value[0]); // scalar
+    protected double calcLogP(List<Double> value) {
+        return dist.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<NonNegativeReal>> sample() {
-        ContinuousDistribution.Sampler sampler = dist.createSampler(rng);
-        double x = sampler.sample();
-        RealScalarParam<NonNegativeReal> param = new RealScalarParam<>(x, NonNegativeReal.INSTANCE);
-        return List.of(param);
+    protected List<Double> sample() {
+        final double x = sampler.sample();
+        return List.of(x);
     }
 
 } // class Exponential

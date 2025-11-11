@@ -5,7 +5,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.GammaDistribution;
@@ -24,6 +23,7 @@ public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, P
             "scale parameter, defaults to 1");
 
     private GammaDistribution gamma = GammaDistribution.of(1, 1);
+    private ContinuousDistribution.Sampler sampler;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -56,9 +56,13 @@ public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, P
         double beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
 
         // Floating point comparison
-        if (Math.abs(gamma.getShape() - alpha) > EPS ||  Math.abs(gamma.getScale() - 1.0 / beta) > EPS)
+        if (isNotEqual(gamma.getShape(), alpha) ||  isNotEqual(gamma.getScale(), 1.0 / beta)) {
             gamma = GammaDistribution.of(alpha, 1.0 / beta);
-
+            sampler = gamma.createSampler(rng);
+        } else if (sampler == null) {
+            // Ensure sampler exists
+            sampler = gamma.createSampler(rng);
+        }
     }
 
     private double density(double x) {
@@ -70,18 +74,15 @@ public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, P
     }
 
     @Override
-    protected double calcLogP(Double... value) {
-        // If x is positive zero or negative zero, then the result is negative infinity.
-        return Math.log(this.density(value[0])); // scalar
+    protected double calcLogP(List<Double> value) {
+        return gamma.logDensity(value.getFirst()); // scalar
     }
 
     @Override
-    protected List<RealScalar<PositiveReal>> sample() {
-        ContinuousDistribution.Sampler sampler = gamma.createSampler(rng);
+    protected List<Double> sample() {
         final double y = sampler.sample();  // sample from Gamma
         final double x = 1.0 / y; // sample from Gamma
-        RealScalarParam<PositiveReal> param = new RealScalarParam<>(x, PositiveReal.INSTANCE);
-        return List.of(param);
+        return List.of(x);
     }
 
     //        @Override
