@@ -26,8 +26,9 @@ public class ScalarIID<V extends Vector<D, T>,
         D extends Domain<T>,
         T> extends TensorDistribution<V, D, T> {
 
-    // param is vector, but distr is univariate
+    // param in IID is vector, but distr is univariate
 
+    // the param in distr is null
     final public Input<TensorDistribution<S, D, T>> distInput
             = new Input<>("distr",
             "the base distribution for iid, e.g. normal, beta, gamma.",
@@ -35,10 +36,21 @@ public class ScalarIID<V extends Vector<D, T>,
 
     protected TensorDistribution<S, D, T> dist;
 
+    public ScalarIID() {}
+
+    public ScalarIID(V param, TensorDistribution<S, D, T> dist) {
+
+        try {
+            initByName("param", param, "distr", dist);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
     public void initAndValidate() {
         dist = distInput.get();
-//        domain = dist.
         // param
         super.initAndValidate();
         if (param == null || param.size() <= 1)
@@ -60,7 +72,16 @@ public class ScalarIID<V extends Vector<D, T>,
 
     @Override
     protected List<T> sample() {
-        throw new UnsupportedOperationException("Directly use sample(State state, Random random)");
+        List<T> newListX = new ArrayList<>(dimension());
+        for (int i = 0; i < dimension(); i++) {
+            // Scalar
+            T newX = dist.sample().getFirst();
+            while (! param.isValid(newX)) {
+                newX = dist.sample().getFirst();
+            }
+            newListX.add(newX);
+        }
+        return newListX;
     }
 
     @Override

@@ -6,6 +6,7 @@ import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.RealScalar;
@@ -88,22 +89,34 @@ public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNe
 
         System.out.println("param = " + param + ", logP =" + poisson.calculateLogP());
 
+
+        /** R code
+         * x <- c(0, 1, 2, 3)
+         * lambda <- 5
+         * logP <- dpois(x, lambda, log = TRUE)
+         * sum(logP)  # total log-likelihood across observations
+         */
+
         /*
-k	P(X=k)	log P(X=k)
-0	0.006737947	-5.0
-1	0.0336897	-3.391
-2	0.084224	-2.476
-3	0.140374	-1.964
-Sum of logP for [0,1,2,3] ≈ -12.831
+k	log P(X=k)
+0	-5.0
+1	-3.390562
+2	-2.474271
+3	-1.963446
+Sum of logP for [0,1,2,3] ≈ -12.82828
          */
 
         for (int i = 0; i < 4; i++) {
             System.out.println("i = " + i + ", logP =" + poisson.calcLogP(List.of(i)));
         }
 
-        // TODO IID of 0, 1, 2, 3
+        ScalarIID iid = new ScalarIID(
+                new IntVectorParam(new int[]{0, 1, 2, 3}, NonNegativeInt.INSTANCE),
+                poisson);
 
-//Not working now :   System.out.println(poisson.calcLogP(List.of(0, 1, 2, 3)));
+        System.out.println("param = " + iid.param + ", logP =" + iid.calculateLogP());
+        System.out.println(iid.calcLogP(List.of(0, 1, 2, 3)));
+
     }
 
 } // class Poisson

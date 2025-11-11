@@ -21,8 +21,23 @@ public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double>
     final public Input<RealVector<PositiveReal>> alphaInput = new Input<>("alpha",
             "coefficients of the Dirichlet distribution", Validate.REQUIRED);
 
-    private final double expectedSum = 1.0;
     private GammaDistribution[] gammas;
+
+    /**
+     * Must provide empty constructor for construction by XML.
+     * Note that this constructor DOES NOT call initAndValidate();
+     */
+    public Dirichlet() {}
+
+    public Dirichlet(Simplex param, RealVector<PositiveReal> alpha) {
+
+        try {
+            initByName("param", param, "alpha", alpha);
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
 
     @Override
     public void initAndValidate() {
@@ -69,6 +84,7 @@ public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double>
         double sumX = value.stream()              // Stream<Double>
                 .mapToDouble(Double::doubleValue) // unbox to double
                 .sum();
+        final double expectedSum = 1.0;
         if (Math.abs(sumX - expectedSum) > 1e-6) {
             Log.trace("sum of values (" + sumX +") differs significantly from the expected sum of values (" + expectedSum +")");
             return Double.NEGATIVE_INFINITY;
@@ -89,7 +105,7 @@ public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double>
         // Normalize
         for (int i = 0; i < dimension(); i++) {
             // if expectedSum != 1, then adjust the sum to it
-            dirichletSample[i] = (dirichletSample[i] / sum); //* expectedSum;
+            dirichletSample[i] = (dirichletSample[i] / sum);
         }
         // Returning an immutable result
         return List.of(dirichletSample);

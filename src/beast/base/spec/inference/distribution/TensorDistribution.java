@@ -7,13 +7,10 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
-import beast.base.spec.inference.parameter.BoolScalarParam;
-import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
@@ -66,7 +63,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     //*** abstract methods ***//
 
     /**
-     * Override {@link beast.base.inference.Distribution#calculateLogP()}.
+     * Override {@link Distribution#calculateLogP()}.
      * Parameter value is wrapped by tensor S.
      * @return the normalized probability (density) for this distribution.
      */
@@ -105,7 +102,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
      */
     protected abstract double calcLogP(List<T> value);
     //TODO difficult to handle T... value, because varargs are actually T[] at runtime.
-    // easy to get ClassCastException
+    // otherwise it will often get ClassCastException
 
     /**
      * It is used to sample one data point from this distribution.
@@ -144,15 +141,61 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         sampleConditions(state, random);
 
         try {
-            // sample distribution parameters
-            List<T> newListX = sample();
-
+            param = paramInput.get();
+            // param is optional
             if (param != null) {
-                param = paramInput.get();
-                setNewValue(param, newListX.getFirst());
-//            } else if (iidparam != null) {
-//                iidparam = iidparamInput.get();
-//                setNewValue(iidparam, newListX);
+
+                switch (param) {
+                    case Scalar scalar -> {
+                        // sample distribution parameters
+                        T newX = sample().getFirst();
+                        while (! scalar.isValid(newX)) {
+                            newX = sample().getFirst();
+                        }
+                        switch (scalar) {
+                            case RealScalarParam rs -> rs.set((Double) newX);
+                            case IntScalarParam is -> is.set((Integer) newX);
+                            case BoolScalarParam bs -> bs.set((Boolean) newX);
+                            default -> {
+                                throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
+                            }
+                        }
+                    }
+                    case Vector vector -> {
+                        List<T> newListX = null;
+                        boolean valid = false; // start loop
+                        while (! valid) {
+                            newListX = sample();
+                            if (vector.size() != newListX.size())
+                                throw new IllegalStateException("sample is not implemented yet for vector that is not a Vector");
+
+                            for (int i = 0; i < vector.size(); i++) {
+                                valid = vector.isValid(newListX.get(i));
+                                if ( ! valid)
+                                    break;
+                            }
+                        } // end while
+
+                        switch (vector) {
+                            case RealVectorParam rv -> {
+                                for (int i = 0; i < rv.size(); i++)
+                                    rv.set(i, (Double) newListX.get(i));
+                            }
+                            case IntVectorParam iv -> {
+                                for (int i = 0; i < iv.size(); i++)
+                                    iv.set(i, (Integer) newListX.get(i));
+                            }
+                            case BoolVectorParam bv -> {
+                                for (int i = 0; i < bv.size(); i++)
+                                    bv.set(i, (Boolean) newListX.get(i));
+                            }
+                            default -> {
+                                throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
+                            }
+                        }
+                    }
+                    default -> throw new IllegalStateException("Unexpected tensor type");
+                }
             }
 
         } catch (Exception e) {
@@ -161,33 +204,8 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         }
     }
 
-    private void setNewValue(S param, T newx) {
-        switch (param) {
-            case Scalar scalar -> {
-                if (param instanceof Bounded b) {
-                    while (!b.withinBounds((Comparable) newx)) {
-                        newx = sample().getFirst();
-                    }
-                }
-                switch (scalar) {
-                    case RealScalarParam rs -> rs.set((Double) newx);
-                    case IntScalarParam is -> is.set((Integer) newx);
-                    case BoolScalarParam bs -> bs.set((Boolean) newx);
-                    default -> {
-                        throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
-                    }
-                }
-            }
-            case Vector vector -> {
-
-                //TODO
-
-                throw new UnsupportedOperationException("sample is not implemented yet for vector parameters");
-            }
-            default -> throw new IllegalStateException("Unexpected tensor type");
-        }
-    }
-
+//    private void setNewValue(S param, T newx) {
+//    }
 //    private void setNewValue(List<S> iidparam, List<S> newListX) {
 //        assert iidparam.size() == newListX.size();
 //        for (int i = 0; i < iidparam.size(); i++) {
