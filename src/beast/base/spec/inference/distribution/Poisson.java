@@ -110,7 +110,7 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
             System.out.println("i = " + i + ", logP =" + poisson.calcLogP(List.of(i)));
         }
 
-        ScalarIID iid = new ScalarIID(
+        IID iid = new IID(
                 new IntVectorParam(new int[]{0, 1, 2, 3}, NonNegativeInt.INSTANCE),
                 poisson);
 

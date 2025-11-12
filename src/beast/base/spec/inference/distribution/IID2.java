@@ -2,13 +2,11 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Input;
 import beast.base.inference.State;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.Domain;
-import beast.base.spec.inference.parameter.BoolVectorParam;
-import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.BoolScalarParam;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.Scalar;
-import beast.base.spec.type.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,17 +14,18 @@ import java.util.Random;
 
 /**
  * A collection of ({@link Scalar}) is independent and identically distributed.
- * @param <V>  samples
  * @param <S>  the sample type S of the distribution, see {@link TensorDistribution}.
  * @param <D>  domain {@link Domain}
  * @param <T>  Java type
  */
-public class ScalarIID<V extends Vector<D, T>,
-        S extends Scalar<D, T>,
+public class IID2<S extends Scalar<D, T>,
         D extends Domain<T>,
-        T> extends TensorDistribution<V, D, T> {
+        T> extends TensorDistribution<S, D, T> {
 
     // param in IID is vector, but distr is univariate
+    final public Input<List<S>> iidparamInput = new Input<>("iidparam",
+            "multiple point at which the density is calculated using IID",
+            Input.Validate.REQUIRED, List.class);
 
     // the param in distr is null
     final public Input<TensorDistribution<S, D, T>> distInput
@@ -35,13 +34,17 @@ public class ScalarIID<V extends Vector<D, T>,
             Input.Validate.REQUIRED);
 
     protected TensorDistribution<S, D, T> dist;
+    protected List<S> iidparam;
 
-    public ScalarIID() {}
 
-    public ScalarIID(V param, TensorDistribution<S, D, T> dist) {
+    public IID2() {
+        paramInput.setRule(Input.Validate.FORBIDDEN);
+    }
+
+    public IID2(List<S> iidparam, TensorDistribution<S, D, T> dist) {
 
         try {
-            initByName("param", param, "distr", dist);
+            initByName("iidparam", iidparam, "distr", dist);
         } catch (Exception e) {
             throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
                     " via initByName in constructor.", e );
@@ -52,16 +55,25 @@ public class ScalarIID<V extends Vector<D, T>,
     public void initAndValidate() {
         dist = distInput.get();
         // param
-        super.initAndValidate();
-        if (param == null || param.size() <= 1)
+        iidparam = iidparamInput.get();
+        if (iidparam == null || dimension() <= 1)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
 
+        for (S s : iidparam)
+            if (s != null && !s.isValid())
+                throw new IllegalArgumentException("Param in IID is not valid ! " + s);
+
+    }
+
+    @Override
+    public int dimension() {
+        return iidparam != null ? iidparam.size() : 0;
     }
 
     @Override
     protected double calcLogP(List<T> value) {
         // value dim == param dim
-        if (value.size() != param.size())
+        if (value.size() != dimension())
             throw new IllegalArgumentException("Value dim does not match param size ! ");
         double logP = 0.0;
         for (T t : value) {
@@ -95,43 +107,29 @@ public class ScalarIID<V extends Vector<D, T>,
         // Cause conditional parameters to be sampled
         sampleConditions(state, random);
 
-        if (this.param == null)
+        if (this.iidparam == null)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
-        List<T> newListX = new ArrayList<>(dimension());
+
         try {
             // sample at each dim();
             for (int i = 0; i < dimension(); i++) {
                 // scalar
-                T newx = dist.sample().getFirst();
-                if (param instanceof Bounded b) {
-                    while (!b.withinBounds((Comparable) newx)) {
-                        newx = dist.sample().getFirst();
+                S x = this.iidparam.get(i);
+                // sample distribution parameters
+                T newX = dist.sample().getFirst();
+                while (! x.isValid(newX)) {
+                    newX = dist.sample().getFirst();
+                }
+                switch (x) {
+                    case RealScalarParam rs -> rs.set((Double) newX);
+                    case IntScalarParam is -> is.set((Integer) newX);
+                    case BoolScalarParam bs -> bs.set((Boolean) newX);
+                    default -> {
+                        throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
                     }
                 }
-                newListX.add(newx);
-            }
 
-            if (this.param.size() != newListX.size())
-                throw new IllegalArgumentException("Samples size needs to match param dimension " + dimension());
-
-            switch (this.param) {
-                case RealVectorParam rv -> {
-                    for (int i = 0; i < dimension(); i++) {
-                        rv.set(i, (Double) newListX.get(i));
-                    }
-                }
-                case IntVectorParam iv -> {
-                    for (int i = 0; i < dimension(); i++) {
-                        iv.set(i, (Integer) newListX.get(i));
-                    }
-                }
-                case BoolVectorParam bv -> {
-                    for (int i = 0; i < dimension(); i++) {
-                        bv.set(i, (Boolean) newListX.get(i));
-                    }
-                }
-                default ->
-                    throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
+                //TODO what about S is vector or matrix?
             }
 
         } catch (Exception e) {

@@ -139,7 +139,7 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
 
         // Cause conditional parameters to be sampled
         sampleConditions(state, random);
-
+//TODO modified from old code, but not sure how it works without set state
         try {
             param = paramInput.get();
             // param is optional
