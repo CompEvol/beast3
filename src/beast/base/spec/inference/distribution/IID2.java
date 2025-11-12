@@ -65,6 +65,8 @@ public class IID2<S extends Scalar<D, T>,
 
     }
 
+    // important to define List<T> in calcLogP(List<T> value)
+    // should be same size of iidparam
     @Override
     public int dimension() {
         return iidparam != null ? iidparam.size() : 0;

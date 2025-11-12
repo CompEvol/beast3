@@ -52,6 +52,7 @@ public class IID<V extends Vector<D, T>,
 
     }
 
+    // when param is vector, dist is univariate, then apply dist to each dim.
     @Override
     protected double calcLogP(List<T> value) {
         // value dim == param dim
