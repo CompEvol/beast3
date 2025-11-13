@@ -16,7 +16,7 @@ import java.util.List;
 @Description("Normal distribution.  f(x) = frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{ -\\frac{(x-\\mu)^2}{2\\sigma^2} } " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Normal extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
+public class Normal extends ScalarDistribution<RealScalar<Real>, Double> {
 
     final public Input<RealScalar<Real>> meanInput = new Input<>("mean",
             "mean of the normal distribution, defaults to 0");
@@ -36,7 +36,7 @@ public class Normal extends TensorDistribution<RealScalar<PositiveReal>, Positiv
     public Normal() {
     }
 
-    public Normal(RealScalar<PositiveReal> param,
+    public Normal(RealScalar<Real> param,
                   RealScalar<Real> mean, RealScalar<PositiveReal> sigma) {
 
         try {
@@ -77,8 +77,13 @@ public class Normal extends TensorDistribution<RealScalar<PositiveReal>, Positiv
         }
     }
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

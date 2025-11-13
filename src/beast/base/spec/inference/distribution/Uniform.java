@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Description("Uniform distribution over a given interval (including lower and upper values)")
-public class Uniform extends TensorDistribution<RealScalar<Real>, Real, Double>
+public class Uniform extends ScalarDistribution<RealScalar<Real>, Double>
         implements Bounded<Double> {
 
     final public Input<RealScalar<Real>> lowerInput = new Input<>("lower",
@@ -67,8 +67,13 @@ public class Uniform extends TensorDistribution<RealScalar<Real>, Real, Double>
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.List;
         "where B() is the beta function. " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Beta extends TensorDistribution<RealScalar<UnitInterval>, UnitInterval, Double> {
+public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "first shape parameter, defaults to 1");
@@ -40,16 +40,6 @@ public class Beta extends TensorDistribution<RealScalar<UnitInterval>, UnitInter
                     " via initByName in constructor.", e );
         }
     }
-
-//    public Beta(List<RealScalar<UnitInterval>> iidparam,
-//                RealScalar<PositiveReal> alpha, RealScalar<PositiveReal> beta) {
-//        try {
-//            initByName("iidparam", iidparam, "alpha", alpha, "beta", beta);
-//        } catch (Exception e) {
-//            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
-//                    " via initByName in constructor.", e );
-//        }
-//    }
 
     @Override
     public void initAndValidate() {
@@ -77,8 +67,13 @@ public class Beta extends TensorDistribution<RealScalar<UnitInterval>, UnitInter
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

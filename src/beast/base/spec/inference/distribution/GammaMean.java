@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Description("Gamma distribution using a different parameterization.")
-public class GammaMean extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
+public class GammaMean extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1", Input.Validate.REQUIRED);
@@ -66,8 +66,13 @@ public class GammaMean extends TensorDistribution<RealScalar<PositiveReal>, Posi
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

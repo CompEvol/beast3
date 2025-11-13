@@ -15,7 +15,7 @@ import java.util.List;
 @Description("Exponential distribution.  f(x;\\theta) = 1/\\theta e^{-x/\\theta}, if x >= 0 " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Exponential extends TensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal, Double> {
+public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>, Double> {
 
     final public Input<RealScalar<PositiveReal>> meanInput = new Input<>("mean",
             "mean parameter, defaults to 1");
@@ -64,8 +64,13 @@ public class Exponential extends TensorDistribution<RealScalar<NonNegativeReal>,
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

@@ -15,7 +15,7 @@ import java.util.List;
  * @author Alexei Drummond
  */
 @Description("A log-normal distribution with mean and variance parameters.")
-public class LogNormal extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
+public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
 
     final public Input<RealScalar<Real>> MParameterInput = new Input<>("M",
             "M parameter of lognormal distribution. " +
@@ -81,8 +81,13 @@ public class LogNormal extends TensorDistribution<RealScalar<PositiveReal>, Posi
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

@@ -6,33 +6,33 @@ import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Vector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * A collection of ({@link Scalar}) is independent and identically distributed.
  * @param <V>  params
  * @param <S>  the sample type S of the distribution, see {@link TensorDistribution}.
- * @param <D>  domain {@link Domain}
+// * @param <D>  domain {@link Domain}
  * @param <T>  Java type
  */
-public class IID<V extends Vector<D, T>,
-        S extends Scalar<D, T>,
-        D extends Domain<T>,
-        T> extends TensorDistribution<V, D, T> {
+public class IID<V extends Vector<?, T>,
+        S extends Scalar<?, T>,
+        T> extends TensorDistribution<V, T> {
 
     // param in IID is vector, but distr is univariate
 
     // the param in distr is null
-    final public Input<TensorDistribution<S, D, T>> distInput
+    final public Input<ScalarDistribution<S, T>> distInput
             = new Input<>("distr",
             "the base distribution for iid, e.g. normal, beta, gamma.",
             Input.Validate.REQUIRED);
 
-    protected TensorDistribution<S, D, T> dist;
+    protected ScalarDistribution<S, T> dist;
 
     public IID() {}
 
-    public IID(V param, TensorDistribution<S, D, T> dist) {
+    public IID(V param, ScalarDistribution<S, T> dist) {
 
         try {
             initByName("param", param, "distr", dist);
@@ -54,13 +54,21 @@ public class IID<V extends Vector<D, T>,
 
     // when param is vector, dist is univariate, then apply dist to each dim.
     @Override
-    protected double calcLogP(List<T> value) {
-        // value dim == param dim
-        if (value.size() != dimension())
-            throw new IllegalArgumentException("Value dim does not match param size ! ");
+    public double calculateLogP() {
+        return this.calcLogP(param.getElements());
+    }
+
+    @Override
+    protected double calcLogP(T... value) {
+        return this.calcLogP(Arrays.asList(value));
+    }
+
+    private double calcLogP(List<T> values) {
+        if (values == null || values.size() <= 1)
+            throw new IllegalArgumentException("IID requires param, but it is null ! ");
         double logP = 0.0;
-        for (T t : value) {
-            logP += dist.calcLogP(List.of(t));
+        for (T t : values) {
+            logP += dist.calcLogP(t);
         }
         return logP;
     }

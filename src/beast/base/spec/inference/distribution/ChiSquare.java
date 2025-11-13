@@ -15,7 +15,7 @@ import java.util.List;
 @Description("Chi square distribution, f(x; k) = \\frac{1}{2^{k/2}Gamma(k/2)} x^{k/2-1} e^{-x/2} " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class ChiSquare extends TensorDistribution<RealScalar<NonNegativeReal>, NonNegativeReal, Double> {
+public class ChiSquare extends ScalarDistribution<RealScalar<NonNegativeReal>, Double> {
 
     // Note Apache Commons Statistics uses double for Chi-squared degrees of freedom,
     // because it is a special case of the Gamma distribution.
@@ -64,8 +64,13 @@ public class ChiSquare extends TensorDistribution<RealScalar<NonNegativeReal>, N
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

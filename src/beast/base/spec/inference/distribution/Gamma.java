@@ -14,7 +14,7 @@ import java.util.List;
 @Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Gamma extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
+public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
@@ -91,8 +91,13 @@ public class Gamma extends TensorDistribution<RealScalar<PositiveReal>, Positive
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

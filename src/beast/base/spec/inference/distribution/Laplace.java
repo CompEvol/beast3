@@ -15,7 +15,7 @@ import java.util.List;
         "however, whereas the normal distribution is expressed in terms of the squared difference from the mean ?, " +
         "the Laplace density is expressed in terms of the absolute difference from the mean. Consequently the Laplace " +
         "distribution has fatter tails than the normal distribution.")
-public class Laplace extends TensorDistribution<RealScalar<Real>, Real, Double> {
+public class Laplace extends ScalarDistribution<RealScalar<Real>, Double> {
 
     final public Input<RealScalar<Real>> muInput = new Input<>("mu",
             "location parameter, defaults to 0");
@@ -66,8 +66,13 @@ public class Laplace extends TensorDistribution<RealScalar<Real>, Real, Double> 
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return dist.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return dist.logDensity(value); // scalar
     }
 
     @Override

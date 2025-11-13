@@ -7,7 +7,6 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.*;
@@ -23,12 +22,13 @@ import java.util.Random;
 
 /**
  * Strong typed {@link Distribution} for {@link Tensor}.
- * @param <S> the shape for sampled value, which could be {@link Scalar} or {@link Vector}
- * @param <D> the domain for sampled value, which extends either {@link Real} or {@link Int}.
+ * @param <S> the shape for sampled value, which could be {@link Vector},
+ *           but for {@link Scalar}, use {@link ScalarDistribution}.
+// * @param <D> the domain for sampled value, which extends either {@link Real} or {@link Int}.
  * @param <T> the Java primitive type for sampled value, either Double or Integer.
  */
 @Description("The BEAST Distribution over a tensor.")
-public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain<T>, T>
+public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         extends Distribution {
 
     protected static final double EPS = 1e-12;
@@ -40,27 +40,29 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
     // Note this is the same tensor used for the sampled values defined in the class types.
     final public Input<S> paramInput = new Input<>("param",
             "point at which the density is calculated", Validate.OPTIONAL, Tensor.class);
-//    final public Input<List<S>> iidparamInput = new Input<>("iidparam",
-//            "multiple point at which the density is calculated using IID", Validate.XOR, List.class);
 
     protected S param;
-//    protected List<S> iidparam;
 
     @Override
     public void initAndValidate() {
-        param = paramInput.get();
-//        iidparam = iidparamInput.get();
-//        if (param == null && iidparam == null || param != null && iidparam != null)
-//            throw new IllegalArgumentException("Only one of param and iidparam input can be specified !");
+        param = paramInput.get(); // optional
         if (param != null && !param.isValid())
             throw new IllegalArgumentException("Tensor param is not valid ! " + param);
-//        if (iidparam != null)
-//            for (S s : iidparam)
-//                if (s != null && !s.isValid())
-//                    throw new IllegalArgumentException("Param in IID is not valid ! " + s);
     }
 
-    //*** abstract methods ***//
+    /**
+     * Floating point comparison. Make it public for other packages to use
+     * @param a
+     * @param b
+     * @return   if the two double numbers are equal.
+     */
+    public static boolean isNotEqual(double a, double b) {
+        return Math.abs(a - b) > EPS;
+    }
+
+    public int dimension() {
+        return param != null ? param.size() : 0; //iidparam.size();
+    }
 
     /**
      * Override {@link Distribution#calculateLogP()}.
@@ -69,40 +71,17 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
      */
     @Override
     public double calculateLogP() {
-        logP = 0;
-        if (param != null) {
-            param = paramInput.get();
-            if (param instanceof Scalar scalar) {
-                // single value
-                T val = (T) scalar.get();
-                logP += calcLogP(List.of(val));
-
-            } else if (param instanceof Vector vector) {
-//                @SuppressWarnings("unchecked")
-//                T[] vals = (T[]) Array.newInstance(vector.get(0).getClass(), vector.size());
-                List<T> vals = vector.getElements();
-                logP += calcLogP(vals);
-            } else
-                throw new IllegalStateException("Unexpected tensor type");
-//        } else if (iidparam != null) {
-//            // if IID
-//            for (S s : iidparam) {
-//                List<T> values = getTensorValue(s);
-//                for (T value : values)
-//                    logP += calcLogP(value);
-//            }
-        }
-        return logP;
+        throw new UnsupportedOperationException("Please override this method in every child class !");
     }
 
+    //*** abstract methods ***//
+
     /**
-     * Implement this case by case to compute the log-density or log-probability.
+     * Used by {@link IID} when computing the log probability/density from the base distribution.
      * @param value T in Java type
      * @return  the normalized probability (density) for this distribution.
      */
-    protected abstract double calcLogP(List<T> value);
-    //TODO difficult to handle T... value, because varargs are actually T[] at runtime.
-    // otherwise it will often get ClassCastException
+    protected abstract double calcLogP(T... value);
 
     /**
      * It is used to sample one data point from this distribution.
@@ -111,21 +90,6 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
      *
      */
     protected abstract List<T> sample();
-
-    public int dimension() {
-        return param != null ? param.size() : 0; //iidparam.size();
-    }
-
-    // unwrap values
-    @Deprecated
-//    private List<T> getTensorValue(Tensor<D,T> tensor) {
-//        if (tensor instanceof Scalar<D,T> scalar)
-//            return List.of(scalar.get());
-//        else if (tensor instanceof Vector<D,T> vector)
-//            return vector.getElements();
-//        else
-//            throw new IllegalStateException("Unexpected tensor type");
-//    }
 
     //*** Override Distribution methods ***//
 
@@ -204,15 +168,6 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         }
     }
 
-//    private void setNewValue(S param, T newx) {
-//    }
-//    private void setNewValue(List<S> iidparam, List<S> newListX) {
-//        assert iidparam.size() == newListX.size();
-//        for (int i = 0; i < iidparam.size(); i++) {
-//            setNewValue(iidparam.get(i), newListX.get(i));
-//        }
-//    }
-
     @Override
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
@@ -228,16 +183,6 @@ public abstract class TensorDistribution<S extends Tensor<D,T>, D extends Domain
         String id = param != null ? ((BEASTInterface) param).getID() : null;
         arguments.add(id);
         return arguments;
-    }
-
-    /**
-     * Floating point comparison. Make it public for other packages to use
-     * @param a
-     * @param b
-     * @return   if the two double numbers are equal.
-     */
-    public static boolean isNotEqual(double a, double b) {
-        return Math.abs(a - b) > EPS;
     }
 
 }

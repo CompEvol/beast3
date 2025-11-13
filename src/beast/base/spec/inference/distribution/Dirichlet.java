@@ -5,18 +5,18 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import org.apache.commons.math3.special.Gamma;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
+import java.util.Arrays;
 import java.util.List;
 
 
 @Description("Dirichlet distribution.  p(x_1,...,x_n;alpha_1,...,alpha_n) = 1/B(alpha) prod_{i=1}^K x_i^{alpha_i - 1} " +
         "where B() is the beta function B(alpha) = prod_{i=1}^K Gamma(alpha_i)/ Gamma(sum_{i=1}^K alpha_i}. ")
-public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double> {
+public class Dirichlet extends TensorDistribution<Simplex, Double> {
 
     final public Input<RealVector<PositiveReal>> alphaInput = new Input<>("alpha",
             "coefficients of the Dirichlet distribution", Validate.REQUIRED);
@@ -66,7 +66,17 @@ public class Dirichlet extends TensorDistribution<Simplex, UnitInterval, Double>
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
+    protected double calcLogP(Double... value) {
+        return this.calcLogP(Arrays.asList(value));
+    }
+
+    @Override
+    public double calculateLogP() {
+        // Avoid unnecessary conversions, use List<> directly for better performance
+        return this.calcLogP(param.getElements());
+    }
+
+    private double calcLogP(List<Double> value) {
         List<Double> alpha = alphaInput.get().getElements();
         if (alpha.size() != value.size())
             throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +

@@ -15,7 +15,7 @@ import java.util.List;
 @Description("Inverse Gamma distribution, used as prior.    for x>0  f(x; alpha, beta) = \frac{beta^alpha}{Gamma(alpha)} (1/x)^{alpha + 1}exp(-beta/x) " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, PositiveReal, Double> {
+public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
@@ -74,8 +74,13 @@ public class InverseGamma extends TensorDistribution<RealScalar<PositiveReal>, P
     }
 
     @Override
-    protected double calcLogP(List<Double> value) {
-        return gamma.logDensity(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return gamma.logDensity(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Double value) {
+        return gamma.logDensity(value); // scalar
     }
 
     @Override

@@ -19,7 +19,7 @@ import java.util.List;
 @Description("Poisson distribution, used as prior  f(k; lambda)=\\frac{lambda^k e^{-lambda}}{k!}  " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
-public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNegativeInt, Integer> {
+public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integer> {
 
     // allow 0
     final public Input<RealScalar<NonNegativeReal>> lambdaInput = new Input<>(
@@ -52,8 +52,13 @@ public class Poisson extends TensorDistribution<IntScalar<NonNegativeInt>, NonNe
     }
 
     @Override
-    protected double calcLogP(List<Integer> value) {
-        return dist.logProbability(value.getFirst()); // scalar
+    public double calculateLogP() {
+        return dist.logProbability(param.get()); // unbox value, faster
+    }
+
+    @Override
+    protected double calcLogP(Integer value) {
+        return dist.logProbability(value); // scalar
     }
 
     @Override
@@ -107,7 +112,9 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
          */
 
         for (int i = 0; i < 4; i++) {
-            System.out.println("i = " + i + ", logP =" + poisson.calcLogP(List.of(i)));
+            param = new IntScalarParam<>(i, NonNegativeInt.INSTANCE);
+            poisson = new Poisson(param, lambda);
+            System.out.println("i = " + i + ", logP =" + poisson.calculateLogP());
         }
 
         IID iid = new IID(
@@ -115,7 +122,6 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
                 poisson);
 
         System.out.println("param = " + iid.param + ", logP =" + iid.calculateLogP());
-        System.out.println(iid.calcLogP(List.of(0, 1, 2, 3)));
 
     }
 
