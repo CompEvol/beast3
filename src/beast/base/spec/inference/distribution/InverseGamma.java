@@ -75,7 +75,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
 
     @Override
     public double calculateLogP() {
-        return gamma.logDensity(param.get()); // unbox value, faster
+        return gamma.logDensity(param.get()); // no unboxing needed, faster
     }
 
     @Override

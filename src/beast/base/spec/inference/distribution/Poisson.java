@@ -85,10 +85,10 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
     }
 
     public static void main(String[] args) {
-        // in
+        // model param is immutable
         RealScalar<NonNegativeReal> lambda = new RealScalarParam<>(5.0, NonNegativeReal.INSTANCE);
-        // out
-        IntScalar<NonNegativeInt> param = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
+        // this is a state node, its value can be changed
+        IntScalarParam<NonNegativeInt> param = new IntScalarParam<>(0, NonNegativeInt.INSTANCE);
         // include initAndValidate
         Poisson poisson = new Poisson(param, lambda);
 
@@ -112,11 +112,12 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
          */
 
         for (int i = 0; i < 4; i++) {
-            param = new IntScalarParam<>(i, NonNegativeInt.INSTANCE);
+            param.set(i);
             poisson = new Poisson(param, lambda);
             System.out.println("i = " + i + ", logP =" + poisson.calculateLogP());
         }
 
+        // IID
         IID iid = new IID(
                 new IntVectorParam(new int[]{0, 1, 2, 3}, NonNegativeInt.INSTANCE),
                 poisson);

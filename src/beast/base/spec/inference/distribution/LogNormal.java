@@ -82,7 +82,7 @@ public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Doub
 
     @Override
     public double calculateLogP() {
-        return dist.logDensity(param.get()); // unbox value, faster
+        return dist.logDensity(param.get()); // no unboxing needed, faster
     }
 
     @Override

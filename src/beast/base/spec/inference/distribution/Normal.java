@@ -78,7 +78,7 @@ public class Normal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
     @Override
     public double calculateLogP() {
-        return dist.logDensity(param.get()); // unbox value, faster
+        return dist.logDensity(param.get()); // no unboxing needed, faster
     }
 
     @Override

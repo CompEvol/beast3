@@ -68,7 +68,7 @@ public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
 
     @Override
     public double calculateLogP() {
-        return dist.logDensity(param.get()); // unbox value, faster
+        return dist.logDensity(param.get()); // no unboxing needed, faster
     }
 
     @Override
