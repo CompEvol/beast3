@@ -1,14 +1,16 @@
 package beast.base.inference.distribution;
 
+import beast.base.core.Description;
+import beast.base.core.Input;
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ContinuousDistribution;
 import org.apache.commons.math.distribution.Distribution;
 
-import beast.base.core.Description;
-import beast.base.core.Input;
 
-
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Uniform}
+ */
+@Deprecated
 @Description("Uniform distribution over a given interval (including lower and upper values)")
 public class Uniform extends ParametricDistribution {
     final public Input<Double> lowerInput = new Input<>("lower", "lower bound on the interval, default 0", 0.0);
