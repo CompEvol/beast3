@@ -52,7 +52,8 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
     @Override
     public double calculateLogP() {
         // FastMath : faster performance with tiny accuracy cost
-        return param.get() ? FastMath.log(p) : FastMath.log(1 - p);
+    	logP = param.get() ? FastMath.log(p) : FastMath.log(1 - p);
+    	return logP;
     }
 
     @Override

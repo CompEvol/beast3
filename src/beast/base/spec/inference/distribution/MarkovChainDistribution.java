@@ -1,11 +1,13 @@
 package beast.base.spec.inference.distribution;
 
 
+
 import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.math.distribution.GammaDistribution;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
+import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
@@ -13,8 +15,6 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.inference.*;
-import beast.base.inference.distribution.LogNormalDistributionModel;
-import beast.base.inference.distribution.LogNormalDistributionModel.LogNormalImpl;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
@@ -29,7 +29,7 @@ import beast.base.spec.type.RealVector;
 		"If useLogNormal is set, a log normal distribution is used instead of a Gamma. " +
         "If a Jeffrey's prior is used, the first value is assumed to be distributed as 1/x, otherwise it is assumed to be uniform. " +
         "Handy for population parameters. ")
-public class MarkovChainDistribution extends Distribution {
+public class MarkovChainDistribution extends TensorDistribution<RealVector<PositiveReal>, Double> {
 
     final public Input<Boolean> isJeffreysInput = new Input<>("jeffreys", "use Jeffrey's prior (default false)", false);
     final public Input<Boolean> isReverseInput = new Input<>("reverse", "parameter in reverse (default false)", false);
@@ -52,7 +52,7 @@ public class MarkovChainDistribution extends Distribution {
     private boolean uselog = false;
     private double shape = 1.0;
     GammaDistribution gamma;
-    LogNormalImpl logNormal;
+    LogNormalDistribution logNormal;
     boolean useLogNormal;
     private static int warningCount = 0;
 
@@ -66,7 +66,7 @@ public class MarkovChainDistribution extends Distribution {
         initialMean = initialMeanInput.get();
         useLogNormal = useLogNormalInput.get();
         gamma = new GammaDistributionImpl(shape, 1);
-        logNormal = new LogNormalDistributionModel().new LogNormalImpl(1, 1);
+        logNormal = LogNormalDistribution.of(1.0, 1.0);
 
         if (jeffreys && initialMean != null) {
             throw new RuntimeException("Must specify either Jeffrey's prior or an initial mean, but not both");
@@ -98,7 +98,7 @@ public class MarkovChainDistribution extends Distribution {
 	            final double sigma = 1.0 / shape; // shape = precision
 	            // convert mean to log space
 	            final double M = Math.log(mean) - (0.5 * sigma * sigma);
-	            logNormal.setMeanAndStdDev(M, sigma);
+	            logNormal = LogNormalDistribution.of(M, sigma);
 	            logP += logNormal.logDensity(x);
             } else {
                 final double scale = mean / shape;
@@ -142,16 +142,29 @@ public class MarkovChainDistribution extends Distribution {
 
     @Override
     public List<String> getArguments() {
-        return null;
+		throw new RuntimeException("not implemented yet");
     }
 
     @Override
     public List<String> getConditions() {
-        return null;
+		throw new RuntimeException("not implemented yet");
     }
 
     @Override
     public void sample(State state, Random random) {
+		throw new RuntimeException("not implemented yet");
     }
+
+
+	@Override
+	protected double calcLogP(Double... value) {
+		logP = calculateLogP();
+		return logP;
+	}
+
+	@Override
+	protected List<Double> sample() {
+		throw new RuntimeException("not implemented yet");
+	}
 }
 
