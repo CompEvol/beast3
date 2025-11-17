@@ -67,7 +67,8 @@ public class GammaMean extends ScalarDistribution<RealScalar<PositiveReal>, Doub
 
     @Override
     public double calculateLogP() {
-        return dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        return logP;
     }
 
     @Override

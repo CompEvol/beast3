@@ -55,7 +55,8 @@ public class IID<V extends Vector<?, T>,
     // when param is vector, dist is univariate, then apply dist to each dim.
     @Override
     public double calculateLogP() {
-        return this.calcLogP(param.getElements());
+        logP = this.calcLogP(param.getElements());
+        return logP;
     }
 
     @Override

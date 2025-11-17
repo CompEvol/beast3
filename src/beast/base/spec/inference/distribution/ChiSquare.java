@@ -65,7 +65,8 @@ public class ChiSquare extends ScalarDistribution<RealScalar<NonNegativeReal>, D
 
     @Override
     public double calculateLogP() {
-        return dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        return logP;
     }
 
     @Override

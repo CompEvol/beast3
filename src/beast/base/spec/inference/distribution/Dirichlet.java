@@ -73,7 +73,8 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
     @Override
     public double calculateLogP() {
         // Avoid unnecessary conversions, use List<> directly for better performance
-        return this.calcLogP(param.getElements());
+        logP = this.calcLogP(param.getElements());
+        return logP;
     }
 
     private double calcLogP(List<Double> value) {
