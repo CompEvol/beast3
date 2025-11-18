@@ -127,4 +127,9 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
 
     }
 
+    @Override
+    public boolean isIntegerDistribution() {
+    	return true;
+    }
+
 } // class Poisson

@@ -36,7 +36,7 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
     final public Input<Boolean> useLogInput = new Input<>("uselog", "use logarithm of parameter values (default false)", false);
     final public Input<Double> shapeInput = new Input<>("shape", "shape parameter of the Gamma distribution (default 1.0 = exponential distribution) " +
     		" or precision parameter if the log normal is used.", 1.0);
-    final public Input<RealVector<PositiveReal>> parameterInput = new Input<>("parameter", "chain parameter to calculate distribution over", Validate.REQUIRED);
+//    final public Input<RealVector<PositiveReal>> parameterInput = new Input<>("parameter", "chain parameter to calculate distribution over", Validate.REQUIRED);
 
     final public Input<RealScalar<PositiveReal>> initialMeanInput = new Input<>("initialMean", "the mean of the prior distribution on the first element. This is an alternative boundary condition to Jeffrey's on the first value.", Validate.OPTIONAL);
 
@@ -56,13 +56,18 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
     boolean useLogNormal;
     private static int warningCount = 0;
 
+    public MarkovChainDistribution() {
+		// paramInput.setTipText("chain parameter to calculate distribution over");
+	}
+    
+    
     @Override
     public void initAndValidate() {
         reverse = isReverseInput.get();
         jeffreys = isJeffreysInput.get();
         uselog = useLogInput.get();
         shape = shapeInput.get();
-        chainParameter = parameterInput.get();
+        chainParameter = paramInput.get();
         initialMean = initialMeanInput.get();
         useLogNormal = useLogNormalInput.get();
         gamma = new GammaDistributionImpl(shape, 1);

@@ -97,4 +97,9 @@ public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Doub
         return List.of(x);
     }
 
+    
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 }
