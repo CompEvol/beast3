@@ -94,4 +94,8 @@ public class Normal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
 
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 } // class Normal

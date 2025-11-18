@@ -22,7 +22,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
             "scale parameter, defaults to 1");
 
-    private GammaDistribution gamma = GammaDistribution.of(1, 1);
+    private GammaDistribution dist = GammaDistribution.of(1, 1);
     private ContinuousDistribution.Sampler sampler;
 
     private double alpha;
@@ -62,12 +62,12 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         C = alpha * Math.log(beta) - org.apache.commons.math.special.Gamma.logGamma(alpha);
 
         // Floating point comparison
-        if (isNotEqual(gamma.getShape(), alpha) ||  isNotEqual(gamma.getScale(), 1.0 / beta)) {
-            gamma = GammaDistribution.of(alpha, 1.0 / beta);
-            sampler = gamma.createSampler(rng);
+        if (isNotEqual(dist.getShape(), alpha) ||  isNotEqual(dist.getScale(), 1.0 / beta)) {
+            dist = GammaDistribution.of(alpha, 1.0 / beta);
+            sampler = dist.createSampler(rng);
         } else if (sampler == null) {
             // Ensure sampler exists
-            sampler = gamma.createSampler(rng);
+            sampler = dist.createSampler(rng);
         }
     }
 
@@ -93,4 +93,8 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         return List.of(x);
     }
 
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 } // class InverseGamma

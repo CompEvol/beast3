@@ -80,4 +80,8 @@ public class ChiSquare extends ScalarDistribution<RealScalar<NonNegativeReal>, D
         return List.of(x);
     }
 
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 } // class ChiSquare

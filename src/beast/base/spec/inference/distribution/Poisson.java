@@ -132,4 +132,8 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
     	return true;
     }
 
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 } // class Poisson

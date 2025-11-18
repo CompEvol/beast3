@@ -102,4 +102,9 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double>
     public boolean upperInclusive() {
         return true;
     }
+    
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
 }

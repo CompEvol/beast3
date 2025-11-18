@@ -80,4 +80,10 @@ public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>,
         return List.of(x);
     }
 
+    
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
+    
 } // class Exponential

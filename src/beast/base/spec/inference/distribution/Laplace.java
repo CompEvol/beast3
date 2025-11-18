@@ -82,4 +82,9 @@ public class Laplace extends ScalarDistribution<RealScalar<Real>, Double> {
         return List.of(x);
     }
 
+    @Override
+    public Object getApacheDistribution() {
+    	return dist;
+    }
+
 } // class

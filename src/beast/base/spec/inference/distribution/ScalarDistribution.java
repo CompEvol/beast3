@@ -9,6 +9,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Tensor;
 
 /**
  * Strong typed {@link Distribution} for {@link Scalar}.
@@ -129,5 +130,11 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
          return offsetInput.get();
      }
 
+     
+     public boolean isCompatible(Tensor<?,?> t) {
+    	 Class thisType = paramInput.getType();
+    	 return  (t.getClass().isAssignableFrom(thisType));
+     }
+     
 }
 
