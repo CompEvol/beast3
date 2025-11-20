@@ -82,7 +82,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         return logDensity(value); // scalar
     }
 
-    private double logDensity(double x) {
+    public double logDensity(double x) {
         return -(alpha + 1.0) * Math.log(x) - (beta / x) + C;
     }
 

@@ -1,15 +1,14 @@
 package beast.base.spec.inference.distribution;
 
 
-import org.apache.commons.math.MathException;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
-import org.apache.commons.statistics.distribution.DiscreteDistribution;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
+import org.apache.commons.math.MathException;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+import org.apache.commons.statistics.distribution.DiscreteDistribution;
 
 /**
  * Strong typed {@link Distribution} for {@link Scalar}.
@@ -71,7 +70,11 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     	}
     	return 0.0;
     }
-  
+
+    public double logDensity(double x) {
+    	return Math.log(density(x));
+    }
+
     /**
      * @return org.apache.commons.statistics.distribution.ContinuousDistribution or 
      *    org.apache.commons.statistics.distribution.DiscreteDistribution if available

@@ -1,21 +1,20 @@
-package beast.base.evolution.tree;
+package beast.base.spec.evolution.tree;
 
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.TaxonSet;
+import beast.base.evolution.tree.Node;
+import beast.base.evolution.tree.Tree;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 
 import java.io.PrintStream;
 import java.util.*;
 
-/**
- * @deprecated replaced by {@link beast.base.spec.evolution.tree.MRCAPrior}
- */
-@Deprecated
+
 @Description("Prior over set of taxa, useful for defining monophyletic constraints and "
         + "distributions over MRCA times or (sets of) tips of trees. "
 		+ "Be aware that the distribution is in units equal to that used in the tree: "
@@ -29,7 +28,7 @@ public class MRCAPrior extends Distribution {
             "set of taxa for which prior information is available");
     public final Input<Boolean> isMonophyleticInput = new Input<>("monophyletic",
             "whether the taxon set is monophyletic (forms a clade without other taxa) or nor. Default is false.", false);
-    public final Input<ParametricDistribution> distInput = new Input<>("distr",
+    public final Input<ScalarDistribution> distInput = new Input<>("distr",
             "distribution used to calculate prior over MRCA time, "
                     + "e.g. normal, beta, gamma. If not specified, monophyletic must be true");
     public final Input<Boolean> onlyUseTipsInput = new Input<>("tipsonly",
@@ -41,7 +40,7 @@ public class MRCAPrior extends Distribution {
     /**
      * shadow members *
      */
-    public ParametricDistribution dist;
+    public ScalarDistribution dist;
     public Tree tree;
     // number of taxa in taxon set
     protected int nrOfTaxa = -1;
