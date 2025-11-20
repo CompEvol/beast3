@@ -409,7 +409,7 @@ public class Input<T> {
             try {
                 setStringValue((String) value, beastObject);
             } catch (Exception e) {
-            	String msg = "Failed to set the string value to '" + value + "' for beastobject id=" + beastObject.getID() +
+            	String msg = "Failed to set the string value to '" + value + "' for beast object id=" + beastObject.getID() +
             			(BEASTInterface.class.isAssignableFrom(theClass)? "\nPerhaps forgot to add a `@` in the attribute value?" :  "");
             	Log.warning(msg);
                 throw new RuntimeException(msg);
@@ -553,7 +553,7 @@ public class Input<T> {
             return false;
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-            throw new RuntimeException("Illegal method access attempted on beastobject id=" + beastObject.getID());
+            throw new RuntimeException("Illegal method access attempted on beast object id=" + beastObject.getID());
         }
     }
 
