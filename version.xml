@@ -232,6 +232,7 @@
                 <provider classname="beast.base.spec.evolution.Sum"/>
                 <provider classname="beast.base.spec.evolution.TreeWithMetaDataLogger"/>
                 <provider classname="beast.base.spec.evolution.tree.ClusterTree"/>
+                <provider classname="beast.base.spec.evolution.tree.MRCAPrior"/>
                 <provider classname="beast.base.spec.evolution.tree.coalescent.BayesianSkyline"/>
                 <provider classname="beast.base.spec.evolution.tree.coalescent.CompoundPopulationFunction"/>
                 <provider classname="beast.base.spec.evolution.tree.coalescent.ConstantPopulation"/>
