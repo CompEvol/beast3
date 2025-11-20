@@ -50,7 +50,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
 
     /**
      * Return the probability density for a particular point.
-     * NB this does not take offset in account
+     * NB this takes offset in account
      *
      * @param x The point at which the density should be computed.
      * @return The pdf at point x.
@@ -71,6 +71,11 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     	return 0.0;
     }
 
+    /**
+     * @see #density(double)
+     * @param x The point at which the density should be computed.
+     * @return The log-scale pdf at point x.
+     */
     public double logDensity(double x) {
     	return Math.log(density(x));
     }
