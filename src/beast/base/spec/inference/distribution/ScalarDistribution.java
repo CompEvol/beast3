@@ -30,16 +30,33 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      * @return  the normalised probability (density) for this distribution.
      */
     protected abstract double calcLogP(T value);
+//    protected double calcLogP(T value) {
+//        Object dist = getApacheDistribution();
+//
+//        if (dist == null) {
+//            throw new RuntimeException("not implemented yet");
+//        }
+//
+//        final double y = ((Number) value).doubleValue() - getOffset();
+//        if (dist instanceof ContinuousDistribution cd) {
+//            return cd.density(y);
+//        } else  if (dist instanceof DiscreteDistribution dd) {
+//            return dd.probability((int) y);
+//        }
+//        return 0.0;
+//    }
 
     @Override
     protected double calcLogP(T... value) {
         throw new IllegalArgumentException("Illegal operation !");
     }
 
+//    @Override
+//    public double calculateLogP() {
+//        logP = calcLogP(param.get());
+//        return logP;
+//    }
 
-    
-    
-    
     /**
      * @return true if the distribution is an integer distribution
      * false if it is a continuous distribution
