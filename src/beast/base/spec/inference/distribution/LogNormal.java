@@ -11,7 +11,7 @@ import org.apache.commons.statistics.distribution.LogNormalDistribution;
 import java.util.List;
 
 
-/**
+/** TODO x is PositiveReal or NonNegativeReal
  * @author Alexei Drummond
  */
 @Description("A log-normal distribution with mean and variance parameters.")

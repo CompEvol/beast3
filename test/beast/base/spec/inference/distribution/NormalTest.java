@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Wai Lok Sibon Li
  * 
  */
-public class NormalDistributionTest {
+public class NormalTest {
     Normal norm;
 
     @BeforeEach
