@@ -92,19 +92,19 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = dist.logDensity(param.get() - getOffset()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Double value) {
-        return dist.logDensity(value); // scalar
+        return dist.logDensity(value - getOffset()); // scalar
     }
 
     @Override
     protected List<Double> sample() {
-        final double x = sampler.sample();
-        return List.of(x);
+        final double x = sampler.sample() + getOffset();
+        return List.of(x); // Returning an immutable result
     }
 
     @Override
