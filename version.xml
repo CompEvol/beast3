@@ -226,6 +226,7 @@
 <!--OneOnX not migrated, it is not a distribution-->
                 <provider classname="beast.base.spec.inference.distribution.Poisson"/>
                 <provider classname="beast.base.spec.inference.distribution.Uniform"/>
+                <provider classname="beast.base.spec.inference.distribution.IID"/>
 
 
                 <provider classname="beast.base.spec.FunctionOfTensor"/>

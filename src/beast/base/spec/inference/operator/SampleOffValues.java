@@ -3,11 +3,12 @@ package beast.base.spec.inference.operator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Operator;
-import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.Scalar;
 import beast.base.util.Randomizer;
 
 /**
@@ -20,7 +21,7 @@ public class SampleOffValues extends Operator {
 
     final public Input<BoolVectorParam> indicatorsInput = new Input<>("indicators", "Sample only entries which are 'off'");
 
-    final public Input<ParametricDistribution> distInput = new Input<>("dist",
+    final public Input<ScalarDistribution<Scalar<Real,Double>, Double>> distInput = new Input<>("dist",
             "distribution to sample from.", Input.Validate.REQUIRED);
 
     public final Input<Boolean> scaleAll =
@@ -34,7 +35,7 @@ public class SampleOffValues extends Operator {
     public double proposal() {
         final BoolVectorParam indicators = (BoolVectorParam) InputUtil.get(indicatorsInput, this);
         final RealVectorParam<? extends Real> data = (RealVectorParam<? extends Real>) InputUtil.get(valuesInput, this);
-        final ParametricDistribution distribution = distInput.get();
+        final ScalarDistribution<Scalar<Real,Double>, Double> distribution = distInput.get();
 
         final int idim = indicators.size();
 

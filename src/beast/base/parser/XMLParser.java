@@ -505,7 +505,11 @@ public class XMLParser {
                 }
             }
         }
-        initBEASTObjects();
+        try {
+        	initBEASTObjects();
+        } catch (Throwable th) {
+        	th.printStackTrace();
+        }
         return beastObjects;
     } // parseTemplate
 
