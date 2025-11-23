@@ -231,6 +231,7 @@
 
                 <provider classname="beast.base.spec.FunctionOfTensor"/>
                 <provider classname="beast.base.spec.evolution.Sum"/>
+                <provider classname="beast.base.spec.evolution.IntSum"/>
                 <provider classname="beast.base.spec.evolution.TreeWithMetaDataLogger"/>
                 <provider classname="beast.base.spec.evolution.tree.ClusterTree"/>
                 <provider classname="beast.base.spec.evolution.tree.MRCAPrior"/>
