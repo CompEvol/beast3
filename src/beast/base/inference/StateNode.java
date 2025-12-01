@@ -59,6 +59,7 @@ public abstract class StateNode extends CalculationNode implements Loggable, Clo
      * an element in an array, or a node in a tree) has changed.
      * *
      */
+    @Override
     public boolean somethingIsDirty() {
         return this.hasStartedEditing;
     }

@@ -120,8 +120,13 @@ public abstract class CalculationNode extends BEASTObject {
      *         calculation time by calling this directly instead of calling isDirty()
      *         on the associated input.
      */
+    @Deprecated /** use somethingIsDirty() instead **/
     final public boolean isDirtyCalculation() {
         return isDirty;
+    }
+    
+    public boolean somethingIsDirty() {
+    	return isDirty;
     }
 
     /**
