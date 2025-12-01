@@ -21,7 +21,7 @@ https://www.azul.com/downloads/?version=java-25-ea&package=jdk#zulu
 
 The supported domain types in this version are:
 
-<a href="./Domain0.2.png"><img src="./Domain0.2.png" width="800" ></a>
+<a href="./Domain0.2.png"><img src="./Domain0.2.png" width="600" ></a>
 
 
 ## 2. Type 
