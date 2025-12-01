@@ -1,4 +1,4 @@
-# Specification of BEAST 3 (Version 0.1.1)
+# Specification of BEAST 3 (Version 0.2.0)
 
 This specification defines a strong typing system that enforces compile-time type checking in order to:
 
@@ -21,25 +21,16 @@ https://www.azul.com/downloads/?version=java-25-ea&package=jdk#zulu
 
 The supported domain types in this version are:
 
-<a href="./Domain0.1.1.png"><img src="./Domain0.1.1.png" width="800" ></a>
+<a href="./Domain0.2.png"><img src="./Domain0.2.png" width="800" ></a>
 
 
-## 2. Shape
+## 2. Type 
 
 Constrain the value’s dimension.
 
-### Scalar
+<a href="./Type0.2.png"><img src="./Type0.2.png" width="800" ></a>
 
-<a href="./Scalar0.1.1.png"><img src="./Scalar0.1.1.png" width="500" ></a>
+## 3. Distribution 
 
-### Vector
+<a href="./Distribution2.0.png"><img src="./Distribution2.0.png" width="800" ></a>
 
-<a href="./Vector0.1.1.png"><img src="./Vector0.1.1.png" width="500" ></a>
-
-## 3. Bounded
-
-This interface represents any input that has bounds.
-
-For example, a domain could define its own bounds, and a parameter may also specify bounds. 
-By implementing the [Bounded](https://github.com/CompEvol/beast3/blob/master/src/beast/base/spec/Bounded.java) interface,
-both can share a common mechanism for validating their ranges in a single place.
