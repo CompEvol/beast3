@@ -27,13 +27,13 @@
 package beast.base.spec.evolution.substitutionmodel;
 
 
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.type.RealVector;
+
+import java.lang.reflect.InvocationTargetException;
 
 
 
@@ -41,7 +41,8 @@ import beast.base.spec.type.RealVector;
         "than that one of the is equal to one and the others are specified relative to " +
         "this unit rate. Works for any number of states.")
 public class GeneralSubstitutionModel extends BasicGeneralSubstitutionModel {
-    final public Input<RealVector<PositiveReal>> ratesInput =
+    // GeneralSubstModel should allow zero rates -- for example, the stochastic variable selection model in DTA has mostly zero rates.
+    final public Input<RealVector<NonNegativeReal>> ratesInput =
             new Input<>("rates", "Rate parameter which defines the transition rate matrix. " +
                     "Only the off-diagonal entries need to be specified (diagonal makes row sum to zero in a " +
                     "rate matrix). Entry i specifies the rate from floor(i/(n-1)) to i%(n-1)+delta where " +
@@ -75,7 +76,7 @@ public class GeneralSubstitutionModel extends BasicGeneralSubstitutionModel {
 
     @Override
     public void setupRelativeRates() {
-    	RealVector<PositiveReal> rates = this.ratesInput.get();
+    	RealVector<NonNegativeReal> rates = this.ratesInput.get();
         for (int i = 0; i < rates.size(); i++) {
             relativeRates[i] = rates.get(i);
         }
