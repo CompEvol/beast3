@@ -1,28 +1,15 @@
 package beast.base.evolution.tree;
 
 
-
-import java.util.List;
-
 import beast.base.evolution.alignment.TaxonSet;
 
-public interface TreeInterface {
-    String getID();
+public interface TreeInterface extends NetworkInterface {
 
-    int getLeafNodeCount();
-	int getInternalNodeCount();
-	int getNodeCount();
-
-	Node getRoot();
+    Node getRoot();
     Node getNode(int i);
     Node [] getNodesAsArray();
-
-    List<Node> getExternalNodes();
-    List<Node> getInternalNodes();
     
     TaxonSet getTaxonset();
-    
-	boolean somethingIsDirty();
 
     public void getMetaData(Node node, Double[] t, String pattern);
     public void setMetaData(Node node, Double[] t, String pattern);
