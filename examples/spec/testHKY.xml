@@ -88,6 +88,8 @@
                        value="0.5"/>
             </distribution>
 
+<!--            <distribution spec='beast.base.spec.inference.distribution.Uniform' param='@hky.kappa' lower="1" upper="10" />-->
+
             <distribution id='likelihood' idref="treeLikelihood"/>
         </distribution>
 
