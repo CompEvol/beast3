@@ -24,11 +24,12 @@ i. When to use the strong typing?
 Any model parameter representing a random variable must be strong-typed, for example, the clock rate.
 Parameters that are not sampled from a distribution can remain as Java types, such as lower and upper bounds.
 
-ii. Immutable or mutable
+ii. Parameter interface or class
 
-All model parameters must be immutable, so they are defined as interfaces such as `RealScalar` or `RealVector`.
-In contrast, all `StateNode` objects, such as the inputs to an `Operator`, must be mutable, 
-then use the classes with setter methods, for example, `RealScalarParam` or `RealVectorParam`.
+Parameter interfaces such as `RealScalar` and `RealVector` contain only getter methods, making them read-only.
+They are used for model inputs whose values are not expected to change.
+In contrast, whenever a `StateNode` object is required, such as the inputs to an `Operator`, parameter classes must be used.
+These classes provide setter methods, for example, `RealScalarParam` or `RealVectorParam`.
 
 
 ## 1. Domain
