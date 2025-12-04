@@ -29,8 +29,10 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
 
+    @Deprecated
     final public Input<Integer> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default Integer.MIN_VALUE + 1)");
+    @Deprecated
     final public Input<Integer> upperValueInput = new Input<>("upper",
             "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
@@ -44,7 +46,9 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     protected D domain;
 
     // default
+    @Deprecated
     protected int lower = Integer.MIN_VALUE + 1;
+    @Deprecated
     protected int upper = Integer.MAX_VALUE - 1;
 
     /**
@@ -266,6 +270,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         }
     }
 
+    @Deprecated
     public void setLower(Integer lower) {
         if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -274,6 +279,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         lowerValueInput.setValue(lower, this);
     }
 
+    @Deprecated
     public void setUpper(Integer upper) {
         if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +

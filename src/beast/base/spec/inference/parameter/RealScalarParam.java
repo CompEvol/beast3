@@ -23,8 +23,10 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
                     "specifies the permissible range of values.", Real.INSTANCE);
 
+    @Deprecated
     final public Input<Double> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default -infinity)");
+    @Deprecated
     final public Input<Double> upperValueInput = new Input<>("upper",
             "upper value for this parameter (default +infinity)");
 
@@ -38,7 +40,9 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     protected D domain;
 
     // default
+    @Deprecated
     protected double lower = Double.NEGATIVE_INFINITY;
+    @Deprecated
     protected double upper = Double.POSITIVE_INFINITY;
 
 
@@ -127,6 +131,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         domainTypeInput.setValue(domain, this);
     }
 
+    @Deprecated
     public void setLower(Double lower) {
         if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -135,6 +140,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         lowerValueInput.setValue(lower, this);
     }
 
+    @Deprecated
     public void setUpper(Double upper) {
         if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +

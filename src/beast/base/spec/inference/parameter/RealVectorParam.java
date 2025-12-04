@@ -30,9 +30,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
-
+    @Deprecated
     final public Input<Double> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default -infinity)");
+    @Deprecated
     final public Input<Double> upperValueInput = new Input<>("upper",
             "upper value for this parameter (default +infinity)");
 
@@ -46,7 +47,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     protected D domain;
 
     // default
+    @Deprecated
     protected double lower = Double.NEGATIVE_INFINITY;
+    @Deprecated
     protected double upper = Double.POSITIVE_INFINITY;
 
     /**
@@ -270,6 +273,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
+    @Deprecated
     public void setLower(Double lower) {
         if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -278,6 +282,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         lowerValueInput.setValue(lower, this);
     }
 
+    @Deprecated
     public void setUpper(Double upper) {
         if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
