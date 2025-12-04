@@ -15,7 +15,7 @@ import org.apache.commons.statistics.distribution.DiscreteDistribution;
  * @param <S> the shape for sampled value, which could be {@link Scalar}
  * @param <T> the Java primitive type for sampled value, either Double or Integer.
  */
-@Description("The BEAST Distribution over a tensor.")
+@Description("The BEAST Distribution over a scalar.")
 public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
         extends TensorDistribution<S,T> {
 
