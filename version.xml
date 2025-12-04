@@ -186,6 +186,8 @@
                 <provider classname="beast.base.spec.inference.parameter.SimplexParam"/>
                 <provider classname="beast.base.spec.inference.parameter.IntSimplexParam"/>
 
+                <provider classname="beast.base.spec.inference.util.ESS"/>
+                <provider classname="beast.base.spec.inference.util.RPNcalculator"/>
 
                 <provider classname="beast.base.spec.inference.operator.BitFlipOperator"/>
                 <provider classname="beast.base.spec.inference.operator.IntRandomWalkOperator"/>
@@ -205,7 +207,7 @@
                 <provider classname="beast.base.spec.inference.operator.uniform.ScalarIntervalOperator"/>
                 <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
 
-                <provider classname="beast.base.spec.inference.distribution.Prior"/>
+<!--                <provider classname="beast.base.spec.inference.distribution.Prior"/>-->
 
                 <provider classname="beast.base.spec.inference.distribution.IntTensorDistribution"/>
                 <provider classname="beast.base.spec.inference.distribution.RealTensorDistribution"/>
@@ -213,6 +215,7 @@
 
                 <provider classname="beast.base.spec.inference.distribution.Bernoulli"/>
                 <provider classname="beast.base.spec.inference.distribution.Beta"/>
+                <provider classname="beast.base.spec.inference.distribution.Cauchy"/>
                 <provider classname="beast.base.spec.inference.distribution.ChiSquare"/>
                 <provider classname="beast.base.spec.inference.distribution.Dirichlet"/>
                 <provider classname="beast.base.spec.inference.distribution.Exponential"/>
