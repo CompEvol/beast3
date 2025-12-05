@@ -1,7 +1,11 @@
-package beast.base.inference.util;
+package beast.base.spec.inference.util;
 
-import beast.base.core.*;
+import beast.base.core.BEASTObject;
+import beast.base.core.Description;
+import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.core.Loggable;
+import beast.base.spec.type.Scalar;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -10,14 +14,11 @@ import java.util.List;
 
 //import beast.core.Distribution;
 
-/**
- * @deprecated use {@link beast.base.spec.inference.util.ESS}
- */
-@Deprecated
 @Description("Report effective sample size of a parameter or log values from a distribution. " +
         "This uses the same criterion as Tracer and assumes 10% burn in.")
 public class ESS extends BEASTObject implements Loggable {
-    final public Input<Function> functionInput =
+    //TODO the previous code seems not to support Vector
+    final public Input<Scalar> functionInput =
             new Input<>("arg", "value (e.g. parameter or distribution) to report ESS for", Validate.REQUIRED);
 
     /**
@@ -64,9 +65,17 @@ public class ESS extends BEASTObject implements Loggable {
 
     @Override
     public void log(final long sample, PrintStream out) {
-        final Double newValue = functionInput.get().getArrayValue();
-        trace.add(newValue);
-        sum += newValue;
+        final Object newValue = functionInput.get();
+        // convert to Double
+        final double doubleValue;
+        if (newValue instanceof Number number) {
+            doubleValue = number.doubleValue();
+        } else if (newValue instanceof Boolean booleanValue) {
+            doubleValue = booleanValue ? 1.0 : 0.0;
+        } else
+            throw  new IllegalArgumentException("The value type is not supported : " + newValue);
+        sum += doubleValue;
+        trace.add(doubleValue);
 
         final int totalSamples = trace.size();
 
@@ -148,7 +157,6 @@ public class ESS extends BEASTObject implements Loggable {
      * Can be used to calculate effective sample size
      *
      * @param trace:         values from which the ACT is calculated
-     * @param sampleInterval time between samples *
      */
     public static double calcESS(List<Double> trace) {
         return calcESS(trace.toArray(new Double[0]), 1);

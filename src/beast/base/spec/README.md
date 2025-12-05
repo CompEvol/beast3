@@ -17,6 +17,21 @@ https://www.azul.com/downloads/?version=java-25-ea&package=jdk#zulu
 
 <a href="./JDK25.png"><img src="./JDK25.png" width="500" ></a>
 
+## Developer guide
+
+i. When to use the strong typing?
+
+Any model parameter representing a random variable must be strong-typed, for example, the clock rate.
+Parameters that are not sampled from a distribution can remain as Java types, such as lower and upper bounds.
+
+ii. Parameter interface or class
+
+Parameter interfaces such as `RealScalar` and `RealVector` contain only getter methods, making them read-only.
+They are used for model inputs whose values are not expected to change.
+In contrast, whenever a `StateNode` object is required, such as the inputs to an `Operator`, parameter classes must be used.
+These classes provide setter methods, for example, `RealScalarParam` or `RealVectorParam`.
+
+
 ## 1. Domain
 
 The supported domain types in this version are:

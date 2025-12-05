@@ -15,12 +15,11 @@ import java.util.List;
  */
 @Description("Uniform distribution over a given interval (including lower and upper values). " +
         "An exception is thrown if any bound is set to infinity.")
-public class Uniform extends ScalarDistribution<RealScalar<Real>, Double>
-        implements Bounded<Double> {
+public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implements Bounded<Double> {
 
-    final public Input<RealScalar<Real>> lowerInput = new Input<>("lower",
+    final public Input<Double> lowerInput = new Input<>("lower",
             "lower bound on the interval, default 0. An exception is thrown if set to -Infinity");
-    final public Input<RealScalar<Real>> upperInput = new Input<>("upper",
+    final public Input<Double> upperInput = new Input<>("upper",
             "upper bound on the interval, default 1. An exception is thrown if set to Infinity");
 
     // if (!Double.isFinite(upper - lower)) {
@@ -40,8 +39,7 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double>
      * @param lower An exception is thrown if set to -Infinity.
      * @param upper An exception is thrown if set to Infinity.
      */
-    public Uniform(RealScalar<Real> param,
-                RealScalar<Real> lower, RealScalar<Real> upper) {
+    public Uniform(RealScalar<Real> param, double lower, double upper) {
 
         try {
             initByName("param", param, "lower", lower, "upper", upper);
@@ -55,14 +53,17 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double>
     public void initAndValidate() {
         refresh();
         super.initAndValidate();
+        if (param != null && !this.withinBounds(param.get()))
+            throw new IllegalArgumentException("Tensor " + param +
+                    " is not within uniform distribution bounds " + boundsToString());
     }
 
     /**
      * make sure internal state is up to date *
      */
     void refresh() {
-        double lower  = (lowerInput.get() != null) ? lowerInput.get().get() : 0.0;
-        double upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 1.0;
+        double lower  = (lowerInput.get() != null) ? lowerInput.get() : 0.0;
+        double upper  = (upperInput.get() != null) ? upperInput.get() : 1.0;
 
         // Floating point comparison
         if (isNotEqual(dist.getSupportLowerBound(), lower)

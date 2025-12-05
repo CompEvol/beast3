@@ -22,8 +22,10 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
             "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
                     "specifies the permissible range of values.", Int.INSTANCE);
 
+    @Deprecated
     final public Input<Integer> lowerValueInput = new Input<>("lower",
             "lower value for this parameter (default Integer.MIN_VALUE + 1)");
+    @Deprecated
     final public Input<Integer> upperValueInput = new Input<>("upper",
             "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
@@ -37,7 +39,9 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     protected D domain;
 
     // default
+    @Deprecated
     protected int lower = Integer.MIN_VALUE + 1;
+    @Deprecated
     protected int upper = Integer.MAX_VALUE - 1;
 
 
@@ -136,6 +140,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         domainTypeInput.setValue(domain, this);
     }
 
+    @Deprecated
     public void setLower(Integer lower) {
         if (lower < getDomain().getLower())
             throw new IllegalArgumentException("Lower bound " + lower +
@@ -144,6 +149,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         lowerValueInput.setValue(lower, this);
     }
 
+    @Deprecated
     public void setUpper(Integer upper) {
         if (upper > getDomain().getUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
