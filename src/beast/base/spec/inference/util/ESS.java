@@ -6,6 +6,8 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
 import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Tensor;
+import beast.base.spec.type.Vector;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ import java.util.List;
         "This uses the same criterion as Tracer and assumes 10% burn in.")
 public class ESS extends BEASTObject implements Loggable {
     //TODO the previous code seems not to support Vector
-    final public Input<Scalar> functionInput =
+    final public Input<Tensor> functionInput =
             new Input<>("arg", "value (e.g. parameter or distribution) to report ESS for", Validate.REQUIRED);
 
     /**
@@ -65,7 +67,17 @@ public class ESS extends BEASTObject implements Loggable {
 
     @Override
     public void log(final long sample, PrintStream out) {
-        final Object newValue = functionInput.get();
+        //final Double newValue = functionInput.get().getArrayValue();
+        // original code only takes the 1st element if value is a vector
+        Tensor tensor = functionInput.get();
+        final Object newValue;
+        if (tensor instanceof Scalar scalar)
+            newValue = scalar.get();
+        else if (tensor instanceof Vector vector)
+            newValue = vector.get(0);
+        else
+            throw new UnsupportedOperationException("ESS supports only Vector or Scalar ! But get " + tensor.getClass());
+
         // convert to Double
         final double doubleValue;
         if (newValue instanceof Number number) {

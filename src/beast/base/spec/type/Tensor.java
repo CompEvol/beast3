@@ -11,6 +11,11 @@ import beast.base.spec.domain.Domain;
 public interface Tensor<D extends Domain<T>, T> {
 
     /**
+     * Calling <code>get()</code> when idx is an empty array <code>idx.length == 0</code>.
+     * Calling <code>get(0)</code> when idx is a single-element array,
+     * where <code>idx.length == 1; idx[0] == 0</code>.
+     * Calling <code>get(1,2)</code> for multidimensional indexing.
+     * <p>
      * Get the primitive value with the type T.
      * Primitive numeric types (e.g. double) are typically 10×–50× faster than
      * boxed types (e.g. Double) in computation and 3×–4× smaller in memory.

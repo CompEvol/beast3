@@ -1,8 +1,15 @@
-package beast.base.inference.util;
+package beast.base.spec.inference.util;
 
 
-import beast.base.core.*;
+import beast.base.core.BEASTInterface;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
+import beast.base.inference.util.RPNexpressionCalculator;
+import beast.base.spec.domain.Domain;
+import beast.base.spec.type.Tensor;
+import beast.base.spec.type.TensorUtils;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -12,7 +19,6 @@ import java.util.Map;
 
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.util.RPNcalculator}
  * A statistic based on evaluating simple expressions.
  * <p/>
  * The expressions are in RPN, so no parsing issues. whitespace separated. Variables (other statistics),
@@ -20,13 +26,11 @@ import java.util.Map;
  *
  * @author Joseph Heled in beast1, migrated to beast2 by Denise Kuehnert
  */
-@Deprecated
 @Description("RPN calculator to evaluate simple expressions of parameters (Reverse Polish notation is a mathematical notation wherein every operator follows its operands)")
-public class RPNcalculator extends CalculationNode implements Loggable, Function {
-
+public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
 
     final public Input<String> strExpressionInput = new Input<>("expression", "Expressions needed for the calculations", Input.Validate.REQUIRED);
-    final public Input<List<Function>> parametersInput = new Input<>("parameter", "Parameters needed for the calculations", new ArrayList<>());
+    final public Input<List<Tensor>> parametersInput = new Input<>("parameter", "Parameters needed for the calculations", new ArrayList<>());
     public Input<String> argNamesInput = new Input<>("argnames", "names of arguments used in expression (comma delimited)," +
             " order as given by XML");
 
@@ -41,7 +45,7 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
 	public void initAndValidate() {
 
         names = new ArrayList<>();
-        dim = parametersInput.get().get(0).getDimension();
+        dim = parametersInput.get().getFirst().size();
 
         int pdim;
 
@@ -55,9 +59,9 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
         	int k = 0;
         	for (String name : names_) {
         		names.add(name);
-        		Function p = parametersInput.get().get(k);
+        		Tensor p = parametersInput.get().get(k);
                 expressions = new RPNexpressionCalculator[dim];
-	            pdim = p.getDimension();
+	            pdim = p.size();
 	        	
 	            if (pdim != dim && dim != 1 && pdim != 1) {
 	                throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
@@ -67,14 +71,14 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
 	            expressions = new RPNexpressionCalculator[dim];
 	            names.add(p.toString());
 
-	            variables.put(name, toObjectArray(p.getDoubleValues()));
+	            variables.put(name, TensorUtils.valuesToObjectArray(p));
 	
 	            k++;
         	}
         } else {
-	        for (final Function p : parametersInput.get()) {
+	        for (final Tensor p : parametersInput.get()) {
 	
-	            pdim = p.getDimension();
+	            pdim = p.size();
 	
 	            if (pdim != dim && dim != 1 && pdim != 1) {
 	                throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
@@ -86,7 +90,7 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
 	
 	            for (int i = 0; i < pdim; i++) {
 	                variables = new HashMap<>();
-	                variables.put(((BEASTInterface) p).getID(), toObjectArray(p.getDoubleValues()));
+	                variables.put(((BEASTInterface) p).getID(), TensorUtils.valuesToObjectArray(p));
 	            }
 	        }
         }
@@ -101,7 +105,7 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
                     final Object[] values = (variables.get(name));
                     if (values == null) {
                     	String ids = "";
-                        for (final Function p : parametersInput.get()) {
+                        for (final Tensor p : parametersInput.get()) {
                     		ids += ((BEASTInterface) p).getID() +", ";
                     	}
                     	if (parametersInput.get().size() > 0) {
@@ -132,42 +136,13 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
         }
     }
 
-    private Object[] toObjectArray(double[] doubleValues) {
-		Double [] o = new Double[doubleValues.length];
-		for (int i = 0; i < doubleValues.length; i++) {
-			o[i] = doubleValues[i];
-		}
-		return o;
-	}
-
 	private void updateValues() {
-        for (Function p : parametersInput.get()) {
-            for (int i = 0; i < p.getDimension(); i++) {
-                variables.put(((BEASTInterface) p).getID(), toObjectArray(p.getDoubleValues()));
+        for (Tensor p : parametersInput.get()) {
+            for (int i = 0; i < p.size(); i++) {
+                variables.put(((BEASTInterface) p).getID(), TensorUtils.valuesToObjectArray(p));
             }
         }
     }
-
-    @Override
-	public int getDimension() {
-        return dim;
-    }
-
-
-    // todo: add dirty flag to avoid double calculation!!! 
-    @Override
-    public double getArrayValue() {
-        return getStatisticValue(0);
-    }
-
-    @Override
-    public double getArrayValue(final int i) {
-        return getStatisticValue(i);
-    }
-
-//    public String getDimensionName(final int dim) {
-//        return names.get(dim);
-//    }
 
     /**
      * @return the value of the expression
@@ -176,7 +151,6 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
         updateValues();
         return expressions[i].evaluate(vars[i]);
     }
-
 
     @Override
     public void init(final PrintStream out) {
@@ -200,11 +174,58 @@ public class RPNcalculator extends CalculationNode implements Loggable, Function
 
     public List<String> getArguments() {
         final List<String> arguments = new ArrayList<>();
-        for (final Function p : parametersInput.get()) {
+        for (final Tensor p : parametersInput.get()) {
             arguments.add(((BEASTInterface) p).getID());
         }
         return arguments;
     }
 
+    public double[] getDoubleValues() {
+        final double[] values = new double[dim];
+        for (int i = 0; i < dim; i++) {
+            values[i] = getStatisticValue(i);
+        }
+        return values;
+    }
+
+    //*** Tensor ***//
+
+    // todo: add dirty flag to avoid double calculation!!!
+    @Override
+    public Double get(int... idx) {
+        if (idx.length == 0) {
+            // Scalar
+            return getStatisticValue(0);
+        } else if (idx.length == 1) {
+            // Vector
+            return getStatisticValue(idx[0]);
+        }
+        throw new UnsupportedOperationException("Only scalar and vector is supported.");
+    }
+
+    @Override
+    public int size() {
+        return dim;
+    }
+
+    @Override
+    public Domain getDomain() {
+        throw new UnsupportedOperationException("Method is not available for RPNcalculator.");
+    }
+
+    @Override
+    public int rank() {
+        throw new UnsupportedOperationException("Method is not available for RPNcalculator.");
+    }
+
+    @Override
+    public int[] shape() {
+        throw new UnsupportedOperationException("Method is not available for RPNcalculator.");
+    }
+
+    @Override
+    public boolean isValid(Object value) {
+        throw new UnsupportedOperationException("Method is not available for RPNcalculator.");
+    }
 
 }
