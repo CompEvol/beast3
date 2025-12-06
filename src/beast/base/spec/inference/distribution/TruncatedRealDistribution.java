@@ -177,33 +177,33 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
         refresh();
         ContinuousDistribution innerDist = getInnerDistribution();
         double offset = dist.getOffset();
-        
         double cdfLower = innerDist.cumulativeProbability(lower.get() - offset) + EPS;  // avoid CDF of 0
         double cdfUpper = innerDist.cumulativeProbability(upper.get() - offset) - EPS;  // avoid CDF of 1
         
         // Numerical integration using Simpson's rule
-        return simpsonIntegration(innerDist, cdfLower, cdfUpper, 100) + offset;
+        return simpsonIntegration(innerDist, cdfLower, cdfUpper, 20_000) + offset;
     }
 
     private double simpsonIntegration(ContinuousDistribution dist, double cdfLower, double cdfUpper, int n) {
-        if (n % 2 != 0) 
-            n++; // Ensure even number of intervals
+        if (n % 2 != 0)  // Ensure even number of intervals
+            n++;
         
         double stepSize = (cdfUpper - cdfLower) / n;
         double Z = cdfUpper - cdfLower;
         
         double sum = 0.0;
         for (int i = 0; i <= n; i++) {
+            // Even spacing in quantile space
             double u = cdfLower + i * stepSize;
             double x = dist.inverseCumulativeProbability(u);
             
             // Weight for Simpson's rule
             double weight = (i == 0 || i == n) ? 1.0 : ((i % 2 == 1) ? 4.0 : 2.0);
             
-            // Integrand is just x (we're integrating the inverse CDF)
-            sum += weight * x / Z;
+            // Integrand is just x
+            sum += weight * x;
         }
-        return sum * stepSize / 3.0;
+        return sum * stepSize / Z / 3.0;
     }
 
     @Override

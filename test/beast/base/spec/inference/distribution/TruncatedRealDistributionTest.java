@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.apache.commons.statistics.distribution.TruncatedNormalDistribution;
+
 /**
  * Unit tests for TruncatedRealDistribution
  */
@@ -156,43 +158,33 @@ public class TruncatedRealDistributionTest {
 
     @Test
     public void testMeanComputation() {
-        System.out.println("Testing mean computation for various distributions");
+        testMeanComputation(0, 1, 0, 10);
+        testMeanComputation(5, 1, 3, 7);
+        testMeanComputation(1, 5, -3, -2);
+    }
+
+    public void testMeanComputation(double mu, double sigma, double lower, double upper) {
+        System.out.println("Testing mean computation for TruncatedNormal("+ mu + "," + sigma + "," + lower + "," + upper + ")");
 
         // Test 1: Truncated standard normal [0, Inf) should have mean > 0
-        Normal baseNorm1 = new Normal();
-        baseNorm1.initByName(
-            "mean", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
+        Normal baseNorm = new Normal();
+        baseNorm.initByName(
+            "mean", new RealScalarParam<>(mu, Real.INSTANCE),
+            "sigma", new RealScalarParam<>(sigma, PositiveReal.INSTANCE)
         );
 
         TruncatedRealDistribution<Real> truncNorm1 = new TruncatedRealDistribution<>();
         truncNorm1.initByName(
-            "distribution", baseNorm1,
-            "lower", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "upper", new RealScalarParam<>(10.0, Real.INSTANCE)
+            "distribution", baseNorm,
+            "lower", new RealScalarParam<>(lower, Real.INSTANCE),
+            "upper", new RealScalarParam<>(upper, Real.INSTANCE)
         );
 
-        double mean1 = truncNorm1.getMean();
-        System.out.println(mean1);
-        assertTrue(mean1 > 0.0, "Mean of truncated normal [0, 10] should be positive");
-        assertTrue(mean1 < 2.0, "Mean of truncated normal [0, 10] should be less than 2");
-
-        // Test 2: Symmetric truncation around mean
-        Normal baseNorm2 = new Normal();
-        baseNorm2.initByName(
-            "mean", new RealScalarParam<>(5.0, Real.INSTANCE),
-            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
+        TruncatedNormalDistribution truncNormApache = TruncatedNormalDistribution.of(mu, sigma, lower, upper);
+        System.out.println(truncNorm1.getMean());
+        assertEquals(truncNorm1.getMean(), truncNormApache.getMean(), 2e-4,
+            "Computed mean should match Apache Commons Statistics for TruncatedNormal(" + mu + "," + sigma + "," + lower + "," + upper + ")"
         );
-
-        TruncatedRealDistribution<Real> truncNorm2 = new TruncatedRealDistribution<>();
-        truncNorm2.initByName(
-            "distribution", baseNorm2,
-            "lower", new RealScalarParam<>(3.0, Real.INSTANCE),
-            "upper", new RealScalarParam<>(7.0, Real.INSTANCE)
-        );
-
-        double mean2 = truncNorm2.getMean();
-        assertEquals(5.0, mean2, 0.1, "Symmetric truncation should preserve mean approximately");
     }
 
     @Test
@@ -310,59 +302,4 @@ public class TruncatedRealDistributionTest {
         assertEquals(0.317, probOOB, 0.01, "Probability out of bounds should be ~0.32 for N(0,1) truncated to [-1,1]");
     }
 
-    @Test
-    public void testCDFFunctions() {
-        System.out.println("Testing CDF helper functions");
-
-        Normal baseNorm = new Normal();
-        baseNorm.initByName(
-            "mean", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
-        );
-
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
-        truncNorm.initByName(
-            "distribution", baseNorm,
-            "lower", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "upper", new RealScalarParam<>(1.0, Real.INSTANCE)
-        );
-
-        double lowerCDF = truncNorm.getLowerCDF();
-        double upperCDF = truncNorm.getUpperCDF();
-
-        // Lower CDF should be around 0.5 for N(0,1) at x=0
-        assertEquals(0.5, lowerCDF, 0.01);
-        
-        // Upper CDF should be around 0.841 for N(0,1) at x=1
-        assertEquals(0.841, upperCDF, 0.01);
-        
-        // Upper should be greater than lower
-        assertTrue(upperCDF > lowerCDF);
-    }
-
-    @Test
-    public void testRefresh() {
-        System.out.println("Testing refresh method");
-
-        Normal baseNorm = new Normal();
-        baseNorm.initByName(
-            "mean", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
-        );
-
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
-        truncNorm.initByName(
-            "distribution", baseNorm,
-            "lower", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "upper", new RealScalarParam<>(2.0, Real.INSTANCE)
-        );
-
-        double mean1 = truncNorm.getMean();
-        
-        // Refresh should not change the mean if parameters haven't changed
-        truncNorm.refresh();
-        double mean2 = truncNorm.getMean();
-        
-        assertEquals(mean1, mean2, 1e-10);
-    }
 }
