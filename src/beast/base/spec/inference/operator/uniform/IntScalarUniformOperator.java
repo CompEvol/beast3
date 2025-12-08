@@ -8,10 +8,6 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.util.Randomizer;
 
-/**
- * @deprecated every random var should have a prior, this is replaced by {@link beast.base.spec.inference.distribution.IntUniform}
- */
-@Deprecated
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
 public class IntScalarUniformOperator extends Operator {
 

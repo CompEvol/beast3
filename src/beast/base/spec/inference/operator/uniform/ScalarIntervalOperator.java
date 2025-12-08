@@ -7,10 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 
-/**
- * @deprecated every random var should have a prior, this is replaced by {@link beast.base.spec.inference.distribution.Uniform}
- */
-@Deprecated
 @Description("A scale operator that selects a random dimension of the real parameter and scales the value a " +
         "random amount according to a Bactrian distribution such that the parameter remains in its range. "
         + "Supposed to be more efficient than UniformOperator")
