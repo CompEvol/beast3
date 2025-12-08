@@ -1,4 +1,4 @@
-package beast.base.spec.inference.operator;
+package beast.base.spec.evolution.operator;
 
 
 import java.text.DecimalFormat;
@@ -20,8 +20,9 @@ import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
 
-@Description("Like the UpDownOperator, this element represents an operator that scales "
-		+ "two (or more) parameters in different directions, but uses a Bactrian proposal distribution for the scale value. "
+@Description("This element represents an operator that scales "
+		+ "one or more Scalables (like parameters or trees) in different directions, "
+		+ "but uses a Bactrian proposal distribution for the scale value. "
         + "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
 public class UpDownOperator extends KernelOperator {
     final public Input<Double> scaleFactorInput = new Input<>("scaleFactor",

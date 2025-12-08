@@ -11,8 +11,6 @@ import beast.base.core.Log;
 import beast.base.inference.operator.CompoundParameterHelper;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.spec.inference.operator.deltaexchange.IntDeltaExchangeOperator;
-import beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator;
 import beast.base.util.Randomizer;
 
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")

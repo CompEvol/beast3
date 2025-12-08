@@ -31,7 +31,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 
 
-@Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
+@Description("Scales a real scalar parameter")
 public class ScaleScalarOperator extends AbstractScale {
 
     public final Input<RealScalarParam<? extends PositiveReal>> parameterInput = new Input<>(
