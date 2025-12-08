@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 
-@Description("A scalar real-valued parameter with domain constraints")
+@Description("A boolean-valued vector")
 public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector{ //VectorParam<Bool, Boolean> {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",

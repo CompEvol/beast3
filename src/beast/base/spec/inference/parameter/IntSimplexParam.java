@@ -3,11 +3,10 @@ package beast.base.spec.inference.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.type.IntSimplex;
 
 
-@Description("A scalar real-valued parameter with domain constraints")
+@Description("A int-valued vector whose elements sum to a given sum")
 public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D> implements IntSimplex<D> {// VectorParam<D, Integer> {
 
     final public Input<Integer> sumInput = new Input<>("sum",
@@ -15,7 +14,7 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
 
     public IntSimplexParam() {
         super();
-        super.setDomain((D)PositiveInt.INSTANCE); // correct domain using setter
+        super.setDomain((D) NonNegativeInt.INSTANCE); // correct domain using setter
     }
 
     public IntSimplexParam(int[] values, D domain, int expectedSum) {

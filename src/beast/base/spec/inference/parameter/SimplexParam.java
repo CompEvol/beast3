@@ -5,7 +5,7 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
 
 
-@Description("A scalar real-valued parameter with domain constraints")
+@Description("A real-valued vector whose elements sum to 1")
 public class SimplexParam extends RealVectorParam<UnitInterval> implements Simplex { // VectorParam<UnitInterval, Double> {
 
     public SimplexParam() {

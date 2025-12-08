@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
-@Description("A scalar int-valued parameter with domain constraints")
+@Description("A int-valued vector with domain constraints")
 public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>, BoundedParam<Integer> { //VectorParam<D, Integer> {
 
     final public Input<List<Integer>> valuesInput = new Input<>("value",

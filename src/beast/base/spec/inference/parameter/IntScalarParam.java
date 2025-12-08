@@ -10,7 +10,7 @@ import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 
-@Description("A scalar real-valued parameter with domain constraints")
+@Description("A scalar int-valued parameter with domain constraints")
 public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D>, BoundedParam<Integer> {
 
     final public Input<Integer> valuesInput = new Input<>("value",
