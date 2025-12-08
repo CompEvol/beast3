@@ -1,16 +1,6 @@
 package beast.base.spec.inference.operator;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Input.Validate;
-import beast.base.core.Log;
-import beast.base.core.ProgramStatus;
+import beast.base.core.*;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
@@ -21,6 +11,11 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.type.IntVector;
 import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Description("A generic operator for use with a sum-constrained (possibly weighted) parameter.")
 public class DeltaExchangeOperator extends KernelOperator {
@@ -39,8 +34,10 @@ public class DeltaExchangeOperator extends KernelOperator {
 	List<Tensor<?,?>> getParameters() {
 		List<Tensor<?,?>> list = new ArrayList<>();
 		list.addAll(parameterInput.get());
-		list.add(rvparameterInput.get());
-		list.add(ivparameterInput.get());
+		if (rvparameterInput.get() != null)
+            list.add(rvparameterInput.get());
+        if (ivparameterInput.get() != null)
+            list.add(ivparameterInput.get());
 		list.addAll(rsparameterInput.get());
 		list.addAll(isparameterInput.get());
 		return list;
@@ -199,7 +196,7 @@ public class DeltaExchangeOperator extends KernelOperator {
     	Tensor<?,?> p1 = getParameters().get(map[dim1]);
     	Tensor<?,?> p2 = getParameters().get(map[dim2]);
 
-        if (p1.getDomain() instanceof Real) {
+        if (p1.getDomain() instanceof Real d1 && p2.getDomain() instanceof Real d2) {
             // operate on real parameter
             double scalar1 = (Double) p1.get(offset[dim1]);
             double scalar2 = (Double) p2.get(offset[dim2]);
@@ -226,7 +223,8 @@ public class DeltaExchangeOperator extends KernelOperator {
 
             }
 
-            if (((Real)p1).isValid(scalar1) && ((Real)p2).isValid(scalar2)) {
+//            if (((Real)p1).isValid(scalar1) && ((Real)p2).isValid(scalar2)) {
+            if ( d1.isValid(scalar1) && d2.isValid(scalar2) ) {
             	if (p1 instanceof RealScalarParam p) {
             		p.set(scalar1);
             	} else if (p1 instanceof RealVectorParam p) {
@@ -240,7 +238,7 @@ public class DeltaExchangeOperator extends KernelOperator {
             } else {
             	logq = Double.NEGATIVE_INFINITY;
             }
-        } else {
+        } else if (p1.getDomain() instanceof Int d1 && p2.getDomain() instanceof Int d2) {
             // operate on int parameter
             int scalar1 = (Integer) p1.get(offset[dim1]);
             int scalar2 = (Integer) p2.get(offset[dim2]);
@@ -251,7 +249,8 @@ public class DeltaExchangeOperator extends KernelOperator {
             scalar1 = Math.round(scalar1 - d);
             scalar2 = Math.round(scalar2 + d);
 
-            if (((Int)p1).isValid(scalar1) && ((Int)p2).isValid(scalar2)) {
+//            if (((Int)p1).isValid(scalar1) && ((Int)p2).isValid(scalar2)) {
+            if ( d1.isValid(scalar1) && d2.isValid(scalar2) ) {
             	if (p1 instanceof IntScalarParam p) {
             		p.set(scalar1);
             	} else if (p1 instanceof IntVectorParam p) {
@@ -265,7 +264,9 @@ public class DeltaExchangeOperator extends KernelOperator {
             } else {
                 logq = Double.NEGATIVE_INFINITY;            	
             }
-        }
+        } else
+            throw new IllegalArgumentException("Parameter domain is not supported in DeltaExchangeOperator : "
+                    + p1.getDomain() + " & " + p2.getDomain());
 
         // symmetrical move so return a zero hasting ratio
         return logq;
