@@ -73,7 +73,8 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    @Override
+    public void refresh() {
         double lambda = (lambdaInput.get() != null) ? lambdaInput.get().get() : 1.0;
 
         // Floating point comparison:

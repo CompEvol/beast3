@@ -196,6 +196,7 @@ public class DeltaExchangeOperator extends KernelOperator {
     	Tensor<?,?> p1 = getParameters().get(map[dim1]);
     	Tensor<?,?> p2 = getParameters().get(map[dim2]);
 
+    	// needs check on both p1 and p2 to facilitate type cast to d1 and d2
         if (p1.getDomain() instanceof Real d1 && p2.getDomain() instanceof Real d2) {
             // operate on real parameter
             double scalar1 = (Double) p1.get(offset[dim1]);
@@ -223,7 +224,6 @@ public class DeltaExchangeOperator extends KernelOperator {
 
             }
 
-//            if (((Real)p1).isValid(scalar1) && ((Real)p2).isValid(scalar2)) {
             if ( d1.isValid(scalar1) && d2.isValid(scalar2) ) {
             	if (p1 instanceof RealScalarParam p) {
             		p.set(scalar1);
@@ -238,6 +238,7 @@ public class DeltaExchangeOperator extends KernelOperator {
             } else {
             	logq = Double.NEGATIVE_INFINITY;
             }
+        // needs check on both p1 and p2 to facilitate type cast to d1 and d2
         } else if (p1.getDomain() instanceof Int d1 && p2.getDomain() instanceof Int d2) {
             // operate on int parameter
             int scalar1 = (Integer) p1.get(offset[dim1]);
@@ -249,7 +250,6 @@ public class DeltaExchangeOperator extends KernelOperator {
             scalar1 = Math.round(scalar1 - d);
             scalar2 = Math.round(scalar2 + d);
 
-//            if (((Int)p1).isValid(scalar1) && ((Int)p2).isValid(scalar2)) {
             if ( d1.isValid(scalar1) && d2.isValid(scalar2) ) {
             	if (p1 instanceof IntScalarParam p) {
             		p.set(scalar1);
@@ -264,9 +264,10 @@ public class DeltaExchangeOperator extends KernelOperator {
             } else {
                 logq = Double.NEGATIVE_INFINITY;            	
             }
-        } else
-            throw new IllegalArgumentException("Parameter domain is not supported in DeltaExchangeOperator : "
-                    + p1.getDomain() + " & " + p2.getDomain());
+        } else {
+        	// never gets here due to sanity checks in initAndValidate
+        
+        }
 
         // symmetrical move so return a zero hasting ratio
         return logq;

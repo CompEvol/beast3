@@ -52,7 +52,8 @@ public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
     /**
      * make sure internal state is up to date *
      */
-    void refresh() {
+    @Override
+    public void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
         double beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
 

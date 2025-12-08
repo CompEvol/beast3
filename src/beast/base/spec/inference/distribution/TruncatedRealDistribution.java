@@ -4,10 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
@@ -18,7 +15,7 @@ import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 
 
 @Description("Truncates a real valued distribution to the interval [lower,upper].")
-public class TruncatedRealDistribution<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> {
+public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Real>, Double> {
 
 
     final public Input<ScalarDistribution<RealScalar<Real>, Double>> distributionInput = new Input<>("distribution",
@@ -41,7 +38,7 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
         double lower,
         double upper
     ) {
-        assert (D.INSTANCE.getLower() <= lower) && (lower < upper) && (upper <= D.INSTANCE.getUpper());
+        assert (Real.INSTANCE.getLower() <= lower) && (lower < upper) && (upper <= Real.INSTANCE.getUpper());
 
         try {
             initByName(
@@ -58,6 +55,7 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
     @Override
     public void initAndValidate() {
         refresh();
+        dist.initAndValidate();
         super.initAndValidate();
 
         if (offsetInput.get() != 0.0)
@@ -65,25 +63,26 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
                     " distribution. Set offset in base distribution (distributionInput) instead");
 
         // Set bounds in parameter in the future (for early reject in operators)
-        RealScalar<D> param = paramInput.get();
-        if (param instanceof RealScalarParam<D> p) {
-            p.setLower(lower.get() + getOffset());
-            p.setUpper(upper.get() + getOffset());
-        }
+//        RealScalar<Real> param = paramInput.get();
+//        if (param instanceof RealScalarParam<Real> p) {
+//            p.setLower(lower.get() + getOffset());
+//            p.setUpper(upper.get() + getOffset());
+//        }
     }
 
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    @Override
+    public void refresh() {
         dist = distributionInput.get();
         lower = lowerInput.get();
         if (lower == null)
-            lower = new RealScalarParam<>(D.INSTANCE.getLower(), D.INSTANCE);
+            lower = new RealScalarParam<>(Real.INSTANCE.getLower(), Real.INSTANCE);
 
         upper = upperInput.get();
         if (upper == null)
-            upper = new RealScalarParam<>(D.INSTANCE.getUpper(), D.INSTANCE);
+            upper = new RealScalarParam<>(Real.INSTANCE.getUpper(), Real.INSTANCE);
     }
 
      /**
@@ -136,7 +135,7 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
     double probOutOfBounds() {
         double probOOB = getLowerCDF() + (1-getUpperCDF());
         assert 0.0 <= probOOB && probOOB <= 1.0;
-        System.out.println("*" + probOOB);
+        // System.out.println("*" + probOOB);
         return probOOB;
     }
     
@@ -208,19 +207,12 @@ public class TruncatedRealDistribution<D extends Real> extends ScalarDistributio
 
     @Override
     public Object getApacheDistribution() {
-        throw new UnsupportedOperationException("Not implemented for TruncatedRealDistribution");
+    	return distributionInput.get().getApacheDistribution();
     }
 
     boolean isValid(double value) {
         double y = value - getOffset();
-        return D.INSTANCE.isValid(y) && lower.get() <= y && y <= upper.get();
+        return Real.INSTANCE.isValid(y) && lower.get() <= y && y <= upper.get();
     }
-
-
-    /* Implementations for some common domains */
-    
-    class TruncatedPositiveRealDistribution extends TruncatedRealDistribution<PositiveReal> {}
-    class TruncatedNonNegativeRealDistribution extends TruncatedRealDistribution<NonNegativeReal> {}
-    class TruncatedUnitIntervalRealDistribution extends TruncatedRealDistribution<UnitInterval> {}
 
 } // class TruncatedRealDistribution

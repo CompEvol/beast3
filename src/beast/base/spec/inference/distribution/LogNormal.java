@@ -63,7 +63,8 @@ public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Doub
     /**
      * make sure internal state is up to date *
      */
-    void refresh() {
+    @Override
+    public void refresh() {
         double mean  = (MParameterInput.get() != null) ? MParameterInput.get().get() : 0.0;
         double sigma = (SParameterInput.get() != null) ? SParameterInput.get().get() : 1.0;
 

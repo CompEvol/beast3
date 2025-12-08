@@ -49,7 +49,8 @@ public class GammaMean extends ScalarDistribution<RealScalar<PositiveReal>, Doub
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    @Override
+    public void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 2.0;
         double mean = (meanInput.get() != null) ? meanInput.get().get() : 1.0; // default
 

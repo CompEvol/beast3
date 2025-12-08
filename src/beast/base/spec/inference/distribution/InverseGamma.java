@@ -56,7 +56,8 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     /**
      * ensure internal state is up to date *
      */
-    void refresh() {
+    @Override
+    public void refresh() {
         alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
         beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
         C = alpha * Math.log(beta) - org.apache.commons.math.special.Gamma.logGamma(alpha);

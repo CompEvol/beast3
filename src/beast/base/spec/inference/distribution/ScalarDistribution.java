@@ -105,6 +105,14 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     public Object getApacheDistribution() {
     	return null;
     }
+    
+    /** 
+     * Synchronise apache distribution parameters with input values
+     * to ensure internal state is up to date. 
+     * This is useful when parameters are sampled, as well as in BEAUti 
+     * when input values are edited  
+     * **/
+    public void refresh() {}
 
     /**
      * For this distribution, X, this method returns x such that P(X &lt; x) = p.

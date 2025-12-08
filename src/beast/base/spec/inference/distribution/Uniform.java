@@ -59,7 +59,8 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
     /**
      * make sure internal state is up to date *
      */
-    void refresh() {
+    @Override
+    public void refresh() {
         double lower  = (lowerInput.get() != null) ? lowerInput.get().get() : 0.0;
         double upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 1.0;
 

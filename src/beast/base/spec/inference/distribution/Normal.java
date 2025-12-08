@@ -57,7 +57,8 @@ public class Normal extends ScalarDistribution<RealScalar<Real>, Double> {
     /**
      * make sure internal state is up to date *
      */
-	void refresh() {
+    @Override
+    public void refresh() {
         double mean = (meanInput.get() != null) ? meanInput.get().get() : 0.0;
         double sd = 1.0; // default
         // Use sdInput if provided; otherwise compute from tauInput if provided;

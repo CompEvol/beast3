@@ -59,7 +59,8 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> impl
     /**
      * make sure internal state is up to date *
      */
-    void refresh() {
+    @Override
+    public void refresh() {
         int lower  = (lowerInput.get() != null) ? lowerInput.get().get() : 1;
         int upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 10;
 
