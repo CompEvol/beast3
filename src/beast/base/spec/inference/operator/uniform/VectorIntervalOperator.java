@@ -8,6 +8,12 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
+/**
+ * @deprecated every random var should have a prior,
+ * this is replaced by {@link beast.base.spec.inference.distribution.Uniform}
+ * combined with {@link beast.base.spec.inference.distribution.IID}
+ */
+@Deprecated
 @Description("A scale operator that selects a random dimension of the real parameter and scales the value a " +
         "random amount according to a Bactrian distribution such that the parameter remains in its range. "
         + "Supposed to be more efficient than UniformOperator")

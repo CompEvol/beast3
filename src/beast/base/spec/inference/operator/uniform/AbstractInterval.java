@@ -5,6 +5,7 @@ import beast.base.inference.operator.kernel.KernelOperator;
 
 import java.text.DecimalFormat;
 
+@Deprecated
 public abstract class AbstractInterval extends KernelOperator {
 
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor",

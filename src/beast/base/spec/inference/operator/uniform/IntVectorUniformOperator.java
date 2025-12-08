@@ -7,7 +7,12 @@ import beast.base.inference.Operator;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
-
+/**
+ * @deprecated every random var should have a prior,
+ * this is replaced by {@link beast.base.spec.inference.distribution.IntUniform}
+ * combined with {@link beast.base.spec.inference.distribution.IID}
+ */
+@Deprecated
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
 public class IntVectorUniformOperator extends Operator {
 

@@ -198,10 +198,10 @@
                 <provider classname="beast.base.spec.inference.operator.DeltaExchangeOperator"/>
                 <provider classname="beast.base.spec.inference.operator.scale.ScaleScalarOperator"/>
                 <provider classname="beast.base.spec.inference.operator.scale.ScaleVectorOperator"/>
-                <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>
-                <provider classname="beast.base.spec.inference.operator.uniform.IntVectorUniformOperator"/>
-                <provider classname="beast.base.spec.inference.operator.uniform.ScalarIntervalOperator"/>
-                <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>
+<!--                <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>-->
+<!--                <provider classname="beast.base.spec.inference.operator.uniform.IntVectorUniformOperator"/>-->
+<!--                <provider classname="beast.base.spec.inference.operator.uniform.ScalarIntervalOperator"/>-->
+<!--                <provider classname="beast.base.spec.inference.operator.uniform.VectorIntervalOperator"/>-->
 
 <!--                <provider classname="beast.base.spec.inference.distribution.Prior"/>-->
 
@@ -217,6 +217,7 @@
                 <provider classname="beast.base.spec.inference.distribution.Exponential"/>
                 <provider classname="beast.base.spec.inference.distribution.Gamma"/>
                 <provider classname="beast.base.spec.inference.distribution.GammaMean"/>
+                <provider classname="beast.base.spec.inference.distribution.IntUniform"/>
                 <provider classname="beast.base.spec.inference.distribution.InverseGamma"/>
                 <provider classname="beast.base.spec.inference.distribution.Laplace"/>
                 <provider classname="beast.base.spec.inference.distribution.LogNormal"/>
