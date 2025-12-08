@@ -32,7 +32,10 @@ import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.ScaleOperator}
+ */
+@Deprecated
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
 public class ScaleVectorOperator extends AbstractScale {
 

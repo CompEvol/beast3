@@ -30,7 +30,10 @@ import beast.base.core.Input;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.ScaleOperator}
+ */
+@Deprecated
 @Description("Scales a real scalar parameter")
 public class ScaleScalarOperator extends AbstractScale {
 
