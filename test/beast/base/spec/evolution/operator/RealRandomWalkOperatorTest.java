@@ -1,8 +1,5 @@
 package beast.base.spec.evolution.operator;
 
-import beast.base.core.BEASTObject;
-import beast.base.core.Input;
-import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
 import beast.base.inference.State;
 import beast.base.inference.operator.kernel.KernelDistribution;
@@ -12,19 +9,12 @@ import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.util.ESS;
 import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.Tensor;
-import beast.base.spec.type.TensorUtils;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -178,120 +168,6 @@ public class RealRandomWalkOperatorTest {
 		assertEquals(0.117, StatUtils.percentile(v, 5), 5e-3);
 		assertEquals(3.14, StatUtils.percentile(v, 95), 1e-1);
 		assertEquals(4.31, StatUtils.percentile(v, 97.5), 1e-1);
-
-	}
-	/**
-	 * Modified logger which analyses a sequence of tree states generated
-	 * by an MCMC run.
-	 */
-	public class TraceReport extends Logger {
-
-		public Input<Integer> burninInput = new Input<Integer>("burnin",
-				"Number of samples to skip (burn in)", Input.Validate.REQUIRED);
-
-		public Input<Boolean> silentInput = new Input<Boolean>("silent",
-				"Don't display final report.", false);
-
-        BEASTObject paramToTrack;
-
-		int m_nEvery = 1;
-		int burnin;
-		boolean silent = false;
-
-		List<Double> values;
-		List<double[]> values2;
-
-		@Override
-		public void initAndValidate() {
-//            System.out.println("\nSeed : " + Randomizer.getSeed() + "\n");
-
-			List<BEASTObject> loggers = loggersInput.get();
-			final int nLoggers = loggers.size();
-			if (nLoggers == 0) {
-				throw new IllegalArgumentException("Logger with nothing to log specified");
-			}
-
-			if (everyInput.get() != null)
-				m_nEvery = everyInput.get();
-
-			burnin = burninInput.get();
-
-			if (silentInput.get() != null)
-				silent = silentInput.get();
-
-            paramToTrack = loggers.get(0);
-			values = new ArrayList<>();
-			values2 = new ArrayList<>();
-		}
-
-		@Override
-		public void init() { }
-
-		@Override
-		public void log(long nSample) {
-
-			if ((nSample % m_nEvery > 0) || nSample<burnin)
-				return;
-
-            if (paramToTrack instanceof Tensor<?,?> tensor) {
-                values.add(TensorUtils.valuesToDoubleArray(tensor)[0]);
-                values2.add(TensorUtils.valuesToDoubleArray(tensor));
-            } else
-                throw new IllegalArgumentException("Require Tensor, but got " + paramToTrack);
-
-		}
-
-		@Override
-		public void close() {
-
-			if (!silent) {
-				System.out.println("\n----- Tree trace analysis -----------------------");
-				double[] v = new double[values.size()];
-				for (int i = 0; i < v.length; i++) {
-					v[i] = values.get(i);
-				}
-				double m = StatUtils.mean(v);
-				double s = StatUtils.variance(v);
-				double ess = ESS.calcESS(values);
-				System.out.println("Mean: " + m + " variance: " + s + " ESS: " + ess);
-				System.out.println("-------------------------------------------------");
-				System.out.println();
-				
-				try {
-					PrintStream log = new PrintStream(new File("/tmp/bactrian.log"));
-					log.print("Sample\t");
-					int n = values2.get(0).length;
-					for (int j = 0; j < n; j++) {
-						log.print("param" + (j+1) + "\t");
-					}
-					log.println();
-					for (int i = 0; i < v.length; i++) {
-						log.print(i + "\t");
-						for (int j = 0; j < n; j++) {
-							log.print(values2.get(i)[j] + "\t");
-						}
-						log.println();
-					}
-					log.close();
-					System.out.println("trace log written to /tmp/bactrian.log");
-				} catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-
-		/**
-		 * Obtain completed analysis.
-		 *
-		 * @return trace.
-		 */
-		public List<Double> getAnalysis() {
-			return values;
-		}
-		
-		public List<double[]> getAnalysis2() {
-			return values2;
-		}
 
 	}
 }
