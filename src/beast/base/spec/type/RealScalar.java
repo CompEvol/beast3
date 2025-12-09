@@ -1,7 +1,13 @@
 package beast.base.spec.type;
 
+import java.util.List;
+
+import org.apache.commons.math.MathException;
+
+import beast.base.core.BEASTInterface;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 
 public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<Double> {
 
@@ -25,13 +31,43 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
     @Override
     default Double getLower() {
         D domain = getDomain();
-        return domain.getLower();
+        Double lower = domain.getLower();
+        if (this instanceof BEASTInterface b) {
+        	for (BEASTInterface o : b.getOutputs()) {
+        		if (o instanceof ScalarDistribution d) {
+        			List<String> arguments = d.getArguments();
+        			if (arguments.contains(b.getID())) {
+        				try {
+							lower = Math.max(lower, d.inverseCumulativeProbability(0));
+						} catch (MathException e) {
+							// ignore
+						}
+        			}
+        		}
+        	}
+        }
+        return lower;
     }
 
     @Override
     default Double getUpper() {
         D domain = getDomain();
-        return domain.getUpper();
+        Double upper = domain.getUpper();
+        if (this instanceof BEASTInterface b) {
+        	for (BEASTInterface o : b.getOutputs()) {
+        		if (o instanceof ScalarDistribution d) {
+        			List<String> arguments = d.getArguments();
+        			if (arguments.contains(b.getID())) {
+        				try {
+        					upper = Math.min(upper, d.inverseCumulativeProbability(1));
+						} catch (MathException e) {
+							// ignore
+						}
+        			}
+        		}
+        	}
+        }
+        return upper;
     }
 
     @Override
@@ -50,4 +86,5 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         // Note: these bounds can be the subset of domain bounds.
         return Scalar.super.isValid(value) && withinBounds(value);
     }
+    
 }
