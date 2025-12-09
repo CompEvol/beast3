@@ -10,6 +10,7 @@ import beast.base.spec.type.RealScalar;
 
 import java.util.List;
 
+import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 
@@ -58,9 +59,9 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
         dist.initAndValidate();
         super.initAndValidate();
 
-        if (offsetInput.get() != 0.0)
-            throw new IllegalArgumentException("Non-zero offset not allowed for " + getClass().getName() + 
-                    " distribution. Set offset in base distribution (distributionInput) instead");
+//        if (offsetInput.get() != 0.0)
+//            throw new IllegalArgumentException("Non-zero offset not allowed for " + getClass().getName() + 
+//                    " distribution. Set offset in base distribution (distributionInput) instead");
 
         // Set bounds in parameter in the future (for early reject in operators)
 //        RealScalar<Real> param = paramInput.get();
@@ -108,6 +109,7 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
         return logDensity(value);
     }
 
+    @Override
     public double logDensity(double x) {
         if (isValid(x))
             return dist.calcLogP(x) - Math.log(1 - probOutOfBounds());
@@ -115,8 +117,17 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
             return Double.NEGATIVE_INFINITY;
     }
 
+    @Override
     public double density(double x) {
         return Math.exp(logDensity(x));
+    }
+    
+    @Override
+    public double inverseCumulativeProbability(double p) throws MathException {
+        double lowerP = getLowerCDF();
+        double upperP = (1-getUpperCDF());
+        p = lowerP + (1 - upperP - lowerP) * p;
+    	return super.inverseCumulativeProbability(p);
     }
 
     // Get the Apache distribution of the inner distribution object (provides inverse CDF)

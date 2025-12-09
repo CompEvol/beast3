@@ -29,17 +29,15 @@ public class TruncatedRealDistributionTest {
         Normal baseNorm = new Normal();
         baseNorm.initByName(
             "mean", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE),
-            "offset", "0.0"
+            "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
         // Truncate to [0, 2]
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(0.0, Real.INSTANCE),
-            "upper", new RealScalarParam<>(2.0, Real.INSTANCE),
-            "offset", "0.0"
+            "upper", new RealScalarParam<>(2.0, Real.INSTANCE)
         );
 
         // Test that density is 0 outside bounds
@@ -72,7 +70,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(2.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(3.0, Real.INSTANCE),
@@ -106,7 +104,7 @@ public class TruncatedRealDistributionTest {
         double lower = -1.0;
         double upper = 1.5;
 
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(lower, Real.INSTANCE),
@@ -131,7 +129,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(0.0, Real.INSTANCE),
@@ -173,7 +171,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(sigma, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm1 = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm1 = new TruncatedRealDistribution();
         truncNorm1.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(lower, Real.INSTANCE),
@@ -197,7 +195,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(-1.0, Real.INSTANCE),
@@ -224,8 +222,8 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm = 
-            new TruncatedRealDistribution<>(baseNorm, -2.0, 2.0);
+        TruncatedRealDistribution truncNorm = 
+            new TruncatedRealDistribution(baseNorm, -2.0, 2.0);
 
         // Check that it was initialized correctly
         assertTrue(truncNorm.isValid(0.0));
@@ -244,7 +242,7 @@ public class TruncatedRealDistributionTest {
         );
 
         // Create truncated distribution without explicit bounds
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName("distribution", baseNorm);
 
         // Should use domain bounds (Real = (-Inf, +Inf))
@@ -263,7 +261,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<PositiveReal> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(1.0, Real.INSTANCE),
@@ -287,7 +285,7 @@ public class TruncatedRealDistributionTest {
             "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
         );
 
-        TruncatedRealDistribution<Real> truncNorm = new TruncatedRealDistribution<>();
+        TruncatedRealDistribution truncNorm = new TruncatedRealDistribution();
         truncNorm.initByName(
             "distribution", baseNorm,
             "lower", new RealScalarParam<>(-1.0, Real.INSTANCE),
