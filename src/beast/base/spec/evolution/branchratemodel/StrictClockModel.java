@@ -3,7 +3,6 @@ package beast.base.spec.evolution.branchratemodel;
 import beast.base.core.Description;
 import beast.base.evolution.tree.Node;
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
 /**
@@ -21,9 +20,9 @@ public class StrictClockModel extends Base {
     public void initAndValidate() {
         muParameter = meanRateInput.get();
         if (muParameter != null) {
-        	if (muParameter instanceof RealScalarParam<PositiveReal> mu) { 
-        		mu.setBounds(Math.max(0.0, mu.getLower()), mu.getUpper());
-        	}
+//        	if (muParameter instanceof RealScalarParam<PositiveReal> mu) {
+//        		mu.setBounds(Math.max(0.0, mu.getLower()), mu.getUpper());
+//        	}
             mu = muParameter.get();
         }
     }

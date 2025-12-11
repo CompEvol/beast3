@@ -12,7 +12,7 @@ import org.w3c.dom.Node;
 import java.io.PrintStream;
 
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, BoundedParam<Double>, Scalable {
+public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, Scalable {
 
     final public Input<Double> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -23,12 +23,12 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
                     "specifies the permissible range of values.", Real.INSTANCE);
 
-    @Deprecated
-    final public Input<Double> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default -infinity)");
-    @Deprecated
-    final public Input<Double> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default +infinity)");
+//    @Deprecated
+//    final public Input<Double> lowerValueInput = new Input<>("lower",
+//            "lower value for this parameter (default -infinity)");
+//    @Deprecated
+//    final public Input<Double> upperValueInput = new Input<>("upper",
+//            "upper value for this parameter (default +infinity)");
 
     /**
      * the actual values of this parameter
@@ -40,39 +40,52 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     protected D domain;
 
     // default
-    @Deprecated
-    protected double lower = Double.NEGATIVE_INFINITY;
-    @Deprecated
-    protected double upper = Double.POSITIVE_INFINITY;
+//    @Deprecated
+//    protected double lower = Double.NEGATIVE_INFINITY;
+//    @Deprecated
+//    protected double upper = Double.POSITIVE_INFINITY;
 
 
     public RealScalarParam() { }
-
-    public RealScalarParam(double value, D domain) {
-        // default bounds
-        this(value, domain, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
-    }
 
     /**
      * This constructor centralizes logic in one place,
      * and guarantees initAndValidate() runs once.
      * @param value    scalar value
      * @param domain   scalar {@link Domain}
-     * @param lower    lower bound
-     * @param upper    upper bound
      */
-    public RealScalarParam(double value, D domain, double lower, double upper) {
+    public RealScalarParam(double value, D domain) {
+        // default bounds
+//        this(value, domain, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+
         // Note set value to Input which will assign value in initAndValidate()
         valuesInput.setValue(value, this);
         setDomain(domain); // this set Input as well
 
-        if (this.lower != lower || this.upper != upper)
-            // adjust bounds to the Domain range
-            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
-
         // always validate
         initAndValidate();
     }
+
+//    /**
+//     * This constructor centralizes logic in one place,
+//     * and guarantees initAndValidate() runs once.
+//     * @param value    scalar value
+//     * @param domain   scalar {@link Domain}
+//     * @param lower    lower bound
+//     * @param upper    upper bound
+//     */
+//    public RealScalarParam(double value, D domain, double lower, double upper) {
+//        // Note set value to Input which will assign value in initAndValidate()
+//        valuesInput.setValue(value, this);
+//        setDomain(domain); // this set Input as well
+//
+//        if (this.lower != lower || this.upper != upper)
+//            // adjust bounds to the Domain range
+//            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+//
+//        // always validate
+//        initAndValidate();
+//    }
 
     @Override
     public void initAndValidate() {
@@ -81,7 +94,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         // Initialize domain from input
         this.domain = (D) domainTypeInput.get();
 
-        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
+//        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         if (!isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -103,15 +116,15 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         return domain;
     }
 
-    @Override
-    public Double getLower() {
-        return lower;
-    }
-
-    @Override
-    public Double getUpper() {
-        return upper;
-    }
+//    @Override
+//    public Double getLower() {
+//        return lower;
+//    }
+//
+//    @Override
+//    public Double getUpper() {
+//        return upper;
+//    }
 
     //*** setters ***
 
@@ -131,23 +144,23 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         domainTypeInput.setValue(domain, this);
     }
 
-    @Deprecated
-    public void setLower(Double lower) {
-        if (lower < getDomain().getLower())
-            throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.lower = lower;
-        lowerValueInput.setValue(lower, this);
-    }
-
-    @Deprecated
-    public void setUpper(Double upper) {
-        if (upper > getDomain().getUpper())
-            throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.upper = upper;
-        upperValueInput.setValue(upper, this);
-    }
+//    @Deprecated
+//    public void setLower(Double lower) {
+//        if (lower < getDomain().getLower())
+//            throw new IllegalArgumentException("Lower bound " + lower +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.lower = lower;
+//        lowerValueInput.setValue(lower, this);
+//    }
+//
+//    @Deprecated
+//    public void setUpper(Double upper) {
+//        if (upper > getDomain().getUpper())
+//            throw new IllegalArgumentException("Upper bound " + upper +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.upper = upper;
+//        upperValueInput.setValue(upper, this);
+//    }
 
     //*** StateNode methods ***
 
@@ -206,7 +219,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             @SuppressWarnings("unchecked") final RealScalarParam copy = (RealScalarParam) this.clone();
             // value is primitive field
             copy.setDomain(domain);
-            copy.setBounds(getLower(), getUpper());
+//            copy.setBounds(getLower(), getUpper());
             return copy;
         } catch (Exception e) {
             e.printStackTrace();
@@ -228,7 +241,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         copy.index = index;
         copy.setDomain(getDomain());
         copy.set(get());
-        copy.setBounds(getLower(), getUpper());
+//        copy.setBounds(getLower(), getUpper());
     }
 
     @Override
@@ -236,7 +249,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         @SuppressWarnings("unchecked") final RealScalarParam<D> source = (RealScalarParam<D>) other;
         setID(source.getID());
         setDomain(source.getDomain());
-        setBounds(source.getLower(), source.getUpper());
+//        setBounds(source.getLower(), source.getUpper());
         set(source.get());
         storedValue = source.storedValue;
     }
@@ -248,10 +261,10 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         ParameterUtils.parseParameter(node, this);
     }
 
-    @Override
-    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
-        setLower(Double.parseDouble(lower));
-        setUpper(Double.parseDouble(upper));
+//    @Override
+    public void fromXML(final String shape, final String... valuesStr) {
+//        setLower(Double.parseDouble(lower));
+//        setUpper(Double.parseDouble(upper));
         if (shape != null)
             throw new IllegalArgumentException("Shape not supported for Scalar ! " + shape);
         set(Double.parseDouble(valuesStr[0]));

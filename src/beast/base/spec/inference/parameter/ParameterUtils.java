@@ -56,7 +56,9 @@ public class ParameterUtils {
             final String valuesAsString = matcher1.group(4);
 
             final String[] valuesStr = valuesAsString.split(" ");
-            if (param instanceof BoundedParam<?> boundedParam) {
+            if (param instanceof RealScalarParam<?> realScalarParam) {
+                realScalarParam.fromXML(shape, valuesStr);
+            } else if (param instanceof BoundedParam<?> boundedParam) { //TODO
                 boundedParam.fromXML(lower, upper, shape, valuesStr);
             } else
                 throw new RuntimeException("Unknown parameter type : " + param.getClass().getName());

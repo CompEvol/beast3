@@ -3,10 +3,15 @@ package beast.base.spec.inference.parameter;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.Bounded;
+import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Tensor;
 import org.w3c.dom.Node;
 
 /**
+ * @deprecated remove all bound setter methods,
+ * and bound getter methods should provide bounds according to the domain and its distribution.
+ * @see RealScalar#getLower()
+ *
  * This defines a lower and upper limit, with the option
  * to specify whether each bound is inclusive or exclusive.
  * It also provides a validation method to check whether a given value
@@ -14,6 +19,7 @@ import org.w3c.dom.Node;
  *
  * @param <T> the numeric or comparable type of the value (e.g. {@link Double}, {@link Integer})
  */
+@Deprecated
 public interface BoundedParam<T extends Comparable<T>> extends Bounded<T> {
 
     /**

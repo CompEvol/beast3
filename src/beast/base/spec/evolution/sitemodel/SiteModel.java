@@ -25,28 +25,20 @@
 package beast.base.spec.evolution.sitemodel;
 
 
-
-
-
-import java.util.ArrayList;
-
-import org.apache.commons.math.distribution.GammaDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
+import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.StateNode;
 import beast.base.inference.util.InputUtil;
-import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import beast.base.evolution.sitemodel.SiteModelInterface;
+import org.apache.commons.math.distribution.GammaDistribution;
+import org.apache.commons.math.distribution.GammaDistributionImpl;
+
+import java.util.ArrayList;
 
 
 /**
@@ -64,13 +56,13 @@ public class SiteModel extends SiteModelInterface.Base {
             new Input<>("gammaCategoryCount", "gamma category count (default=zero for no gamma)", 0);
     final public Input<RealScalar<PositiveReal>> shapeParameterInput =
             new Input<>("shape", "shape parameter of gamma distribution. Ignored if gammaCategoryCount 1 or less");
-    final public Input<RealScalar<NonNegativeReal>> invarParameterInput =
+    final public Input<RealScalar<UnitInterval>> invarParameterInput =
             new Input<>("proportionInvariant", "proportion of sites that is invariant: should be between 0 (default) and 1");
     //public Input<Boolean> useBeast1StyleGammaInput = new Input<>("useBeast1Gamma", "use BEAST1 style gamma categories -- for backward compatibility testing", false);
 
     protected RealScalar<PositiveReal> muParameter;
     protected RealScalar<PositiveReal> shapeParameter;
-    protected RealScalar<NonNegativeReal> invarParameter;
+    protected RealScalar<UnitInterval> invarParameter;
     protected boolean useBeast1StyleGamma;
     
     @Override
@@ -83,24 +75,25 @@ public class SiteModel extends SiteModelInterface.Base {
         shapeParameter = shapeParameterInput.get();
         invarParameter = invarParameterInput.get();
         if (invarParameter == null) {
-            invarParameter = new RealScalarParam<NonNegativeReal>(0.0, NonNegativeReal.INSTANCE);
-        }
-        if (invarParameter instanceof RealScalarParam<NonNegativeReal> invar) {
-        	invar.setBounds(Math.max(0.0, invar.getLower()), Math.min(1.0, invar.getUpper()));
+            invarParameter = new RealScalarParam<>(0.0, UnitInterval.INSTANCE);
         }
 
-        if (muParameter instanceof RealScalarParam<PositiveReal> mu) {
-        	mu.setBounds(Math.max(mu.getLower(), 0.0), Math.min(mu.getUpper(), Double.POSITIVE_INFINITY));
-        }
         if (shapeParameter != null) {
             // The quantile calculator fails when the shape parameter goes much below
             // 1E-3 so we have put a hard lower bound on it. If this is not there then
             // the category rates can go to 0 and cause a -Inf likelihood (whilst this
             // is not a problem as the state will be rejected, it could mask other issues
             // and this seems the better approach.
+//            if (shapeParameter instanceof RealScalarParam<PositiveReal> shape) {
+//            	shape.setBounds(Math.max(shape.getLower(), 1.0E-3), Math.min(shape.getUpper(), 1.0E3));
+//            }
             if (shapeParameter instanceof RealScalarParam<PositiveReal> shape) {
-            	shape.setBounds(Math.max(shape.getLower(), 1.0E-3), Math.min(shape.getUpper(), 1.0E3));
+                if (shape.getLower() < 1.0E-3)
+                    Log.warning("The quantile calculator in SiteModel fails when the shape parameter goes much below 1.0E-3.\n" +
+                            "A TruncatedDistribution may be used to enforce this constraint.\n" +
+                            "Lower = " + shape.getLower());
             }
+
         }
 
 
