@@ -3,7 +3,6 @@ package beast.base.spec.inference.parameter;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import org.w3c.dom.Node;
@@ -11,7 +10,7 @@ import org.w3c.dom.Node;
 import java.io.PrintStream;
 
 @Description("A scalar int-valued parameter with domain constraints")
-public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D>, BoundedParam<Integer> {
+public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D> {
 
     final public Input<Integer> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -22,12 +21,12 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
             "The domain type (default: Int; alternatives: NonNegativeInt, or PositiveInt) " +
                     "specifies the permissible range of values.", Int.INSTANCE);
 
-    @Deprecated
-    final public Input<Integer> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
-    @Deprecated
-    final public Input<Integer> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
+//    @Deprecated
+//    final public Input<Integer> lowerValueInput = new Input<>("lower",
+//            "lower value for this parameter (default Integer.MIN_VALUE + 1)");
+//    @Deprecated
+//    final public Input<Integer> upperValueInput = new Input<>("upper",
+//            "upper value for this parameter (default Integer.MAX_VALUE - 1)");
 
     /**
      * the actual values of this parameter
@@ -38,11 +37,11 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     // Domain instance to enforce constraints
     protected D domain;
 
-    // default
-    @Deprecated
-    protected int lower = Integer.MIN_VALUE + 1;
-    @Deprecated
-    protected int upper = Integer.MAX_VALUE - 1;
+//    // default
+//    @Deprecated
+//    protected int lower = Integer.MIN_VALUE + 1;
+//    @Deprecated
+//    protected int upper = Integer.MAX_VALUE - 1;
 
 
     public IntScalarParam() {
@@ -50,29 +49,36 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     public IntScalarParam(int value, D domain) {
         // default bounds
-        this(value, domain, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
-    }
+//        this(value, domain, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
 
-    /**
-     * This constructor centralizes logic in one place,
-     * and guarantees initAndValidate() runs once.
-     * @param value    scalar value
-     * @param domain   scalar {@link Domain}
-     * @param lower    lower bound
-     * @param upper    upper bound
-     */
-    public IntScalarParam(int value, D domain, int lower, int upper) {
         // Note sync Input which will assign value in initAndValidate()
         valuesInput.setValue(value, this);
         setDomain(domain); // this set Input as well
 
-        if (this.lower != lower || this.upper != upper)
-            // adjust bounds to the Domain range
-            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
-
         // always validate
         initAndValidate();
     }
+
+//    /**
+//     * This constructor centralizes logic in one place,
+//     * and guarantees initAndValidate() runs once.
+//     * @param value    scalar value
+//     * @param domain   scalar {@link Domain}
+//     * @param lower    lower bound
+//     * @param upper    upper bound
+//     */
+//    public IntScalarParam(int value, D domain, int lower, int upper) {
+//        // Note sync Input which will assign value in initAndValidate()
+//        valuesInput.setValue(value, this);
+//        setDomain(domain); // this set Input as well
+//
+//        if (this.lower != lower || this.upper != upper)
+//            // adjust bounds to the Domain range
+//            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+//
+//        // always validate
+//        initAndValidate();
+//    }
 
 
     @Override
@@ -90,7 +96,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 //        setBounds(Math.max(getLower(), domain.getLower()),
 //                Math.min(getUpper(), domain.getUpper()));
 
-        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
+//        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         if (!isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
@@ -112,15 +118,15 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         return domain;
     }
 
-    @Override
-    public Integer getLower() {
-        return lower;
-    }
-
-    @Override
-    public Integer getUpper() {
-        return upper;
-    }
+//    @Override
+//    public Integer getLower() {
+//        return lower;
+//    }
+//
+//    @Override
+//    public Integer getUpper() {
+//        return upper;
+//    }
 
     //*** setValue ***
 
@@ -140,23 +146,23 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         domainTypeInput.setValue(domain, this);
     }
 
-    @Deprecated
-    public void setLower(Integer lower) {
-        if (lower < getDomain().getLower())
-            throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.lower = lower;
-        lowerValueInput.setValue(lower, this);
-    }
-
-    @Deprecated
-    public void setUpper(Integer upper) {
-        if (upper > getDomain().getUpper())
-            throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.upper = upper;
-        upperValueInput.setValue(upper, this);
-    }
+//    @Deprecated
+//    public void setLower(Integer lower) {
+//        if (lower < getDomain().getLower())
+//            throw new IllegalArgumentException("Lower bound " + lower +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.lower = lower;
+//        lowerValueInput.setValue(lower, this);
+//    }
+//
+//    @Deprecated
+//    public void setUpper(Integer upper) {
+//        if (upper > getDomain().getUpper())
+//            throw new IllegalArgumentException("Upper bound " + upper +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.upper = upper;
+//        upperValueInput.setValue(upper, this);
+//    }
 
     //*** StateNode methods ***
 
@@ -199,7 +205,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
             @SuppressWarnings("unchecked") final IntScalarParam copy = (IntScalarParam) this.clone();
             copy.set(value);
             copy.setDomain(domain);
-            copy.setBounds(getLower(), getUpper());
+//            copy.setBounds(getLower(), getUpper());
             return copy;
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,7 +227,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         copy.index = index;
         copy.setDomain(getDomain());
         copy.set(get());
-        copy.setBounds(getLower(), getUpper());
+//        copy.setBounds(getLower(), getUpper());
     }
 
     @Override
@@ -231,7 +237,7 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         set(source.get());
         storedValue = source.storedValue;
         setDomain(source.getDomain());
-        setBounds(source.getLower(), source.getUpper());
+//        setBounds(source.getLower(), source.getUpper());
     }
 
     //*** for resume ***
@@ -241,10 +247,10 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
         ParameterUtils.parseParameter(node, this);
     }
 
-    @Override
-    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
-        setLower(Integer.parseInt(lower));
-        setUpper(Integer.parseInt(upper));
+//    @Override
+    public void fromXML(final String shape, final String... valuesStr) {
+//        setLower(Integer.parseInt(lower));
+//        setUpper(Integer.parseInt(upper));
         if (shape != null)
             throw new IllegalArgumentException("Shape not supported for Scalar ! " + shape);
         set(Integer.parseInt(valuesStr[0]));

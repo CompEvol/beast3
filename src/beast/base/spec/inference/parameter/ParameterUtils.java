@@ -58,6 +58,8 @@ public class ParameterUtils {
             final String[] valuesStr = valuesAsString.split(" ");
             if (param instanceof RealScalarParam<?> realScalarParam) {
                 realScalarParam.fromXML(shape, valuesStr);
+            } else if (param instanceof IntScalarParam<?> intScalarParam) {
+                intScalarParam.fromXML(shape, valuesStr);
             } else if (param instanceof BoundedParam<?> boundedParam) { //TODO
                 boundedParam.fromXML(lower, upper, shape, valuesStr);
             } else
