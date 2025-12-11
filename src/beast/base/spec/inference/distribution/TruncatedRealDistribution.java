@@ -136,12 +136,12 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
 
     @Override
     public Double getLower() {
-        return getInnerDistribution().getSupportLowerBound() + getOffset();
+        return Math.max(lower.get(), getInnerDistribution().getSupportLowerBound()) + getOffset();
     }
 
     @Override
     public Double getUpper() {
-        return getInnerDistribution().getSupportUpperBound() + getOffset();
+        return Math.min(upper.get(), getInnerDistribution().getSupportUpperBound()) + getOffset();
     }
 
     double getLowerCDF() {

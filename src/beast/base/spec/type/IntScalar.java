@@ -1,13 +1,11 @@
 package beast.base.spec.type;
 
-import java.util.List;
-
-import org.apache.commons.math.MathException;
-
 import beast.base.core.BEASTInterface;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.distribution.ScalarDistribution;
+
+import java.util.List;
 
 public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<Integer> {
 
@@ -37,11 +35,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-        				try {
-							lower = Math.max(lower, (int) d.inverseCumulativeProbability(0));
-						} catch (MathException e) {
-							// ignore
-						}
+//        				try {
+//							lower = Math.max(lower, (int) d.inverseCumulativeProbability(0));
+                        lower = Math.max(lower, (Integer) d.getLower());
+//						} catch (MathException e) {
+//							// ignore
+//						}
         			}
         		}
         	}
@@ -58,11 +57,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-        				try {
-        					upper = Math.min(upper, (int) d.inverseCumulativeProbability(1));
-						} catch (MathException e) {
-							// ignore
-						}
+//        				try {
+//        					upper = Math.min(upper, (int) d.inverseCumulativeProbability(1));
+                        upper = Math.min(upper, (Integer) d.getUpper());
+//						} catch (MathException e) {
+//							// ignore
+//						}
         			}
         		}
         	}
