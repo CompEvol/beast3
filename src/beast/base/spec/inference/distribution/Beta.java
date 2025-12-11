@@ -79,6 +79,16 @@ public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
     }
 
     @Override
+    public Double getLower() {
+        return dist.getSupportLowerBound() + getOffset();
+    }
+
+    @Override
+    public Double getUpper() {
+        return dist.getSupportUpperBound() + getOffset();
+    }
+
+    @Override
     protected List<Double> sample() {
         final double x = sampler.sample() + getOffset();
         return List.of(x); // Returning an immutable result

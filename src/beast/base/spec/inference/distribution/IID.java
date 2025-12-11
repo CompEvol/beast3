@@ -88,4 +88,13 @@ public class IID<V extends Vector<?, T>,
         return newListX;
     }
 
+    @Override
+    public T getLower() {
+        return dist.getLower();
+    }
+
+    @Override
+    public T getUpper() {
+        return dist.getUpper();
+    }
 }

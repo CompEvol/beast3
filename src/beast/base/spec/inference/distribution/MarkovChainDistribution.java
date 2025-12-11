@@ -1,23 +1,21 @@
 package beast.base.spec.inference.distribution;
 
 
-
-import java.util.List;
-import java.util.Random;
-
+import beast.base.core.BEASTInterface;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.core.Input.Validate;
+import beast.base.core.Log;
+import beast.base.inference.State;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import org.apache.commons.math.distribution.GammaDistribution;
 import org.apache.commons.math.distribution.GammaDistributionImpl;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.core.Input.Validate;
-import beast.base.inference.*;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.RealVector;
+import java.util.List;
+import java.util.Random;
 
 
 
@@ -167,7 +165,17 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
 		return logP;
 	}
 
-	@Override
+    @Override
+    public Double getLower() {
+        throw new UnsupportedOperationException("not supported");
+    }
+
+    @Override
+    public Double getUpper() {
+        throw new UnsupportedOperationException("not supported");
+    }
+
+    @Override
 	protected List<Double> sample() {
 		throw new RuntimeException("not implemented yet");
 	}

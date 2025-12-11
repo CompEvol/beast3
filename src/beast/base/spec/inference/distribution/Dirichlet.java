@@ -122,4 +122,14 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
         return List.of(dirichletSample);
     }
 
+    @Override
+    public Double getLower() {
+        // all gammas have the same bounds
+        return gammas[0].getSupportLowerBound();
+    }
+
+    @Override
+    public Double getUpper() {
+        return gammas[0].getSupportUpperBound();
+    }
 }

@@ -7,12 +7,11 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-
-import java.util.List;
-
 import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
+
+import java.util.List;
 
 
 @Description("Truncates a real valued distribution to the interval [lower,upper].")
@@ -133,6 +132,16 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     // Get the Apache distribution of the inner distribution object (provides inverse CDF)
     ContinuousDistribution getInnerDistribution() {
         return (ContinuousDistribution) dist.getApacheDistribution();
+    }
+
+    @Override
+    public Double getLower() {
+        return getInnerDistribution().getSupportLowerBound() + getOffset();
+    }
+
+    @Override
+    public Double getUpper() {
+        return getInnerDistribution().getSupportUpperBound() + getOffset();
     }
 
     double getLowerCDF() {

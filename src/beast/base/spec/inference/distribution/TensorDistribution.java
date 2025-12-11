@@ -74,6 +74,11 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         throw new UnsupportedOperationException("Please override this method in every child class !");
     }
 
+    public abstract T getLower();
+
+    public abstract T getUpper();
+
+
     //*** abstract methods ***//
 
     /**

@@ -63,6 +63,16 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
     }
 
     @Override
+    public Boolean getLower() {
+        throw new IllegalStateException(getClass().getName() + " does not support lower bounds.");
+    }
+
+    @Override
+    public Boolean getUpper() {
+        throw new IllegalStateException(getClass().getName() + " does not support upper bounds.");
+    }
+
+    @Override
     protected List<Boolean> sample() {
         boolean success = (Randomizer.nextDouble() < p);
         // Returning an immutable result

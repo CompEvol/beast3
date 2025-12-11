@@ -65,6 +65,16 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
     }
 
     @Override
+    public Integer getLower() {
+        return dist.getSupportLowerBound() + (int) getOffset();
+    }
+
+    @Override
+    public Integer getUpper() {
+        return dist.getSupportUpperBound() + (int) getOffset();
+    }
+
+    @Override
     protected List<Integer> sample() {
         final int x = sampler.sample() + (int) getOffset();
         return List.of(x); // Returning an immutable result

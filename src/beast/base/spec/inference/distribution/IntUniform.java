@@ -94,12 +94,12 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> impl
 
     @Override
     public Integer getLower() {
-        return dist.getSupportLowerBound();
+        return dist.getSupportLowerBound() + (int)getOffset();
     }
 
     @Override
     public Integer getUpper() {
-        return dist.getSupportUpperBound();
+        return dist.getSupportUpperBound() + (int)getOffset();
     }
 
     @Override

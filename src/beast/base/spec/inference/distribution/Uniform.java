@@ -94,12 +94,12 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
 
     @Override
     public Double getLower() {
-        return dist.getSupportLowerBound();
+        return dist.getSupportLowerBound() + getOffset();
     }
 
     @Override
     public Double getUpper() {
-        return dist.getSupportUpperBound();
+        return dist.getSupportUpperBound() + getOffset();
     }
 
     @Override
