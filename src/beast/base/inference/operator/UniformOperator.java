@@ -7,13 +7,12 @@ import beast.base.inference.Operator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.inference.operator.uniform.IntUniformOperator;
 import beast.base.util.Randomizer;
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.operator.uniform.IntScalarUniformOperator},
- * {@link beast.base.spec.inference.operator.uniform.IntVectorUniformOperator},
- * {@link beast.base.spec.inference.operator.uniform.ScalarIntervalOperator},
- * and {@link beast.base.spec.inference.operator.uniform.VectorIntervalOperator}.
+ * @deprecated replaced by {@link IntUniformOperator},
+ * {@link beast.base.spec.inference.operator.uniform.IntervalOperator}
  */
 @Deprecated
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
