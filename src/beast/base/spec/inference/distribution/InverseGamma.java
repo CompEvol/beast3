@@ -95,16 +95,6 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     }
 
     @Override
-    public Double getLower() {
-        return dist.getSupportLowerBound() + getOffset();
-    }
-
-    @Override
-    public Double getUpper() {
-        return dist.getSupportUpperBound() + getOffset();
-    }
-
-    @Override
     protected List<Double> sample() {
         final double y = sampler.sample();  // sample from Gamma
         final double x = 1.0 / y + getOffset(); // sample from Gamma

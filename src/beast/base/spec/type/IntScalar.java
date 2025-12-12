@@ -35,12 +35,7 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-//        				try {
-//							lower = Math.max(lower, (int) d.inverseCumulativeProbability(0));
                         lower = Math.max(lower, (Integer) d.getLower());
-//						} catch (MathException e) {
-//							// ignore
-//						}
         			}
         		}
         	}
@@ -57,12 +52,7 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-//        				try {
-//        					upper = Math.min(upper, (int) d.inverseCumulativeProbability(1));
                         upper = Math.min(upper, (Integer) d.getUpper());
-//						} catch (MathException e) {
-//							// ignore
-//						}
         			}
         		}
         	}

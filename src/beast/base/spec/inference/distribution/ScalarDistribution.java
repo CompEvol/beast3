@@ -123,21 +123,77 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      *                       computed due to convergence or other numerical errors.
      */
      public double inverseCumulativeProbability(double p) throws MathException {
+         if (p <= 0) {
+        	 return (double) getLower();
+         } else if (p >= 1) {
+        	 return (double) getUpper();
+         }
+
          Object dist = getApacheDistribution();
          
+         if (dist == null) {
+        	 refresh();
+        	 dist = getApacheDistribution();
+         }
          if (dist == null) {
         	 throw new RuntimeException("not implemented yet");
          }
          
          double offset = getOffset();
          if (dist instanceof ContinuousDistribution cd) {
-             return offset + cd.inverseCumulativeProbability(p);
+             return (offset + cd.inverseCumulativeProbability(p));
          } else if (dist instanceof DiscreteDistribution dd) {
-             return offset + dd.inverseCumulativeProbability(p);
+             return (offset + dd.inverseCumulativeProbability(p));
          }
-         return 0.0;
+         return 0;
      }
 
+     
+     @Override
+     public T getLower() {
+         Object dist = getApacheDistribution();
+         
+         if (dist == null) {
+        	 refresh();
+        	 dist = getApacheDistribution();
+         }
+         if (dist == null) {
+        	 throw new RuntimeException("not implemented yet");
+         }
+         
+         double offset = getOffset();
+         if (dist instanceof ContinuousDistribution cd) {
+             Double lower = offset + cd.getSupportLowerBound();
+             return (T) lower;
+         } else if (dist instanceof DiscreteDistribution dd) {
+             Integer lower = (int)(offset + dd.getSupportLowerBound());
+             return (T) lower;
+         }
+    	 return null;
+     }
+     
+     @Override
+     public T getUpper() {
+         Object dist = getApacheDistribution();
+         
+         if (dist == null) {
+        	 refresh();
+        	 dist = getApacheDistribution();
+         }
+         if (dist == null) {
+        	 throw new RuntimeException("not implemented yet");
+         }
+         
+         double offset = getOffset();
+         if (dist instanceof ContinuousDistribution cd) {
+             Double lower = offset + cd.getSupportUpperBound();
+             return (T) lower;
+         } else if (dist instanceof DiscreteDistribution dd) {
+             Integer lower = (int)(offset + dd.getSupportUpperBound());
+             return (T) lower;
+         }
+    	 return null;
+     }
      
     /** returns mean of distribution, if implemented 
      * taking offset (if any) in account 
@@ -160,7 +216,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
       * @return  offset of distribution.
       */
      public double getOffset() {
-         return offsetInput.get();
+         return 0; // offsetInput.get();
      }
 
      

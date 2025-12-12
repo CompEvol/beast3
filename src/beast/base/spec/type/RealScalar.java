@@ -35,12 +35,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-//        				try {
-//							lower = Math.max(lower, d.inverseCumulativeProbability(0));
                         lower = Math.max(lower, (Double) d.getLower());
-//						} catch (MathException e) {
-//							// ignore
-//						}
         			}
         		}
         	}
@@ -57,12 +52,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID())) {
-//        				try {
-//        					upper = Math.min(upper, d.inverseCumulativeProbability(1));
-                            upper = Math.min(upper, (Double) d.getUpper());
-//						} catch (MathException e) {
-//							// ignore
-//						}
+                        upper = Math.min(upper, (Double) d.getUpper());
         			}
         		}
         	}

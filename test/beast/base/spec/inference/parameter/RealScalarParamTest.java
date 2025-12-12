@@ -34,14 +34,17 @@ class RealScalarParamTest {
     @Test
     void testBounds() {
         RealScalarParam param = new RealScalarParam(1.0, PositiveReal.INSTANCE);
+        param.setID("param");
 
         Normal normal = new Normal(param, new RealScalarParam(0, Real.INSTANCE), new RealScalarParam(1, PositiveReal.INSTANCE));
+        normal.setID("normal");
         assertEquals(0.0, param.getLower(), 1e-10);
     	assertEquals(Double.POSITIVE_INFINITY, param.getUpper(), 1e-10);
     
         
     	// now wrap the Normal in a TruncatedRealDistribution to specify narrower bounds
     	TruncatedRealDistribution truncated = new TruncatedRealDistribution(normal, 1.0, 2.0);
+    	truncated.setID("truncated");
     	truncated.initByName("param", param);
     	
     	assertEquals(1.0, param.getLower(), 1e-10);
