@@ -10,6 +10,7 @@ import beast.base.spec.inference.distribution.TruncatedRealDistribution;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.operator.uniform.IntervalOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class IntervalOperatorTest {
@@ -28,6 +29,94 @@ public class IntervalOperatorTest {
         // Fix seed: will hopefully ensure success of test unless something
         // goes terribly wrong.
         Randomizer.setSeed(127);
+    }
+
+
+    @Test
+    public void testRealScalarBound() {
+        try {
+            final double lower = 0.0;
+            final double upper = 3.0;
+
+            RealScalarParam<Real> parameter = new RealScalarParam<>(1.0, Real.INSTANCE);
+            // set bounds
+            Uniform uniform = new Uniform(parameter,
+                    new RealScalarParam<>(lower, Real.INSTANCE),
+                    new RealScalarParam<>(upper, Real.INSTANCE));
+
+            // check bounds
+            assertEquals(lower, parameter.getLower(), 1e-10);
+            assertEquals(upper, parameter.getUpper(), 1e-10);
+
+            State state = new State();
+            state.initByName("stateNode", parameter);
+            state.initialise();
+
+            IntervalOperator intervalOperator = new IntervalOperator();
+            intervalOperator.initByName("parameter", parameter, "weight", 1.0);
+
+            System.out.println("IntervalOperator on RealScalarParam : " +
+                    "value excludes bounds, where lower = 0.0 and upper = 3.0 ");
+            for (int i = 0; i < 400; i++) {
+                intervalOperator.proposal();
+                double value = parameter.get();
+                assertTrue(value > lower && value < upper,
+                        "IntervalOperator on RealScalarParam, value in (" +
+                                lower + ", " + upper + ") + " + value);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+
+    /**
+     * IntervalOperator's move excludes bounds
+     */
+    @Test
+    public void testRealVectorBound() {
+        try {
+
+            final double lower = 0.0;
+            final double upper = 3.0;
+
+            RealVectorParam<Real> parameter = new RealVectorParam<>(new double[]{1.0, 0.1, 2.0}, PositiveReal.INSTANCE);
+
+            //TODO
+            parameter.setLower(lower);
+	        parameter.setUpper(upper);
+
+//            Uniform uniform = new Uniform(null,
+//                    new RealScalarParam<>(0, Real.INSTANCE),
+//                    new RealScalarParam<>(3, Real.INSTANCE));
+//
+//            IID iid = new IID(parameter, uniform);
+//
+//            assertEquals(0.0, (Double) iid.getLower(), 1e-10);
+//            assertEquals(3.0, (Double) iid.getUpper(), 1e-10);
+
+            State state = new State();
+            state.initByName("stateNode", parameter);
+            state.initialise();
+
+            IntervalOperator intervalOperator = new IntervalOperator();
+            intervalOperator.initByName("parameter", parameter, "weight", 1.0);
+
+            System.out.println("IntervalOperator on RealVectorParam : " +
+                    "value excludes bounds, where lower = 0.0 and upper = 3.0 ");
+            for (int i = 0; i < 400; i++) {
+                intervalOperator.proposal();
+                for (int j = 0; j < parameter.size(); j++) {
+                    double value = parameter.get(j);
+                    assertTrue(value > lower && value < upper,
+                            "IntervalOperator on RealVectorParam, value in (" + lower + ", " +
+                                    upper + ") + " + value + " at dim " + j);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
     }
 
     @Test
