@@ -1,13 +1,19 @@
 package test.beast.evolution.operator;
 
-import java.util.Arrays;
-
 import beast.base.inference.State;
 import beast.base.inference.operator.UniformOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
+import beast.base.spec.evolution.operator.IntUniformOperatorTest;
+
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * @deprecated replaced by {@link IntUniformOperatorTest}
+ */
+@Deprecated
 public class UniformIntegerOperatorTest  {
     private final int dimension = 3;
     private int[][] count;
