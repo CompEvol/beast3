@@ -14,14 +14,16 @@ import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 import java.util.List;
 
 
-@Description("Truncates a real valued distribution to the interval [lower,upper].")
+@Description("Truncates a real valued distribution to the interval [lower,upper]. " +
+             "The base distribution itself should not define any parameters. " +
+        "All parameters should be passed via TruncatedRealDistribution.")
 public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Real>, Double> {
 
 
     final public Input<ScalarDistribution<RealScalar<Real>, Double>> distributionInput = new Input<>("distribution",
             "precision of the normal distribution, defaults to 1", Validate.REQUIRED);
-    final public Input<RealScalar<Real>> lowerInput = new Input<RealScalar<Real>>("lower", "Lower end of the truncation interval.");
-    final public Input<RealScalar<Real>> upperInput = new Input<RealScalar<Real>>("upper", "Upper end of the truncation interval.");
+    final public Input<RealScalar<Real>> lowerInput = new Input<>("lower", "Lower end of the truncation interval.");
+    final public Input<RealScalar<Real>> upperInput = new Input<>("upper", "Upper end of the truncation interval.");
 
     private ScalarDistribution<RealScalar<Real>, Double> dist;
     RealScalar<Real> lower, upper;
@@ -151,7 +153,7 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     		refresh();
     		dist = getInnerDistribution();
     	}
-        return Math.max(lower.get(), dist.getSupportUpperBound()) + getOffset();
+        return Math.min(upper.get(), dist.getSupportUpperBound()) + getOffset();
     }
 
     double getLowerCDF() {
