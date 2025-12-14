@@ -1,18 +1,20 @@
 package test.beast.evolution.speciation;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.speciation.YuleModel;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 import beast.base.inference.parameter.RealParameter;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Created by Denise on 16.11.16.
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.speciation.YuleModelTest}
  */
-public class YuleModelTest  {
+@Deprecated
+ public class YuleModelTest  {
 
 	  @Test
 	    public void testYule() throws Exception {

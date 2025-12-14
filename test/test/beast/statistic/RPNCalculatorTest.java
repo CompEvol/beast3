@@ -1,15 +1,19 @@
 package test.beast.statistic;
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.core.BEASTInterface;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
 import beast.base.parser.XMLParser;
 import beast.base.parser.XMLParserException;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.statistic.RPNCalculatorTest}
+ */
+@Deprecated
 public class RPNCalculatorTest  {
 
 	

@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.DirichletTest}
+ */
+@Deprecated
 public class DirichletTest {
     @Test
     void normalisedTest() {

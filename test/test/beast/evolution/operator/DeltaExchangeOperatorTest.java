@@ -3,19 +3,20 @@
  */
 package test.beast.evolution.operator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.State;
 import beast.base.inference.operator.DeltaExchangeOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author gereon
  *
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.DeltaExchangeOperatorTest}
  */
+@Deprecated
 public class DeltaExchangeOperatorTest extends TestOperator {
 
 	@Test

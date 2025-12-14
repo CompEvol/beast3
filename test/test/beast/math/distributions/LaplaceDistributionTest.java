@@ -1,19 +1,22 @@
 package test.beast.math.distributions;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import beast.base.inference.distribution.LaplaceDistribution;
+import beast.base.util.Randomizer;
 import org.apache.commons.math.MathException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import beast.base.inference.distribution.LaplaceDistribution;
-import beast.base.util.Randomizer;
 import test.beast.BEASTTestCase;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /*
  * @author Louis du Plessis
  *         Date: 2018/08/06
+ *
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.LaplaceTest}
  */
+@Deprecated
 public class LaplaceDistributionTest  {
 
     LaplaceDistribution laplace;

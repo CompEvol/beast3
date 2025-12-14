@@ -1,18 +1,17 @@
 package test.beast.math.distributions;
 
 
-
+import beast.base.core.BEASTInterface;
+import beast.base.inference.distribution.*;
+import beast.base.parser.XMLParser;
 import org.junit.jupiter.api.Test;
 
-import beast.base.core.BEASTInterface;
-import beast.base.inference.distribution.Exponential;
-import beast.base.inference.distribution.Gamma;
-import beast.base.inference.distribution.LogNormalDistributionModel;
-import beast.base.inference.distribution.Normal;
-import beast.base.inference.distribution.Uniform;
-import beast.base.parser.XMLParser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.MeanOfParametricDistributionTest}
+ */
+@Deprecated
 public class MeanOfParametricDistributionTest  {
 
 	@Test

@@ -1,10 +1,6 @@
 package test.beast.evolution.operator;
 
 
-import org.apache.commons.math3.stat.StatUtils;
-import org.junit.jupiter.api.Test;
-import org.xml.sax.SAXException;
-
 import beast.base.core.Function;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
@@ -16,14 +12,20 @@ import beast.base.inference.operator.kernel.BactrianDeltaExchangeOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
-import java.util.List;
-import javax.xml.parsers.ParserConfigurationException;
-
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.DeltaExchangeOperatorTest}
+ */
+@Deprecated
 public class BactrianDeltaExchangeOperatorTest extends BactrianRandomWalkOperatorTest {
 
 

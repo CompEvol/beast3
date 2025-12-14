@@ -1,14 +1,18 @@
 package test.beast.evolution.speciation;
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.speciation.BirthDeathGernhard08Model;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.parameter.RealParameter;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 import test.beast.BEASTTestCase;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.speciation.BirthDeathGernhard08ModelTest}
+ */
+@Deprecated
 public class BirthDeathGernhard08ModelTest  {
 
 

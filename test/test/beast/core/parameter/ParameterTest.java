@@ -1,17 +1,19 @@
 package test.beast.core.parameter;
 
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.parameter.RealParameter;
-
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.parameter.RealScalarParamTest}
+ * and {@link beast.base.spec.inference.parameter.RealVectorParamTest}
+ */
+@Deprecated
 public class ParameterTest  {
 
     @Test

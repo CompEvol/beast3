@@ -1,10 +1,5 @@
 package test.beast.evolution.operator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.apache.commons.math3.stat.StatUtils;
-import org.junit.jupiter.api.Test;
-
 import beast.base.core.BEASTObject;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -20,6 +15,8 @@ import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.ESS;
 import beast.base.util.Randomizer;
+import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -27,7 +24,12 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.RealRandomWalkOperatorTest}
+ */
+@Deprecated
 public class BactrianRandomWalkOperatorTest  {
 
 	@Test

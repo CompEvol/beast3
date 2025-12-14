@@ -4,6 +4,7 @@ import beast.base.core.Description;
 import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.HKY;
 import beast.base.inference.parameter.RealParameter;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -12,7 +13,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Joseph Heled
  *         Date: 7/11/2007
  *         imported by Walter Xie from BEAST 1
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.substmodel.HKYTest}
  */
+@Deprecated
 @Description("Test HKY matrix exponentiation")
 public class HKYTest  {
 

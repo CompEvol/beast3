@@ -1,20 +1,22 @@
 package test.beast.evolution.tree.coalescent;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.BeforeEach;
-
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.Coalescent;
 import beast.base.evolution.tree.coalescent.ConstantPopulation;
+import org.junit.jupiter.api.BeforeEach;
 import test.beast.BEASTTestCase;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Alexei Drummond
  * @author Walter Xie
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.CoalescentTest}
  */
+@Deprecated
 public class CoalescentTest extends BEASTTestCase {
     String[] trees = new String[]{"((A:1.0,B:1.0):1.0,C:2.0);", ""}; //more trees ?
     Alignment data;

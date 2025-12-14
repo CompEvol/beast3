@@ -1,15 +1,19 @@
 package test.beast.math.distributions;
 
 
-import org.apache.commons.math.MathException;
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.distribution.LogNormalDistributionModel;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.LogNormalTest}
+ */
+@Deprecated
 public class LogNormalDistributionModelTest  {
 
     @Test

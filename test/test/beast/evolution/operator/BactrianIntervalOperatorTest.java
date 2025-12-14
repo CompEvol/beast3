@@ -1,12 +1,5 @@
 package test.beast.evolution.operator;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
-
-import org.apache.commons.math3.stat.StatUtils;
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.MCMC;
 import beast.base.inference.State;
 import beast.base.inference.distribution.Normal;
@@ -16,7 +9,17 @@ import beast.base.inference.distribution.Uniform;
 import beast.base.inference.operator.kernel.BactrianIntervalOperator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.IntervalOperatorTest}
+ */
+@Deprecated
 public class BactrianIntervalOperatorTest extends BactrianRandomWalkOperatorTest {
 
 	@Test

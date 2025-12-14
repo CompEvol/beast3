@@ -1,12 +1,15 @@
 package test.beast.evolution.operator;
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.operator.ScaleOperator;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TreeParser;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.ScaleOperatorTest}
+ */
+@Deprecated
 public class ScaleOperatorTest  {
 	final static double EPSILON = 1e-10;
 

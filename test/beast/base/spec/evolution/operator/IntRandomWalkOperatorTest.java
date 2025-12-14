@@ -35,7 +35,7 @@ public class IntRandomWalkOperatorTest {
 	    	    int[][] count = new int[dimension][upper + 1];
 		        int [] init = new int[dimension];
 		        Arrays.fill(init, 0);
-		        IntVectorParam parameter = new IntVectorParam(init, NonNegativeInt.INSTANCE);
+		        IntVectorParam<NonNegativeInt> parameter = new IntVectorParam<>(init, NonNegativeInt.INSTANCE);
 //		        parameter.setLower(0);
 		        parameter.setUpper(upper);
 	

@@ -1,18 +1,21 @@
 package test.beast.evolution.tree.coalescent;
 
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeIntervals;
 import beast.base.evolution.tree.coalescent.BayesianSkyline;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 
 /**
  * @author Alexei Drummond
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.coalescent.BayesianSkylineTest}
  */
+@Deprecated
 public class BayesianSkylineTest  {
 
     @Test

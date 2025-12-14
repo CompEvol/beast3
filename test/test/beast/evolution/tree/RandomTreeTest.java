@@ -19,11 +19,6 @@
 
 package test.beast.evolution.tree;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.alignment.TaxonSet;
@@ -33,10 +28,17 @@ import beast.base.evolution.tree.coalescent.ConstantPopulation;
 import beast.base.evolution.tree.coalescent.RandomTree;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Tim Vaughan <tgvaughan@gmail.com>
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.tree.RandomTreeTest}
  */
+@Deprecated
 public class RandomTreeTest {
     
     public RandomTreeTest() { }

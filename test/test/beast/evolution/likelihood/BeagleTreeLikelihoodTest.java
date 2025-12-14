@@ -1,7 +1,10 @@
 package test.beast.evolution.likelihood;
 
 import beast.base.evolution.likelihood.TreeLikelihood;
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.likelihood.BeagleTreeLikelihoodTest}
+ */
+@Deprecated
 public class BeagleTreeLikelihoodTest extends TreeLikelihoodTest {
 
 	@Override

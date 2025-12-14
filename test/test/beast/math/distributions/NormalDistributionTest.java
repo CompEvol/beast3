@@ -1,16 +1,18 @@
 package test.beast.math.distributions;
 
-import org.apache.commons.math.MathException;
-
 import beast.base.inference.distribution.Normal;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * adapted from BEAST 1
  * @author Wai Lok Sibon Li
- * 
+ *
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.NormalTest}
  */
+@Deprecated
 public class NormalDistributionTest  {
     Normal norm;
 

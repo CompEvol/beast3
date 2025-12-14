@@ -1,17 +1,17 @@
 package test.beast.evolution.substmodel;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-
 import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -19,7 +19,10 @@ import java.util.stream.DoubleStream;
  * Instantaneous rate q_ij can be 0, but the transition prob p_ij(t) cannot.
  *
  * @author Walter Xie
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.substmodel.GeneralSubstitutionModelTest}
  */
+@Deprecated
 public class GeneralSubstitutionModelTest {
     GeneralSubstitutionModel geneSubstModel;
 

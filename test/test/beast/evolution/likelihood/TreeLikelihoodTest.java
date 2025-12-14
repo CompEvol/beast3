@@ -1,38 +1,28 @@
 package test.beast.evolution.likelihood;
 
 
-import org.junit.jupiter.api.Test;
-
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.datatype.UserDataType;
 import beast.base.evolution.likelihood.TreeLikelihood;
 import beast.base.evolution.sitemodel.SiteModel;
-import beast.base.evolution.substitutionmodel.BinaryCovarion;
-import beast.base.evolution.substitutionmodel.Blosum62;
-import beast.base.evolution.substitutionmodel.CPREV;
-import beast.base.evolution.substitutionmodel.Dayhoff;
-import beast.base.evolution.substitutionmodel.Frequencies;
-import beast.base.evolution.substitutionmodel.GTR;
-import beast.base.evolution.substitutionmodel.GeneralSubstitutionModel;
-import beast.base.evolution.substitutionmodel.HKY;
-import beast.base.evolution.substitutionmodel.JTT;
-import beast.base.evolution.substitutionmodel.JukesCantor;
-import beast.base.evolution.substitutionmodel.MTREV;
-import beast.base.evolution.substitutionmodel.MutationDeathModel;
-import beast.base.evolution.substitutionmodel.SubstitutionModel;
-import beast.base.evolution.substitutionmodel.WAG;
+import beast.base.evolution.substitutionmodel.*;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.parameter.RealParameter;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 import test.beast.BEASTTestCase;
 import test.beast.evolution.alignment.UncertainAlignmentTest;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This test mimics the testLikelihood.xml file from Beast 1, which compares Beast 1 results to PAUP results.
  * So, it these tests succeed, then Beast II calculates the same for these simple models as Beast 1 and PAUP.
- * *
+ *
+ *
+ * @deprecated replaced by {@link beast.base.spec.evolution.likelihood.TreeLikelihoodTest}
  */
+@Deprecated
 public class TreeLikelihoodTest  {
 
     public TreeLikelihoodTest() {

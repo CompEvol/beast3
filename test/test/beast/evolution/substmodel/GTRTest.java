@@ -5,12 +5,15 @@ import beast.base.core.Description;
 import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.GTR;
 import beast.base.inference.parameter.RealParameter;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test GTR matrix exponentiation
  *
+ * @deprecated replaced by {@link beast.base.spec.evolution.substmodel.GTRTest}
  */
+@Deprecated
 @Description("Test GTR matrix exponentiation")
 public class GTRTest  {
 

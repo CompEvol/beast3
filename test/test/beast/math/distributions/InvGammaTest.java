@@ -1,8 +1,8 @@
 package test.beast.math.distributions;
 
+import beast.base.inference.distribution.InverseGamma;
 import org.apache.commons.math.MathException;
 
-import beast.base.inference.distribution.InverseGamma;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -10,7 +10,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Joseph Heled
  *         Date: 24/04/2009
+ *
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.InverseGammaTest}
  */
+@Deprecated
 public class InvGammaTest  {
     interface TestData {
         double getShape();

@@ -1,16 +1,19 @@
 package test.beast.evolution.operator;
 
 
-
-import java.util.Arrays;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.State;
 import beast.base.inference.operator.IntRandomWalkOperator;
 import beast.base.inference.parameter.IntegerParameter;
+import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.IntRandomWalkOperatorTest}
+ */
+@Deprecated
 public class IntRandomWalkOperatorTest  {
 
     @Test
