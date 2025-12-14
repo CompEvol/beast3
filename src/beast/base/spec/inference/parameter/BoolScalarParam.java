@@ -144,7 +144,6 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     public StateNode copy() {
         try {
             @SuppressWarnings("unchecked") final BoolScalarParam copy = (BoolScalarParam) this.clone();
-            copy.set(value);
             return copy;
         } catch (Exception e) {
             e.printStackTrace();

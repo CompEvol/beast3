@@ -203,7 +203,6 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     public StateNode copy() {
         try {
             @SuppressWarnings("unchecked") final IntScalarParam copy = (IntScalarParam) this.clone();
-            copy.set(value);
             copy.setDomain(domain);
 //            copy.setBounds(getLower(), getUpper());
             return copy;
