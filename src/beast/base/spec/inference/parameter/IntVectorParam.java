@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 
 @Description("A int-valued vector with domain constraints")
-public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>, BoundedParam<Integer> { //VectorParam<D, Integer> {
+public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> { //VectorParam<D, Integer> {
 
     final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -80,23 +80,25 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
      * @param upper    upper bound
      */
     public IntVectorParam(final int[] values, D domain, int lower, int upper) {
-        setInputsNoValidation(values, domain, lower, upper);
+      valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
+      domainTypeInput.setValue(domain, this);
+      isDirty = new boolean[values.length];
 
         // always validate
         initAndValidate();
     }
 
-    // this is only used by inherited class
-    protected void setInputsNoValidation(final int[] values, D domain, int lower, int upper) {
-        // Note set value to Input which will assign value in initAndValidate()
-        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
-        domainTypeInput.setValue(domain, this);
-        isDirty = new boolean[values.length];
-
-        if (this.lower != lower || this.upper != upper)
-            // adjust bounds to the Domain range
-            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
-    }
+//    // this is only used by inherited class
+//    protected void setInputsNoValidation(final int[] values, D domain, int lower, int upper) {
+//        // Note set value to Input which will assign value in initAndValidate()
+//        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
+//        domainTypeInput.setValue(domain, this);
+//        isDirty = new boolean[values.length];
+//
+//        if (this.lower != lower || this.upper != upper)
+//            // adjust bounds to the Domain range
+//            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+//    }
 
 
     @Override
@@ -130,7 +132,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 //        setBounds(Math.max(getLower(), domain.getLower()),
 //                Math.min(getUpper(), domain.getUpper()));
 
-        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
+//        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         // validate value after domain and bounds are set
 //        for (Integer value : values) {
@@ -387,7 +389,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         copy.index = index;
         copy.values = values.clone();
         copy.setDomain(getDomain());
-        copy.setBounds(getLower(), getUpper());
+//        copy.setBounds(getLower(), getUpper());
         copy.isDirty = new boolean[values.length];
     }
 
@@ -404,7 +406,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         storedValues = source.storedValues.clone();
         System.arraycopy(source.values, 0, values, 0, values.length);
         setDomain(source.getDomain());
-        setBounds(source.getLower(), source.getUpper());
+//        setBounds(source.getLower(), source.getUpper());
         isDirty = new boolean[source.values.length];
     }
 
@@ -436,10 +438,10 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         ParameterUtils.parseParameter(node, this);
     }
 
-    @Override
-    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
-        setLower(Integer.parseInt(lower));
-        setUpper(Integer.parseInt(upper));
+//    @Override
+    public void fromXML(final String shape, final String... valuesStr) {
+//        setLower(Integer.parseInt(lower));
+//        setUpper(Integer.parseInt(upper));
         // validate shape
         try {
             int dim = Integer.parseInt(shape);

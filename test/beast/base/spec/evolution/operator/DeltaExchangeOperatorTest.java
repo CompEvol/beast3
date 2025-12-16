@@ -83,7 +83,7 @@ public class DeltaExchangeOperatorTest extends TestOperator {
         // Set up operator:
         SimplexParam param1 = new SimplexParam(new double[]{0.25, 0.25, 0.25, 0.25});
         param1.setID("param1");
-        param1.setBounds(0.0,  1.0);
+        // param1.setBounds(0.0,  1.0);
         Operator bactrianOperator = new DeltaExchangeOperator();
         // gives ESS: 18886.199729294272
         //Operator bactrianOperator = new DeltaExchangeOperator();

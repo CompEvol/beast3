@@ -34,7 +34,7 @@ public class BayesianSkylineTest  {
         int events = tree.getInternalNodeCount();
         IntSimplex<PositiveInt> groupSizes = new IntSimplexParam<>(
                 new int[]{2, 2}, PositiveInt.INSTANCE,
-                events, 1, Integer.MAX_VALUE);
+                events); // , 1, Integer.MAX_VALUE);
 
         //skyline.init(popSize, groupSize, intervals);
         skyline.initByName("popSizes", new RealVectorParam<>(new double[]{1.0,2.0}, PositiveReal.INSTANCE),

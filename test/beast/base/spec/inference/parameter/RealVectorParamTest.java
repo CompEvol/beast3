@@ -44,7 +44,7 @@ public class RealVectorParamTest {
 
         double[] x = {1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
         try {
-            RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE, 2.0, 6.0);
+            RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE); // , 2.0, 6.0);
             assertEquals(6, parameter.size());
 
             fail("Expected IllegalArgumentException not thrown");

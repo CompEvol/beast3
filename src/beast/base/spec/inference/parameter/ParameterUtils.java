@@ -60,8 +60,8 @@ public class ParameterUtils {
                 realScalarParam.fromXML(shape, valuesStr);
             } else if (param instanceof IntScalarParam<?> intScalarParam) {
                 intScalarParam.fromXML(shape, valuesStr);
-            } else if (param instanceof BoundedParam<?> boundedParam) { //TODO
-                boundedParam.fromXML(lower, upper, shape, valuesStr);
+//            } else if (param instanceof BoundedParam<?> boundedParam) { //TODO
+//                boundedParam.fromXML(lower, upper, shape, valuesStr);
             } else
                 throw new RuntimeException("Unknown parameter type : " + param.getClass().getName());
 
@@ -100,8 +100,8 @@ public class ParameterUtils {
             // scalar and vector use shape for validation, but it is compulsory for matrix.
             if (!shapeStr.isEmpty())
                 str += shapeStr + ", ";
-            if (param instanceof BoundedParam<?> boundedParam)
-                str += boundedParam.boundsToString();
+//            if (param instanceof BoundedParam<?> boundedParam)
+//                str += boundedParam.boundsToString();
             // check if nothing inside { }
             if (str.endsWith("{"))
                 str = str.substring(0, str.length() - 1);

@@ -120,7 +120,7 @@ public class BayesianSkyline extends TreeDistribution {
 System.err.println(Arrays.toString(values));                
                 // constructor always calls initAndValidate()
                 IntSimplexParam parameter = new IntSimplexParam(values, groupSizes.getDomain(),
-                        events, 1, Integer.MAX_VALUE);
+                        events); // , 1, Integer.MAX_VALUE);
                 // do not setBounds after constructor
 //                parameter.setBounds(1, Integer.MAX_VALUE);
                 if (groupSizes instanceof StateNode stateNode) {

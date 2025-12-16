@@ -1,5 +1,7 @@
 package beast.base.spec.inference.parameter;
 
+import java.util.stream.DoubleStream;
+
 import beast.base.core.Description;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
@@ -15,15 +17,19 @@ public class SimplexParam extends RealVectorParam<UnitInterval> implements Simpl
 
     public SimplexParam(final double[] values) {
         // use Domain bounds
-        this(values, UnitInterval.INSTANCE.getLower(), UnitInterval.INSTANCE.getUpper());
-    }
-
-    public SimplexParam(double[] values, double lower, double upper) {
-        setInputsNoValidation(values, UnitInterval.INSTANCE, lower, upper);
-
+        valuesInput.setValue(DoubleStream.of(values).boxed().toList(), this);
+        domainTypeInput.setValue(UnitInterval.INSTANCE, this);
+        
         // always validate
         initAndValidate();
     }
+
+//    public SimplexParam(double[] values, double lower, double upper) {
+//        setInputsNoValidation(values, UnitInterval.INSTANCE, lower, upper);
+//
+//        // always validate
+//        initAndValidate();
+//    }
 
     @Override
     public void initAndValidate() {

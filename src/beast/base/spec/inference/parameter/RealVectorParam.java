@@ -18,7 +18,7 @@ import java.util.stream.DoubleStream;
 
 
 @Description("A real-valued vector with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, BoundedParam<Double>, Scalable { //VectorParam<D, Double> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, Scalable { //VectorParam<D, Double> {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -69,8 +69,12 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     }
 
     public RealVectorParam(final double[] values, D domain) {
-        // default bounds
-        this(values, domain, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+      valuesInput.setValue(DoubleStream.of(values).boxed().toList(), this);
+      domainTypeInput.setValue(domain, this);
+      isDirty = new boolean[values.length];
+      
+      // always validate
+      initAndValidate();
     }
 
     /**
@@ -81,24 +85,24 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      * @param lower    lower bound
      * @param upper    upper bound
      */
-    public RealVectorParam(final double[] values, D domain, double lower, double upper) {
-        setInputsNoValidation(values, domain, lower, upper);
+//    public RealVectorParam(final double[] values, D domain, double lower, double upper) {
+//        setInputsNoValidation(values, domain, lower, upper);
+//
+//        // always validate
+//        initAndValidate();
+//    }
 
-        // always validate
-        initAndValidate();
-    }
-
-    // this is only used by inherited class
-    protected void setInputsNoValidation(final double[] values, D domain, double lower, double upper) {
-        // Note set value to Input which will assign value in initAndValidate()
-        valuesInput.setValue(DoubleStream.of(values).boxed().toList(), this);
-        domainTypeInput.setValue(domain, this);
-        isDirty = new boolean[values.length];
-
-        if (this.lower != lower || this.upper != upper)
-            // adjust bounds to the Domain range
-            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
-    }
+//    // this is only used by inherited class
+//    protected void setInputsNoValidation(final double[] values, D domain, double lower, double upper) {
+//        // Note set value to Input which will assign value in initAndValidate()
+//        valuesInput.setValue(DoubleStream.of(values).boxed().toList(), this);
+//        domainTypeInput.setValue(domain, this);
+//        isDirty = new boolean[values.length];
+//
+//        if (this.lower != lower || this.upper != upper)
+//            // adjust bounds to the Domain range
+//            adjustBounds(lower, upper, domain.getLower(), domain.getUpper());
+//    }
 
     @Override
     public void initAndValidate() {
@@ -130,7 +134,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 //        setBounds(Math.max(getLower(), domain.getLower()),
 //                Math.min(getUpper(), domain.getUpper()));
 
-        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
+//        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         // validate value after domain and bounds are set
 //        for (Double value : values) {
@@ -418,7 +422,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         copy.index = index;
         copy.values = values.clone();
         copy.setDomain(getDomain());
-        copy.setBounds(getLower(), getUpper());
+//        copy.setBounds(getLower(), getUpper());
         copy.isDirty = new boolean[values.length];
     }
 
@@ -435,7 +439,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         storedValues = source.storedValues.clone();
         System.arraycopy(source.values, 0, values, 0, values.length);
         setDomain(source.getDomain());
-        setBounds(source.getLower(), source.getUpper());
+//        setBounds(source.getLower(), source.getUpper());
         isDirty = new boolean[source.values.length];
     }
 
@@ -467,10 +471,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         ParameterUtils.parseParameter(node, this);
     }
 
-    @Override
-    public void fromXML(final String lower, final String upper, final String shape, final String... valuesStr) {
-        setLower(Double.parseDouble(lower));
-        setUpper(Double.parseDouble(upper));
+//    @Override
+    public void fromXML(final String shape, final String... valuesStr) {
+//        setLower(Double.parseDouble(lower));
+//        setUpper(Double.parseDouble(upper));
         // validate shape
         try {
             int dim = Integer.parseInt(shape);

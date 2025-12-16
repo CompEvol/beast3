@@ -82,7 +82,7 @@ public abstract class EmpiricalSubstitutionModel extends BasicGeneralSubstitutio
         for (int i = 0; i < states; i++) {
         	freqsInOrder[i] = freqs[order[i]];
         }
-        SimplexParam freqsRParam = new SimplexParam(freqsInOrder, 0.0, 1.0);
+        SimplexParam freqsRParam = new SimplexParam(freqsInOrder); // , 0.0, 1.0);
         Frequencies freqsParam = new Frequencies(freqsRParam);
         return freqsParam;
     }

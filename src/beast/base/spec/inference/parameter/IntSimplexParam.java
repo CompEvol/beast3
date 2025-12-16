@@ -1,5 +1,7 @@
 package beast.base.spec.inference.parameter;
 
+import java.util.stream.IntStream;
+
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeInt;
@@ -19,14 +21,11 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
 
     public IntSimplexParam(int[] values, D domain, int expectedSum) {
         // use Domain bounds
-        this(values, domain, expectedSum,domain.getLower(), domain.getUpper());
-    }
-
-    public IntSimplexParam(int[] values, D domain, int expectedSum, int lower, int upper) {
-        setInputsNoValidation(values, domain, lower, upper);
+        valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
+        domainTypeInput.setValue(domain, this);
+        isDirty = new boolean[values.length];
         sumInput.setValue(expectedSum, this);
 
-        // always validate
         initAndValidate();
     }
 

@@ -5,6 +5,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.TruncatedReal;
+import test.beast.BEASTTestCase;
 
 import org.junit.jupiter.api.Test;
 
@@ -39,8 +40,8 @@ public class RealScalarParamTest {
 		Normal normal = new Normal(param, new RealScalarParam(0, Real.INSTANCE),
 				new RealScalarParam(1, PositiveReal.INSTANCE));
 		normal.setID("normal");
-		assertEquals(0.0, param.getLower(), 1e-10);
-		assertEquals(Double.POSITIVE_INFINITY, param.getUpper(), 1e-10);
+		assertEquals(0.0, param.getLower(), BEASTTestCase.PRECISION);
+		assertEquals(Double.POSITIVE_INFINITY, param.getUpper(), BEASTTestCase.PRECISION);
 	}
 
 	@Test
@@ -58,11 +59,11 @@ public class RealScalarParamTest {
 		truncated.setID("truncated");
 		truncated.initByName("param", param);
 
-		assertEquals(1.0, truncated.getLower(), 1e-10);
-		assertEquals(2.0, truncated.getUpper(), 1e-10);
+		assertEquals(1.0, truncated.getLower(), BEASTTestCase.PRECISION);
+		assertEquals(2.0, truncated.getUpper(), BEASTTestCase.PRECISION);
 
-		assertEquals(1.0, param.getLower(), 1e-10);
-		assertEquals(2.0, param.getUpper(), 1e-10);
+		assertEquals(1.0, param.getLower(), BEASTTestCase.PRECISION);
+		assertEquals(2.0, param.getUpper(), BEASTTestCase.PRECISION);
 	}
 
 	/*
