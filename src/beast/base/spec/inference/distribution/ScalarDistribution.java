@@ -17,10 +17,7 @@ import org.apache.commons.statistics.distribution.DiscreteDistribution;
  */
 @Description("The BEAST Distribution over a scalar.")
 public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
-        extends TensorDistribution<S,T> {
-
-	public final Input<Double> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", 0.0);
-		
+        extends TensorDistribution<S,T> {		
 
     //*** abstract methods ***//
 
@@ -29,33 +26,32 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      * @param value T in Java type
      * @return  the normalised probability (density) for this distribution.
      */
-    protected abstract double calcLogP(T value);
-//    protected double calcLogP(T value) {
-//        Object dist = getApacheDistribution();
-//
-//        if (dist == null) {
-//            throw new RuntimeException("not implemented yet");
-//        }
-//
-//        final double y = ((Number) value).doubleValue() - getOffset();
-//        if (dist instanceof ContinuousDistribution cd) {
-//            return cd.density(y);
-//        } else  if (dist instanceof DiscreteDistribution dd) {
-//            return dd.probability((int) y);
-//        }
-//        return 0.0;
-//    }
+    protected double calcLogP(T value) {
+        Object dist = getApacheDistribution();
+
+        if (dist == null) {
+            throw new RuntimeException("not implemented yet");
+        }
+
+        final double y = ((Number) value).doubleValue();
+        if (dist instanceof ContinuousDistribution cd) {
+            return cd.density(y);
+        } else  if (dist instanceof DiscreteDistribution dd) {
+            return dd.probability((int) y);
+        }
+        return 0.0;
+    }
 
     @Override
     protected double calcLogP(T... value) {
         throw new IllegalArgumentException("Illegal operation !");
     }
 
-//    @Override
-//    public double calculateLogP() {
-//        logP = calcLogP(param.get());
-//        return logP;
-//    }
+    @Override
+    public double calculateLogP() {
+        logP = calcLogP(param.get());
+        return logP;
+    }
 
     /**
      * @return true if the distribution is an integer distribution
@@ -67,7 +63,6 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
 
     /**
      * Return the probability density for a particular point.
-     * NB this takes offset in account
      *
      * @param x The point at which the density should be computed.
      * @return The pdf at point x.
@@ -79,11 +74,10 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
        	 throw new RuntimeException("not implemented yet");
         }
         
-    	double y = x - getOffset();
     	if (dist instanceof ContinuousDistribution cd) {
-    		return cd.density(y);
+    		return cd.density(x);
     	} else  if (dist instanceof DiscreteDistribution dd) {
-    		return dd.probability((int) y);
+    		return dd.probability((int) x);
     	}
     	return 0.0;
     }
@@ -139,11 +133,10 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
         	 throw new RuntimeException("not implemented yet");
          }
          
-         double offset = getOffset();
          if (dist instanceof ContinuousDistribution cd) {
-             return (offset + cd.inverseCumulativeProbability(p));
+             return cd.inverseCumulativeProbability(p);
          } else if (dist instanceof DiscreteDistribution dd) {
-             return (offset + dd.inverseCumulativeProbability(p));
+             return dd.inverseCumulativeProbability(p);
          }
          return 0;
      }
@@ -161,12 +154,11 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
         	 throw new RuntimeException("not implemented yet");
          }
          
-         double offset = getOffset();
          if (dist instanceof ContinuousDistribution cd) {
-             Double lower = offset + cd.getSupportLowerBound();
+             Double lower = cd.getSupportLowerBound();
              return (T) lower;
          } else if (dist instanceof DiscreteDistribution dd) {
-             Integer lower = (int)(offset + dd.getSupportLowerBound());
+             Integer lower = dd.getSupportLowerBound();
              return (T) lower;
          }
     	 return null;
@@ -184,19 +176,17 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
         	 throw new RuntimeException("not implemented yet");
          }
          
-         double offset = getOffset();
          if (dist instanceof ContinuousDistribution cd) {
-             Double lower = offset + cd.getSupportUpperBound();
+             Double lower = cd.getSupportUpperBound();
              return (T) lower;
          } else if (dist instanceof DiscreteDistribution dd) {
-             Integer lower = (int)(offset + dd.getSupportUpperBound());
+             Integer lower =  dd.getSupportUpperBound();
              return (T) lower;
          }
     	 return null;
      }
      
     /** returns mean of distribution, if implemented 
-     * taking offset (if any) in account 
      **/
      public double getMean() {
     	 Object dist = getApacheDistribution();
@@ -206,17 +196,9 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
          }
          
     	 if (dist instanceof ContinuousDistribution cd) {
-    		 double offset = getOffset();
-    		 return offset + cd.getMean();
+    		 return cd.getMean();
     	 }
     	 throw new IllegalArgumentException("not implemented yet");
-     }
-
-     /**
-      * @return  offset of distribution.
-      */
-     public double getOffset() {
-         return 0; // offsetInput.get();
      }
 
      

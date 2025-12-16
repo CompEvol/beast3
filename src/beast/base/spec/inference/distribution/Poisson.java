@@ -53,20 +53,20 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
 
     @Override
     public double calculateLogP() {
-        int y = (int) (param.get() - getOffset());
+        int y = (int) (param.get());
         logP = dist.logProbability(y); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Integer value) {
-        int y = (int) (value - getOffset());
+        int y = (int) (value);
         return dist.logProbability(y); // scalar
     }
 
     @Override
     protected List<Integer> sample() {
-        final int x = sampler.sample() + (int) getOffset();
+        final int x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
 

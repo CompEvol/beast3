@@ -34,8 +34,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         	for (BEASTInterface o : b.getOutputs()) {
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
-        			if (arguments.contains(b.getID())) {
-                        lower = Math.max(lower, (Integer) d.getLower());
+        			if (arguments.contains(b.getID()) && b.getID() != null) {
+        				try {
+        					lower = Math.max(lower, (Integer) d.getLower());
+        				} catch (Throwable e) {
+        					// ignore
+        				}
         			}
         		}
         	}
@@ -51,8 +55,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         	for (BEASTInterface o : b.getOutputs()) {
         		if (o instanceof ScalarDistribution d) {
         			List<String> arguments = d.getArguments();
-        			if (arguments.contains(b.getID())) {
-                        upper = Math.min(upper, (Integer) d.getUpper());
+        			if (arguments.contains(b.getID()) && b.getID() != null) {
+        				try {
+	                        upper = Math.min(upper, (Integer) d.getUpper());
+	    				} catch (Throwable e) {
+	    					// ignore
+	    				}
         			}
         		}
         	}

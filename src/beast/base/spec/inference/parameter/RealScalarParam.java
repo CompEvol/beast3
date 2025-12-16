@@ -97,6 +97,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 //        initBounds(lowerValueInput, upperValueInput, domain.getLower(), domain.getUpper());
 
         if (!isValid(value)) {
+        	isValid(value);
             throw new IllegalArgumentException("Value " + value +
                     " is not valid for domain " + getDomain().getClass().getName());
         }

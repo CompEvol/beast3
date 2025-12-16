@@ -77,18 +77,18 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> impl
 
     @Override
     public double calculateLogP() {
-        logP = dist.logProbability(param.get() - (int) getOffset()); // no unboxing needed, faster
+        logP = dist.logProbability(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Integer value) {
-        return dist.logProbability(value - (int) getOffset()); // scalar
+        return dist.logProbability(value); // scalar
     }
 
     @Override
     protected List<Integer> sample() {
-        final int x = sampler.sample() + (int) getOffset();
+        final int x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
 

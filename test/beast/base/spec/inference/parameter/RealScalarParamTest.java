@@ -4,7 +4,8 @@ import beast.base.parser.XMLProducer;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
-import beast.base.spec.inference.distribution.TruncatedRealDistribution;
+import beast.base.spec.inference.distribution.TruncatedReal;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,6 +39,7 @@ public class RealScalarParamTest {
         assertEquals(0.0, param.getLower(), 1e-10);
     	assertEquals(Double.POSITIVE_INFINITY, param.getUpper(), 1e-10);
     }
+    
     @Test
     void testBounds2() {
         RealScalarParam param = new RealScalarParam(1.0, PositiveReal.INSTANCE);
@@ -48,7 +50,7 @@ public class RealScalarParamTest {
         normal.setID("normal");
 
         // now wrap the Normal in a TruncatedRealDistribution to specify narrower bounds
-        TruncatedRealDistribution truncated = new TruncatedRealDistribution(normal, 1.0, 2.0);
+        TruncatedReal truncated = new TruncatedReal(normal, 1.0, 2.0);
         truncated.setID("truncated");
         truncated.initByName("param", param);
 

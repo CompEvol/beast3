@@ -85,7 +85,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
 
     // handle offset in one place
     public double logDensity(double x) {
-        double y = x - getOffset();
+        double y = x;
         return -(alpha + 1.0) * Math.log(y) - (beta / y) + C;
     }
 
@@ -97,7 +97,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     @Override
     protected List<Double> sample() {
         final double y = sampler.sample();  // sample from Gamma
-        final double x = 1.0 / y + getOffset(); // sample from Gamma
+        final double x = 1.0 / y; // sample from Gamma
         return List.of(x);
     }
 

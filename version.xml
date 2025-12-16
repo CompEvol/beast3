@@ -179,7 +179,7 @@
 <!--   in dev   -->
                 <provider classname="beast.base.spec.inference.parameter.BoolScalarParam"/>
                 <provider classname="beast.base.spec.inference.parameter.BoolVectorParam"/>
-                <provider classname="beast.base.spec.inference.parameter.InScalarParam"/>
+                <provider classname="beast.base.spec.inference.parameter.IntScalarParam"/>
                 <provider classname="beast.base.spec.inference.parameter.IntVectorParam"/>
                 <provider classname="beast.base.spec.inference.parameter.RealScalarParam"/>
                 <provider classname="beast.base.spec.inference.parameter.RealVectorParam"/>
@@ -230,7 +230,10 @@
                 <provider classname="beast.base.spec.inference.distribution.Poisson"/>
                 <provider classname="beast.base.spec.inference.distribution.Uniform"/>
                 <provider classname="beast.base.spec.inference.distribution.IID"/>
-                <provider classname="beast.base.spec.inference.distribution.TruncatedRealDistribution"/>
+                <provider classname="beast.base.spec.inference.distribution.OffsetReal"/>
+                <provider classname="beast.base.spec.inference.distribution.OffsetInt"/>
+                <provider classname="beast.base.spec.inference.distribution.TruncatedReal"/>
+                <provider classname="beast.base.spec.inference.distribution.TruncatedInt"/>
 
 
                 <provider classname="beast.base.spec.FunctionOfTensor"/>

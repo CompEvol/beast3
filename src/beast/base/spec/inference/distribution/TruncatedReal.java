@@ -17,7 +17,7 @@ import java.util.List;
 @Description("Truncates a real valued distribution to the interval [lower,upper]. " +
              "The base distribution itself should not define any parameters. " +
         "All parameters should be passed via TruncatedRealDistribution.")
-public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Real>, Double> {
+public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
 
     final public Input<ScalarDistribution<RealScalar<Real>, Double>> distributionInput = new Input<>("distribution",
@@ -32,10 +32,10 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
      * Must provide empty constructor for construction by XML.
      * Note that this constructor DOES NOT call initAndValidate();
      */
-    public TruncatedRealDistribution() {
+    public TruncatedReal() {
     }
 
-    public TruncatedRealDistribution(
+    public TruncatedReal(
         ScalarDistribution<RealScalar<Real>, Double> dist,
         double lower,
         double upper
@@ -67,8 +67,8 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
         // Set bounds in parameter in the future (for early reject in operators)
 //        RealScalar<Real> param = paramInput.get();
 //        if (param instanceof RealScalarParam<Real> p) {
-//            p.setLower(lower.get() + getOffset());
-//            p.setUpper(upper.get() + getOffset());
+//            p.setLower(lower.get());
+//            p.setUpper(upper.get());
 //        }
     }
 
@@ -87,17 +87,6 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
             upper = new RealScalarParam<>(Real.INSTANCE.getUpper(), Real.INSTANCE);
     }
 
-     /**
-      * @return  offset of distribution.
-      */
-     @Override
-     public double getOffset() {
-         return 0.0;
-         // TODO: do we want to allow an offset in the TruncatedRealDistribution?
-         // It seems redundant, since the inner distribution itself has an offset, 
-         // but I'm not sure whether assuming offset==0 breaks things.
-         // TODO: If we allow an offset, adjust logDensity accordingly.
-     }
 
     @Override
     public double calculateLogP() {
@@ -133,6 +122,9 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
 
     // Get the Apache distribution of the inner distribution object (provides inverse CDF)
     ContinuousDistribution getInnerDistribution() {
+    	if (dist == null) {
+    		refresh();
+    	}
         return (ContinuousDistribution) dist.getApacheDistribution();
     }
 
@@ -143,7 +135,7 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     		refresh();
     		dist = getInnerDistribution();
     	}
-        return Math.max(lower.get(), dist.getSupportLowerBound()) + getOffset();
+        return Math.max(lower.get(), dist.getSupportLowerBound());
     }
 
     @Override
@@ -153,15 +145,15 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     		refresh();
     		dist = getInnerDistribution();
     	}
-        return Math.min(upper.get(), dist.getSupportUpperBound()) + getOffset();
+        return Math.min(upper.get(), dist.getSupportUpperBound());
     }
 
     double getLowerCDF() {
-        return getInnerDistribution().cumulativeProbability(lower.get() - dist.getOffset());
+        return getInnerDistribution().cumulativeProbability(lower.get());
     }
 
     double getUpperCDF() {
-        return getInnerDistribution().cumulativeProbability(upper.get() - dist.getOffset());
+        return getInnerDistribution().cumulativeProbability(upper.get());
     }
 
     double probOutOfBounds() {
@@ -180,7 +172,7 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
         double u = uDist.createSampler(rng).sample();
 
         // Transform using inverse CDF of the inner distribution
-        double x = getInnerDistribution().inverseCumulativeProbability(u) + dist.getOffset();
+        double x = getInnerDistribution().inverseCumulativeProbability(u);
 
         // Alternative implementation using rejection sampling (less efficient, but simpler logic):
         // double x = dist.sample().get(0);
@@ -207,12 +199,11 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     public double getMean() {
         refresh();
         ContinuousDistribution innerDist = getInnerDistribution();
-        double offset = dist.getOffset();
-        double cdfLower = innerDist.cumulativeProbability(lower.get() - offset) + EPS;  // avoid CDF of 0
-        double cdfUpper = innerDist.cumulativeProbability(upper.get() - offset) - EPS;  // avoid CDF of 1
+        double cdfLower = innerDist.cumulativeProbability(lower.get()) + EPS;  // avoid CDF of 0
+        double cdfUpper = innerDist.cumulativeProbability(upper.get()) - EPS;  // avoid CDF of 1
         
         // Numerical integration using Simpson's rule
-        return simpsonIntegration(innerDist, cdfLower, cdfUpper, 20_000) + offset;
+        return simpsonIntegration(innerDist, cdfLower, cdfUpper, 20_000);
     }
 
     private double simpsonIntegration(ContinuousDistribution dist, double cdfLower, double cdfUpper, int n) {
@@ -243,8 +234,7 @@ public class TruncatedRealDistribution extends ScalarDistribution<RealScalar<Rea
     }
 
     boolean isValid(double value) {
-        double y = value - getOffset();
-        return Real.INSTANCE.isValid(y) && lower.get() <= y && y <= upper.get();
+        return Real.INSTANCE.isValid(value) && lower.get() <= value && value <= upper.get();
     }
 
-} // class TruncatedRealDistribution
+} // class TruncatedReal

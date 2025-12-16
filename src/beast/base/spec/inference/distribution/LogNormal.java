@@ -83,18 +83,18 @@ public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Doub
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get() - getOffset()); // no unboxing needed, faster
+        logP = dist.logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Double value) {
-        return dist.logDensity(value - getOffset()); // scalar
+        return dist.logDensity(value); // scalar
     }
 
     @Override
     protected List<Double> sample() {
-        final double x = sampler.sample() + getOffset();
+        final double x = sampler.sample();
         return List.of(x);
     }
 
