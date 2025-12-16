@@ -21,24 +21,25 @@ public class LogNormalTest {
     public void testCalcLogP() {
         LogNormal logNormal = new LogNormal();
         logNormal.hasMeanInRealSpaceInput.setValue("true", logNormal);
-        logNormal.offsetInput.setValue("1200", logNormal);
+        // logNormal.offsetInput.setValue("1200", logNormal);
         logNormal.MParameterInput.setValue(new RealScalarParam<>(2000, Real.INSTANCE), logNormal);
         logNormal.SParameterInput.setValue(new RealScalarParam<>(0.6, PositiveReal.INSTANCE), logNormal);
         logNormal.initAndValidate();
 
         double f0 = logNormal.calcLogP(2952.6747000000014);
-        assertEquals(-7.880210654973873, f0, 1e-10);
+        assertEquals(-8.849139963207243, f0, 1e-10);
 
         logNormal.paramInput.setValue(new RealScalarParam<>(2952.6747000000014, PositiveReal.INSTANCE), logNormal);
         logNormal.initAndValidate();
-        assertEquals(-7.880210654973873, logNormal.calculateLogP(), 1e-10);
+        assertEquals(-8.849139963207243, logNormal.calculateLogP(), 1e-10);
     }
 
     @Test
     public void testCalcLogP2() throws Exception {
         // does the same as testCalcLogP(), but with by constructing object through XML
         final String xml = "<distribution spec='beast.base.spec.inference.distribution.LogNormal' " +
-                "offset='1200' meanInRealSpace='true'>\n" +
+                //"offset='1200' meanInRealSpace='true'>\n" +
+                "meanInRealSpace='true'>\n" +
                 "  <M spec='beast.base.spec.inference.parameter.RealScalarParam' " +
                 "     domain='Real' value='2000'/>\n" +
                 "  <S spec='beast.base.spec.inference.parameter.RealScalarParam' " +
@@ -48,7 +49,7 @@ public class LogNormalTest {
         LogNormal logNormal = (LogNormal) parser.parseBareFragment(xml, true);
 
         double f0 = logNormal.calcLogP(2952.6747000000014);
-        assertEquals(-7.880210654973873, f0, 1e-10);
+        assertEquals(-8.849139963207243, f0, 1e-10);
     }
 
     @Test
@@ -57,10 +58,10 @@ public class LogNormalTest {
         LogNormal logNormal = new LogNormal();
         logNormal.initByName("M", new RealScalarParam<>(2000, Real.INSTANCE),
                 "S", new RealScalarParam<>(0.6, PositiveReal.INSTANCE),
-                "meanInRealSpace", true, "offset", "1200");
+                "meanInRealSpace", true);//, "offset", "1200");
 
         double f0 = logNormal.calcLogP(2952.6747000000014);
-        assertEquals(-7.880210654973873, f0, 1e-10);
+        assertEquals(-8.849139963207243, f0, 1e-10);
     }
 
 

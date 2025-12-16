@@ -6,7 +6,7 @@ import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
-import beast.base.spec.inference.distribution.TruncatedRealDistribution;
+import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.operator.uniform.IntervalOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -128,7 +128,7 @@ public class IntervalOperatorTest {
 
         RealScalarParam<Real> param = new RealScalarParam<>(2.0, Real.INSTANCE);
         // replace param.setBounds(1.0,3.0); to this
-        TruncatedRealDistribution prior = new TruncatedRealDistribution();
+        TruncatedReal prior = new TruncatedReal();
         prior.initByName(
                 "param", param,
                 "distribution", normal,

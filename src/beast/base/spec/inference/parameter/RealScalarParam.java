@@ -19,7 +19,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
             0.0, Input.Validate.REQUIRED, Double.class);
 
     // Additional input to specify the domain type
-    public final Input<? extends Real> domainTypeInput = new Input<>("domain",
+    final public Input<? extends Real> domainTypeInput = new Input<>("domain",
             "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
                     "specifies the permissible range of values.", Real.INSTANCE);
 
@@ -113,7 +113,9 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     // Implement Scalar<D> interface methods
     @Override
     public D getDomain() {
-        if (domain == null) return (D) domainTypeInput.get(); // used before init
+        if (domain == null) {
+        	this.domain = (D) domainTypeInput.get(); // used before init
+        }
         return domain;
     }
 
