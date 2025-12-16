@@ -25,7 +25,7 @@ public class SubstitutionModelTest extends TestFramework {
     public void testSiteModelAlpha() throws Exception {
         analyse(1);
     }
-
+//TODO no prior 1/X,
     @Test
     public void testMultiSubstModel() throws Exception {
         analyse(2);

@@ -94,10 +94,10 @@
         </distribution>
 
 <!-- beast.base.inference.operator.ScaleOperator is strong typing op  -->
-        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.scale.ScaleScalarOperator'
+        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.ScaleOperator'
                   scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
 <!--        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>-->
-        <operator id="deltaExchange" spec="beast.base.spec.inference.operator.deltaexchange.RealDeltaExchangeOperator"
+        <operator id="deltaExchange" spec="beast.base.spec.inference.operator.DeltaExchangeOperator"
                   delta="0.25" weight="2" parameter="@freqs"/>
 
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
