@@ -70,7 +70,7 @@
         <distribution id='likelihood' idref="treeLikelihood"/>
 
         <operator id='kappaScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
-        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.scale.ScaleTreeOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
+        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
         <operator spec='Uniform' weight="10" tree="@tree"/>
         <operator spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="1" tree="@tree"/>

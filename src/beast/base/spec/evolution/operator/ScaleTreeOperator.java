@@ -1,9 +1,9 @@
-package beast.base.spec.evolution.operator.scale;
+package beast.base.spec.evolution.operator;
 
 import beast.base.core.Input;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.inference.operator.scale.AbstractScale;
+import beast.base.spec.inference.operator.AbstractScale;
 
 public class ScaleTreeOperator extends AbstractScale {
 

@@ -1,4 +1,4 @@
-package beast.base.spec.inference.operator.scale;
+package beast.base.spec.inference.operator;
 
 import beast.base.core.Input;
 import beast.base.inference.operator.kernel.KernelOperator;
@@ -6,9 +6,9 @@ import beast.base.inference.operator.kernel.KernelOperator;
 import java.text.DecimalFormat;
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.operator.ScaleOperator}
+ * used by {@link beast.base.spec.evolution.operator.ScaleTreeOperator}
+ * and {@link beast.base.spec.inference.operator.ScaleOperator}
  */
-@Deprecated
 public abstract class AbstractScale extends KernelOperator {
 
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor",

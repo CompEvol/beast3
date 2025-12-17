@@ -28,17 +28,14 @@ package beast.base.spec.inference.operator;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Scalable;
-import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
-import java.text.DecimalFormat;
-
 @Description("Scale operator that finds scale factor according to a Bactrian distribution (Yang & Rodriguez, 2013), "
         + "which is a mixture of two Gaussians: p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
-public class ScaleOperator extends KernelOperator {
+public class ScaleOperator extends AbstractScale {
 
     // RealScalar or RealVector
     public final Input<Scalable> parameterInput = new Input<>(
@@ -62,37 +59,9 @@ public class ScaleOperator extends KernelOperator {
                     "If not specified, it is assumed all dimensions are allowed to be scaled.");
 
 
-    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor",
-            "scaling factor: range from 0 to 1. Close to zero is very large jumps, " +
-                    "close to 1.0 is very small jumps.", 0.75);
-    final public Input<Double> scaleUpperLimit = new Input<>("upper",
-            "Upper Limit of scale factor", 1.0 - 1e-8);
-    final public Input<Double> scaleLowerLimit = new Input<>("lower",
-            "Lower limit of scale factor", 1e-8);
-
-    final public Input<Boolean> optimiseInput = new Input<>("optimise",
-            "flag to indicate that the scale factor is automatically changed in order to " +
-                    "achieve a good acceptance rate (default true)", true);
-
-    /**
-     * shadows input *
-     */
-    protected double scaleFactor;
-    protected double upper;
-    protected double lower;
-
-
     @Override
     public void initAndValidate() {
         super.initAndValidate();
-
-        if (scaleUpperLimit.get() == 1 - 1e-8) {
-            scaleUpperLimit.setValue(10.0, this);
-        }
-
-        scaleFactor = scaleFactorInput.get();
-        upper = scaleUpperLimit.get();
-        lower = scaleLowerLimit.get();
 
         final BoolVectorParam indicators = indicatorInput.get();
 
@@ -254,9 +223,6 @@ public class ScaleOperator extends KernelOperator {
         }
     }
 
-    protected double getScaler(int i, double value) {
-        return kernelDistribution.getScaler(i, value, getCoercableParameterValue());
-    }
     protected double getScaler(int i) {
         return getScaler(i, Double.NaN);
     }
@@ -272,39 +238,4 @@ public class ScaleOperator extends KernelOperator {
             setCoercableParameterValue(scaleFactor);
         }
     }
-
-    @Override
-    public double getCoercableParameterValue() {
-        return scaleFactor;
-    }
-
-    @Override
-    public void setCoercableParameterValue(final double value) {
-        scaleFactor = Math.max(Math.min(value, upper), lower);
-    }
-
-    @Override
-    public double getTargetAcceptanceProbability() {
-        return 0.3;
-    }
-
-
-    @Override
-    public String getPerformanceSuggestion() {
-        double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
-        double targetProb = getTargetAcceptanceProbability();
-
-        double ratio = prob / targetProb;
-        if (ratio > 2.0) ratio = 2.0;
-        if (ratio < 0.5) ratio = 0.5;
-
-        // new scale factor
-        double newWindowSize = getCoercableParameterValue() * ratio;
-
-        DecimalFormat formatter = new DecimalFormat("#.###");
-        if (prob < 0.10 || prob > 0.40) {
-            return "Try setting scale factor to about " + formatter.format(newWindowSize);
-        } else return "";
-    }
-
 } // class ScaleOperator

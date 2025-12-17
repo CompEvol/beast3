@@ -14,9 +14,8 @@ import beast.base.util.Randomizer;
 import java.text.DecimalFormat;
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.operator.scale.ScaleScalarOperator},
- * {@link beast.base.spec.inference.operator.scale.ScaleVectorOperator},
- * and {@link beast.base.spec.evolution.operator.scale.ScaleTreeOperator}
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.ScaleOperator},
+ * and {@link beast.base.spec.evolution.operator.ScaleTreeOperator}
  */
 @Deprecated
 @Description("Scale operator that finds scale factor according to a Bactrian distribution (Yang & Rodriguez, 2013), "

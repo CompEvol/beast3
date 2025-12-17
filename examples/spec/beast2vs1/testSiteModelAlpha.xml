@@ -166,7 +166,7 @@
         <operator id='shapeScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="1" parameter="@siteModel.alpha"/>
         <operator id='clockRateScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="1" parameter="@clockRate"/>
         <operator id='popSizeScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="3" parameter="@popSize"/>
-        <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" tree="@tree"/>
+        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.75" weight="3" tree="@tree"/>
         <operator spec='Uniform' weight="30" tree="@tree"/>
         <operator spec='SubtreeSlide' weight="15" gaussian="true" size="0.0077" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="15" tree="@tree"/>

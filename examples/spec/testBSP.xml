@@ -176,7 +176,7 @@
         <operator id='frequenciesDelta' spec='DeltaExchangeOperator' delta="0.01" weight="0.1"
                   parameter="@hky.frequencies"/>
 -->
-        <operator id='treeRootScaler' spec='beast.base.spec.evolution.operator.scale.ScaleTreeOperator'
+        <operator id='treeRootScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator'
                   scaleFactor="0.75" weight="3" tree="@tree" rootOnly='true'/>
         <operator spec='Uniform' weight="30" tree="@tree"/>
 <!--

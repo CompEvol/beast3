@@ -38,9 +38,8 @@ import beast.base.util.Randomizer;
 import java.text.DecimalFormat;
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.operator.scale.ScaleScalarOperator},
- * {@link beast.base.spec.inference.operator.scale.ScaleVectorOperator},
- * and {@link beast.base.spec.evolution.operator.scale.ScaleTreeOperator}
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.ScaleOperator},
+ * and {@link beast.base.spec.evolution.operator.ScaleTreeOperator}
  */
 @Deprecated
 @Description("Scales a parameter or a complete beast.tree (depending on which of the two is specified.")
