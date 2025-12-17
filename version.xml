@@ -194,11 +194,8 @@
                 <provider classname="beast.base.spec.inference.operator.IntRandomWalkOperator"/>
                 <provider classname="beast.base.spec.inference.operator.RealRandomWalkOperator"/>
                 <provider classname="beast.base.spec.inference.operator.SampleOffValues"/>
-                <provider classname="beast.base.spec.inference.operator.SwapOperator"/>
-
                 <provider classname="beast.base.spec.inference.operator.ScaleOperator"/>
-                <!--                <provider classname="beast.base.spec.inference.operator.scale.ScaleScalarOperator"/>-->
-                <!--                <provider classname="beast.base.spec.inference.operator.scale.ScaleVectorOperator"/>-->
+                <provider classname="beast.base.spec.inference.operator.SwapOperator"/>
 
                 <provider classname="beast.base.spec.inference.operator.uniform.IntervalOperator"/>
 <!--                <provider classname="beast.base.spec.inference.operator.uniform.IntScalarUniformOperator"/>-->
@@ -287,7 +284,7 @@
 
 
 
-                <provider classname="beast.base.spec.evolution.operator.scale.ScaleTreeOperator"/>
+                <provider classname="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableOperatorSampler"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.UpDownOperator"/>
