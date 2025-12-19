@@ -1,6 +1,5 @@
 package test.beast.evolution.operator;
 
-import beast.base.evolution.operator.ScaleOperator;
 import beast.base.evolution.operator.kernel.BactrianScaleOperator;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
@@ -76,35 +75,36 @@ public class NoPriorVsUniformTest extends BactrianRandomWalkOperatorTest {
         proposeNoPrior(parameter, scaleOperator);
     }
 
-    @Test
-    void testNoPriorBactrianScale() {
-
-        RealParameter parameter = new RealParameter(start);
-        parameter.setLower(lower);
-        parameter.setUpper(upper);
-
-        BactrianScaleOperator bactrianOperator = new BactrianScaleOperator();
-        // scaleFactor 0.75
-        bactrianOperator.initByName("weight", "1", "parameter", parameter);
-
-        System.out.println("\nBactrianScaleOperator");
-        proposeNoPrior(parameter, bactrianOperator);
-    }
-
-    @Test
-    void testNoPriorScale() {
-
-        RealParameter parameter = new RealParameter(start);
-        parameter.setLower(lower);
-        parameter.setUpper(upper);
-
-        ScaleOperator scaleOperator = new ScaleOperator();
-        // scaleFactor 0.75
-        scaleOperator.initByName("weight", "1", "parameter", parameter);
-
-        System.out.println("\nScaleOperator");
-        proposeNoPrior(parameter, scaleOperator);
-    }
+    //TODO: Scale op is symmetric in log space, how to test in log space
+//    @Test
+//    void testNoPriorBactrianScale() {
+//
+//        RealParameter parameter = new RealParameter(start);
+//        parameter.setLower(lower);
+//        parameter.setUpper(upper);
+//
+//        BactrianScaleOperator bactrianOperator = new BactrianScaleOperator();
+//        // scaleFactor 0.75
+//        bactrianOperator.initByName("weight", "1", "parameter", parameter);
+//
+//        System.out.println("\nBactrianScaleOperator");
+//        proposeNoPrior(parameter, bactrianOperator);
+//    }
+//
+//    @Test
+//    void testNoPriorScale() {
+//
+//        RealParameter parameter = new RealParameter(start);
+//        parameter.setLower(lower);
+//        parameter.setUpper(upper);
+//
+//        ScaleOperator scaleOperator = new ScaleOperator();
+//        // scaleFactor 0.75
+//        scaleOperator.initByName("weight", "1", "parameter", parameter);
+//
+//        System.out.println("\nScaleOperator");
+//        proposeNoPrior(parameter, scaleOperator);
+//    }
 
     private void proposeNoPrior(RealParameter param, Operator operator) {
         List<Double> values = new ArrayList<>();
