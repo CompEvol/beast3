@@ -141,7 +141,7 @@ public class NoPriorVsUniformTest extends BactrianRandomWalkOperatorTest {
 
     private void validateMean(double var, double ess, double mean) {
         double standardErr = Math.sqrt(var) / Math.sqrt(ess);
-        final double expectedM =  (upper - lower) / 2 + lower;
+        final double expectedM =  (upper + lower) / 2;
         final double expectedMeanLower = expectedM - 2 * standardErr;
         final double expectedMeanUpper = expectedM + 2 * standardErr;
 
