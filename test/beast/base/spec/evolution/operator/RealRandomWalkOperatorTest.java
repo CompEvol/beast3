@@ -7,17 +7,21 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.operator.RealRandomWalkOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.util.ESS;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class RealRandomWalkOperatorTest {
@@ -94,8 +98,6 @@ public class RealRandomWalkOperatorTest {
 		assertEquals(1.0, s, 5e-3);
 
 	}
-
-	
 	
 	@Test
 	public void testLogNormalDistribution() throws Exception {
@@ -170,4 +172,84 @@ public class RealRandomWalkOperatorTest {
 		assertEquals(4.31, StatUtils.percentile(v, 97.5), 1e-1);
 
 	}
+
+    @Test
+    void testUniformPrior() throws Exception {
+        final double lower = 1.0;
+        final double upper = 3.0;
+        RealScalarParam<Real> parameter = new RealScalarParam<>(1.0, Real.INSTANCE);
+        // set bounds
+        Uniform uniform = new Uniform(parameter,
+                new RealScalarParam<>(lower, Real.INSTANCE),
+                new RealScalarParam<>(upper, Real.INSTANCE));
+        // if ID is null the bounds setting will not work
+        parameter.setID("p1");
+
+        // check bounds
+        assertEquals(lower, parameter.getLower(), 1e-10);
+        assertEquals(upper, parameter.getUpper(), 1e-10);
+
+        // Set up state:
+        State state = new State();
+        state.initByName("stateNode", parameter);
+
+        // Set up operator:
+        RealRandomWalkOperator bactrianOperator = new RealRandomWalkOperator();
+// 		KernelDistribution.MirrorDistribution kdist = new KernelDistribution.MirrorDistribution();
+        KernelDistribution.Bactrian kdist = new KernelDistribution.Bactrian();
+        kdist.initAndValidate();
+        bactrianOperator.initByName("weight", "1", "scalar", parameter,
+                "kernelDistribution", kdist, "windowSize", 0.1, "optimise", true);
+
+        // Set up logger:
+        TraceReport traceReport = new TraceReport();
+        traceReport.initByName(
+                "logEvery", "10",
+                "burnin", "2000",
+                "log", parameter,
+                "silent", false
+        );
+
+        // Set up MCMC:
+        MCMC mcmc = new MCMC();
+        mcmc.initByName(
+                "chainLength", "2000000",
+                "state", state,
+                "distribution", uniform,
+                "operator", bactrianOperator,
+                "logger", traceReport
+        );
+
+        // Run MCMC:
+        mcmc.run();
+
+        List<Double> values = traceReport.getAnalysis();
+
+        double min = Collections.min(values);
+        double max = Collections.max(values);
+
+        System.out.println("min = " + min + ", max = " + max);
+
+        assertTrue(min >= lower, "Min = " + min);
+        assertTrue(max <= upper, "Max = " + max);
+
+        double[] v = values.stream().mapToDouble(Double::doubleValue).toArray();
+        double mean = StatUtils.mean(v);
+        double var = StatUtils.variance(v);
+        double ess = ESS.calcESS(values);
+        System.out.println("mean = " + mean + ", var = " +
+                var + ", ESS = " + ess + ", length = " + v.length);
+
+        double standardErr = Math.sqrt(var) / Math.sqrt(ess);
+        final double expectedM =  (upper + lower) / 2;
+        final double expectedMeanLower = expectedM - 2 * standardErr;
+        final double expectedMeanUpper = expectedM + 2 * standardErr;
+
+        System.out.println("expectedM = " + expectedM + ", expectedMeanLower = " +
+                expectedMeanLower + ", expectedMeanUpper = " + expectedMeanUpper);
+
+        assertEquals(expectedM, mean, 9e-3);
+        assertTrue(mean >= expectedM - 2 * standardErr && mean <= expectedM + 2 * standardErr,
+                "expectedM = " + expectedM + ", standardErr = " + standardErr);
+    }
 }

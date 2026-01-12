@@ -43,6 +43,8 @@ public class IntervalOperatorTest {
             Uniform uniform = new Uniform(parameter,
                     new RealScalarParam<>(lower, Real.INSTANCE),
                     new RealScalarParam<>(upper, Real.INSTANCE));
+            // if ID is null the bounds setting will not work
+            parameter.setID("p1");
 
             // check bounds
             assertEquals(lower, parameter.getLower(), 1e-10);
