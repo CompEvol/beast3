@@ -118,11 +118,8 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     public Integer inverseCumulativeProbability(double p) throws MathException {
         double lowerP = getLowerCDF();
         double upperP = getUpperCDF();
-        p = lowerP + (upperP - lowerP) * p;
-    	Integer x = super.inverseCumulativeProbability(p);
-    	x = Math.max(x, lower.get());
-    	x = Math.min(x, upper.get());
-    	return x;
+        double adjustedP = lowerP + p * (upperP - lowerP);
+        return getInnerDistribution().inverseCumulativeProbability(adjustedP);
     }
 
     public ScalarDistribution<IntScalar<Int>, Integer> getInnerDistribution() {
