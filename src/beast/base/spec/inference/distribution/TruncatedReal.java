@@ -8,7 +8,6 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.math.MathException;
-import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 
 import java.util.List;
@@ -59,17 +58,6 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         refresh();
         dist.initAndValidate();
         super.initAndValidate();
-
-//        if (offsetInput.get() != 0.0)
-//            throw new IllegalArgumentException("Non-zero offset not allowed for " + getClass().getName() + 
-//                    " distribution. Set offset in base distribution (distributionInput) instead");
-
-        // Set bounds in parameter in the future (for early reject in operators)
-//        RealScalar<Real> param = paramInput.get();
-//        if (param instanceof RealScalarParam<Real> p) {
-//            p.setLower(lower.get());
-//            p.setUpper(upper.get());
-//        }
     }
 
     /**
@@ -86,7 +74,6 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         if (upper == null)
             upper = new RealScalarParam<>(Real.INSTANCE.getUpper(), Real.INSTANCE);
     }
-
 
     @Override
     public double calculateLogP() {
@@ -113,39 +100,45 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     }
     
     @Override
-    public double inverseCumulativeProbability(double p) throws MathException {
-        double lowerP = getLowerCDF();
-        double upperP = (1-getUpperCDF());
-        p = lowerP + (1 - upperP - lowerP) * p;
-    	return super.inverseCumulativeProbability(p);
+    public double cumulativeProbability(double x) {
+        if (x < lower.get()) {
+            return 0.0;
+        } else if (x > upper.get()) {
+            return 1.0;
+        } else {
+            double lowerP = getLowerCDF();
+            double upperP = getUpperCDF();
+            double p = getInnerDistribution().cumulativeProbability(x);
+            return (p - lowerP) / (upperP - lowerP);
+        }
     }
 
-    // Get the Apache distribution of the inner distribution object (provides inverse CDF)
-    ContinuousDistribution getInnerDistribution() {
+    @Override
+    public Double inverseCumulativeProbability(double p) throws MathException {
+        if (p < 0.0 || p > 1.0) {
+            throw new MathException("Probability p must be in [0, 1]");
+        }
+        double lowerP = getLowerCDF();
+        double upperP = getUpperCDF();
+        double adjustedP = lowerP + p * (upperP - lowerP);
+        return getInnerDistribution().inverseCumulativeProbability(adjustedP);
+    }
+
+    public ScalarDistribution<RealScalar<Real>, Double> getInnerDistribution() {
     	if (dist == null) {
     		refresh();
     	}
-        return (ContinuousDistribution) dist.getApacheDistribution();
+        return dist;
     }
 
     @Override
     public Double getLower() {
-    	ContinuousDistribution dist = getInnerDistribution();
-    	if (dist == null) {
-    		refresh();
-    		dist = getInnerDistribution();
-    	}
-        return Math.max(lower.get(), dist.getSupportLowerBound());
+        return Math.max(lower.get(), getInnerDistribution().getLower());
     }
 
     @Override
     public Double getUpper() {
-    	ContinuousDistribution dist = getInnerDistribution();
-    	if (dist == null) {
-    		refresh();
-    		dist = getInnerDistribution();
-    	}
-        return Math.min(upper.get(), dist.getSupportUpperBound());
+        return Math.min(upper.get(), getInnerDistribution().getUpper());
     }
 
     double getLowerCDF() {
@@ -159,7 +152,6 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     double probOutOfBounds() {
         double probOOB = getLowerCDF() + (1-getUpperCDF());
         assert 0.0 <= probOOB && probOOB <= 1.0;
-        // System.out.println("*" + probOOB);
         return probOOB;
     }
     
@@ -172,7 +164,13 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         double u = uDist.createSampler(rng).sample();
 
         // Transform using inverse CDF of the inner distribution
-        double x = getInnerDistribution().inverseCumulativeProbability(u);
+        double x;
+        try {
+            x = getInnerDistribution().inverseCumulativeProbability(u);
+        } catch (MathException e) {
+            throw new RuntimeException("Failed to sample from truncated distribution", e);
+            // TODO use rejection sampling as fallback?
+        }
 
         // Alternative implementation using rejection sampling (less efficient, but simpler logic):
         // double x = dist.sample().get(0);
@@ -198,7 +196,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     @Override
     public double getMean() {
         refresh();
-        ContinuousDistribution innerDist = getInnerDistribution();
+        ScalarDistribution<RealScalar<Real>, Double> innerDist = getInnerDistribution();
         double cdfLower = innerDist.cumulativeProbability(lower.get()) + EPS;  // avoid CDF of 0
         double cdfUpper = innerDist.cumulativeProbability(upper.get()) - EPS;  // avoid CDF of 1
         
@@ -206,7 +204,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         return simpsonIntegration(innerDist, cdfLower, cdfUpper, 20_000);
     }
 
-    private double simpsonIntegration(ContinuousDistribution dist, double cdfLower, double cdfUpper, int n) {
+    private double simpsonIntegration(ScalarDistribution<RealScalar<Real>, Double> dist, double cdfLower, double cdfUpper, int n) {
         if (n % 2 != 0)  // Ensure even number of intervals
             n++;
         
@@ -217,7 +215,12 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         for (int i = 0; i <= n; i++) {
             // Even spacing in quantile space
             double u = cdfLower + i * stepSize;
-            double x = dist.inverseCumulativeProbability(u);
+            double x;
+            try {
+                x = dist.inverseCumulativeProbability(u);
+            } catch (MathException e) {
+                throw new RuntimeException("Failed to compute inverse CDF during mean calculation", e);
+            }
             
             // Weight for Simpson's rule
             double weight = (i == 0 || i == n) ? 1.0 : ((i % 2 == 1) ? 4.0 : 2.0);
@@ -230,7 +233,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
 
     @Override
     public Object getApacheDistribution() {
-    	return distributionInput.get().getApacheDistribution();
+    	throw new RuntimeException("Not implemented for TruncatedReal distribution");
     }
 
     boolean isValid(double value) {

@@ -91,6 +91,29 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     	return Math.log(density(x));
     }
 
+
+    public double cumulativeProbability(double x) {
+        // Attempt to get the Apache distribution
+        Object dist = getApacheDistribution();
+        if (dist == null) {
+            refresh();
+            dist = getApacheDistribution();
+        }
+
+        // If there is no Apache distribution, subclass needs to implement CDF manually
+        if (dist == null) {
+            throw new RuntimeException("not implemented yet");
+        }
+         
+        // Compute CDF based on distribution type
+        if (dist instanceof ContinuousDistribution cd) {
+            return cd.cumulativeProbability(x);
+        } else if (dist instanceof DiscreteDistribution dd) {
+            return dd.cumulativeProbability((int) x);
+        }
+        throw new RuntimeException("Unknown distribution type");
+    }
+
     /**
      * @return org.apache.commons.statistics.distribution.ContinuousDistribution or 
      *    org.apache.commons.statistics.distribution.DiscreteDistribution if available
@@ -116,12 +139,12 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      * @throws MathException if the inverse cumulative probability can not be
      *                       computed due to convergence or other numerical errors.
      */
-     public double inverseCumulativeProbability(double p) throws MathException {
-         if (p <= 0) {
-        	 return (double) getLower();
-         } else if (p >= 1) {
-        	 return (double) getUpper();
-         }
+    public T inverseCumulativeProbability(double p) throws MathException {
+        if (p <= 0) {
+        	return getLower();
+        } else if (p >= 1) {
+            return getUpper();
+        }
 
          Object dist = getApacheDistribution();
          
@@ -134,13 +157,12 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
          }
          
          if (dist instanceof ContinuousDistribution cd) {
-             return cd.inverseCumulativeProbability(p);
+             return (T) Double.valueOf(cd.inverseCumulativeProbability(p));
          } else if (dist instanceof DiscreteDistribution dd) {
-             return dd.inverseCumulativeProbability(p);
+             return (T) Integer.valueOf(dd.inverseCumulativeProbability(p));
          }
-         return 0;
+         throw new RuntimeException("Unknown distribution type");
      }
-
      
      @Override
      public T getLower() {
