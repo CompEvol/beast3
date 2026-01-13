@@ -91,10 +91,9 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
     
     @Override
-    public double inverseCumulativeProbability(double p) throws MathException {
+    public Integer inverseCumulativeProbability(double p) throws MathException {
     	return dist.inverseCumulativeProbability(p) + offset.get();
     }
-
     
     @Override
     protected List<Integer> sample() {

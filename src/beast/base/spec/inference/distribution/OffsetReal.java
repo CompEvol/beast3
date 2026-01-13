@@ -91,7 +91,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
     
     @Override
-    public double inverseCumulativeProbability(double p) throws MathException {
+    public Double inverseCumulativeProbability(double p) throws MathException {
     	return dist.inverseCumulativeProbability(p) + offset.get();
     }
 
