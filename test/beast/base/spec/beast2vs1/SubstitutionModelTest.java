@@ -25,7 +25,7 @@ public class SubstitutionModelTest extends TestFramework {
     public void testSiteModelAlpha() throws Exception {
         analyse(1);
     }
-//TODO no prior 1/X,
+
     @Test
     public void testMultiSubstModel() throws Exception {
         analyse(2);
@@ -71,7 +71,7 @@ public class SubstitutionModelTest extends TestFramework {
             case 2: // testMultiSubstModel.xml
                 addExpIntoList(expList, "posterior", -6001.92, 8.1888E-2);
                 addExpIntoList(expList, "prior", -8.24, 1.1349E-2);
-                addExpIntoList(expList, "TreeHeight.firsthalf", 0.2523, 1.2987E-4);
+                addExpIntoList(expList, "Tree.firsthalf.height", 0.2523, 1.2987E-4);
                 addExpIntoList(expList, "kappa.firsthalf", 4.8401, 1.184E-2);
                 addExpIntoList(expList, "freqParameter.firsthalf.1", 0.289, 6.1115E-4);
                 addExpIntoList(expList, "freqParameter.firsthalf.2", 0.3204, 6.8116E-4);

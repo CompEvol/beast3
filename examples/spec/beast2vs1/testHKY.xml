@@ -86,10 +86,10 @@
 <!--         <logger logEvery="1000" fileName="test.$(seed).trees">
             <log idref="tree"/>
         </logger>       -->
-        <logger logEvery="10000">
+        <logger logEvery="100000">
 	        <model idref='likelihood'/>
             <log idref="likelihood"/>
-    	    <ESS spec='beast.base.inference.util.ESS' name='log' arg="@likelihood"/>
+    	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@likelihood"/>
             <log idref='hky.kappa'/>
     	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@hky.kappa"/>
         </logger>

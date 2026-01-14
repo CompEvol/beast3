@@ -1,9 +1,11 @@
 package beast.base.spec.beast2vs1;
 
 import beagle.BeagleFlag;
+import beast.base.core.BEASTInterface;
 import beast.base.inference.Logger;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
+import beast.pkgmgmt.BEASTClassLoader;
 import test.beast.beast2vs1.trace.Expectation;
 import test.beast.beast2vs1.trace.LogAnalyser;
 
@@ -40,6 +42,9 @@ public abstract class TestFramework {
 
         long beagleFlags = BeagleFlag.PROCESSOR_CPU.getMask() | BeagleFlag.VECTOR_SSE.getMask();
         System.setProperty("beagle.preferred.flags", Long.toString(beagleFlags));
+
+        // add OneOnX for testing only
+        BEASTClassLoader.addService(BEASTInterface.class.getName(), OneOnX.class.getName(), "BEAST.base");
     }
 //    protected abstract void analyse() throws Exception;
 
