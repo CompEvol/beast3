@@ -106,21 +106,6 @@
 
     <distribution spec="CompoundDistribution" id="posterior">
         <distribution spec="CompoundDistribution" id="prior">
-<!--	
-            <distribution id="hky.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@hky.kappa">
-                <distr id="LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"
-                              spec="beast.base.inference.distribution.LogNormalDistributionModel"/>
-            </distribution>
-            <distribution id="hky.frequencies.prior" spec="beast.base.inference.distribution.Prior" x="@hky.frequencies">
-                <distr id="Uniform" lower="0.0" upper="1.0" spec="beast.base.inference.distribution.Uniform"/>
-            </distribution>
--->
-<!--            <distribution id="popSize.prior" spec="beast.base.spec.inference.distribution.IID" param="@skyline.popSize">-->
-<!--                <distr spec="beast.base.spec.inference.distribution.Uniform" param="@skyline.popSize">-->
-<!--                    <lower id="popSize.lower" spec="RealScalarParam" domain="Real" value="0.001"/>-->
-<!--                    <upper id="popSize.upper" spec="RealScalarParam" domain="Real" value="38000.0"/>-->
-<!--                </distr>-->
-<!--            </distribution>-->
 
             <distribution spec="beast.base.spec.evolution.tree.coalescent.BayesianSkyline" id='skyline'>
                 <popSizes idref="skyline.popSize"/>
@@ -155,6 +140,7 @@
         <state>
             <stateNode id="skyline.popSize" spec='beast.base.spec.inference.parameter.RealVectorParam'
                        domain="PositiveReal" dimension="5" value="380.0" lower="0.0" upper="38000.0"/>
+            <!--  Note: for group size of BSP, need to set domain="PositiveInt" -->
             <stateNode id='skyline.groupSize' spec='beast.base.spec.inference.parameter.IntSimplexParam'
                        domain="PositiveInt" dimension="5" value="1"/>
             <stateNode idref="hky.kappa"/>

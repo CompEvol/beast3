@@ -1,11 +1,11 @@
 package beast.base.spec.inference.parameter;
 
-import java.util.stream.IntStream;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.type.IntSimplex;
+
+import java.util.stream.IntStream;
 
 
 @Description("A int-valued vector whose elements sum to a given sum")
@@ -19,6 +19,7 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
         super.setDomain((D) NonNegativeInt.INSTANCE); // correct domain using setter
     }
 
+    // Note: for group size of BSP, need to set domain="PositiveInt"
     public IntSimplexParam(int[] values, D domain, int expectedSum) {
         // use Domain bounds
         valuesInput.setValue(IntStream.of(values).boxed().toList(), this);
