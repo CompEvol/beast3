@@ -19,7 +19,7 @@ import java.util.List;
 @Description("Report effective sample size of a parameter or log values from a distribution. " +
         "This uses the same criterion as Tracer and assumes 10% burn in.")
 public class ESS extends BEASTObject implements Loggable {
-    //TODO the previous code seems not to support Vector
+    // If Vector, then only compute ESS for the 1st element
     final public Input<Tensor> functionInput =
             new Input<>("arg", "value (e.g. parameter or distribution) to report ESS for", Validate.REQUIRED);
 

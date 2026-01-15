@@ -89,7 +89,8 @@
         <logger logEvery="100000">
 	        <model idref='likelihood'/>
             <log idref="likelihood"/>
-    	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@likelihood"/>
+<!--   TODO         -->
+    	    <ESS spec='beast.base.inference.util.ESS' name='log' arg="@likelihood"/>
             <log idref='hky.kappa'/>
     	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@hky.kappa"/>
         </logger>
