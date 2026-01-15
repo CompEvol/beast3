@@ -16,10 +16,10 @@ public class TreePriorTest extends TestFramework {
             "testExponentialGrowth.xml", "testYuleModel_10taxa.xml", "testBirthDeathModel_10taxa.xml",
             "testBirthDeathAsYule.xml", "testBSP1.xml", "testBSPNoClock.xml", "testEBSP.xml"};
 //TODO
-//    @Test
-//    public void testCoalescentNoClock() throws Exception {
-//        analyse(0);
-//    }
+    @Test
+    public void testCoalescentNoClock() throws Exception {
+        analyse(0);
+    }
 //
 //    @Test
 //    public void testCoalescentNoClock1() throws Exception {

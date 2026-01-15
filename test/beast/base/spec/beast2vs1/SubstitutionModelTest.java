@@ -33,7 +33,7 @@ public class SubstitutionModelTest extends TestFramework {
 
     @Test
     public void testSRD06CP12_3() throws Exception {
-        analyse(3);
+        analyse(3);//TODO not pass
     }
 
     @BeforeEach
