@@ -118,8 +118,11 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      * @return org.apache.commons.statistics.distribution.ContinuousDistribution or 
      *    org.apache.commons.statistics.distribution.DiscreteDistribution if available
      *    or null otherwise
+     *    
+     * Should only be used inside ScalarDistribution -- for external access use the
+     * rest of the ScalarDistribution methods.
      */
-    public Object getApacheDistribution() {
+    protected Object getApacheDistribution() {
     	return null;
     }
     

@@ -112,7 +112,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	if (dist == null) {
     		refresh();
     	}

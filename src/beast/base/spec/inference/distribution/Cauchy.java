@@ -84,7 +84,7 @@ public class Cauchy extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class ChiSquare

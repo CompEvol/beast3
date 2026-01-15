@@ -109,7 +109,7 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class Gamma

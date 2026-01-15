@@ -102,7 +102,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class InverseGamma

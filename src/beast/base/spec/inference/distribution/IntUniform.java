@@ -103,7 +103,7 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> impl
     }
     
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 }

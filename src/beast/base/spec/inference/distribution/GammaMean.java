@@ -85,7 +85,7 @@ public class GammaMean extends ScalarDistribution<RealScalar<PositiveReal>, Doub
 
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class Gamma

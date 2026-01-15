@@ -135,8 +135,8 @@ public class IntervalOperator extends KernelOperator {
         if (param instanceof RealScalarParam<?> rs)
             rs.set(newValue);
         else {
-            RealVectorParam<?> rv = (RealVectorParam<?>) param;
-            rv.set(index, newValue);
+            RealVectorParam<?> rv_ = (RealVectorParam<?>) param;
+            rv_.set(index, newValue);
         }
 
         //Hastings ratio

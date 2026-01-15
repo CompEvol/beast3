@@ -85,7 +85,7 @@ public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class Beta

@@ -210,7 +210,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	throw new RuntimeException("Not implemented for TruncatedInt distribution");
     }
 

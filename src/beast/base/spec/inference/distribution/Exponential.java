@@ -82,7 +82,7 @@ public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>,
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
     

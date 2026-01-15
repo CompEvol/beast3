@@ -103,7 +103,7 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
     }
     
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 }

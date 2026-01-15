@@ -136,7 +136,7 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
     }
 
     @Override
-    public Object getApacheDistribution() {
+	protected Object getApacheDistribution() {
     	return dist;
     }
 } // class Poisson
