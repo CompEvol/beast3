@@ -51,15 +51,15 @@ public class TreePriorTest extends TestFramework {
         analyse(6);
     }
 
-//    @Test
-//    public void testBSPNoClock() throws Exception {
-//        analyse(7);
-//    }
-//
-//    @Test
-//    public void testEBSP() throws Exception {
-//        analyse(8);
-//    }
+    @Test
+    public void testBSPNoClock() throws Exception {
+        analyse(7);
+    }
+//TODO
+    @Test
+    public void testEBSP() throws Exception {
+        analyse(8);
+    }
 
     @BeforeEach
     protected void setUp() throws Exception {
