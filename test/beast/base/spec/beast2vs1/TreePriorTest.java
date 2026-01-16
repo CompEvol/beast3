@@ -20,17 +20,17 @@ public class TreePriorTest extends TestFramework {
     public void testCoalescentNoClock() throws Exception {
         analyse(0);
     }
-//
-//    @Test
-//    public void testCoalescentNoClock1() throws Exception {
-//        analyse(1);
-//    }
-//
-//    @Test
-//    public void testExponentialGrowth() throws Exception {
-//        analyse(2);
-//    }
-//
+
+    @Test
+    public void testCoalescentNoClock1() throws Exception {
+        analyse(1);
+    }
+
+    @Test
+    public void testExponentialGrowth() throws Exception {
+        analyse(2);
+    }
+
 //    @Test
 //    public void testYuleModel_10taxa() throws Exception {
 //        analyse(3);
