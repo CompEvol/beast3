@@ -32,7 +32,7 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.RealScalar;
 
@@ -64,7 +64,7 @@ public class BirthDeathGernhard08Model extends YuleModel {
     final public Input<String> typeInput =
             new Input<>("type", "tree type, should be one of " + Arrays.toString(TYPES) + " (default unscaled)",
                     "unscaled", TYPES);
-    final public Input<RealScalar<? extends PositiveReal>> relativeDeathRateParameterInput =
+    final public Input<RealScalar<? extends NonNegativeReal>> relativeDeathRateParameterInput =
             new Input<>("relativeDeathRate", "relative death rate parameter, mu/lambda in birth death model (turnover parameter)", Validate.REQUIRED);
     final public Input<RealScalar<UnitInterval>> sampleProbabilityInput =
             new Input<>("sampleProbability", "sample probability, rho in birth/death model");
