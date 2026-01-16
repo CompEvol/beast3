@@ -1,17 +1,18 @@
 package test.beast.beast2vs1;
 
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import test.beast.beast2vs1.trace.Expectation;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import test.beast.beast2vs1.trace.Expectation;
-
 /**
+ * @deprecated replaced by {@link beast.base.spec.beast2vs1.TreePriorTest}
  * @author Walter Xie
  */
+@Deprecated
 public class TreePriorTest extends TestFramework {
     private final String[] XML_FILES = new String[]{"testCoalescentNoClock.xml", "testCoalescentNoClock1.xml",
             "testExponentialGrowth.xml", "testYuleModel_10taxa.xml", "testBirthDeathModel_10taxa.xml",
