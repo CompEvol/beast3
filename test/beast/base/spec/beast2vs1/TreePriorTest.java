@@ -31,20 +31,20 @@ public class TreePriorTest extends TestFramework {
         analyse(2);
     }
 
-//    @Test
-//    public void testYuleModel_10taxa() throws Exception {
-//        analyse(3);
-//    }
-//
-//    @Test
-//    public void testBirthDeathModel_10taxa() throws Exception {
-//        analyse(4);
-//    }
-//
-//    @Test
-//    public void testBirthDeathAsYule() throws Exception {
-//        analyse(5);
-//    }
+    @Test
+    public void testYuleModel_10taxa() throws Exception {
+        analyse(3);
+    }
+
+    @Test
+    public void testBirthDeathModel_10taxa() throws Exception {
+        analyse(4);
+    }
+
+    @Test
+    public void testBirthDeathAsYule() throws Exception {
+        analyse(5);
+    }
 
     @Test
     public void testBSP() throws Exception {
