@@ -145,8 +145,7 @@
 
     <logger id="screenlog" logEvery="100000" mode="autodetect">
         <distribution idref="posterior" name="log"/>
-        <!--   TODO    -->
-        <log arg="@posterior" id="ESS.0" spec="beast.base.inference.util.ESS"/>
+        <log arg="@posterior" id="ESS.0" spec="beast.base.spec.inference.util.ESS"/>
         <distribution idref="likelihood" name="log"/>
         <distribution idref="prior" name="log"/>
     </logger>
