@@ -42,22 +42,14 @@ public class RealVectorParamTest {
     @Test
     public void testInitAndValidate() {
 
-        double[] x = {1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
-        try {
-            RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE); // , 2.0, 6.0);
-            assertEquals(6, parameter.size());
-
-            fail("Expected IllegalArgumentException not thrown");
-        } catch (IllegalArgumentException ex) {
-            String message = ex.getMessage();
-            assertTrue(message.contains("not valid") & message.contains("or bounds"), ex.getMessage());
-        }
-
-        x = new double[]{-1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
+        double[] x = new double[]{-1.0, 2.0, 3.0, 2.0, 4.0, 5.5};
 
         try {
             // if using constructor, validation is in initAndValidate()
             RealVectorParam parameter = new RealVectorParam(x, PositiveReal.INSTANCE);
+            // Exception throws after the x is set
+            assertEquals(6, parameter.size());
+
             fail("Expected IllegalArgumentException not thrown");
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage();
