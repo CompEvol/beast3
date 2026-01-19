@@ -131,19 +131,19 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
 	@Override
-	public Double getLower() {
+	public Double getLowerBoundOfParameter() {
     	if (dist == null) {
     		refresh();
     	}
-		return dist.getLower() + offset.get();
+		return dist.getLowerBoundOfParameter() + offset.get();
 	}
 
 	@Override
-	public Double getUpper() {
+	public Double getUpperBoundOfParameter() {
     	if (dist == null) {
     		refresh();
     	}
-		return dist.getUpper() + offset.get();
+		return dist.getUpperBoundOfParameter() + offset.get();
 	}
 
 } // class OffsetReal

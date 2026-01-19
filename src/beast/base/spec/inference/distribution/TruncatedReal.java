@@ -132,13 +132,13 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     }
 
     @Override
-    public Double getLower() {
-        return Math.max(lower.get(), getInnerDistribution().getLower());
+    public Double getLowerBoundOfParameter() {
+        return Math.max(lower.get(), getInnerDistribution().getLowerBoundOfParameter());
     }
 
     @Override
-    public Double getUpper() {
-        return Math.min(upper.get(), getInnerDistribution().getUpper());
+    public Double getUpperBoundOfParameter() {
+        return Math.min(upper.get(), getInnerDistribution().getUpperBoundOfParameter());
     }
 
     double getLowerCDF() {

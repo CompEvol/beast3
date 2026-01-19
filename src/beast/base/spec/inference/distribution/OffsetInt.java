@@ -130,19 +130,19 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
 	@Override
-	public Integer getLower() {
+	public Integer getLowerBoundOfParameter() {
     	if (dist == null) {
     		refresh();
     	}
-		return dist.getLower() + offset.get();
+		return dist.getLowerBoundOfParameter() + offset.get();
 	}
 
 	@Override
-	public Integer getUpper() {
+	public Integer getUpperBoundOfParameter() {
     	if (dist == null) {
     		refresh();
     	}
-		return dist.getUpper() + offset.get();
+		return dist.getUpperBoundOfParameter() + offset.get();
 	}
 
 } // class OffsetInt

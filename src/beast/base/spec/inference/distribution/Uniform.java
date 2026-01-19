@@ -106,4 +106,17 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
 	protected Object getApacheDistribution() {
     	return dist;
     }
+
+	@Override
+	public Double getLower() {
+        double lower  = (lowerInput.get() != null) ? lowerInput.get().get() : 0.0;
+        return lower;
+	}
+
+	@Override
+	public Double getUpper() {
+        double upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 1.0;
+		return upper;
+	}
+    
 }

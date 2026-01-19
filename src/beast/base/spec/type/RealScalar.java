@@ -36,7 +36,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID()) && b.getID() != null) {
         				try {
-        					lower = Math.max(lower, (Double) d.getLower());
+        					lower = Math.max(lower, (Double) d.getLowerBoundOfParameter());
         				} catch (Throwable e) {
         					// ignore
         				}
@@ -57,7 +57,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID()) && b.getID() != null) {
         				try {
-        					upper = Math.min(upper, (Double) d.getUpper());
+        					upper = Math.min(upper, (Double) d.getUpperBoundOfParameter());
         				} catch (Throwable e) {
         					// ignore
         				}

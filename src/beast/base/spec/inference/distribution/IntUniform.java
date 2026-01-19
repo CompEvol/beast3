@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Description("Uniform distribution over a given interval (including lower and upper values). " +
         "An exception is thrown if any bound is set to infinity.")
-public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> implements Bounded<Integer> {
+public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> { //implements Bounded<Integer> {
 
     final public Input<IntScalar<Int>> lowerInput = new Input<>("lower",
             "lower bound on the interval, default 1.");
@@ -106,4 +106,16 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> impl
 	protected Object getApacheDistribution() {
     	return dist;
     }
+
+	@Override
+	public Integer getLowerBoundOfParameter() {
+		Integer lower  = (lowerInput.get() != null) ? lowerInput.get().get() : 1;
+        return lower;
+	}
+
+	@Override
+	public Integer getUpperBoundOfParameter() {
+		Integer upper  = (upperInput.get()  != null) ? upperInput.get().get()  : 10;
+		return upper;
+	}
 }

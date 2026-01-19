@@ -1,8 +1,8 @@
 package beast.base.spec.inference.distribution;
 
 
+
 import beast.base.core.Description;
-import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
@@ -144,9 +144,9 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      */
     public T inverseCumulativeProbability(double p) throws MathException {
         if (p <= 0) {
-        	return getLower();
+        	return getLowerBoundOfParameter();
         } else if (p >= 1) {
-            return getUpper();
+            return getUpperBoundOfParameter();
         }
 
          Object dist = getApacheDistribution();
@@ -168,7 +168,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      }
      
      @Override
-     public T getLower() {
+     public T getLowerBoundOfParameter() {
          Object dist = getApacheDistribution();
          
          if (dist == null) {
@@ -190,7 +190,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      }
      
      @Override
-     public T getUpper() {
+     public T getUpperBoundOfParameter() {
          Object dist = getApacheDistribution();
          
          if (dist == null) {

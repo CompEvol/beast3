@@ -36,7 +36,7 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID()) && b.getID() != null) {
         				try {
-        					lower = Math.max(lower, (Integer) d.getLower());
+        					lower = Math.max(lower, (Integer) d.getLowerBoundOfParameter());
         				} catch (Throwable e) {
         					// ignore
         				}
@@ -57,7 +57,7 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         			List<String> arguments = d.getArguments();
         			if (arguments.contains(b.getID()) && b.getID() != null) {
         				try {
-	                        upper = Math.min(upper, (Integer) d.getUpper());
+	                        upper = Math.min(upper, (Integer) d.getUpperBoundOfParameter());
 	    				} catch (Throwable e) {
 	    					// ignore
 	    				}

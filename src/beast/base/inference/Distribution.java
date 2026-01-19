@@ -24,10 +24,10 @@
 */
 package beast.base.inference;
 
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import beast.base.core.BEASTInterface;
@@ -35,10 +35,12 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Loggable;
+import beast.base.spec.domain.Real;
+import beast.base.spec.type.RealScalar;
 
 @Description("Probabilistic representation that can produce " +
         "a log probability for instance for running an MCMC chain.")
-public abstract class Distribution extends CalculationNode implements Loggable, Function {
+public abstract class Distribution extends CalculationNode implements Loggable, Function, RealScalar<Real> {
 
     /**
      * current and stored log probability/log likelihood/log distribution *
@@ -237,6 +239,26 @@ public abstract class Distribution extends CalculationNode implements Loggable, 
         return 0;
     }
 
+    /**
+     * RealScalar<Real> implementation
+     */
+    
+    @Override
+    public double get() {
+    	return logP;
+    }
+
+
+    /** 
+     * distributions need not be normalised,
+     * also, densities can be positive 
+     */
+	@Override
+	public Real getDomain() {
+		return Real.INSTANCE;
+	}
+
+    
     /**
      * Intended to be overridden by stochastically estimated distributions.
      * Used to disable target distribution consistency checks implemented in

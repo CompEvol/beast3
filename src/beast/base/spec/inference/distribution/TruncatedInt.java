@@ -130,13 +130,13 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
     @Override
-    public Integer getLower() {
-        return Math.max(lower.get(), getInnerDistribution().getLower());
+    public Integer getLowerBoundOfParameter() {
+        return Math.max(lower.get(), getInnerDistribution().getLowerBoundOfParameter());
     }
 
     @Override
-    public Integer getUpper() {
-        return Math.max(lower.get(), getInnerDistribution().getUpper());
+    public Integer getUpperBoundOfParameter() {
+        return Math.max(lower.get(), getInnerDistribution().getUpperBoundOfParameter());
     }
 
     double getLowerCDF() {

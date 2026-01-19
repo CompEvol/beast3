@@ -39,7 +39,8 @@ public class RealRandomWalkOperatorTest {
 //		Randomizer.setSeed(127);
 
 		// Assemble model:
-        RealScalar<Real> param = new RealScalarParam<>(0.0, Real.INSTANCE);
+		RealScalarParam<Real> param = new RealScalarParam<>(0.0, Real.INSTANCE);
+        param.setID("parameter");
         RealScalar<Real> mean = new RealScalarParam<>(1.0, Real.INSTANCE);
         RealScalar<PositiveReal> sigma = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
 		Normal prior = new Normal(param, mean, sigma);

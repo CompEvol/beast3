@@ -123,13 +123,13 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
     }
 
     @Override
-    public Double getLower() {
+    public Double getLowerBoundOfParameter() {
         // all gammas have the same bounds
         return gammas[0].getSupportLowerBound();
     }
 
     @Override
-    public Double getUpper() {
+    public Double getUpperBoundOfParameter() {
         return gammas[0].getSupportUpperBound();
     }
 }

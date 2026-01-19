@@ -63,12 +63,12 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
     }
 
     @Override
-    public Boolean getLower() {
+    public Boolean getLowerBoundOfParameter() {
         throw new IllegalStateException(getClass().getName() + " does not support lower bounds.");
     }
 
     @Override
-    public Boolean getUpper() {
+    public Boolean getUpperBoundOfParameter() {
         throw new IllegalStateException(getClass().getName() + " does not support upper bounds.");
     }
 

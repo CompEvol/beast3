@@ -74,9 +74,18 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         throw new UnsupportedOperationException("Please override this method in every child class !");
     }
 
-    public abstract T getLower();
+    
+    /**
+     * @return lower bound of the parameter this tensor distribution applies to
+     * or is sampled from
+     */
+    public abstract T getLowerBoundOfParameter();
 
-    public abstract T getUpper();
+    /**
+     * @return upper bound of the parameter this tensor distribution applies to
+     * or is sampled from
+     */
+    public abstract T getUpperBoundOfParameter();
 
 
     //*** abstract methods ***//

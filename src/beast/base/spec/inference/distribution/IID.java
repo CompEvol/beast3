@@ -89,12 +89,12 @@ public class IID<V extends Vector<?, T>,
     }
 
     @Override
-    public T getLower() {
-        return dist.getLower();
+    public T getLowerBoundOfParameter() {
+        return dist.getLowerBoundOfParameter();
     }
 
     @Override
-    public T getUpper() {
-        return dist.getUpper();
+    public T getUpperBoundOfParameter() {
+        return dist.getUpperBoundOfParameter();
     }
 }

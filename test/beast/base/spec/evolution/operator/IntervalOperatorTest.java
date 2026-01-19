@@ -129,6 +129,7 @@ public class IntervalOperatorTest {
         Normal normal = new Normal(null, mean, sigma);
 
         RealScalarParam<Real> param = new RealScalarParam<>(2.0, Real.INSTANCE);
+        param.setID("parameter");
         // replace param.setBounds(1.0,3.0); to this
         TruncatedReal prior = new TruncatedReal();
         prior.initByName(
@@ -139,8 +140,8 @@ public class IntervalOperatorTest {
         );
 
         // Test  bounds
-        assertEquals(1.0, prior.getLower(), 1e-10);
-        assertEquals(3.0, prior.getUpper(), 1e-10);
+        assertEquals(1.0, prior.getLowerBoundOfParameter(), 1e-10);
+        assertEquals(3.0, prior.getUpperBoundOfParameter(), 1e-10);
         assertEquals(1.0, param.getLower(), 1e-10);
         assertEquals(3.0, param.getUpper(), 1e-10);
 
@@ -166,6 +167,7 @@ public class IntervalOperatorTest {
 	public void testUniformDistribution() throws Exception {
 		// Set up prior:
         RealScalarParam<Real> param = new RealScalarParam<>(2.0, Real.INSTANCE);
+        param.setID("parameter");
         RealScalar<Real> lower = new RealScalarParam<>(1.0, Real.INSTANCE);
         RealScalar<Real> upper = new RealScalarParam<>(3.0, Real.INSTANCE);
         Uniform prior = new Uniform(param, lower, upper);
@@ -189,6 +191,7 @@ public class IntervalOperatorTest {
 	public void testUniformDistributionZeroLowerBound() throws Exception {
 		// Set up prior:
         RealScalarParam<Real> param = new RealScalarParam<>(1.0, Real.INSTANCE);
+        param.setID("parameter");
         RealScalar<Real> lower = new RealScalarParam<>(0.0, Real.INSTANCE);
         RealScalar<Real> upper = new RealScalarParam<>(2.0, Real.INSTANCE);
         Uniform prior = new Uniform(param, lower, upper);
@@ -211,6 +214,7 @@ public class IntervalOperatorTest {
 	public void testUniformDistributionZeroUpperBound() throws Exception {
 		// Set up prior:
         RealScalarParam<Real> param = new RealScalarParam<>(-1.0, Real.INSTANCE);
+        param.setID("parameter");
         RealScalar<Real> lower = new RealScalarParam<>(-2.0, Real.INSTANCE);
         RealScalar<Real> upper = new RealScalarParam<>(0.0, Real.INSTANCE);
         Uniform prior = new Uniform(param, lower, upper);

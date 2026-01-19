@@ -59,8 +59,8 @@ public class RealScalarParamTest {
 		truncated.setID("truncated");
 		truncated.initByName("param", param);
 
-		assertEquals(1.0, truncated.getLower(), BEASTTestCase.PRECISION);
-		assertEquals(2.0, truncated.getUpper(), BEASTTestCase.PRECISION);
+		assertEquals(1.0, truncated.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+		assertEquals(2.0, truncated.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
 
 		assertEquals(1.0, param.getLower(), BEASTTestCase.PRECISION);
 		assertEquals(2.0, param.getUpper(), BEASTTestCase.PRECISION);

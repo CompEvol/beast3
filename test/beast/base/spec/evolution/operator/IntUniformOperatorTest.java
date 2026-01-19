@@ -21,6 +21,7 @@ public class IntUniformOperatorTest {
     public void testIntScalarBound() {
         try {
             IntScalarParam<Int> parameter = new IntScalarParam<>(1, Int.INSTANCE);
+            parameter.setID("parameter");
             // set bounds
             IntUniform uniform = new IntUniform(parameter,
                     new IntScalarParam<>(0, Int.INSTANCE),

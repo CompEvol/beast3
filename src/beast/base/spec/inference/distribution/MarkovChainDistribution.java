@@ -166,12 +166,12 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
 	}
 
     @Override
-    public Double getLower() {
+    public Double getLowerBoundOfParameter() {
         throw new UnsupportedOperationException("not supported");
     }
 
     @Override
-    public Double getUpper() {
+    public Double getUpperBoundOfParameter() {
         throw new UnsupportedOperationException("not supported");
     }
 
