@@ -23,16 +23,16 @@ public class IID<V extends Vector<?, T>,
     // param in IID is vector, but distr is univariate
 
     // the param in distr is null
-    final public Input<ScalarDistribution<S, T>> distInput
+    final public Input<ScalarDistribution<?, T>> distInput
             = new Input<>("distr",
             "the base distribution for iid, e.g. normal, beta, gamma.",
             Input.Validate.REQUIRED);
 
-    protected ScalarDistribution<S, T> dist;
+    protected ScalarDistribution<?, T> dist;
 
     public IID() {}
 
-    public IID(V param, ScalarDistribution<S, T> dist) {
+    public IID(V param, ScalarDistribution<?, T> dist) {
 
         try {
             initByName("param", param, "distr", dist);
