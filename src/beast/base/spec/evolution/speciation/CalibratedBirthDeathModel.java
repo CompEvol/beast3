@@ -59,7 +59,7 @@ public class CalibratedBirthDeathModel extends SpeciesTreeDistribution {
     }
 
     // Q2R does this makes sense, or it has to be a realParameter??
-    final public Input<RealScalar<? extends PositiveReal>> birthRateInput =
+    final public Input<RealScalar<PositiveReal>> birthRateInput =
             new Input<>("birthRate", "birth rate - the rate at which new lineages are created as a result of an " +
                     "existing lineage splitting into two.", Validate.REQUIRED);
     // 0 ≤ relativeDeathRate < 1  TODO how to deal with it, if do not create a new type ?
@@ -80,7 +80,7 @@ public class CalibratedBirthDeathModel extends SpeciesTreeDistribution {
             " times and ranked topology (default 'full'). However, 'full'" +
             " is generally slow except for a few special cases, such as a single clade or two nested clades.",
             Type.OVER_ALL_TOPOS, Type.values());
-
+//TODO
     final public Input<RPNcalculator> userMarInput = new Input<>("logMarginal",
             "Use provided formula to compute the (log of) the marginal for special cases.",
             (RPNcalculator) null);

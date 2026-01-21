@@ -15,9 +15,9 @@ import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.StateNode;
-import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.util.RPNcalculator;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.type.RealScalar;
 import org.apache.commons.math.MathException;
 
@@ -58,7 +58,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
     }
 
     // Q2R does this makes sense, or it has to be a realParameter??
-    final public Input<RealScalar<? extends PositiveReal>> birthRateInput =
+    final public Input<RealScalar<PositiveReal>> birthRateInput =
             new Input<>("birthRate", "birth rate of splitting a linage into two", Validate.REQUIRED);
 
     final public Input<List<CalibrationPoint>> calibrationsInput =
@@ -69,7 +69,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
             " times and ranked topology (default 'full'). However, 'full'" +
             " is generally slow except for in a few special cases, such as a single clade or two nested clades.",
             Type.OVER_ALL_TOPOS, Type.values());
-
+//TODO
     final public Input<RPNcalculator> userMarInput = new Input<>("logMarginal",
             "Used provided correction (log of marginal) for special cases.", (RPNcalculator) null);
 
@@ -291,7 +291,8 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         // get lower  bound: max(lower bound of dist , bounds of nested clades)
         for (int k = 0; k < calCount; ++k) {
             final CalibrationPoint cal = orderedCalibrations[k];
-            final ParametricDistribution dist = cal.dist();
+            // TODO check
+            final ScalarDistribution<?, Double> dist = cal.dist();
             //final double offset = dist.getOffset();
             lowBound[k] = dist.inverseCumulativeProbability(0);
             // those are node heights

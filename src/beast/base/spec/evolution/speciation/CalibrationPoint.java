@@ -4,7 +4,8 @@ import beast.base.core.BEASTObject;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.TaxonSet;
-import beast.base.inference.distribution.ParametricDistribution;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 
 /**
 * @author Joseph Heled
@@ -15,7 +16,9 @@ public class CalibrationPoint extends BEASTObject {
     final public Input<TaxonSet> taxonsetInput = new Input<>("taxonset",
             "Set of taxa. The prior distribution is applied to their TMRCA.", Input.Validate.REQUIRED);
 
-    final public Input<ParametricDistribution> distInput = new Input<>("distr",
+    // define the type to make the dist related method calls returning double
+    // Real allows Uniform
+    final public Input<ScalarDistribution<? extends Real, Double>> distInput = new Input<>("distr",
             "Prior distribution applied to time of clade MRCA", Input.Validate.REQUIRED);
 
 //    public Input<Boolean> m_bIsMonophyleticInput = new Input<>("monophyletic",
@@ -27,7 +30,7 @@ public class CalibrationPoint extends BEASTObject {
 
     private TaxonSet t;
     private boolean forPar;
-    private ParametricDistribution pd;
+    private ScalarDistribution<? extends Real, Double> pd;
 
     public CalibrationPoint() {}
 
@@ -46,7 +49,7 @@ public class CalibrationPoint extends BEASTObject {
         return forPar;
     }
 
-    public ParametricDistribution dist() {
+    public ScalarDistribution<? extends Real, Double> dist() {
       return pd;
     }
 
