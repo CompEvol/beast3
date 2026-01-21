@@ -257,6 +257,9 @@
                 <provider classname="beast.base.spec.evolution.speciation.CalibratedYuleModel"/>
                 <provider classname="beast.base.spec.evolution.speciation.CalibrationPoint"/>
                 <provider classname="beast.base.spec.evolution.speciation.YuleModel"/>
+                <provider classname="beast.base.spec.evolution.speciation.GeneTreeForSpeciesTreeDistribution"/>
+                <provider classname="beast.base.spec.evolution.speciation.SpeciesTreePrior"/>
+                <provider classname="beast.base.spec.evolution.speciation.RandomGeneTree"/>
 
                 <provider classname="beast.base.spec.evolution.branchratemodel.RandomLocalClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.StrictClockModel"/>
