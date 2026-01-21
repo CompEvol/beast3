@@ -13,6 +13,7 @@ import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
+import beast.base.util.Randomizer;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.simple.RandomSource;
 
@@ -35,7 +36,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
 
     // TODO how to change RNG ?
     // MT is reproducible scientific RNG
-    protected static UniformRandomProvider rng = RandomSource.MT.create();
+    protected static UniformRandomProvider rng = RandomSource.MT.create(Randomizer.getSeed());
 
     // Note this is the same tensor used for the sampled values defined in the class types.
     final public Input<S> paramInput = new Input<>("param",
