@@ -1,4 +1,4 @@
-package beast.base.spec.inference.distribution;
+package beast.base.spec.evolution.operator;
 
 import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.util.Randomizer;
