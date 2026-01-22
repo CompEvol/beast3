@@ -78,12 +78,13 @@ public class RandomLocalClockModel extends Base {
 
         RealVector<PositiveReal> rates = rateParamInput.get();
         if (rates instanceof RealVectorParam<PositiveReal> ratesParam) {
-	        if (ratesParam.lowerValueInput.get() == null || ratesParam.lowerValueInput.get() < 0.0) {
-	        	ratesParam.setLower(0.0);
-	        }
-	        if (ratesParam.upperValueInput.get() == null || ratesParam.upperValueInput.get() < 0.0) {
-	        	ratesParam.setUpper(Double.MAX_VALUE);
-	        }
+            // setBounds are deprecated, and PositiveReal provides this domain range
+//	        if (ratesParam.lowerValueInput.get() == null || ratesParam.lowerValueInput.get() < 0.0) {
+//	        	ratesParam.setLower(0.0);
+//	        }
+//	        if (ratesParam.upperValueInput.get() == null || ratesParam.upperValueInput.get() < 0.0) {
+//	        	ratesParam.setUpper(Double.MAX_VALUE);
+//	        }
 	        if (ratesParam.size() != rateSize) {
 	        	Log.warning("RandomLocalClockModel::Setting dimension of rates to " + rateSize);
 	        	ratesParam.setDimension(rateSize);
