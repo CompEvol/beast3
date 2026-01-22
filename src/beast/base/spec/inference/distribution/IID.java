@@ -47,9 +47,10 @@ public class IID<V extends Vector<?, T>,
         dist = distInput.get();
         // param
         super.initAndValidate();
-        if (param == null || dimension() <= 1)
+        if (param == null)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
-
+        // Note: the param dim can be changed after this init,
+        // for example, RandomLocalClockModel will reset rates dimension given tree during model init.
     }
 
     // when param is vector, dist is univariate, then apply dist to each dim.
@@ -65,8 +66,10 @@ public class IID<V extends Vector<?, T>,
     }
 
     private double calcLogP(List<T> values) {
-        if (values == null || values.size() <= 1)
+        if (values == null)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
+        if (values.size() != dimension())
+            throw new IllegalArgumentException("Values dimension != parameter dimension !");
         double logP = 0.0;
         for (T t : values) {
             logP += dist.calcLogP(t);
