@@ -411,6 +411,28 @@ public class OperatorSchedule extends BEASTObject {
      * @return change of value of a parameter for MCMC chain optimisation
      */
     public double calcDelta(final Operator operator, final double logAlpha) {
+    	/**
+		* Robbins-Monro Stochastic Approximation
+		* It treats the MH acceptance probability of the 
+		* last sample as a "noisy observation" of the sampler's 
+		* performance and uses it to update the step size   
+		* (scale $\sigma$) of the operator.
+		
+		*   If the last sample had a very high $\alpha$ (accepted easily), the 
+		*   step size was likely too small (inefficient). If $\alpha$ was very low (rejected), 
+		*   the step size was too large.
+		*   **The Optimization:**
+		*   \log(\sigma_{n+1}) = \log(\sigma_n) + \gamma_n (\alpha_n - \alpha_{target})
+		*   $\alpha_n$: The MH acceptance probability of the **last sample**.
+		*   $\alpha_{target}$: The desired goal (e.g., $0.234$ for Metropolis or $0.8$ for HMC).
+		*   $\gamma_n$: A "gain" factor that decreases over time to ensure convergence.
+		*   
+		*   More details in Andrieu, C., & Thoms, J. (2008). "A tutorial on adaptive MCMC." Statistics and Computing
+		*   https://www2.stat.duke.edu/~sschmid/Courses/Stat376/Papers/AdaptiveMC/AndrieuTutorial2008.pdf
+    	*/
+    	
+    	
+    	
         // do no optimisation for the first N optimisable operations
         if (autoOptimizeDelayCount < autoOptimizeDelay || !autoOptimise) {
             autoOptimizeDelayCount++;
