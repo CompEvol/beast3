@@ -1,11 +1,6 @@
 package beast.base.spec.evolution.branchratemodel;
 
 
-
-import java.util.Arrays;
-
-import org.apache.commons.math.MathException;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -14,10 +9,11 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
 import beast.base.inference.StateNode;
-import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
@@ -25,6 +21,9 @@ import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+
+import java.util.Arrays;
 
 /**
  * @author Alexei Drummond
@@ -36,13 +35,13 @@ import beast.base.util.Randomizer;
                 "  Dating with Confidence. PLoS Biol 4(5): e88", DOI = "10.1371/journal.pbio.0040088",
         year = 2006, firstAuthorSurname = "drummond")
 public class UCRelaxedClockModel extends Base {
-    final public Input<ParametricDistribution> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
+    final public Input<ScalarDistribution<?, Double>> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
     final public Input<IntVector<NonNegativeInt>> categoryInput = new Input<>("rateCategories", "the rate categories associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.REQUIRED);
     final public Input<Integer> numberOfDiscreteRates = new Input<>("numberOfDiscreteRates", "the number of discrete rates to approximate the rate distribution by. "
     		+ "With category parameterisation, a value <= 0 will cause the number of categories to be set equal to the number of branches in the tree. "
     		+ "With quantile parameterisation, a value <= 1 will calculate rates for every quantile, a value > 1 will approximate the distribution piecewise linearly with specified number of rates. "
     		+ "(default = -1)", -1);
-    final public Input<RealVector<PositiveReal>> quantileInput = new Input<>("rateQuantiles", "the rate quantiles associated with nodes in the tree for sampling of individual rates among branches.");
+    final public Input<RealVector<UnitInterval>> quantileInput = new Input<>("rateQuantiles", "the rate quantiles associated with nodes in the tree for sampling of individual rates among branches.");
     final public Input<RealVector<PositiveReal>> rateInput = new Input<>("rates", "the rates associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.XOR, categoryInput);
     final public Input<Tree> treeInput = new Input<>("tree", "the tree this relaxed clock is associated with.", Input.Validate.REQUIRED);
     final public Input<Boolean> normalizeInput = new Input<>("normalize", "Whether to normalize the average rate (default false).", false);
@@ -57,13 +56,13 @@ public class UCRelaxedClockModel extends Base {
     RealVector<PositiveReal> rateParameter; //when mode=rates
     IntVector<NonNegativeInt> categories; //when mode=categories
     public IntVector<NonNegativeInt> getCategories() {return categories;}
-    RealVector<PositiveReal> quantiles; // when mode=quantiles
+    RealVector<UnitInterval> quantiles; // when mode=quantiles
 
     // if using categories, then it is set to be true; otherwise, it is set to be false.
     //boolean usingcategories;
 
-    ParametricDistribution distribution; //the distribution of the rates
-    public ParametricDistribution getDistribution() {return distribution;}
+    ScalarDistribution<?, Double> distribution; //the distribution of the rates
+    public ScalarDistribution<?, Double> getDistribution() {return distribution;}
 
     private RealScalar<PositiveReal> meanRate;
     public RealScalar<PositiveReal> getMeanRate() {return meanRate;}
@@ -130,16 +129,16 @@ public class UCRelaxedClockModel extends Base {
         //initialize rates in three modes
         switch (mode) {
             case quantiles: {
-            	if (quantiles instanceof RealVectorParam<PositiveReal> quantilesParam) { 
+            	if (quantiles instanceof RealVectorParam<UnitInterval> quantilesParam) {
             		quantilesParam.setDimension(branchCount);
 	                double[] initialQuantiles = new double[branchCount];
 	                for (int i = 0; i < branchCount; i++) {
 	                    initialQuantiles[i] = Randomizer.nextDouble();
 	                }
-	                RealVectorParam<PositiveReal>  other = new RealVectorParam<>(initialQuantiles, PositiveReal.INSTANCE);
+	                RealVectorParam<UnitInterval>  other = new RealVectorParam<>(initialQuantiles, UnitInterval.INSTANCE);
 	                quantilesParam.assignFromWithoutID(other);
-	                quantilesParam.setLower(0.0);
-	                quantilesParam.setUpper(1.0);
+//	                quantilesParam.setLower(0.0); // deprecated, use UnitInterval instead
+//	                quantilesParam.setUpper(1.0);
             	}
                 if (numberOfDiscreteRates.get() > 1) {
                     rates = new double[LATTICE_SIZE_FOR_DISCRETIZED_RATES];
@@ -160,6 +159,7 @@ public class UCRelaxedClockModel extends Base {
 	                // set initial values of rate categories
 	                IntVectorParam<NonNegativeInt> other = new IntVectorParam<>(initialCategories, NonNegativeInt.INSTANCE);
 	                categoriesParam.assignFromWithoutID(other);
+                    //TODO use prior to set bounds
 	                categoriesParam.setLower(0);
 	                categoriesParam.setUpper(LATTICE_SIZE_FOR_DISCRETIZED_RATES - 1);
             	}
@@ -173,19 +173,25 @@ public class UCRelaxedClockModel extends Base {
 	                if (rateParam.size() != branchCount) {
 	                	rateParam.setDimension(branchCount);
 	                    //randomly draw rates from the distribution
-	                    Double[][] initialRates0 = null;
-						try {
-							initialRates0 = distribution.sample(branchCount);
-						} catch (MathException e) {
-							e.printStackTrace();
-						}
+//	                    Double[][] initialRates0 = null;
+//						try {
+//							initialRates0 = distribution.sample(branchCount);
+//						} catch (MathException e) {
+//							e.printStackTrace();
+//						}
 	                    double [] initialRates = new double[branchCount];
 	                    for (int i = 0; i < branchCount; i++) {
-	                    	initialRates[i] = initialRates0[i][0];
+                            // code is copied from ParametricDistribution, which is deprecated
+                            final double p = Randomizer.nextDouble();
+                            try {
+                                initialRates[i] = distribution.inverseCumulativeProbability(p);
+                            } catch (MathException e) {
+							    e.printStackTrace();
+						    }
 	                    }
 		                RealVectorParam<PositiveReal>  other = new RealVectorParam<>(initialRates, PositiveReal.INSTANCE);
 	                    rateParam.assignFromWithoutID(other);
-	                    rateParam.setLower(0.0);
+//	                    rateParam.setLower(0.0);// deprecated, use PositiveReal instead
 	                }
                 }
             	if (rateParameter.size() != branchCount) {
@@ -376,7 +382,8 @@ public class UCRelaxedClockModel extends Base {
 //            return true;
 //        }
         // rateDistInput cannot be dirty?!?
-        if (rateDistInput.get().isDirtyCalculation()) {
+        // TODO Deprecated
+        if (rateDistInput.get().somethingIsDirty() || rateDistInput.get().isDirtyCalculation()) {
             recompute = true;
             return true;
         }
@@ -392,7 +399,7 @@ public class UCRelaxedClockModel extends Base {
         }
 
         if (quantiles != null) {
-        	RealVector<PositiveReal> q = quantileInput.get();
+        	RealVector<UnitInterval> q = quantileInput.get();
         	if (q instanceof StateNode s && s.somethingIsDirty()) {
                 return true;
         	}
