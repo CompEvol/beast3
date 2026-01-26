@@ -4,12 +4,11 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
+import org.apache.commons.statistics.distribution.TruncatedNormalDistribution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-import org.apache.commons.statistics.distribution.TruncatedNormalDistribution;
 
 /**
  * Unit tests for TruncatedRealDistribution
@@ -20,6 +19,49 @@ public class TruncatedRealDistributionTest {
     public void setUp() {
         Randomizer.setSeed(42);
     }
+
+    @Test
+    public void testTruncatedBeta() {
+        System.out.println("Testing truncated Beta density");
+
+        // Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double>
+        Beta beta = new Beta();
+        beta.initByName(
+                "alpha", new RealScalarParam<>(1.0, PositiveReal.INSTANCE),
+                "beta", new RealScalarParam<>(1.0, PositiveReal.INSTANCE)
+        );
+
+        assertEquals(1.0, beta.density(0.6), 1e-10);
+
+        // Truncate to [0, 2]
+        TruncatedReal truncNorm = new TruncatedReal();
+        truncNorm.initByName(
+                "distribution", beta,
+                "lower", new RealScalarParam<>(0.5, Real.INSTANCE),
+                "upper", new RealScalarParam<>(1.0, Real.INSTANCE)
+        );
+
+        // For Beta(1,1) (i.e. Uniform(0,1)) truncated to [0.5,1.0],
+        // the density is renormalized on that interval.
+        assertEquals(2.0, truncNorm.density(0.6), 1e-10);
+        assertEquals(2.0, truncNorm.density(0.8), 1e-10);
+
+        // Test that density is outside bounds
+        assertEquals(0, truncNorm.density(0.1), 1e-10);
+        assertEquals(0, truncNorm.density(-1.0), 1e-10);
+        assertEquals(0, truncNorm.density(2.6), 1e-10);
+
+        // Test that density integrates approximately to 1 (numerical check)
+        double sum = 0.0;
+        int n = 1_000;
+        double step = 2.0 / n;
+        for (int i = 0; i < n; i++) {
+            double x = i * step + step / 2;
+            sum += truncNorm.density(x) * step;
+        }
+        assertEquals(1.0, sum, 0.01, "Density should integrate to approximately 1");
+    }
+
 
     @Test
     public void testTruncatedNormalDensity() {
