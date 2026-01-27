@@ -1,0 +1,115 @@
+<beast version='2.0'
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.tree.coalescent:beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
+
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="A">
+            A
+        </sequence>
+        <sequence taxon="B">
+            A
+        </sequence>
+        <sequence taxon="C">
+            A
+        </sequence>
+        <sequence taxon="D">
+            A
+        </sequence>
+    </data>
+
+   <tree spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+        <trait spec='beast.base.evolution.tree.TraitSet' traitname='date-backward' units='day'
+               value='
+		A  = 5000,
+		B  = 5000,
+		C  = 5000,
+		D  = 19999'>
+			<taxa spec='beast.base.evolution.alignment.TaxonSet' alignment='@alignment'/>
+        </trait>
+		<taxa idref='alignment'/>
+    </tree>
+
+    <parameter id="popSize" value="10000" spec="RealScalarParam" domain="PositiveReal"/>
+
+    <run spec="MCMC" id="mcmc" chainLength="10000000"> <!--autoOptimize="true"-->
+        <state>
+            <stateNode idref='tree'/>
+        </state>
+
+        <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="coalescent" spec="Coalescent">
+                <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
+                     <tree idref="tree"/>
+                </treeIntervals>
+                <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation" id='ConstantPopulation'>
+                    <popSize idref="popSize"/>
+                </populationModel>
+            </distribution>
+
+            <distribution id="tipDateA" monophyletic="false" spec="beast.base.spec.evolution.tree.MRCAPrior" tipsonly="true" tree="@tree">
+                <taxonset id="TaxonSetA" spec="TaxonSet">
+                    <taxon id="A" spec="Taxon"/>
+                </taxonset>
+                <distr id="Uniform0" spec="beast.base.spec.inference.distribution.Uniform">
+                    <lower id="Uniform0.lower" spec="RealScalarParam" domain="Real" value="4999"/>
+                    <upper id="Uniform0.upper" spec="RealScalarParam" domain="Real" value="5001"/>
+                </distr>
+            </distribution>
+
+            <distribution id="tipDateB" monophyletic="false" spec="beast.base.spec.evolution.tree.MRCAPrior" tipsonly="true" tree="@tree">
+                <taxonset id="TaxonSetB" spec="TaxonSet">
+                    <taxon id="B" spec="Taxon"/>
+                </taxonset>
+                <distr id="Normal0" spec="beast.base.spec.inference.distribution.Normal">
+                    <mean id="Normal0.mean" spec="RealScalarParam" domain="Real" value="5000"/>
+                    <sigma id="Normal0.sigma" spec="RealScalarParam" domain="PositiveReal" value="1"/>
+                </distr>
+            </distribution>
+
+            <distribution id="rootHeight" monophyletic="false" spec="beast.base.spec.evolution.tree.MRCAPrior" tipsonly="false" tree="@tree">
+                <taxonset id="TaxonSetAll" spec="TaxonSet" alignment="@alignment"/>
+                <distr id="Normal1" spec="beast.base.spec.inference.distribution.Normal">
+                    <mean id="Normal1.mean" spec="RealScalarParam" domain="Real" value="20000"/>
+                    <sigma id="Normal1.sigma" spec="RealScalarParam" domain="PositiveReal" value="1"/>
+                </distr>
+            </distribution>
+
+            <!--<distribution id="tipDateD" monophyletic="false" spec="beast.base.evolution.tree.MRCAPrior" tipsonly="true" tree="@tree">-->
+                <!--<taxonset id="TaxonSetD" spec="TaxonSet">-->
+                    <!--<taxon id="D" spec="Taxon"/>-->
+                <!--</taxonset>-->
+            <!--</distribution>-->
+        </distribution>
+
+        <operator spec='SubtreeSlide' weight="15" gaussian="true" size="14000" tree="@tree"/>
+        <operator id="TipDatesRandomWalkerA" windowSize="1" spec="TipDatesRandomWalker" taxonset="@TaxonSetA" tree="@tree" weight="1.0"/>
+        <operator id="TipDatesRandomWalkerB" windowSize="1" spec="TipDatesRandomWalker" taxonset="@TaxonSetB" tree="@tree" weight="1.0"/>
+
+        <logger logEvery="1000" fileName="test.$(seed).log">
+   	        <model idref='posterior'/>
+            <log idref="posterior"/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
+            <log idref="coalescent"/>
+            <log idref="popSize"/>
+            <log idref='tipDateA'/>
+			<log idref='tipDateB'/>
+            <log idref='rootHeight'/>
+        </logger>
+<!--        <logger logEvery="100" fileName="test.$(seed).trees">
+            <log idref="tree"/>
+        </logger>  -->
+        <logger logEvery="10000">
+	        <model idref='posterior'/>
+            <log idref="posterior"/>
+            <log idref="coalescent"/>
+            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
+            <log idref='rootHeight'/>
+            <log idref="popSize"/>
+        </logger>
+    </run>
+
+</beast>
