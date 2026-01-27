@@ -34,7 +34,7 @@ public class TipTimeTest extends TestFramework {
     public void testCoalescentTipDatesSampling() throws Exception {
         analyse(3);
     }
-    //TODO
+
     @Test
     public void testStrictClockTipDatesSampling() throws Exception {
         analyse(4);
