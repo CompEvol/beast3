@@ -21,7 +21,7 @@
         <sequence taxon="J">A</sequence>
     </data>
 
-    <input spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+    <input spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma' allowSampledAncestors='false' isUltrametric='true'>
         <taxa idref='alignment'/>
     </input>
 

@@ -29,6 +29,18 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
     final public Input<String> nodeTypeInput = new Input<>("nodetype",
             "type of the nodes in the beast.tree", Node.class.getName());
 
+    public Input<Boolean> allowSampledAncestorsInput = new Input<>(
+        "allowSampledAncestors",
+        "Specifies whether this tree can have sampled ancestor nodes",
+        false
+    );
+
+    public Input<Boolean> isUltrametricInput = new Input<>(
+            "isUltrametric",
+            "specifies whether this tree is ultrametric or not",
+            false
+    );
+
     final public Input<Boolean> adjustTreeNodeHeightsInput = new Input<>("adjustTreeNodeHeights", "if true (default), then tree node heights are adjusted to avoid non-positive branch lengths. If you want to maintain zero branch lengths then you must set this to false.", true, Input.Validate.OPTIONAL);
 
     /**
@@ -1076,4 +1088,19 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
 		// TODO Auto-generated method stub
 		this.nodeCount = i;
 	}
+
+    /**
+     * @return true if tree is declared as ultrametric (all tips at same time)
+     */
+    public Boolean isUltrametric() {
+        return isUltrametricInput.get();
+    }
+
+    /**
+     * @return true if tree is declared as allowing sampled ancestor nodes
+     */
+    public boolean allowSampledAncestors() {
+        return allowSampledAncestorsInput.get();
+    }
+
 } // class Tree
