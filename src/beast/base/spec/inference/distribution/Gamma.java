@@ -19,9 +19,9 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
     final public Input<RealScalar<PositiveReal>> thetaInput = new Input<>("theta",
-            "scale parameter for Shape–Scale form, which equals to 1/lambda, defaults to 1.");
+            "scale parameter for Shape–Scale form, which equals to 1/rate, defaults to 1.");
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("lambda",
-            "rate parameter for Shape–Rate form, which equals to 1/theta, defaults to 1.", Input.Validate.XOR, thetaInput);
+            "rate parameter for Shape–Rate form, which equals to 1/scale, defaults to 1.", Input.Validate.XOR, thetaInput);
 
     private GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
     private ContinuousDistribution.Sampler sampler;
