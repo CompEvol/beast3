@@ -11,7 +11,7 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 import java.util.List;
 
 
-@Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
+@Description("Gamma distribution. for x>0  g(x;alpha,theta) = 1/{Gamma(alpha) theta^alpha} x^{alpha - 1} e^{-\frac{x}{theta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
 public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
@@ -19,9 +19,9 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
     final public Input<RealScalar<PositiveReal>> thetaInput = new Input<>("theta",
-            "scale parameter for Shape–Scale form, defaults to 1.");
-    final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("beta",
-            "rate parameter for Shape–Rate form, defaults to 1.", Input.Validate.XOR, thetaInput);
+            "scale parameter for Shape–Scale form, which equals to 1/lambda, defaults to 1.");
+    final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("lambda",
+            "rate parameter for Shape–Rate form, which equals to 1/theta, defaults to 1.", Input.Validate.XOR, thetaInput);
 
     private GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
     private ContinuousDistribution.Sampler sampler;

@@ -41,7 +41,7 @@ public class GammaTest  {
     public void testGammaCumulative2() throws Exception {
         Gamma dist = new Gamma();
         dist.initByName("alpha", new RealScalarParam<>(0.001, PositiveReal.INSTANCE),
-                "beta", new RealScalarParam<>((1.0/1000.0), PositiveReal.INSTANCE));
+                "lambda", new RealScalarParam<>((1.0/1000.0), PositiveReal.INSTANCE));
         double v = dist.inverseCumulativeProbability(0.5);
         assertEquals(5.244206e-299, v, 1e-304);
         v = dist.inverseCumulativeProbability(0.05);
@@ -65,7 +65,7 @@ public class GammaTest  {
     static double mypdf(double value, double shape, double scale) {
         return Math.exp((shape-1) * Math.log(value) - value/scale - GammaFunction.lnGamma(shape) - shape * Math.log(scale) );
     }
-
+//TODO not working yet
     @Test
 	public void testPdf()  {
 
@@ -96,7 +96,7 @@ public class GammaTest  {
                 case 1: { // ShapeRate
                     Gamma gamma = new Gamma();
                     gamma.initByName("alpha", new RealScalarParam<>(shape, PositiveReal.INSTANCE),
-                            "beta", new RealScalarParam<>(1 / scale, PositiveReal.INSTANCE));
+                            "lambda", new RealScalarParam<>(1 / scale, PositiveReal.INSTANCE));
                     gammaDist = (GammaDistribution) gamma.getApacheDistribution();
                     break;
                 }
@@ -108,9 +108,9 @@ public class GammaTest  {
                     break;
                 }
                 case 3: { // OneParameter
-                    Gamma gamma = new Gamma();
-                    gamma.initByName("alpha", new RealScalarParam<>(1 / shape, PositiveReal.INSTANCE),
-                            "beta", new RealScalarParam<>(1 / shape, PositiveReal.INSTANCE));
+                    GammaMean gamma = new GammaMean();
+                    gamma.initByName("alpha",
+                            new RealScalarParam<>(1 / shape, PositiveReal.INSTANCE));
                     gammaDist = (GammaDistribution) gamma.getApacheDistribution();
                     break;
                 }

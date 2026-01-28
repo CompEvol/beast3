@@ -12,7 +12,7 @@ import org.apache.commons.math.distribution.GammaDistributionImpl;
  * and {@link beast.base.spec.inference.distribution.GammaMean}
  */
 @Deprecated
-@Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
+@Description("Gamma distribution. for x>0  g(x;alpha,beta) = 1/{Gamma(alpha) beta^alpha} x^{alpha - 1} e^{-\frac{x}{beta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")
 public class Gamma extends ParametricDistribution {
