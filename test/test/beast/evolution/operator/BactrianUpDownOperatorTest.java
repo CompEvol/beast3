@@ -1,10 +1,6 @@
 package test.beast.evolution.operator;
 
 
-import org.apache.commons.math3.stat.StatUtils;
-import org.junit.jupiter.api.Test;
-import org.xml.sax.SAXException;
-
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.BactrianScaleOperator;
 import beast.base.inference.MCMC;
@@ -18,18 +14,23 @@ import beast.base.inference.operator.kernel.BactrianUpDownOperator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
 import beast.base.util.Randomizer;
+import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Test;
+import org.xml.sax.SAXException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.parsers.ParserConfigurationException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.operator.UpDownOperatorTest}
+ */
+@Deprecated
 public class BactrianUpDownOperatorTest extends BactrianRandomWalkOperatorTest {
 
 
