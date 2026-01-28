@@ -1,6 +1,9 @@
 package test.beast.math.distributions;
 
 
+import beast.base.inference.distribution.Gamma;
+import beast.base.util.GammaFunction;
+import beast.base.util.Randomizer;
 import org.apache.commons.math.ConvergenceException;
 import org.apache.commons.math.FunctionEvaluationException;
 import org.apache.commons.math.MathException;
@@ -9,13 +12,12 @@ import org.apache.commons.math.analysis.integration.RombergIntegrator;
 import org.apache.commons.math.analysis.integration.UnivariateRealIntegrator;
 import org.junit.jupiter.api.Test;
 
-import beast.base.inference.distribution.Gamma;
-import beast.base.util.GammaFunction;
-import beast.base.util.Randomizer;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.GammaTest}
+ */
+@Deprecated
 public class GammaTest  {
 	
 	@Test
