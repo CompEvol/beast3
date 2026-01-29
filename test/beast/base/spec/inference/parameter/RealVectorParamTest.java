@@ -2,6 +2,7 @@ package beast.base.spec.inference.parameter;
 
 
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.UnitInterval;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +40,38 @@ public class RealVectorParamTest {
 
     }
 
+
+    @Test
+    public void testValuesAndDimInit() {
+        RealVectorParam parameter = new RealVectorParam();
+        parameter.initByName("dimension", 5, "value", "1.27 1.9", "domain", PositiveReal.INSTANCE);
+        // null{5, [0.0,Infinity]}: 1.27 1.9 1.27 1.9 1.27
+        assertEquals(5, parameter.size());
+        assertEquals(1.27, parameter.get(0));
+        assertEquals(1.9, parameter.get(1));
+        assertEquals(1.27, parameter.get(2));
+        assertEquals(1.9, parameter.get(3));
+        assertEquals(1.27, parameter.get(4));
+
+        final double[] x = new double[]{1, 2};
+        parameter = new RealVectorParam(5, x, PositiveReal.INSTANCE);
+        assertEquals(5, parameter.size());
+        assertEquals(1, parameter.get(0));
+        assertEquals(2, parameter.get(1));
+        assertEquals(1, parameter.get(2));
+        assertEquals(2, parameter.get(3));
+        assertEquals(1, parameter.get(4));
+
+        // freqs
+        parameter = new RealVectorParam();
+        parameter.initByName("dimension", 4, "value", "0.25", "domain", UnitInterval.INSTANCE);
+        assertEquals(4, parameter.size());
+        for (int i = 0; i < parameter.size(); i++) {
+            assertEquals(0.25, parameter.get(i));
+        }
+    }
+
+
     @Test
     public void testInitAndValidate() {
 
@@ -56,6 +89,7 @@ public class RealVectorParamTest {
             assertTrue(message.contains("not valid for domain") & message.contains("PositiveReal"), ex.getMessage());
         }
     }
+
 
     //*** test keys ***//
 
