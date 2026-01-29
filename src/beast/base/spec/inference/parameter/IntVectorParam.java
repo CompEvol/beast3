@@ -71,6 +71,21 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         this(values, domain, Integer.MIN_VALUE + 1, Integer.MAX_VALUE - 1);
     }
 
+    // if values.length < dim, then extend values to the same dim
+    public IntVectorParam(final int dimension, final int[] values, D domain) {
+        int[] newValues = new int[dimension];
+        for (int i = 0; i < dimension; i++) {
+            newValues[i] = values[i % values.length];
+        }
+
+        valuesInput.setValue(IntStream.of(newValues).boxed().toList(), this);
+        domainTypeInput.setValue(domain, this);
+        isDirty = new boolean[values.length];
+
+        // always validate
+        initAndValidate();
+    }
+
     /**
      * This constructor centralizes logic in one place,
      * and guarantees initAndValidate() runs once.
