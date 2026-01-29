@@ -59,6 +59,21 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         initAndValidate();
     }
 
+    // if values.length < dim, then extend values to the same dim
+    public BoolVectorParam(final int dimension, boolean[] values) {
+        List<Boolean> boolList = new ArrayList<>(dimension);
+        for (int i = 0; i < dimension; i++) {
+            boolList.add(values[i % values.length]);
+        }
+
+        valuesInput.setValue(boolList, this);
+        isDirty = new boolean[values.length];
+
+        // always validate
+        initAndValidate();
+    }
+
+
     @Override
     public void initAndValidate() {
         // keys
