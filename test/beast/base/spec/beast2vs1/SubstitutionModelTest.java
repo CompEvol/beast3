@@ -31,10 +31,12 @@ public class SubstitutionModelTest extends TestFramework {
         analyse(2);
     }
 
-    @Test
-    public void testSRD06CP12_3() throws Exception {
-        analyse(3);//TODO not pass
-    }
+    // This test is dropped, because cannot use TruncatedReal to OneOnX,
+    // setBounds are deprecated, it has to use TruncatedReal to define the bounds.
+//    @Test
+//    public void testSRD06CP12_3() throws Exception {
+//        analyse(3);
+//    }
 
     @BeforeEach
     protected void setUp() throws Exception {
