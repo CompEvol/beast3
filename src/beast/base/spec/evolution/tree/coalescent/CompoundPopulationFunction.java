@@ -99,11 +99,14 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
         events += type == Type.STEPWISE ? 0 : 1;
         try {
             if (popSizeParameter.size() != events) {
-                final RealVectorParam p = new RealVectorParam();
-                p.initByName("value", popSizeParameter.getElements() + "",
-                        "domain", popSizeParameter.getDomain(),
-                        "upper", popSizeParameter.getUpper(), "lower", popSizeParameter.getLower(),
-                        "dimension", events);
+//                final RealVectorParam p = new RealVectorParam();
+//                p.initByName("value", popSizeParameter.getElements() + "",
+//                        "domain", popSizeParameter.getDomain(),
+//                        "upper", popSizeParameter.getUpper(), "lower", popSizeParameter.getLower(),
+//                        "dimension", events);
+                double[] popSize = popSizeParameter.getElements()
+                        .stream().mapToDouble(Double::doubleValue).toArray();
+                final RealVectorParam p = new RealVectorParam(events, popSize, popSizeParameter.getDomain());
                 if (popSizeParameter instanceof StateNode stateNode) {
                     p.setID(stateNode.getID());
                     stateNode.assignFromWithoutID(p);
@@ -111,9 +114,14 @@ public class CompoundPopulationFunction extends PopulationFunction.Abstract impl
             }
 
             if (indicatorsParameter.size() != events - 1) {
-                final BoolVectorParam p = new BoolVectorParam();
-                p.initByName("value", "" + indicatorsParameter.getElements(),
-                        "domain", indicatorsParameter.getDomain(), "dimension", events - 1);
+//                final BoolVectorParam p = new BoolVectorParam();
+//                p.initByName("value", "" + indicatorsParameter.getElements(),
+//                        "dimension", events - 1);
+                boolean[] indicators = new boolean[indicatorsParameter.size()];
+                for (int i = 0; i < indicators.length; i++) {
+                    indicators[i] = indicatorsParameter.get(i);
+                }
+                final BoolVectorParam p = new BoolVectorParam(events - 1, indicators);
                 if (indicatorsParameter instanceof StateNode stateNode) {
                     p.setID(stateNode.getID());
                     stateNode.assignFrom(p);

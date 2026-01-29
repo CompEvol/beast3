@@ -77,6 +77,21 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
       initAndValidate();
     }
 
+    // if values.length < dim, then extend values to the same dim
+    public RealVectorParam(final int dimension, final double[] values, D domain) {
+        double[] newValues = new double[dimension];
+        for (int i = 0; i < dimension; i++) {
+            newValues[i] = values[i % values.length];
+        }
+
+        valuesInput.setValue(DoubleStream.of(newValues).boxed().toList(), this);
+        domainTypeInput.setValue(domain, this);
+        isDirty = new boolean[values.length];
+
+        // always validate
+        initAndValidate();
+    }
+
     /**
      * This constructor centralizes logic in one place,
      * and guarantees initAndValidate() runs once.
