@@ -927,7 +927,7 @@ public class Input<T> {
 
         if (this.value instanceof Constrainable constrainableValue) {
             if (constraint == null) {
-                Log.warning("No constraint provided for input '" + getName() + "'. " + 
+                Log.warning("WARNING: No constraint provided for input '" + getName() + "'. " + 
                             constrainableValue.getClass().getSimpleName() + " requires constraints.");
             } else {
                 if (constraint instanceof Constraint.Placeholder) {
