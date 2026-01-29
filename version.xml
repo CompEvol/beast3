@@ -186,6 +186,8 @@
                 <provider classname="beast.base.spec.inference.parameter.SimplexParam"/>
                 <provider classname="beast.base.spec.inference.parameter.IntSimplexParam"/>
 
+                <provider classname="beast.base.spec.inference.util.AsRealScalar"/>
+                <provider classname="beast.base.spec.inference.util.AsIntScalar"/>
                 <provider classname="beast.base.spec.inference.util.ESS"/>
                 <provider classname="beast.base.spec.inference.util.RPNcalculator"/>
 
