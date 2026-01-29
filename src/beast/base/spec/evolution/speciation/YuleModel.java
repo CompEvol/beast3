@@ -6,7 +6,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
-import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.*;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
