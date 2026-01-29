@@ -41,7 +41,10 @@ public class AsRealScalar<D extends Real> extends CalculationNode implements Rea
     @Override
 	public void initAndValidate() {
 		argument = argumentInput.get();
-        setDomain(domain); // this sets domainTypeInput as well
+        //TODO Remco to confirm
+//        setDomain(domain); // this sets domainTypeInput as well
+        // Initialize domain from input
+        this.domain = (D) domainTypeInput.get();
 	}
 
 	@Override

@@ -214,13 +214,17 @@
                 <!-- Prior on sum(indicators) -->
                 <distribution spec="beast.base.spec.inference.distribution.Poisson">
                     <lambda estimate="true" spec="RealScalarParam" domain="PositiveReal" value="0.6931471805599453"/>
-                    <param id="indsSun" spec="beast.base.spec.evolution.Sum" arg="@indicators" />
+                    <param id="indsSun" spec="beast.base.spec.inference.util.AsIntScalar" domain="NonNegativeInt" >
+                         <arg spec="beast.base.spec.evolution.Sum" arg="@indicators" />
+                    </param>
                 </distribution>
 
                 <!-- Prior on popSizes -->
-                <distribution id="popPriorDist"  spec="beast.base.spec.inference.distribution.Exponential"
+                <distribution id="popPriorDist" spec="beast.base.spec.inference.distribution.IID"
                               param="@popSizes">
-                    <mean idref="populationMean"/>
+                    <distr id="popSizesExponential" spec="beast.base.spec.inference.distribution.Exponential">
+                        <mean idref="populationMean"/>
+                    </distr>
                 </distribution>
 
                 <distribution id="coalescent" spec="CompoundDistribution">
@@ -263,11 +267,12 @@
             </distribution>
         </distribution>
 
+<!-- TODO check SampleOffValues -->
+        <operator spec="beast.base.spec.inference.operator.SampleOffValues"
+                  dist="@popSizesExponential" indicators="@indicators" values="@popSizes" weight="15.0"/>
 
         <operator id="bitflip" parameter="@indicators" spec="beast.base.spec.inference.operator.BitFlipOperator"
                   uniform="true" weight="30.0"/>
-        <operator dist="@popPriorDist" indicators="@indicators" spec="beast.base.spec.inference.operator.SampleOffValues"
-                  values="@popSizes" weight="15.0"/>
         <operator degreesOfFreedom="1" indicator="@indicators" parameter="@popSizes" scaleAll="false"
                   scaleAllIndependently="false" scaleFactor="0.5" spec="beast.base.spec.inference.operator.ScaleOperator" weight="6.0"/>
         <operator spec='beast.base.spec.inference.operator.ScaleOperator'

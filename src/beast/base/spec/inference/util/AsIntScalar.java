@@ -41,7 +41,10 @@ public class AsIntScalar<D extends Int> extends CalculationNode implements IntSc
 	@Override
 	public void initAndValidate() {
 		argument = argumentInput.get();
-        setDomain(domain); // this sets domainTypeInput as well
+        //TODO Remco to confirm
+//        setDomain(domain); // this sets domainTypeInput as well
+        // Initialize domain from input
+        this.domain = (D) domainTypeInput.get();
 	}
 
 	@Override
