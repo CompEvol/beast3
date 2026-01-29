@@ -261,6 +261,7 @@
                 <provider classname="beast.base.spec.evolution.speciation.SpeciesTreePrior"/>
                 <provider classname="beast.base.spec.evolution.speciation.RandomGeneTree"/>
 
+                <provider classname="beast.base.spec.evolution.alignment.FilteredAlignment"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.RandomLocalClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.StrictClockModel"/>
                 <provider classname="beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel"/>

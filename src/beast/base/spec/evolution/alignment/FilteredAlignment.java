@@ -1,22 +1,20 @@
-package beast.base.evolution.alignment;
+package beast.base.spec.evolution.alignment;
 
 
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.datatype.DataType;
-import beast.base.inference.parameter.IntegerParameter;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.type.IntVector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
-/**
- * @deprecated use {@link beast.base.spec.evolution.alignment.FilteredAlignment} instead
- */
-@Deprecated
 @Description("Alignment based on a filter operation on another alignment")
 public class FilteredAlignment extends Alignment {
     final public Input<String> filterInput = new Input<>("filter", "specifies which of the sites in the input alignment should be selected " +
@@ -27,7 +25,7 @@ public class FilteredAlignment extends Alignment {
             "1::3,2::3 removes every third site. " +
             "Default for range [1]-[last site], default for iterator [1]:[last site]:[1]", Validate.REQUIRED);
     final public Input<Alignment> alignmentInput = new Input<>("data", "alignment to be filtered", Validate.REQUIRED);
-    final public Input<IntegerParameter> constantSiteWeightsInput = new Input<>("constantSiteWeights", "if specified, constant " +
+    final public Input<IntVector<NonNegativeInt>> constantSiteWeightsInput = new Input<>("constantSiteWeights", "if specified, constant " +
     		"sites will be added with weights specified by the input. The dimension and order of weights must match the datatype. " +
     		"For example for nucleotide data, a 4 dimensional " +
     		"parameter with weights for A, C, G and T respectively need to be specified.");
@@ -54,7 +52,7 @@ public class FilteredAlignment extends Alignment {
         parseFilterSpec();
         calcFilter();
         Alignment data = alignmentInput.get();
-        m_dataType = data.m_dataType;
+        m_dataType = data.getDataType();
         // see if this filter changes data type
         if (userDataTypeInput.get() != null) {
             m_dataType = userDataTypeInput.get();
@@ -62,15 +60,15 @@ public class FilteredAlignment extends Alignment {
         }
 
         if (constantSiteWeightsInput.get() != null) {
-        	if (constantSiteWeightsInput.get().getDimension() != m_dataType.getStateCount()) {
+        	if (constantSiteWeightsInput.get().size() != m_dataType.getStateCount()) {
         		throw new IllegalArgumentException("constantSiteWeights should be of the same dimension as the datatype " +
-        				"(" + constantSiteWeightsInput.get().getDimension() + "!="+ m_dataType.getStateCount() +")");
+        				"(" + constantSiteWeightsInput.get().size() + "!="+ m_dataType.getStateCount() +")");
         	}
     	}
         
    		counts = data.getCounts();
-        taxaNames = data.taxaNames;
-        stateCounts = data.stateCounts;
+        taxaNames = data.getTaxaNames();
+        stateCounts = data.getStateCounts();
         if (convertDataType && m_dataType.getStateCount() > 0) {
         	for (int i = 0; i < stateCounts.size(); i++) {
                 stateCounts.set(i, m_dataType.getStateCount());
@@ -183,7 +181,7 @@ public class FilteredAlignment extends Alignment {
         int nrOfTaxa = counts.size();
         int nrOfSites = filter.length;
         
-        DataType baseType = alignmentInput.get().m_dataType;
+        DataType baseType = alignmentInput.get().getDataType();
         
         
         
@@ -213,7 +211,7 @@ public class FilteredAlignment extends Alignment {
         
         // add constant sites, if specified
         if (constantSiteWeightsInput.get() != null) {
-        	int dim = constantSiteWeightsInput.get().getDimension();
+        	int dim = constantSiteWeightsInput.get().size();
         	// add constant patterns
         	int [][] data2 = new int[nrOfSites + dim][];
             System.arraycopy(data, 0, data2, 0, nrOfSites);
@@ -273,7 +271,7 @@ public class FilteredAlignment extends Alignment {
         
         // addjust weight of constant sites, if specified
         if (constantSiteWeightsInput.get() != null) {
-        	Integer [] constantWeights = constantSiteWeightsInput.get().getValues(); 
+        	List<Integer> constantWeights = constantSiteWeightsInput.get().getElements();
         	for (int i = 0; i < nrOfPatterns; i++) {
         		boolean isContant = true;
         		for (int j = 1; j < nrOfTaxa; j++) {
@@ -283,16 +281,16 @@ public class FilteredAlignment extends Alignment {
         			}
         		}
         		// if this is a constant site, and it is not an ambiguous site
-        		if (isContant && data[i][0] >= 0 && data[i][0] < constantWeights.length) {
+        		if (isContant && data[i][0] >= 0 && data[i][0] < constantWeights.size()) {
         			// take weights in data in account as well
         			// by adding constant patterns, we added a weight of 1, which now gets corrected
         			// but if filtered by stripping constant sites, that weight is already set to zero
-            		weights[i] = (stripInvariantSitesInput.get() ? 0 : weights[i] - 1) + constantWeights[data[i][0]];
+            		weights[i] = (stripInvariantSitesInput.get() ? 0 : weights[i] - 1) + constantWeights.get(data[i][0]);
         		}
         	}
         	
         	// need to decrease siteCount for mapping sites to patterns in m_nPatternIndex
-        	nrOfSites -= constantWeights.length; 
+        	nrOfSites -= constantWeights.size();
         }        
         
         // reserve memory for patterns
@@ -355,7 +353,7 @@ public class FilteredAlignment extends Alignment {
         Log.debug.println("Filter " + filterInput.get());
         Log.info.println(getTaxonCount() + " taxa");
         if (constantSiteWeightsInput.get() != null) {
-        	Integer [] constantWeights = constantSiteWeightsInput.get().getValues();
+        	List<Integer> constantWeights = constantSiteWeightsInput.get().getElements();
         	int sum = 0; 
         	for (int i : constantWeights) { 
         		sum += i;
