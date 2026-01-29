@@ -25,7 +25,7 @@ public class ClockModelTest extends TestFramework {
     public void testStrictClock2() throws Exception {
         analyse(1);
     }
-    //TODO
+
     @Test
     public void testRandomLocalClock() throws Exception {
         analyse(2);
