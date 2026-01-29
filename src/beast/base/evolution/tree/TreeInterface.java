@@ -2,8 +2,9 @@ package beast.base.evolution.tree;
 
 
 import beast.base.evolution.alignment.TaxonSet;
+import beast.base.spec.constraints.Constrainable;
 
-public interface TreeInterface extends NetworkInterface {
+public interface TreeInterface extends NetworkInterface, Constrainable {
 
     Node getRoot();
     Node getNode(int i);
