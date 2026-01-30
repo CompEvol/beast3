@@ -34,6 +34,14 @@ public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
     public Input<String> argNamesInput = new Input<>("argnames", "names of arguments used in expression (comma delimited)," +
             " order as given by XML");
 
+//    // Additional input to specify the domain type
+//    public final Input<D> domainTypeInput = new Input<>("domain",
+//            "The domain type (default: Real; alternatives: NonNegativeReal, PositiveReal, or UnitInterval) " +
+//                    "specifies the permissible range of values.");
+
+    // Domain instance to enforce constraints
+//    protected D domain;
+
     private RPNexpressionCalculator[] expressions;
     private List<String> names;
 
@@ -42,7 +50,10 @@ public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
     int dim;
 
     @Override
-	public void initAndValidate() {
+    public void initAndValidate() {
+
+        // Initialize domain from input
+//        this.domain = domainTypeInput.get();
 
         names = new ArrayList<>();
         dim = parametersInput.get().getFirst().size();
@@ -50,49 +61,49 @@ public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
         int pdim;
 
         if (argNamesInput.get() != null) {
-        	String [] names_ = argNamesInput.get().split(",");
-        	if (names_.length != parametersInput.get().size()) {
-        		throw new IllegalArgumentException("number of argnames does not match number of parameters");
-        	}
-        	
-            variables = new HashMap<>();
-        	int k = 0;
-        	for (String name : names_) {
-        		names.add(name);
-        		Tensor p = parametersInput.get().get(k);
-                expressions = new RPNexpressionCalculator[dim];
-	            pdim = p.size();
-	        	
-	            if (pdim != dim && dim != 1 && pdim != 1) {
-	                throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
-	            }
-	            if (pdim > dim) dim = pdim;
-	
-	            expressions = new RPNexpressionCalculator[dim];
-	            names.add(p.toString());
+            String [] names_ = argNamesInput.get().split(",");
+            if (names_.length != parametersInput.get().size()) {
+                throw new IllegalArgumentException("number of argnames does not match number of parameters");
+            }
 
-	            variables.put(name, TensorUtils.valuesToObjectArray(p));
-	
-	            k++;
-        	}
+            variables = new HashMap<>();
+            int k = 0;
+            for (String name : names_) {
+                names.add(name);
+                Tensor p = parametersInput.get().get(k);
+                expressions = new RPNexpressionCalculator[dim];
+                pdim = p.size();
+
+                if (pdim != dim && dim != 1 && pdim != 1) {
+                    throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
+                }
+                if (pdim > dim) dim = pdim;
+
+                expressions = new RPNexpressionCalculator[dim];
+                names.add(p.toString());
+
+                variables.put(name, TensorUtils.valuesToObjectArray(p));
+
+                k++;
+            }
         } else {
-	        for (final Tensor p : parametersInput.get()) {
-	
-	            pdim = p.size();
-	
-	            if (pdim != dim && dim != 1 && pdim != 1) {
-	                throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
-	            }
-	            if (pdim > dim) dim = pdim;
-	
-	            expressions = new RPNexpressionCalculator[dim];
-	            names.add(p.toString());
-	
-	            for (int i = 0; i < pdim; i++) {
-	                variables = new HashMap<>();
-	                variables.put(((BEASTInterface) p).getID(), TensorUtils.valuesToObjectArray(p));
-	            }
-	        }
+            for (final Tensor p : parametersInput.get()) {
+
+                pdim = p.size();
+
+                if (pdim != dim && dim != 1 && pdim != 1) {
+                    throw new IllegalArgumentException("error: all parameters have to have same length or be of dimension 1.");
+                }
+                if (pdim > dim) dim = pdim;
+
+                expressions = new RPNexpressionCalculator[dim];
+                names.add(p.toString());
+
+                for (int i = 0; i < pdim; i++) {
+                    variables = new HashMap<>();
+                    variables.put(((BEASTInterface) p).getID(), TensorUtils.valuesToObjectArray(p));
+                }
+            }
         }
 
         vars = new RPNexpressionCalculator.GetVariable[dim];
@@ -101,20 +112,20 @@ public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
             final int index = i;
             vars[i] = new RPNexpressionCalculator.GetVariable() {
                 @Override
-				public double get(final String name) {
+                public double get(final String name) {
                     final Object[] values = (variables.get(name));
                     if (values == null) {
-                    	String ids = "";
+                        String ids = "";
                         for (final Tensor p : parametersInput.get()) {
-                    		ids += ((BEASTInterface) p).getID() +", ";
-                    	}
-                    	if (parametersInput.get().size() > 0) {
-                    		ids = ids.substring(0, ids.length() - 2);
-                    	}
-                    	throw new RuntimeException("Something went wront with the RPNCalculator with id=" + getID() +".\n"
-                    			+ "There might be a typo on the expression.\n" +
-                    			"It should only contain these: " + ids +"\n"
-                    					+ "but contains " + name);
+                            ids += ((BEASTInterface) p).getID() +", ";
+                        }
+                        if (parametersInput.get().size() > 0) {
+                            ids = ids.substring(0, ids.length() - 2);
+                        }
+                        throw new RuntimeException("Something went wront with the RPNCalculator with id=" + getID() +".\n"
+                                + "There might be a typo on the expression.\n" +
+                                "It should only contain these: " + ids +"\n"
+                                + "but contains " + name);
                     }
                     if (values[0] instanceof Boolean)
                         return ((Boolean) values[values.length > 1 ? index : 0] ? 1. : 0.);
@@ -136,7 +147,7 @@ public class RPNcalculator extends CalculationNode implements Loggable, Tensor {
         }
     }
 
-	private void updateValues() {
+    private void updateValues() {
         for (Tensor p : parametersInput.get()) {
             for (int i = 0; i < p.size(); i++) {
                 variables.put(((BEASTInterface) p).getID(), TensorUtils.valuesToObjectArray(p));

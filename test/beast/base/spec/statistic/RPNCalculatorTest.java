@@ -21,11 +21,11 @@ public class RPNCalculatorTest {
 		p1.setID("p1");
         RealScalarParam<Real> p2 = new RealScalarParam<>(5, Real.INSTANCE);
 		p2.setID("p2");
-		
-		RPNcalculator calculator = new RPNcalculator();
+
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", p1, "parameter", p2, "expression", "p2 p1 /");
 		
-		Double result = calculator.get();
+		double result = calculator.get();
 		assertEquals(2.0, result, 1e-16);
 	}
 
@@ -35,8 +35,8 @@ public class RPNCalculatorTest {
 		p1.setID("p2");
         RealScalarParam<Real> p2 = new RealScalarParam<>(5, Real.INSTANCE);
 		p2.setID("p1");
-		
-		RPNcalculator calculator = new RPNcalculator();
+
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", p1, "parameter", p2, "expression", "p2 p1 /");
 
 		double result = calculator.get();
@@ -49,8 +49,8 @@ public class RPNCalculatorTest {
 		p1.setID("p1");
         RealVectorParam<Real> p2 = new RealVectorParam<>(new double[]{5,1.0,2.5}, Real.INSTANCE);
 		p2.setID("p2");
-		
-		RPNcalculator calculator = new RPNcalculator();
+
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", p1, "parameter", p2, "expression", "p2 p1 /");
 
 		double result = calculator.get();
@@ -68,7 +68,7 @@ public class RPNCalculatorTest {
         RealScalarParam<Real> p2 = new RealScalarParam<>(5, Real.INSTANCE);
         p2.setID("p 2");
 
-		RPNcalculator calculator = new RPNcalculator();
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", p1, "parameter", p2, "expression", "x2 x1 /", "argnames", "x1,x2");
 
 		double result = calculator.get();
@@ -82,8 +82,8 @@ public class RPNCalculatorTest {
         p1.setID("p 1");
         RealVectorParam<Real> p2 = new RealVectorParam<>(new double[]{5,1.0,2.5}, Real.INSTANCE);
         p2.setID("p 2");
-		
-		RPNcalculator calculator = new RPNcalculator();
+
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", p1, "parameter", p2, "expression", "x2 x1 /", "argnames", "x1,x2");
 
 		double result = calculator.get();

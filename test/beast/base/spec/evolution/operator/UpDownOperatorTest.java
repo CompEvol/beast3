@@ -10,6 +10,7 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.util.AsRealScalar;
 import beast.base.spec.inference.util.RPNcalculator;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
@@ -48,8 +49,7 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
 		param2.setID("param2");
 
         // TODO why not working?
-        RPNcalculator calcOuter = new RPNcalculator();
-        RPNcalculator.RPNRealScalar calculator = calcOuter.new RPNRealScalar();
+        RPNcalculator calculator = new RPNcalculator();
 		calculator.initByName("parameter", param1, "parameter", param2,
                 "expression", "param1 param2 -");
 
@@ -70,7 +70,10 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
 		operators.add(scaleOperator1);
 		operators.add(scaleOperator2);
 
-		doMCMCrun(calculator, operators);
+        AsRealScalar asRealScalar = new AsRealScalar();
+        asRealScalar.initByName("arg", calculator, "domain", PositiveReal.INSTANCE);
+
+		doMCMCrun(asRealScalar, operators);
 	}
 
     // param must be RealScalar<PositiveReal> as required by LogNormal
