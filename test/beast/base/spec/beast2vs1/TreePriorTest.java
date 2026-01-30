@@ -15,7 +15,7 @@ public class TreePriorTest extends TestFramework {
     private final String[] XML_FILES = new String[]{"testCoalescentNoClock.xml", "testCoalescentNoClock1.xml",
             "testExponentialGrowth.xml", "testYuleModel_10taxa.xml", "testBirthDeathModel_10taxa.xml",
             "testBirthDeathAsYule.xml", "testBSP1.xml", "testBSPNoClock.xml", "testEBSP.xml"};
-//TODO
+
     @Test
     public void testCoalescentNoClock() throws Exception {
         analyse(0);
@@ -55,7 +55,7 @@ public class TreePriorTest extends TestFramework {
     public void testBSPNoClock() throws Exception {
         analyse(7);
     }
-//TODO
+//TODO java.lang.RuntimeException: Encountered a positive infinite posterior.
     @Test
     public void testEBSP() throws Exception {
         analyse(8);

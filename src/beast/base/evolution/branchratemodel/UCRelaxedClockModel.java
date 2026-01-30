@@ -1,25 +1,17 @@
 package beast.base.evolution.branchratemodel;
 
 
-
-import java.util.Arrays;
-
-import org.apache.commons.math.MathException;
-
-import beast.base.core.Citation;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.inference.CalculationNode;
-import beast.base.inference.StateNode;
 import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
+import org.apache.commons.math.MathException;
+
+import java.util.Arrays;
 
 /**
  * @author Alexei Drummond
@@ -33,6 +25,7 @@ import beast.base.util.Randomizer;
 /**
  * @deprecated use beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel instead
  */
+@Deprecated
 public class UCRelaxedClockModel extends BranchRateModel.Base {
     final public Input<ParametricDistribution> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
     final public Input<IntegerParameter> categoryInput = new Input<>("rateCategories", "the rate categories associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.REQUIRED);
