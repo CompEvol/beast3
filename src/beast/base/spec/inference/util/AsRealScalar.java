@@ -3,15 +3,18 @@ package beast.base.spec.inference.util;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Tensor;
 
+import java.io.PrintStream;
+
 @Description("Cast the type of a tensor to RealScalar of a particular domain. "
 		+ "If the tensor is a Vector, only the first value is used.")
-public class AsRealScalar<D extends Real> extends CalculationNode implements RealScalar<D> {
+public class AsRealScalar<D extends Real> extends CalculationNode implements RealScalar<D>, Loggable {
     final public Input<Tensor<?,?>> argumentInput = new Input<>("arg", "argument to be converted", Validate.REQUIRED);
 
     // Additional input to specify the domain type
@@ -75,4 +78,18 @@ public class AsRealScalar<D extends Real> extends CalculationNode implements Rea
         domainTypeInput.setValue(domain, this);
     }
 
+    @Override
+    public void init(PrintStream out) {
+        out.print(getID() + "\t");
+    }
+
+    @Override
+    public void log(long sample, PrintStream out) {
+        out.print(get() + "\t");
+    }
+
+    @Override
+    public void close(PrintStream out) {
+        // nothing to do
+    }
 }
