@@ -52,10 +52,7 @@ public abstract class Constraint<T extends Constrainable> {
 
         @Override
         public boolean check(Constrainable arg) {
-            throw new UnsupportedOperationException(
-                "Constraint.Placeholder should only be used for inputs to abstract classes " +
-                "and never be checked. Always specify a valid Constraint for the input in a subclass."
-            );
+            throw new UnsupportedOperationException("Unimplemented method 'check' for Constraint.Placeholder");
         }
     }
 
