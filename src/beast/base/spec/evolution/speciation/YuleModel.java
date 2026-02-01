@@ -10,14 +10,13 @@ import beast.base.evolution.speciation.SpeciesTreeDistribution;
 import beast.base.evolution.tree.*;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
-import beast.base.spec.constraints.ConstraintSet;
-import beast.base.spec.constraints.TreeConstraint;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 
 
 // From Gernhard 2008, Yule density (p; conditioned on n nodes) should be:
@@ -36,19 +35,8 @@ public class YuleModel extends SpeciesTreeDistribution {
     final public Input<Boolean> conditionalOnRootInput =
             new Input<>("conditionalOnRoot", "Whether to condition on the root (default false)", false);
 
-
     protected boolean conditionalOnRoot;
     protected boolean conditionalOnOrigin;
-    
-    /** 
-     * The constructor sets the specific tree constraints of this prior.
-     */
-    public YuleModel() {
-        treeInput.setConstraint(new ConstraintSet<Tree>(
-            new TreeConstraint.RequireUltrametric(),
-            new TreeConstraint.ForbidSampledAncestors()
-        ));
-    }
 
     @Override
     public void initAndValidate() {

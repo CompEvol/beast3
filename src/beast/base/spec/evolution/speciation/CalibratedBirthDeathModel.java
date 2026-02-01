@@ -16,8 +16,6 @@ import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.StateNode;
 import beast.base.inference.util.RPNcalculator;
-import beast.base.spec.constraints.ConstraintSet;
-import beast.base.spec.constraints.TreeConstraint;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.RealScalar;
@@ -109,14 +107,7 @@ public class CalibratedBirthDeathModel extends SpeciesTreeDistribution {
 
     boolean isYule = false;
 
-    /** 
-     * The constructor sets the specific tree constraints of this prior.
-     */
     public CalibratedBirthDeathModel() {
-        treeInput.setConstraint(new ConstraintSet<Tree>(
-            new TreeConstraint.RequireUltrametric(),
-            new TreeConstraint.ForbidSampledAncestors()
-        ));
     }
 
     @Override

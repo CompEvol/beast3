@@ -30,11 +30,8 @@ import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.StateNode;
-import beast.base.spec.constraints.ConstraintSet;
-import beast.base.spec.constraints.TreeConstraint;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.RealScalar;
@@ -71,16 +68,6 @@ public class BirthDeathGernhard08Model extends YuleModel {
             new Input<>("relativeDeathRate", "relative death rate parameter, mu/lambda in birth death model (turnover parameter)", Validate.REQUIRED);
     final public Input<RealScalar<UnitInterval>> sampleProbabilityInput =
             new Input<>("sampleProbability", "sample probability, rho in birth/death model");
-
-    /** 
-     * The constructor sets the specific tree constraints of this prior.
-     */
-    public BirthDeathGernhard08Model() {
-        treeInput.setConstraint(new ConstraintSet<Tree>(
-            new TreeConstraint.RequireUltrametric(),
-            new TreeConstraint.ForbidSampledAncestors()
-        ));
-    }
 
     @Override
     public void initAndValidate() {
