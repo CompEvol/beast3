@@ -25,8 +25,6 @@
 package beast.base.core;
 
 
-import beast.base.spec.constraints.Constrainable;
-import beast.base.spec.constraints.Constraint;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.DomainRegister;
 import beast.base.spec.domain.Real;
@@ -253,55 +251,6 @@ public class Input<T> {
         defaultValue = startValue;
         this.possibleValues = possibleValues;
         checkName();
-    } // c'tor
-
-    /**
-     * Constructor with constraint.
-     * Use for inputs that require validation beyond type checking.
-     */
-    public Input(String name, String tipText, Constraint<?> constraint) {
-        this(name, tipText);
-        this.constraint = constraint;
-    } // c'tor
-    
-    /**
-     * Constructor with constraint and type specified.
-     */
-    public Input(String name, String tipText, Class<?> theClass, Constraint<?> constraint) {
-        this(name, tipText, theClass);
-        this.constraint = constraint;
-    } // c'tor
-
-    /**
-     * Constructor with constraint and REQUIRED rule.
-     */
-    public Input(String name, String tipText, Validate rule, Constraint<?> constraint) {
-        this(name, tipText, rule);
-        this.constraint = constraint;
-    } // c'tor
-
-    /**
-     * Constructor with constraint, REQUIRED rule and type specified.
-     */
-    public Input(String name, String tipText, Validate rule, Class<?> theClass, Constraint<?> constraint) {
-        this(name, tipText, rule, theClass);
-        this.constraint = constraint;
-    } // c'tor
-
-    /**
-     * Constructor with constraint and XOR rule.
-     */
-    public Input(String name, String tipText, Validate rule, Input<?> other, Constraint<?> constraint) {
-        this(name, tipText, rule, other);
-        this.constraint = constraint;
-    } // c'tor
-
-    /**
-     * Constructor with constraint, XOR rule and type specified.
-     */
-    public Input(String name, String tipText, Validate rule, Input<?> other, Class<?> theClass, Constraint<?> constraint) {
-        this(name, tipText, rule, other, theClass);
-        this.constraint = constraint;
     } // c'tor
 
     /**
@@ -901,12 +850,6 @@ public class Input<T> {
         }		
 	}
     
-    protected Constraint<?> constraint;
-
-    public void setConstraint(Constraint<?> constraint) {
-        this.constraint = constraint;
-    }
-
     /**
      * validate input according to validation rule *
      *
@@ -922,26 +865,6 @@ public class Input<T> {
             }
             if (!found) {
                 throw new IllegalArgumentException("Expected one of " + Arrays.toString(possibleValues) + " but got " + this.value);
-            }
-        }
-
-        if (this.value instanceof Constrainable constrainableValue) {
-            if (constraint == null) {
-                Log.warning("No constraint provided for input '" + getName() + "'. " + 
-                            constrainableValue.getClass().getSimpleName() + " requires constraints.");
-            } else {
-                if (constraint instanceof Constraint.Placeholder) {
-                    throw new IllegalArgumentException("Constraint for input '" + getName() + "' is a placeholder. Specify the " +
-                                                    "correct constraint in the constructor of the subclass using the input.");
-                }
-                if (!constraint.isApplicable(constrainableValue)) {
-                    throw new IllegalArgumentException("Constraint " + constraint.getDescription() + " is not applicable to input '" + getName() + "' of type "
-                                                    + constrainableValue.getClass().getSimpleName() + ". Expected type: " + constraint.getApplicableType().getSimpleName());
-                }
-                if (!constraint.check(constrainableValue)) {
-                    throw new IllegalArgumentException("Input '" + getName() + "' violates " + constraint.getDescription() + 
-                                                    ". Provided tree does not meet the required constraints.");
-                }
             }
         }
 
