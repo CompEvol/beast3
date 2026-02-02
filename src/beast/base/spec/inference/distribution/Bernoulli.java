@@ -46,12 +46,13 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
      * make sure internal state is up to date *
      */
     @Override
-    public void refresh() {
+    protected void refresh() {
         p = (pInput.get() != null) ? pInput.get().get() : 1.0;
     }
 
     @Override
     public double calculateLogP() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         // FastMath : faster performance with tiny accuracy cost
     	logP = param.get() ? FastMath.log(p) : FastMath.log(1 - p);
     	return logP;
@@ -59,6 +60,7 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
 
     @Override
     protected double calcLogP(Boolean value) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         return value ? FastMath.log(p) : FastMath.log(1 - p);
     }
 

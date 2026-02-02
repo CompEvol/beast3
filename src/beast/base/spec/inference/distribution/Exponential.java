@@ -51,39 +51,35 @@ public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>,
      * make sure internal state is up to date *
      */
     @Override
-    public void refresh() {
+    protected void refresh() {
         double mean = (meanInput.get() != null) ? meanInput.get().get() : 1.0;
 
         // Floating point comparison:
         if (isNotEqual(dist.getMean(), mean)) {
             dist = ExponentialDistribution.of(mean);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = getApacheDistribution().logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Double value) {
-        return dist.logDensity(value); // scalar
-    }
-
-    @Override
     protected List<Double> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final double x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
 
     @Override
-	protected Object getApacheDistribution() {
-    	return dist;
+	protected ExponentialDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
     
 } // class Exponential

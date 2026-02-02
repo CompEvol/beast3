@@ -7,10 +7,9 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
+import org.apache.commons.math.MathException;
 
 import java.util.List;
-
-import org.apache.commons.math.MathException;
 
 @Description("Offsets a real valued distribution.")
 public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
@@ -59,6 +58,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
     @Override
     public void refresh() {
         dist = distributionInput.get();
+        dist.refresh();
         offset = offsetInput.get();
     }
 
@@ -77,6 +77,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
     @Override
     protected double calcLogP(Double value) {
+        // refresh(); should have been called in dist.calcLogP
         return dist.calcLogP(value - offset.get());
     }
 

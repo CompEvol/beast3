@@ -2,7 +2,6 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import org.apache.commons.statistics.distribution.DiscreteDistribution;
@@ -68,26 +67,21 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> { //
         if (isNotEqual(dist.getSupportLowerBound(), lower)
                 || isNotEqual(dist.getSupportUpperBound(), upper)) {
             dist = UniformDiscreteDistribution.of(lower, upper);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
     @Override
     public double calculateLogP() {
-        logP = dist.logProbability(param.get()); // no unboxing needed, faster
+        logP = getApacheDistribution().logProbability(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Integer value) {
-        return dist.logProbability(value); // scalar
-    }
-
-    @Override
     protected List<Integer> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final int x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
@@ -103,8 +97,9 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> { //
     }
     
     @Override
-	protected Object getApacheDistribution() {
-    	return dist;
+	protected UniformDiscreteDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 
 	@Override

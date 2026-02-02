@@ -66,6 +66,8 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     @Override
     public void refresh() {
         dist = distributionInput.get();
+        dist.refresh();
+
         lower = lowerInput.get();
         if (lower == null)
             lower = new RealScalarParam<>(Real.INSTANCE.getLower(), Real.INSTANCE);
@@ -77,12 +79,14 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
 
     @Override
     public double calculateLogP() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Double value) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         return logDensity(value);
     }
 
@@ -133,11 +137,15 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
 
     @Override
     public Double getLowerBoundOfParameter() {
+        if (getInnerDistribution().getLowerBoundOfParameter() == null)
+            return lower.get();
         return Math.max(lower.get(), getInnerDistribution().getLowerBoundOfParameter());
     }
 
     @Override
     public Double getUpperBoundOfParameter() {
+        if (getInnerDistribution().getLowerBoundOfParameter() == null)
+            return upper.get();
         return Math.min(upper.get(), getInnerDistribution().getUpperBoundOfParameter());
     }
 

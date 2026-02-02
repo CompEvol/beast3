@@ -65,7 +65,7 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
      * make sure internal state is up to date *
      */
     @Override
-    public void refresh() {
+    protected void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
 
         double scale = 1.0; // default
@@ -84,32 +84,28 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
         // Floating point comparison
         if (isNotEqual(dist.getShape(), alpha) ||  isNotEqual(dist.getScale(), scale)) {
             dist = GammaDistribution.of(alpha, scale);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = getApacheDistribution().logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Double value) {
-        return dist.logDensity(value); // scalar
-    }
-
-    @Override
     protected List<Double> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final double x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
 
     @Override
-	protected Object getApacheDistribution() {
-    	return dist;
+	protected GammaDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 } // class Gamma

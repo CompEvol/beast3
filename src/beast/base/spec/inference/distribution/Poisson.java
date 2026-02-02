@@ -53,19 +53,17 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
 
     @Override
     public double calculateLogP() {
-        int y = (int) (param.get());
-        logP = dist.logProbability(y); // no unboxing needed, faster
+        int y = param.get();
+        logP = getApacheDistribution().logProbability(y); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Integer value) {
-        int y = (int) (value);
-        return dist.logProbability(y); // scalar
-    }
-
-    @Override
     protected List<Integer> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final int x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
@@ -81,11 +79,18 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
         if (isNotEqual(dist.getMean(), lambda)) {
             // The expected number of events (E[X]) in Poisson equals lambda
             dist = PoissonDistribution.of(lambda);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
+    }
+
+    @Override
+    public boolean isIntegerDistribution() {
+        return true;
+    }
+
+    @Override
+    protected PoissonDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 
     public static void main(String[] args) {
@@ -130,13 +135,4 @@ Sum of logP for [0,1,2,3] ≈ -12.82828
 
     }
 
-    @Override
-    public boolean isIntegerDistribution() {
-    	return true;
-    }
-
-    @Override
-	protected Object getApacheDistribution() {
-    	return dist;
-    }
 } // class Poisson

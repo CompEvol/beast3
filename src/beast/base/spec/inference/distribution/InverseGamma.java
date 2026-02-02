@@ -65,10 +65,6 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         // Floating point comparison
         if (isNotEqual(dist.getShape(), alpha) ||  isNotEqual(dist.getScale(), 1.0 / beta)) {
             dist = GammaDistribution.of(alpha, 1.0 / beta);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
@@ -85,6 +81,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
 
     // handle offset in one place
     public double logDensity(double x) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         double y = x;
         return -(alpha + 1.0) * Math.log(y) - (beta / y) + C;
     }
@@ -96,6 +93,10 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
 
     @Override
     protected List<Double> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final double y = sampler.sample();  // sample from Gamma
         final double x = 1.0 / y; // sample from Gamma
         return List.of(x);
@@ -103,6 +104,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
 
     @Override
 	protected Object getApacheDistribution() {
-    	return dist;
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 } // class InverseGamma

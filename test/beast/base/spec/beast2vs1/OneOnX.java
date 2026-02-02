@@ -47,6 +47,11 @@ public class OneOnX extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     @Override
+    protected void refresh() {
+
+    }
+
+    @Override
     public double density(double x) {
         return 1 / x;
     }

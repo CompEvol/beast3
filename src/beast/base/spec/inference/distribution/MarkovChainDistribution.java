@@ -119,7 +119,12 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
         }
         return logP;
     }
-    
+
+    @Override
+    protected void refresh() {
+
+    }
+
     private double getChainValue(int i) {
         if (i == -1) {
             if (initialMean != null){

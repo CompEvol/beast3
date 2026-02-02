@@ -71,32 +71,28 @@ public class Normal extends ScalarDistribution<RealScalar<Real>, Double> {
         // Floating point comparison:
         if (isNotEqual(dist.getMean(), mean) || isNotEqual(dist.getStandardDeviation(), sd) ) {
             dist = NormalDistribution.of(mean, sd);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = getApacheDistribution().logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Double value) {
-        return dist.logDensity(value); // scalar
-    }
-
-    @Override
     protected List<Double> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final double x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
 
     @Override
-	protected Object getApacheDistribution() {
-    	return dist;
+	protected NormalDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 } // class Normal

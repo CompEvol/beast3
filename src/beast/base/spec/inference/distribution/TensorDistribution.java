@@ -75,7 +75,15 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         throw new UnsupportedOperationException("Please override this method in every child class !");
     }
 
-    
+    /**
+     * Synchronise distribution parameters with input values
+     * to ensure internal state is up to date.
+     * This is useful when parameters are sampled, as well as in BEAUti
+     * when input values are edited
+     * **/
+    protected abstract void refresh();
+
+
     /**
      * @return lower bound of the parameter this tensor distribution applies to
      * or is sampled from

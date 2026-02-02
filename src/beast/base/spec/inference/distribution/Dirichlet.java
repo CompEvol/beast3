@@ -51,7 +51,7 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
     /**
      * ensure internal state is up to date *
      */
-    void refresh() {
+    protected void refresh() {
         List<Double> alpha = alphaInput.get().getElements();
         gammas = new GammaDistribution[alpha.size()];
 
@@ -78,6 +78,8 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
     }
 
     private double calcLogP(List<Double> value) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+
         List<Double> alpha = alphaInput.get().getElements();
         if (alpha.size() != value.size())
             throw new IllegalArgumentException("Dimensions of alpha and param should be the same, " +

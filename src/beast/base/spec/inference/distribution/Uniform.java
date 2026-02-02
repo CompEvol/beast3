@@ -68,26 +68,21 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
         if (isNotEqual(dist.getSupportLowerBound(), lower)
                 || isNotEqual(dist.getSupportUpperBound(), upper)) {
             dist = UniformContinuousDistribution.of(lower, upper);
-            sampler = dist.createSampler(rng);
-        } else if (sampler == null) {
-            // Ensure sampler exists
-            sampler = dist.createSampler(rng);
         }
     }
 
     @Override
     public double calculateLogP() {
-        logP = dist.logDensity(param.get()); // no unboxing needed, faster
+        logP = getApacheDistribution().logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
-    protected double calcLogP(Double value) {
-        return dist.logDensity(value); // scalar
-    }
-
-    @Override
     protected List<Double> sample() {
+        if (sampler == null) {
+            // Ensure sampler exists
+            sampler = dist.createSampler(rng);
+        }
         final double x = sampler.sample();
         return List.of(x); // Returning an immutable result
     }
@@ -103,8 +98,9 @@ public class Uniform extends ScalarDistribution<RealScalar<Real>, Double> implem
     }
     
     @Override
-	protected Object getApacheDistribution() {
-    	return dist;
+	protected UniformContinuousDistribution getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist;
     }
 
 	@Override

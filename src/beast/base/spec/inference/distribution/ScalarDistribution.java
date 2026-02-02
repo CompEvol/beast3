@@ -33,11 +33,14 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
             throw new RuntimeException("not implemented yet");
         }
 
-        final double y = ((Number) value).doubleValue();
         if (dist instanceof ContinuousDistribution cd) {
-            return cd.density(y);
+//TODO Remco review:  return cd.density(y);
+            final double x = ((Number) value).doubleValue();
+            return cd.logDensity(x);
         } else  if (dist instanceof DiscreteDistribution dd) {
-            return dd.probability((int) y);
+//TODO Remco review:  return dd.probability((int) y);
+            final int x = ((Number) value).intValue();
+            return dd.logProbability(x);
         }
         return 0.0;
     }
@@ -49,6 +52,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
 
     @Override
     public double calculateLogP() {
+        // refresh(); has been called in getApacheDistribution();
         logP = calcLogP(param.get());
         return logP;
     }
@@ -123,16 +127,9 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      * rest of the ScalarDistribution methods.
      */
     protected Object getApacheDistribution() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
     	return null;
     }
-    
-    /** 
-     * Synchronise apache distribution parameters with input values
-     * to ensure internal state is up to date. 
-     * This is useful when parameters are sampled, as well as in BEAUti 
-     * when input values are edited  
-     * **/
-    public void refresh() {}
 
     /**
      * For this distribution, X, this method returns x such that P(X &lt; x) = p.

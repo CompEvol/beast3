@@ -61,17 +61,25 @@ public class IID<V extends Vector<?, T>,
     }
 
     @Override
+    protected void refresh() {
+        dist.refresh();
+    }
+
+    @Override
     protected double calcLogP(T... value) {
         return this.calcLogP(Arrays.asList(value));
     }
 
     private double calcLogP(List<T> values) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+
         if (values == null)
             throw new IllegalArgumentException("IID requires param, but it is null ! ");
         if (values.size() != dimension())
             throw new IllegalArgumentException("Values dimension != parameter dimension !");
         double logP = 0.0;
         for (T t : values) {
+            // refresh(); has been called in getApacheDistribution();
             logP += dist.calcLogP(t);
         }
         return logP;

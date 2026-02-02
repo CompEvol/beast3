@@ -5,16 +5,12 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
-import beast.base.spec.type.RealScalar;
+import org.apache.commons.math.MathException;
+import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
 
 import java.util.List;
-
-import org.apache.commons.math.MathException;
-import org.apache.commons.statistics.distribution.DiscreteDistribution;
-import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
 
 
 @Description("Distribution that truncates a integer valued distribution to the interval [lower,upper].")
@@ -67,6 +63,8 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     @Override
     public void refresh() {
         dist = distributionInput.get();
+        dist.refresh();
+
         lower = lowerInput.get();
         if (lower == null)
             lower = new IntScalarParam<>(Int.INSTANCE.getLower(), Int.INSTANCE);
@@ -78,12 +76,14 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double calculateLogP() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
 	@Override
 	protected double calcLogP(Integer value) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
 		return logDensity(value);
 	}
 
