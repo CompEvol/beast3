@@ -55,7 +55,7 @@ public class TreePriorTest extends TestFramework {
     public void testBSPNoClock() throws Exception {
         analyse(7);
     }
-//TODO java.lang.RuntimeException: Encountered a positive infinite posterior.
+// TODO testEBSP() in beast 2.7 v beast 1 also fails, add a test to compare 2.8 to 2.7
     @Test
     public void testEBSP() throws Exception {
         analyse(8);
