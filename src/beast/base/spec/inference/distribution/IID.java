@@ -61,7 +61,7 @@ public class IID<V extends Vector<?, T>,
     }
 
     @Override
-    protected void refresh() {
+	public void refresh() {
         dist.refresh();
     }
 

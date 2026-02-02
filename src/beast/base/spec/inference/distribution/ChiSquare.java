@@ -52,7 +52,7 @@ public class ChiSquare extends ScalarDistribution<RealScalar<NonNegativeReal>, D
      * make sure internal state is up to date *
      */
     @Override
-    protected void refresh() {
+	public void refresh() {
         double dF = (dfInput.get() != null) ? dfInput.get().get() : 1;
 
         if (dist.getDegreesOfFreedom() != dF) {

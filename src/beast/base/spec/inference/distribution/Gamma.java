@@ -65,7 +65,7 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
      * make sure internal state is up to date *
      */
     @Override
-    protected void refresh() {
+	public void refresh() {
         double alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
 
         double scale = 1.0; // default

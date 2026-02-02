@@ -81,7 +81,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
      * This is useful when parameters are sampled, as well as in BEAUti
      * when input values are edited
      * **/
-    protected abstract void refresh();
+    public abstract void refresh();
 
 
     /**

@@ -51,7 +51,7 @@ public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>,
      * make sure internal state is up to date *
      */
     @Override
-    protected void refresh() {
+	public void refresh() {
         double mean = (meanInput.get() != null) ? meanInput.get().get() : 1.0;
 
         // Floating point comparison:

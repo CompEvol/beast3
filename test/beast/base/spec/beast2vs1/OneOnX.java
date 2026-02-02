@@ -47,7 +47,7 @@ public class OneOnX extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     @Override
-    protected void refresh() {
+	public void refresh() {
 
     }
 

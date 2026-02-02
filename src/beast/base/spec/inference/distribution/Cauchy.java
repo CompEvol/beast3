@@ -52,7 +52,7 @@ public class Cauchy extends ScalarDistribution<RealScalar<Real>, Double> {
      * make sure internal state is up to date *
      */
     @Override
-    protected void refresh() {
+	public void refresh() {
         double location = (locationInput.get() != null) ? locationInput.get().get() : 0.0;
         double scale  = (scaleInput.get()  != null) ? scaleInput.get().get()  : 1.0;
 

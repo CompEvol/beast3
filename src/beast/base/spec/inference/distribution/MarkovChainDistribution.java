@@ -121,7 +121,7 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
     }
 
     @Override
-    protected void refresh() {
+	public void refresh() {
 
     }
 

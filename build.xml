@@ -28,7 +28,7 @@
         <fileset dir="${lib}" includes="beagle.jar"/>
         <fileset dir="${lib}" includes="colt.jar"/>
         <fileset dir="${lib}" includes="antlr-runtime-4.13.2.jar"/>
-        <fileset dir="${lib}" includes="commons-math3-3.6.1.jar" />
+        <fileset dir="${lib}" includes="commons.jar" />
         <fileset dir="${lib}/junit" includes="junit-platform-console-standalone-1.8.2.jar"/>
         <path location="build"/>
     </path>
@@ -310,6 +310,7 @@
                 <path id="assertj.classpath">
 			        <fileset dir="${lib}" includes="junit-4.8.2.jar"/>
         			<fileset dir="${lib}" includes="beagle.jar"/>
+        			<fileset dir="${lib}" includes="commons.jar"/>
 			        <fileset dir="${lib}" includes="colt.jar"/>
 			        <fileset dir="${lib}" includes="antlr-runtime-4.10.1.jar"/>
 			        <fileset dir="build/dist" includes="BEAST.base.jar" />

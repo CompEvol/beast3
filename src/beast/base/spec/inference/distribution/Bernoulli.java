@@ -46,7 +46,7 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
      * make sure internal state is up to date *
      */
     @Override
-    protected void refresh() {
+	public void refresh() {
         p = (pInput.get() != null) ? pInput.get().get() : 1.0;
     }
 
