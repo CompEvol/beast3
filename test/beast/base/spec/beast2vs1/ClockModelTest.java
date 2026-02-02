@@ -30,7 +30,7 @@ public class ClockModelTest extends TestFramework {
     public void testRandomLocalClock() throws Exception {
         analyse(2);
     }
-    //TODO
+
     @Test
     public void testUCRelaxedClockLogNormal() throws Exception {
         analyse(3);
