@@ -1,5 +1,5 @@
-<package name="BEAST.base" version="3.0.0">
-<!-- note version="3.0.x" must be double quotes for Mac release script release/Mac/createdmg.sh -->
+<package name="BEAST.base" version="2.8.0">
+<!-- note version="2.8.x" must be double quotes for Mac release script release/Mac/createdmg.sh -->
 
             <!-- data types -->
             <service type="beast.base.evolution.datatype.DataType">

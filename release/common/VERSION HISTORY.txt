@@ -1,10 +1,13 @@
-                    BEAST v3.0.0 2026
+                    BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: June 2025
+Last updated: February 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast2/issues
 ================================================================================
+Version 2.8.0 February 2026
+	o introduce type system and beast.base.spec hierarchy
+
 Version 2.7.8 June 2025
 	## BEAST
 	o fix DeltaExchangeOperator, BactrianDeltaExchangeOperator, for weighted Dirichlet #1199

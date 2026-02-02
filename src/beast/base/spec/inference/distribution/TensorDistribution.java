@@ -132,8 +132,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
             // param is optional
             if (param != null) {
 
-                switch (param) {
-                    case Scalar scalar -> {
+                    if (param instanceof Scalar scalar) {
                         // sample distribution parameters
                         T newX = sample().getFirst();
                         while (! scalar.isValid(newX)) {
@@ -148,7 +147,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
                             }
                         }
                     }
-                    case Vector vector -> {
+                    else if (param instanceof Vector vector) {
                         List<T> newListX = null;
                         boolean valid = false; // start loop
                         while (! valid) {
@@ -181,8 +180,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
                             }
                         }
                     }
-                    default -> throw new IllegalStateException("Unexpected tensor type");
-                }
+                    else throw new IllegalStateException("Unexpected tensor type");
             }
 
         } catch (Exception e) {
