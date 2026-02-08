@@ -33,7 +33,7 @@ public class TensorUtils {
     }
 
 
-    private static double toDouble(Object value) {
+    public static double toDouble(Object value) {
         if (value instanceof Number number) {
             return number.doubleValue();
         } else if (value instanceof Boolean bool) {
