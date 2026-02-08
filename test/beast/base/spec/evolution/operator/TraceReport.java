@@ -4,8 +4,10 @@ import beast.base.core.BEASTObject;
 import beast.base.core.Input;
 import beast.base.inference.Logger;
 import beast.base.spec.inference.util.ESS;
+import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.TensorUtils;
+import beast.base.spec.type.Vector;
 import org.apache.commons.math3.stat.StatUtils;
 
 import java.io.File;
@@ -13,6 +15,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static beast.base.spec.type.TensorUtils.toDouble;
 
 /**
  * Modified logger which analyses a sequence of tree states generated
@@ -69,10 +73,22 @@ public class TraceReport extends Logger {
 
         if (paramToTrack instanceof Tensor<?,?> tensor) {
             values.add(TensorUtils.valuesToDoubleArray(tensor)[0]);
-            values2.add(TensorUtils.valuesToDoubleArray(tensor));
         } else
             throw new IllegalArgumentException("Require Tensor, but got " + paramToTrack);
 
+        // add all loggable in logger, flat the vector elements and concat with other scalars
+        List<Double> allValues = new ArrayList<>();
+        for (BEASTObject beastObject : loggersInput.get()) {
+            if (beastObject instanceof Scalar scalar) {
+                allValues.add(toDouble(scalar.get()));
+            } else if (tensor instanceof Vector vector) {
+                for (int i = 0; i < vector.size(); i++) {
+                    allValues.add(toDouble(vector.get(i)));
+                }
+            } else
+                throw new UnsupportedOperationException("Only support Vector or Scalar ! But get " + tensor.getClass());
+        }
+        values2.add(allValues.stream().mapToDouble(Double::doubleValue).toArray());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package beast.base.spec.evolution.operator;
 
 
+import beast.base.core.Loggable;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.State;
@@ -73,11 +74,12 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
         AsRealScalar asRealScalar = new AsRealScalar();
         asRealScalar.initByName("arg", calculator, "domain", PositiveReal.INSTANCE);
 
-		doMCMCrun(asRealScalar, operators);
+		doMCMCrun(asRealScalar, param1, param2, operators);
 	}
 
     // param must be RealScalar<PositiveReal> as required by LogNormal
-	private void doMCMCrun(RealScalar<PositiveReal> param, List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
+	private void doMCMCrun(RealScalar<PositiveReal> param, Loggable param1, Loggable param2,
+                           List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
 		Randomizer.setSeed(127);
@@ -103,6 +105,8 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
 				"logEvery", "10",
 				"burnin", "2000",
 				"log", param,
+                "log", param1,
+                "log", param2,
 				"silent", false
 				);
 
