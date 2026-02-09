@@ -70,13 +70,6 @@ The indicators themselves are boolean, but they can be cast to integers and summ
 </distribution>
 ```
 
-Some special cases may not even know the type, until you pass it into a model input.
-For example, [RPNcalculator]
-(https://github.com/CompEvol/beast3/blob/7f137e2604a1000f6a09b047fd122b7f44c77401/src/beast/base/spec/inference/util/RPNcalculator.java#L29-L35)
-can apply Reverse Polish Notation (RPN) expressions to multiply parameters and pass the result as a parameter to a model.
-You do not know the type when writing the code, but you do know the type required when you pass the result to a model.
-So, you can implement Tensor to treat the result in the high level, and use the cast classes later by given the correct domain.
-
 In some special cases, the type may not be known until the value is passed into a model input. 
 For example, the [RPNcalculator]
 (https://github.com/CompEvol/beast3/blob/7f137e2604a1000f6a09b047fd122b7f44c77401/src/beast/base/spec/inference/util/RPNcalculator.java#L29-L35) 
