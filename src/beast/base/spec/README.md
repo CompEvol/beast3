@@ -71,8 +71,8 @@ The indicators themselves are boolean, but they can be cast to integers and summ
 ```
 
 In some special cases, the type may not be known until the value is passed into a model input. 
-For example, the [RPNcalculator]
-(https://github.com/CompEvol/beast3/blob/7f137e2604a1000f6a09b047fd122b7f44c77401/src/beast/base/spec/inference/util/RPNcalculator.java#L29-L35) 
+For example, the `RPNcalculator` 
+https://github.com/CompEvol/beast3/blob/7f137e2604a1000f6a09b047fd122b7f44c77401/src/beast/base/spec/inference/util/RPNcalculator.java#L29-L35
 applies Reverse Polish Notation (RPN) expressions to calculate the current values of parameters, 
 and passes the resulting value to a model working like a parameter.
 When implementing the similar kind of utility classes, the concrete type of the result is not known in advance. 
