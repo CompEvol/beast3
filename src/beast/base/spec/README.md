@@ -1,4 +1,4 @@
-# Specification of BEAST 3 (Version 0.2.0)
+# Specification of BEAST 3 (Version 0.3.0)
 
 This specification defines a strong typing system that enforces compile-time type checking in order to:
 
@@ -36,18 +36,18 @@ These classes provide setter methods, for example, `RealScalarParam` or `RealVec
 
 The supported domain types in this version are:
 
-<a href="./Domain0.2.png"><img src="./Domain0.2.png" width="600" ></a>
+<a href="./Domain0.3.png"><img src="./Domain0.3.png" width="600" ></a>
 
 
 ## 2. Type 
 
 Constrain the value’s dimension.
 
-<a href="./Type0.2.png"><img src="./Type0.2.png" width="800" ></a>
+<a href="./Type0.3.png"><img src="./Type0.3.png" width="800" ></a>
 
 ## 3. Distribution 
 
-<a href="./Distribution2.0.png"><img src="./Distribution2.0.png" width="800" ></a>
+<a href="./Distribution3.0.png"><img src="./Distribution3.0.png" width="800" ></a>
 
 ## 4. Special case to use cast
 
