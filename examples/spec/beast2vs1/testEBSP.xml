@@ -215,7 +215,7 @@
                 <distribution spec="beast.base.spec.inference.distribution.Poisson">
                     <lambda estimate="true" spec="RealScalarParam" domain="PositiveReal" value="0.6931471805599453"/>
                     <param id="indsSun" spec="beast.base.spec.inference.util.AsIntScalar" domain="NonNegativeInt" >
-                         <arg spec="beast.base.spec.evolution.Sum" arg="@indicators" />
+                         <arg spec="beast.base.spec.evolution.IntSum" arg="@indicators" />
                     </param>
                 </distribution>
 
