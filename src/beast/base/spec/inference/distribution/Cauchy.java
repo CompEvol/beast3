@@ -69,7 +69,7 @@ public class Cauchy extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

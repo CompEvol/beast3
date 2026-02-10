@@ -70,7 +70,7 @@ public class Beta extends ScalarDistribution<RealScalar<UnitInterval>, Double> {
     }
 
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

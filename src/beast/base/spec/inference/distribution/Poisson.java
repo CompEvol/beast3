@@ -59,7 +59,7 @@ public class Poisson extends ScalarDistribution<IntScalar<NonNegativeInt>, Integ
     }
 
     @Override
-    protected List<Integer> sample() {
+	public List<Integer> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

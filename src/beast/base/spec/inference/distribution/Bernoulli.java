@@ -75,7 +75,7 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
     }
 
     @Override
-    protected List<Boolean> sample() {
+	public List<Boolean> sample() {
         boolean success = (Randomizer.nextDouble() < p);
         // Returning an immutable result
         return List.of(success);

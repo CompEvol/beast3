@@ -154,7 +154,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
     
     @Override
-    protected List<Integer> sample() {
+	public List<Integer> sample() {
         // Sample CDF value that is compatible with the valid interval [lower, upper] 
         int uLower = lower.get();
         int uUpper = upper.get();

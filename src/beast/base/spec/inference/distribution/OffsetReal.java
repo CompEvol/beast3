@@ -98,7 +98,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
     
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
     	List<Double> samples = dist.sample();
     	for (int i = 0; i < samples.size(); i++) {
     		samples.set(i, samples.get(i) + offset.get());

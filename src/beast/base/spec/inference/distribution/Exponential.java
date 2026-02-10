@@ -67,7 +67,7 @@ public class Exponential extends ScalarDistribution<RealScalar<NonNegativeReal>,
     }
 
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

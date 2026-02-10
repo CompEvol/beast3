@@ -67,7 +67,7 @@ public class ChiSquare extends ScalarDistribution<RealScalar<NonNegativeReal>, D
     }
 
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

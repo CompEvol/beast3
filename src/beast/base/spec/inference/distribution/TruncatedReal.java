@@ -164,7 +164,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     }
     
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         // Sample CDF value that is compativle with the valid interval [lower, upper] 
         double uLower = getLowerCDF();
         double uUpper = getUpperCDF();

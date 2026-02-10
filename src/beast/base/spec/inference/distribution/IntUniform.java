@@ -77,7 +77,7 @@ public class IntUniform extends ScalarDistribution<IntScalar<Int>, Integer> { //
     }
 
     @Override
-    protected List<Integer> sample() {
+	public List<Integer> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

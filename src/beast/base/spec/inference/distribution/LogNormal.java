@@ -84,7 +84,7 @@ public class LogNormal extends ScalarDistribution<RealScalar<PositiveReal>, Doub
     }
 
     @Override
-    protected List<Double> sample() {
+	public List<Double> sample() {
         if (sampler == null) {
             // Ensure sampler exists
             sampler = dist.createSampler(rng);

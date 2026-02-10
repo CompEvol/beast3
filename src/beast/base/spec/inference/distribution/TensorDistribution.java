@@ -112,7 +112,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
      *          if S is scalar then only 1 element in the list.
      *
      */
-    protected abstract List<T> sample();
+    public abstract List<T> sample();
 
     //*** Override Distribution methods ***//
 

@@ -181,7 +181,7 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
     }
 
     @Override
-	protected List<Double> sample() {
+	public List<Double> sample() {
 		throw new RuntimeException("not implemented yet");
 	}
 }

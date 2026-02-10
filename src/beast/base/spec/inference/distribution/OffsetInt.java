@@ -97,7 +97,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
     
     @Override
-    protected List<Integer> sample() {
+	public List<Integer> sample() {
     	List<Integer> samples = dist.sample();
     	for (int i = 0; i < samples.size(); i++) {
     		samples.set(i, samples.get(i) + offset.get());

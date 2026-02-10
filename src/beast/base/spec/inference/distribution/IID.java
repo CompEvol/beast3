@@ -86,7 +86,7 @@ public class IID<V extends Vector<?, T>,
     }
 
     @Override
-    protected List<T> sample() {
+	public List<T> sample() {
         List<T> newListX = new ArrayList<>(dimension());
         for (int i = 0; i < dimension(); i++) {
             // Scalar
