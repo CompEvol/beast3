@@ -62,7 +62,7 @@ public class OneOnX extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     @Override
-    protected List<Double> sample() {
+    public List<Double> sample() {
         throw new UnsupportedOperationException("OneOnX does not support sampling.");
     }
 
