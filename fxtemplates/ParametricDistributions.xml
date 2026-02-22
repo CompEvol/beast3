@@ -1,0 +1,235 @@
+<beast version='2.0'
+       namespace='beastfx.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.inference.distribution'>
+
+
+    <mergewith point='parametricDistributions'>
+        <!-- Parametric distributions, all without hyperpriors -->
+
+        <!-- Uniform -->
+        <subtemplate id='Uniform' class='beast.base.spec.inference.distribution.Uniform' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Uniform.param'
+            hmc='
+            Uniform/GammaShape/=ParametricDistributions/Uniform/GammaShape/,
+            Uniform/upper/=ParametricDistributions/Uniform/upper/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.Uniform">
+        	<lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+        	<upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Normal -->
+        <subtemplate id='Normal' class='beast.base.spec.inference.distribution.Normal' mainid='[top]' 
+        	suppressInputs='beast.base.spec.inference.distribution.Normal.tau,beast.base.spec.inference.distribution.Normal.param'
+            hmc='
+			Normal/mean/=ParametricDistributions/Normal/mean/,
+			Normal/sigma/=ParametricDistributions/Normal/sigma/'>
+            <![CDATA[
+    <distr spec="beast.base.spec.inference.distribution.Normal">
+        <mean spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+        <sigma spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+    </distr>
+]]>
+        </subtemplate>
+
+        <!-- OneOnX -->
+        <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
+            <![CDATA[
+        <distr spec="beast.base.inference.distribution.OneOnX"/>
+]]>
+        </subtemplate>
+
+        <!-- lognormal -->
+        <subtemplate id='LogNormal' class='beast.base.spec.inference.distribution.LogNormal' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.LogNormal.param'
+            hmc='
+			LogNormal/M/=ParametricDistributions/LogNormalDistributionModel/M/,
+			LogNormal/S/=ParametricDistributions/LogNormalDistributionModel/S/,
+			LogNormal/meanInRealSpace/=ParametricDistributions/LogNormalDistributionModel/meanInRealSpace/'>
+            <![CDATA[
+        <distribution spec='beast.base.spec.inference.distribution.LogNormal'>
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
+        </distribution>
+]]>
+        </subtemplate>
+
+        <!-- Exponential -->
+        <subtemplate id='Exponential' class='beast.base.spec.inference.distribution.Exponential' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Exponential.param'
+            hmc='
+            Exponential/mean/=ParametricDistributions/Exponential/mean/'>
+            <![CDATA[
+        <distribution spec='beast.base.spec.inference.distribution.Exponential'>
+                <mean spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+        </distribution>
+]]>
+        </subtemplate>
+
+        <!-- Gamma -->
+        <subtemplate id='Gamma' class='beast.base.spec.inference.distribution.Gamma' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Gamma.beta,beast.base.spec.inference.distribution.Gamma.param'
+            hmc='
+			Gamma/theta/=ParametricDistributions/Gamma/beta/,
+			Gamma/alpha/=ParametricDistributions/Gamma/alpha/,
+			Gamma/mode/=ParametricDistributions/Gamma/mode/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.Gamma">
+                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Beta -->
+        <subtemplate id='Beta' class='beast.base.spec.inference.distribution.Beta' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Beta.param'
+            hmc='
+			Beta/beta/=ParametricDistributions/Beta/beta/,
+			Beta/alpha/=ParametricDistributions/Beta/alpha/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.Beta">
+                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+                <beta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Laplace -->
+        <subtemplate id='Laplace' class='beast.base.spec.inference.distribution.Laplace' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Laplace.param'
+            hmc='
+			Laplace/lambda/=ParametricDistributions/LaplaceDistribution/lambda//mu/,
+			Laplace/scale/=ParametricDistributions/LaplaceDistribution/scale/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.Laplace">
+                <mu spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <scale spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+
+        <!-- Truncated Real -->
+        <subtemplate id='BoundedReal' class='beast.base.spec.inference.distribution.TruncatedReal' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.TruncatedReal.param'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.TruncatedReal">
+            <param spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Normal">
+                <mean spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <sigma spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Truncated Int -->
+        <subtemplate id='BoundedInt' class='beast.base.spec.inference.distribution.TruncatedInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.TruncatedInt.param'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.TruncatedInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <lower spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <upper spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="1" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+        
+        <!-- Offset Real -->
+        <subtemplate id='OffsetReal' class='beast.base.spec.inference.distribution.OffsetReal' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetReal.param'
+			hmc='OffsetReal/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetReal">
+            <param spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Normal">
+                <mean spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <sigma spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Offset Int -->
+        <subtemplate id='OffsetInt' class='beast.base.spec.inference.distribution.OffsetInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetInt.param'
+			hmc='OffsetInt/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+
+        <!-- InverseGamma -->
+        <subtemplate id='InverseGamma' class='beast.base.spec.inference.distribution.InverseGamma' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.InverseGamma.param'
+            hmc='
+			InverseGamma/beta/=ParametricDistributions/InverseGamma/beta/,
+			InverseGamma/alpha/=ParametricDistributions/InverseGamma/alpha/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.InverseGamma">
+                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+                <beta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- Poisson -->
+        <subtemplate id='Poisson' class='beast.base.spec.inference.distribution.Poisson' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Poisson.param'
+            hmc='
+            Poisson/lambda/=ParametricDistributions/Poisson/lambda/'>
+            <![CDATA[
+		<distr spec='beast.base.spec.inference.distribution.Poisson'>
+            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+		</distr>
+]]>
+        </subtemplate>
+
+        <!-- Dirichlet -->
+        <subtemplate id='Dirichlet' class='beast.base.inference.distribution.Dirichlet' mainid='[top]'
+            hmc='
+            Dirichlet/alpha/=ParametricDistributions/Dirichlet/mean/,
+            Dirichlet/offset/=ParametricDistributions/Dirichlet/offset/'>
+            <![CDATA[
+			<distr spec="beast.base.inference.distribution.Dirichlet">
+                <parameter spec="parameter.RealParameter" estimate="false" name="alpha">1.0</parameter>
+            </distr> 
+]]>
+        </subtemplate>
+
+        <!-- IID -->
+        <subtemplate id='IID' class='beast.base.spec.inference.distribution.IID' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.IID.param'
+            hmc='
+            IID/alpha/=ParametricDistributions/IID/mean/,
+            IID/offset/=ParametricDistributions/IID/offset/'>
+            <![CDATA[
+			<distr spec="beast.base.spec.inference.distribution.IID">
+	            <param spec="beast.base.spec.inference.parameter.RealVectorParam" dimension="2" domain="Real" lower="1.0E-9" upper="Infinity">1.0</param>
+        		<distr spec="beast.base.spec.inference.distribution.Uniform">
+		        	<lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="-1e307" estimate="false"/>
+		        	<upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1e307" estimate="false"/>
+        		</distr>
+            </distr> 
+]]>
+        </subtemplate>
+
+    </mergewith>
+
+
+</beast>

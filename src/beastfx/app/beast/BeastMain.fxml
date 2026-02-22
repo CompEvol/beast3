@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.DialogPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+
+<DialogPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="350.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="beastfx.app.beast.Controller">
+<!--
+    <expandableContent>
+      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="200.0" prefWidth="320.0" />
+    </expandableContent>
+-->    
+   <content>
+
+
+<AnchorPane>
+      <children>
+            <ImageView id="beastIcon" fitHeight="97.0" fitWidth="115.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@beast.png" />
+               </image>
+            </ImageView>
+            <Label layoutX="119.0" layoutY="19.0" text="Input file:" />
+            <TextField fx:id="inputFile" layoutX="184.0" layoutY="14.0" promptText="&lt;input file name&gt;" />
+            <Button layoutX="354.0" layoutY="14.0" mnemonicParsing="false" onAction="#chooseFile" text="Choose file...">
+         <opaqueInsets>
+            <Insets left="5.0" />
+         </opaqueInsets></Button>
+            <ChoiceBox fx:id="logFileMode" layoutX="114.0" layoutY="46.0" prefHeight="26.0" prefWidth="342.0" />
+            <Label layoutX="113.0" layoutY="84.0" text="Random number seed:" />
+            <TextField fx:id="seed" layoutX="279.0" layoutY="79.0" prefHeight="26.0" prefWidth="180.0" />
+      <Button fx:id="beagleInfoButton" layoutX="173.0" layoutY="314.0" mnemonicParsing="false" onAction="#showBeagleInfo" prefWidth="90" text="Beagle Info" />
+      <Button fx:id="runButton" layoutX="277.0" layoutY="314.0" mnemonicParsing="false" onAction="#run" prefWidth="90" text="Run" />
+      <Button layoutX="377.0" layoutY="314.0" mnemonicParsing="false" onAction="#quit" prefWidth="90" text="Quit" />
+      <Pane layoutX="114.0" layoutY="162.0" prefHeight="133.0" prefWidth="347.0" style="-fx-border-width: 1; -fx-border-color: darkgray;">
+         <children>
+            <Label layoutX="8.0" layoutY="9.0" text="Run options" />
+
+            <Label layoutX="111.0" layoutY="10.0" text="Threads" />
+            <ChoiceBox fx:id="threads" layoutX="166.0" layoutY="5.0" prefHeight="26.0" prefWidth="43.0" />
+            <Label layoutX="214.0" layoutY="9.0" text="Instances" />
+            <ChoiceBox fx:id="instances" layoutX="285.0" layoutY="4.0" prefHeight="26.0" prefWidth="50.0" />
+
+            <Label layoutX="8.0" layoutY="43.0" text="Prefer use of" />
+            <ChoiceBox fx:id="beagle" layoutX="111.0" layoutY="38.0" prefHeight="26.0" prefWidth="224.0" />
+            <Label layoutX="8.0" layoutY="74.5" text="Precision" />
+            <ChoiceBox fx:id="precision" layoutX="111.0" layoutY="69.5" prefHeight="26.0" prefWidth="224.0" />
+            <Label layoutX="8.0" layoutY="106.0" text="Scaling" />
+            <ChoiceBox fx:id="scaling" layoutX="111.0" layoutY="101.0" prefHeight="26.0" prefWidth="225.0" />
+         </children>
+         <opaqueInsets>
+            <Insets bottom="1.0" left="1.0" right="1.0" top="1.0" />
+         </opaqueInsets>
+      </Pane>
+      <Label layoutX="113.0" layoutY="117.0" text="Log level:" />
+      <ChoiceBox fx:id="logLevel" layoutX="279.0" layoutY="112.0" prefHeight="26.0" prefWidth="180.0" />
+      </children>
+    </AnchorPane>
+       </content>
+</DialogPane>

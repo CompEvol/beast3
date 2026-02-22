@@ -1,0 +1,93 @@
+analysisIdentifier,SpeciesTreePopSize.Species
+analysisIdentifier,popModelAIM.Species
+analysisIdentifier,popModelBridge.Species
+
+auxTreePrior,beast.base.evolution.tree.MRCAPrior
+auxTreePrior,beast.base.spec.evolution.tree.MRCAPrior
+auxTreePrior,beast.math.distributions.MultiMonophyleticConstraint
+auxTreePrior,beast.base.evolution.tree.MRCAPriorWithRogues
+auxTreePrior,beast.math.distributions.MultiMRCAPriors
+
+
+#beast.base.evolution.tree.MRCAPrior,"Clade ",taxonset," is ",distr
+# CladAage
+beast.math.distributions.FossilPrior,"Clade ",taxonset," has fossil prior",cite(10.1093/sysbio/syw076)," ",fossilDistr
+beast.math.distributions.FossilCalibration," with occurrance age (min=",minOccuranceAge,"&comma; max=",maxOccuranceAge,")&comma; divergence rate (min=",minDivRate,"&comma; max=",maxDivRate,")&comma; turnover rate (min=",minTurnoverRate,"&comma; max=",maxTurnoverRate,")&comma; sampling rate (min=",minSamplingRate,"&comma; max=",maxSamplingRate,")&comma; and sample gap (min=",minSamplingGap,"&comma; max=",maxSamplingGap,")"
+
+auxTreePrior,beast.math.distributions.FossilPrior
+
+# StarBeast2
+popModelBridge.Species,"This is a multi-species coalescent (StarBeast2",cite(10.1093/molbev/msx126),") analysis with population model ",childModel
+starbeast2.StarBeastClock," species tree clock model with clock rate ",clock.rate," and ",branchRatesModel.Species
+starbeast2.GeneTree,id," has ploidy ",ploidy
+
+auxTreePrior,starbeast2.GeneTree
+auxTreePrior,starbeast2.GeneTreeWithMigration
+
+popModelAIM.Species,"This is a mutli-species coalescent with migration analysis",cite(10.1093/molbev/msx307)," with population sizes ",Ne,"&comma; mean population ",NeMean,"&comma; ",m,"&comma; migration model ",migrationModel,"&comma; and rate is forward is ",rateIsForward
+migIndicatorSumPrior.Species,"sum of migration indicators ",distr
+migRatesPrior.Species,"rates of migration ",distr
+starbeast2.AllEqual," all equal rates "
+starbeast2.GeneTreeWithMigration
+
+# sampled ancestors
+beast.evolution.speciation.SABirthDeathModel," using a fossilised birth death model",cite(10.1371/journal.pcbi.1003919),"&comma; with diversification rate ",diversificationRate,"&comma; turnover rate ",turnover,"&comma; sampling proportion",samplingProportion,", and removal probability ",removalProbability,". Condition on rho sampling is ",conditionOnRhoSampling,"&comma; rho ",rho,"&comma; and origina ",origin
+
+# bdmm?
+beast.evolution.speciation.BirthDeathSkylineModel,"birth-death skyline model",cite(10.1371/journal.pcbi.1003919)," with with origin ",origin,"&comma; reproductive number ",reproductiveNumber,"&comma; rho ",rho,"&comma; and sampling proportion ",samplingProportion
+
+beast.base.evolution.alignment.TaxonSet,id
+
+# MASCOT
+beast.mascot.distribution.Mascot,"structured coalescent approximated through MASCOT",cite(10.1093/molbev/msx186)," with ","dynamics"
+beast.mascot.dynamics.Constant," constant population using population size ",Ne," and backward migration rates ",backwardsMigration
+
+# starting tree
+"RandomTree.t:$(n)","random starting tree"
+"ClusterTree.t:$(n)","cluster starting tree","clusterType"
+"NewickTree.t:$(n)","Newick starting tree"
+
+"StrictClock.c:$(n)","strict clock"," with clock rate @clock.rate","clock.rate"
+"ExponentialRelaxedClock.c:$(n)","uncorrelated exponential relaxed clock","cite(ExponentialRelaxedClock.c:$(n))"," with clock rate @clock.rate","clock.rate"
+"RelaxedClock.c:$(n)","uncorrelated log-normal relaxed clock","cite(RelaxedClock.c:$(n))"," with clock rate @clock.rate","clock.rate"," and standard deviation ","ucldStdev.c:$(n)"
+"RandomLocalClock.c:$(n)","random local clock","cite(RandomLocalClock.c:$(n))"," with clock rate @clock.rate","clock.rate"
+
+"JC69.s:$(n)","Jukes Cantor"," substitution model"
+"hky.s:$(n)","HKY"," substitution model","cite(hky.s:$(n))"," with kappa @kappa","kappa.s:$(n)"," and ","frequencies"
+"tn93.s:$(n)","TN93"," substitution model","cite(10.1093/oxfordjournals.molbev.a040023)"," with kappa1 @kappa1","kappa1.s:$(n)",", kappa2 @kappa2","kappa2.s:$(n)"," and ","frequencies"
+"gtr.s:$(n)","GTR"," substitution model",cite(10.1007/BF02101990)," with rateAC @rateAC","rateAC.s:$(n)","&comma; rateAG @rateAG","rateAG.s:$(n)","&comma; rateAT @rateAT","rateAT.s:$(n)","&comma; rateCG @rateCG","rateCG.s:$(n)","&comma; rateCT @rateCT","rateCT.s:$(n)",", rateGT @rateGT","rateGT.s:$(n)"," and ","frequencies"
+"Blosum62.s:$(n)","Blosum62","cite(Blosum62.s:$(n))"
+"Dayhoff.s:$(n)","Dayhoff","cite(Dayhoff.s:$(n))"
+"JTT.s:$(n)","JTT","cite(JTT.s:$(n))"
+"CPREV.s:$(n)","CPREV","cite(CPREV.s:$(n))"
+"MTREV.s:$(n)","MTREV","cite(MTREV.s:$(n))"
+"WAG.s:$(n)","WAG","cite(WAG.s:$(n))"
+"MutationDeathModel.s:$(n)","stochastic Dollo"," model","cite(MutationDeathModel.s:$(n))"
+
+"estimatedFreqs.s:$(n)","estimated"," frequencies"
+"empiricalFreqs.s:$(n)","empirical"," frequencies"
+"equalFreqs.s:$(n)","equal"," frequencies"
+
+"YuleModel.t:$(n)","Yule model"," with birth rate @birthDiffRate","birthDiffRate"
+"CalibratedYuleModel.t:$(n)","Calibrated Yule model",cite(CalibratedYuleModel.t:$(n))," with birth rate @birthRate","birthRate"
+"BirthDeath.t:$(n)","birth death model",cite(BirthDeath.t:$(n))," with ","type"," tree type&comma; birth rate ","birthDiffRate","&comma; death rate ","relativeDeathRate"," and sample probability ","sampleProbability"
+"BirthDeathModel.t:$(n)","birth death model",cite(BirthDeathModel.t:$(n))," with ","type"," tree type&comma; birth rate ","birthDiffRate","&comma; death rate ","relativeDeathRate"," and sample probability ","sampleProbability"
+"CoalescentConstant.t:$(n)","constant coalescent"," tree prior with population size ","popSize.t:$(n)"
+"CoalescentExponential.t:$(n)","exponential coalescent"," tree prior with population size ","ePopSize.t:$(n)"," and growth rate ","growthRate.t:$(n)"
+"BayesianSkyline.t:$(n)","Bayesian skyline",cite(BayesianSkyline.t:$(n))," tree prior with population size ","bPopSizes.t:$(n)"
+"ExtendedBayesianSkyline.t:$(n)","extended Bayesian skyline"," tree prior with population size ","popSizes.alltrees"," and population mean ","populationMean.alltrees"
+
+#"Tree.t:Species","SpeciesTreePopSize.Species"
+"SpeciesTreePopSize.Species","This is a multi-species coalescent (*BEAST",cite(10.1093/molbev/msp274),") analysis with a ","popFunction"," population function and gamma ","gammaParameter"
+
+
+"beast.base.inference.distribution.Uniform","uniformly"," distributed ","(lower=","lower"," and upper=","upper",")"
+"beast.base.inference.distribution.Normal","normally"," distributed ","(mean=","mean"," and sigma=","sigma",")"
+"beast.base.inference.distribution.OneOnX","1/X"," distributed"
+"beast.base.inference.distribution.LogNormalDistributionModel","log-normally"," distributed ","(mean-log=","M"," and stdev-log=","S",")"
+"beast.base.inference.distribution.Exponential","exponentially"," distributed ","(mean=","mean",")"
+"beast.base.inference.distribution.Gamma","gamma"," distributed ","(alpha=","alpha"," and beta=","beta",")"
+"beast.math.distributions.Beta","beta"," distributed ","(alpha=","alpha"," and beta=","beta",")"
+"beast.base.inference.distribution.LaplaceDistribution","Laplace"," distributed ","(mu=","mu"," and scale=","scale",")"
+"beast.base.inference.distribution.InverseGamma","inverse Gamma"," distributed ","(alpha=","alpha"," and beta=","beta",")"
+"beast.base.inference.distribution.Poisson","Poisson"," distributed ","(lambda=","lambda",")"

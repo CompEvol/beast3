@@ -1,0 +1,173 @@
+
+<beast version='2.0'
+       namespace='beastfx.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.inference.distribution'>
+
+
+    <!-- Clock models -->
+    <mergewith point='clockModelTemplates'>
+
+        <!-- Strict clock -->
+        <subtemplate id='StrictClock' class='beast.base.spec.evolution.branchratemodel.StrictClockModel'
+                     mainid='StrictClock.c:$(n)'
+                     hmc='ClockPrior/index/=Priors/ClockPrior/,
+                        StrictClockRateScaler/index/=Operators/BactrianRateScaler/index/,
+                        strictClockUpDownOperator/index/=Operators/BactrianUpDown/index/'>
+            <![CDATA[
+                <branchRateModel spec='beast.base.spec.evolution.branchratemodel.StrictClockModel' id='StrictClock.c:$(n)'>
+                    <clock.rate id='clockRate.c:$(n)' spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value='1.0' estimate='false'/>
+                </branchRateModel>
+
+		        <operator id="StrictClockRateScaler.c:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="1.5">
+    	            <parameter idref="clockRate.c:$(n)"/>
+    		        <operator idref="AVMNOperator.$(n)"/>
+		    	    <operator id='StrictClockRateScalerX.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.1" weight="0.1" parameter="@clockRate.c:$(n)"/>
+		        </operator>
+
+	        	<operator id="strictClockUpDownOperator.c:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="1.5">
+    	            <parameter idref="clockRate.c:$(n)"/>
+        	        <tree idref="Tree.t:$(n)"/>
+	        	    <operator idref="AVMNOperator.$(n)"/>
+					<operator id='strictClockUpDownOperatorX.c:$(n)' spec='beast.base.spec.evolution.operator.UpDownOperator' scaleFactor="0.75" weight="3">
+						<up idref="clockRate.c:$(n)"/>
+						<down idref="Tree.t:$(n)"/>
+					</operator>
+    		    </operator>
+
+           <distribution id='ClockPrior.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@clockRate.c:$(n)' >
+                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
+                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+           </distribution>
+
+]]>
+            <connect srcID='clockRate.c:$(n)' targetID='state' inputName='stateNode'
+                     if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
+            <connect srcID='clockRate.c:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
+                     if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'/>
+            <connect srcID='ClockPrior.c:$(n)' targetID='prior' inputName='distribution'
+                     if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>substitution rate of
+                partition c:$(n)
+            </connect>
+            <connect srcID='StrictClockRateScaler.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true'>Scale substitution rate of
+                partition c:$(n)
+            </connect>
+            <connect srcID='strictClockUpDownOperator.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(clockRate.c:$(n)) and clockRate.c:$(n)/estimate=true and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'>
+                Scale up substitution rate c:$(n) and scale down tree t:$(n)
+            </connect>
+        </subtemplate>
+
+
+        <!-- Random local clock -->
+        <subtemplate id='RandomLocalClock' class='beast.base.spec.evolution.branchratemodel.RandomLocalClockModel'
+                     mainid='RandomLocalClock.c:$(n)'
+                     suppressInputs='beast.base.spec.evolution.branchratemodel.RandomLocalClockModel.rates,
+                     beast.base.spec.evolution.branchratemodel.RandomLocalClockModel.indicators,
+                     beast.base.spec.evolution.branchratemodel.RandomLocalClockModel.tree'
+                     hmc='
+					 RandomLocalClock/clock.rate/=StrictClock/clock.rate/,
+					 RandomLocalClock/scaling/,
+					 RandomLocalClock/includeRoot/,
+					 RandomLocalClock/ratesAreMultipliers/,
+                     RRatesPrior/index/=RandomLocalClock/RatesPrior/,
+                     RRateChangesPrior/index/=RandomLocalClock/RRateChangesPrior/,
+                     MeanRRatePrior/index/=Priors/ClockPrior/,
+                     ClockRateScaler/index/=Operators/BactrianRateScaler/index/,
+                     randomClockScaler/index/=Operators/BactrianRateScaler/index/,
+                     randomClockUpDownOperator/index/=Operators/BactrianUpDown/index/,
+                     BitFlipOperator/index/=Operators/BitFlipper/index/
+                     '>
+            <![CDATA[
+        <input spec='beast.base.spec.evolution.branchratemodel.RandomLocalClockModel' id="RandomLocalClock.c:$(n)" ratesAreMultipliers="false" tree='@Tree.t:$(n)'>
+            <clock.rate id='meanClockRate.c:$(n)' spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value='1.0' estimate='false'/>
+            <parameter spec='beast.base.spec.inference.parameter.BoolVectorParam' name='indicators' id='Indicators.c:$(n)' value="0"/>
+            <parameter spec='beast.base.spec.inference.parameter.RealVectorParam' domain="PositiveReal" name='rates' id='clockrates.c:$(n)' value="1"/> 
+            	<!-- lower="1e-9"/ -->
+        </input>
+
+        <operator id="IndicatorsBitFlip.c:$(n)" spec="beast.base.spec.inference.operator.BitFlipOperator" weight="15" parameter="@Indicators.c:$(n)"/>
+<!-- this should probably be a DeltaExchange instead of scale operator to keep mean rate to 1 -->
+        <operator id='ClockRateScaler.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleAll='false' scaleFactor="0.1" weight="15" parameter="@clockrates.c:$(n)"/>
+
+        <operator id='randomClockScaler.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.1" weight="1" parameter="@meanClockRate.c:$(n)"/>
+		<operator id='randomClockUpDownOperator.c:$(n)' spec='beast.base.spec.evolution.operator.UpDownOperator' scaleFactor="0.1" weight="3">
+			<up idref="meanClockRate.c:$(n)"/>
+			<down idref="Tree.t:$(n)"/>
+		</operator>
+
+		<distribution idref="prior">
+			<if cond='inlikelihood(RandomLocalClock.c:$(n))'>
+				<!-- prior on rates -->
+            <distribution id='RRatesPrior.c:s$(n)' spec='beast.base.spec.inference.distribution.IID' param='@clockrates.c:$(n)' >
+               <distr spec='beast.base.spec.inference.distribution.Gamma'>
+                  <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5" estimate="false"/>
+                  <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+               </distr>
+            </distribution>
+
+				<!-- prior on number of changes -->
+				<distribution id='RRateChangesPrior.c:$(n)' spec='beast.base.spec.inference.distribution.Poisson' >
+					<param id="RRateChanges.c:$(n)" spec="beast.base.spec.evolution.IntSum" arg="@Indicators.c:$(n)"/>
+                	<lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.6931471805599453" estimate="false"/>
+    		    </distribution>
+			</if>
+		</distribution>
+
+		<logger idref="tracelog">
+			<if cond='inlikelihood(RandomLocalClock.c:$(n))'>
+				<log idref="RRateChanges.c:$(n)"/>
+			</if>
+		</logger>
+
+      <distribution id='MeanRRatePrior.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@meanClockRate.c:$(n)' >
+         <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
+         <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+      </distribution>
+]]>
+            <connect srcID='Indicators.c:$(n)' targetID='state' inputName='stateNode'
+                     if='inlikelihood(Indicators.c:$(n))'/>
+            <connect srcID='meanClockRate.c:$(n)' targetID='state' inputName='stateNode'
+                     if='inlikelihood(meanClockRate.c:$(n)) and meanClockRate.c:$(n)/estimate=true'/>
+            <connect srcID='meanClockRate.c:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
+                     if='inlikelihood(meanClockRate.c:$(n)) and meanClockRate.c:$(n)/estimate=true'/>
+            <connect srcID='clockrates.c:$(n)' targetID='state' inputName='stateNode'
+                     if='inlikelihood(clockrates.c:$(n))'/>
+
+
+            <connect srcID='randomClockScaler.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(meanClockRate.c:$(n)) and meanClockRate.c:$(n)/estimate=true'>Scale clock rate of
+                partition c:$(n)
+            </connect>
+            <connect srcID='randomClockUpDownOperator.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(meanClockRate.c:$(n)) and inlikelihood(Tree.t:$(n)) and Tree.t:$(n)/estimate=true and meanClockRate.c:$(n)/estimate=true'>
+                Up/down scaler for mean rate and tree of partition c:$(n)
+            </connect>
+            <connect srcID='IndicatorsBitFlip.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(Indicators.c:$(n))'>Flip indicator bits for random clock of partition c:$(n)
+            </connect>
+            <connect srcID='ClockRateScaler.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(clockrates.c:$(n))'>Scale random clock rates of partition c:$(n)
+            </connect>
+            <connect srcID='Tree.t:$(n)' targetID='RandomLocalClock.c:$(n)' inputName='tree' if='inlikelihood(RandomLocalClock.c:$(n))'/>
+
+            <connect srcID='Indicators.c:$(n)' targetID='tracelog' inputName='log'
+                     if='inlikelihood(Indicators.c:$(n))'/>
+            <connect srcID='clockrates.c:$(n)' targetID='tracelog' inputName='log'
+                     if='inlikelihood(clockrates.c:$(n))'/>
+            <connect srcID='meanClockRate.c:$(n)' targetID='tracelog' inputName='log'
+                     if='inposterior(RandomLocalClock.c:$(n)) and meanClockRate.c:$(n)/estimate=true'/>
+
+            <connect srcID='MeanRRatePrior.c:$(n)' targetID='prior' inputName='distribution'
+                     if='inlikelihood(meanClockRate.c:$(n)) and meanClockRate.c:$(n)/estimate=true'>substitution rate of
+                partition c:$(n)
+            </connect>
+
+            <connect srcID='RandomLocalClock.c:$(n)' targetID='TreeWithMetaDataLogger.t:$(n)'
+                     inputName='branchratemodel' if='inposterior(RandomLocalClock.c:$(n))'/>
+        </subtemplate>
+
+    </mergewith>
+
+</beast>
+
+
