@@ -1,16 +1,17 @@
 package beast.base.inference.parameter;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.StateNode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.parameter.CompoundRealScalarParam}.
+ * @deprecated replaced by {@link beast.base.spec.inference.parameter.CompoundRealScalarParam}
+ *             or {@link beast.base.spec.inference.parameter.CompoundIntScalarParam}.
  *             It should be enough, but if not, the new compound could be added as requested.
  */
 @Deprecated
