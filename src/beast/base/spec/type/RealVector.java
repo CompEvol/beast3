@@ -1,8 +1,11 @@
 package beast.base.spec.type;
 
 
+import beast.base.core.BEASTInterface;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 
 public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<Double> {
 
@@ -36,13 +39,33 @@ public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<D
     @Override
     default Double getLower() {
         D domain = getDomain();
-        return domain.getLower();
+        Double lower = domain.getLower();
+        if (this instanceof BEASTInterface b) {
+            for (BEASTInterface o : b.getOutputs()) {
+                if (o instanceof ScalarDistribution d) {
+                    lower = BoundUtils.updateLower(lower, d, b);
+                } else if (o instanceof IID iid) {
+                    lower = BoundUtils.updateLower(lower, iid, b);
+                }
+            }
+        }
+        return lower;
     }
 
     @Override
     default Double getUpper() {
         D domain = getDomain();
-        return domain.getUpper();
+        Double upper = domain.getUpper();
+        if (this instanceof BEASTInterface b) {
+            for (BEASTInterface o : b.getOutputs()) {
+                if (o instanceof ScalarDistribution d) {
+                    upper = BoundUtils.updateUpper(upper, d, b);
+                } else if (o instanceof IID iid) {
+                    upper = BoundUtils.updateUpper(upper, iid, b);
+                }
+            }
+        }
+        return upper;
     }
 
     @Override

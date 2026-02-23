@@ -1,8 +1,11 @@
 package beast.base.spec.type;
 
 
+import beast.base.core.BEASTInterface;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
+import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 
 public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<Integer> {
 
@@ -36,13 +39,33 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
     @Override
     default Integer getLower() {
         D domain = getDomain();
-        return domain.getLower();
+        Integer lower = domain.getLower();
+        if (this instanceof BEASTInterface b) {
+            for (BEASTInterface o : b.getOutputs()) {
+                if (o instanceof ScalarDistribution d) {
+                    lower = BoundUtils.updateLower(lower, d, b);
+                } else if (o instanceof IID iid) {
+                    lower = BoundUtils.updateLower(lower, iid, b);
+                }
+            }
+        }
+        return lower;
     }
 
     @Override
     default Integer getUpper() {
         D domain = getDomain();
-        return domain.getUpper();
+        Integer upper = domain.getUpper();
+        if (this instanceof BEASTInterface b) {
+            for (BEASTInterface o : b.getOutputs()) {
+                if (o instanceof ScalarDistribution d) {
+                    upper = BoundUtils.updateUpper(upper, d, b);
+                } else if (o instanceof IID iid) {
+                    upper = BoundUtils.updateUpper(upper, iid, b);
+                }
+            }
+        }
+        return upper;
     }
 
     @Override

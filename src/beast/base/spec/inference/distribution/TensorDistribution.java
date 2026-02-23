@@ -97,6 +97,17 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     public abstract T getUpperBoundOfParameter();
 
 
+    // Note: these two must be overwritten
+    @Override
+    public Double getLower() {
+        throw new UnsupportedOperationException("Please override this method in every child class !");
+    }
+
+    @Override
+    public Double getUpper() {
+        throw new UnsupportedOperationException("Please override this method in every child class !");
+    }
+
     //*** abstract methods ***//
 
     /**

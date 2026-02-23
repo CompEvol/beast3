@@ -5,6 +5,7 @@ import beast.base.inference.MCMC;
 import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.Uniform;
@@ -83,19 +84,19 @@ public class IntervalOperatorTest {
             final double upper = 3.0;
 
             RealVectorParam<Real> parameter = new RealVectorParam<>(new double[]{1.0, 0.1, 2.0}, PositiveReal.INSTANCE);
+            // if ID is null the bounds setting will not work
+            parameter.setID("p1");
 
-            //TODO
-            parameter.setLower(lower);
-	        parameter.setUpper(upper);
+            // set bounds
+            Uniform uniform = new Uniform(null,
+                    new RealScalarParam<>(lower, Real.INSTANCE),
+                    new RealScalarParam<>(upper, Real.INSTANCE));
 
-//            Uniform uniform = new Uniform(null,
-//                    new RealScalarParam<>(0, Real.INSTANCE),
-//                    new RealScalarParam<>(3, Real.INSTANCE));
-//
-//            IID iid = new IID(parameter, uniform);
-//
-//            assertEquals(0.0, (Double) iid.getLower(), 1e-10);
-//            assertEquals(3.0, (Double) iid.getUpper(), 1e-10);
+            IID iid = new IID(parameter, uniform);
+            iid.setID("iid");
+
+            assertEquals(lower, (Double) iid.getLowerBoundOfParameter(), 1e-10);
+            assertEquals(upper, (Double) iid.getUpperBoundOfParameter(), 1e-10);
 
             State state = new State();
             state.initByName("stateNode", parameter);

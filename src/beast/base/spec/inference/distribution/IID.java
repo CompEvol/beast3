@@ -108,4 +108,5 @@ public class IID<V extends Vector<?, T>,
     public T getUpperBoundOfParameter() {
         return dist.getUpperBoundOfParameter();
     }
+
 }

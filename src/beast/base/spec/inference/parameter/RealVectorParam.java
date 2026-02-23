@@ -4,7 +4,6 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
-import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealVector;
 import org.w3c.dom.Node;
@@ -30,12 +29,12 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     public final Input<Integer> dimensionInput = new Input<>("dimension",
             "dimension of the parameter (default 1, i.e scalar)", 1);
-    @Deprecated
-    final public Input<Double> lowerValueInput = new Input<>("lower",
-            "lower value for this parameter (default -infinity)");
-    @Deprecated
-    final public Input<Double> upperValueInput = new Input<>("upper",
-            "upper value for this parameter (default +infinity)");
+//    @Deprecated
+//    final public Input<Double> lowerValueInput = new Input<>("lower",
+//            "lower value for this parameter (default -infinity)");
+//    @Deprecated
+//    final public Input<Double> upperValueInput = new Input<>("upper",
+//            "upper value for this parameter (default +infinity)");
 
     /**
      * the actual values of this parameter
@@ -47,10 +46,10 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     protected D domain;
 
     // default
-    @Deprecated
-    protected double lower = Double.NEGATIVE_INFINITY;
-    @Deprecated
-    protected double upper = Double.POSITIVE_INFINITY;
+//    @Deprecated
+//    protected double lower = Double.NEGATIVE_INFINITY;
+//    @Deprecated
+//    protected double upper = Double.POSITIVE_INFINITY;
 
     /**
      * isDirty flags for individual elements in high dimensional parameters
@@ -92,14 +91,14 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         initAndValidate();
     }
 
-    /**
-     * This constructor centralizes logic in one place,
-     * and guarantees initAndValidate() runs once.
-     * @param values   vector values
-     * @param domain   vector {@link Domain}
-     * @param lower    lower bound
-     * @param upper    upper bound
-     */
+//    /**
+//     * This constructor centralizes logic in one place,
+//     * and guarantees initAndValidate() runs once.
+//     * @param values   vector values
+//     * @param domain   vector {@link Domain}
+//     * @param lower    lower bound
+//     * @param upper    upper bound
+//     */
 //    public RealVectorParam(final double[] values, D domain, double lower, double upper) {
 //        setInputsNoValidation(values, domain, lower, upper);
 //
@@ -203,15 +202,15 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         return values.length;
     }
 
-    @Override
-    public Double getLower() {
-        return lower;
-    }
-
-    @Override
-    public Double getUpper() {
-        return upper;
-    }
+//    @Override
+//    public Double getLower() {
+//        return lower;
+//    }
+//
+//    @Override
+//    public Double getUpper() {
+//        return upper;
+//    }
 
     /**
      * @param key unique key for a value
@@ -292,23 +291,23 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
-    @Deprecated
-    public void setLower(Double lower) {
-        if (lower < getDomain().getLower())
-            throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.lower = lower;
-        lowerValueInput.setValue(lower, this);
-    }
-
-    @Deprecated
-    public void setUpper(Double upper) {
-        if (upper > getDomain().getUpper())
-            throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + getDomain().getClass().getName());
-        this.upper = upper;
-        upperValueInput.setValue(upper, this);
-    }
+//    @Deprecated
+//    public void setLower(Double lower) {
+//        if (lower < getDomain().getLower())
+//            throw new IllegalArgumentException("Lower bound " + lower +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.lower = lower;
+//        lowerValueInput.setValue(lower, this);
+//    }
+//
+//    @Deprecated
+//    public void setUpper(Double upper) {
+//        if (upper > getDomain().getUpper())
+//            throw new IllegalArgumentException("Upper bound " + upper +
+//                    " is not valid for domain " + getDomain().getClass().getName());
+//        this.upper = upper;
+//        upperValueInput.setValue(upper, this);
+//    }
 
     //*** StateNode methods ***
 

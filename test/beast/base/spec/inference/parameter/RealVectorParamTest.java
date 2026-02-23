@@ -2,8 +2,14 @@ package beast.base.spec.inference.parameter;
 
 
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.TruncatedReal;
+import beast.base.spec.inference.distribution.Uniform;
 import org.junit.jupiter.api.Test;
+import test.beast.BEASTTestCase;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -30,13 +36,8 @@ public class RealVectorParamTest {
             assertTrue(message.contains("not valid for domain") & message.contains("PositiveReal"), ex.getMessage());
         }
 
-        //TODO ?, no exception here
-        try {
-            parameter.set(2, 2.0); // this will throw an exception
-            assertNotSame(parameter.get(0), parameter.get(2));
-        } catch (Exception e) {
-            // setValue is not allowed for StateNode not in State
-        }
+        parameter.set(2, 2.0); // this will throw an exception
+        assertNotSame(parameter.get(0), parameter.get(2));
 
     }
 
@@ -88,6 +89,75 @@ public class RealVectorParamTest {
             String message = ex.getMessage();
             assertTrue(message.contains("not valid for domain") & message.contains("PositiveReal"), ex.getMessage());
         }
+    }
+
+    @Test
+    void testBounds() {
+        RealVectorParam param = new RealVectorParam(new double[]{1.0,1.0}, PositiveReal.INSTANCE);
+        param.setID("param");
+
+        Normal normal = new Normal(null, new RealScalarParam(0, Real.INSTANCE),
+                new RealScalarParam(1, PositiveReal.INSTANCE));
+        normal.setID("normal");
+        IID iid = new IID(param, normal);
+        iid.setID("iid");
+
+        assertEquals(0.0, param.getLower(), BEASTTestCase.PRECISION);
+        assertEquals(Double.POSITIVE_INFINITY, param.getUpper(), BEASTTestCase.PRECISION);
+
+        // Note IID bounds are Normal bounds, which is diff to param bounds
+        assertEquals(Double.NEGATIVE_INFINITY, (Double) iid.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+        assertEquals(Double.POSITIVE_INFINITY, (Double) iid.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
+    }
+
+    @Test
+    void testBounds2() {
+        RealVectorParam param = new RealVectorParam(new double[]{1.0,1.0}, PositiveReal.INSTANCE);
+        param.setID("param");
+
+        // base dist has no param
+        Normal normal = new Normal(null, new RealScalarParam(0, Real.INSTANCE),
+                new RealScalarParam(1, PositiveReal.INSTANCE));
+        normal.setID("normal");
+
+        // now wrap the Normal in a TruncatedRealDistribution to specify narrower bounds
+        TruncatedReal truncated = new TruncatedReal(normal, 1.0, 2.0);
+        truncated.setID("truncated");
+
+        IID iid = new IID(param, truncated);
+        iid.setID("iid");
+
+        assertEquals(1.0, param.getLower(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, param.getUpper(), BEASTTestCase.PRECISION);
+
+        assertEquals(1.0, truncated.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, truncated.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
+
+        assertEquals(1.0, (Double) iid.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, (Double) iid.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
+    }
+
+    @Test
+    void testBounds3() {
+        RealVectorParam param = new RealVectorParam(new double[]{1.0,1.0}, PositiveReal.INSTANCE);
+        param.setID("param");
+
+        // base dist has no param
+        Uniform uniform = new Uniform(null,
+                new RealScalarParam<>(1.0, Real.INSTANCE),
+                new RealScalarParam<>(2.0, Real.INSTANCE));
+
+        IID iid = new IID(param, uniform);
+        iid.setID("iid");
+
+        assertEquals(1.0, param.getLower(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, param.getUpper(), BEASTTestCase.PRECISION);
+
+        assertEquals(1.0, uniform.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, uniform.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
+
+        assertEquals(1.0, (Double) iid.getLowerBoundOfParameter(), BEASTTestCase.PRECISION);
+        assertEquals(2.0, (Double) iid.getUpperBoundOfParameter(), BEASTTestCase.PRECISION);
     }
 
 

@@ -5,8 +5,6 @@ import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 
-import java.util.List;
-
 public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<Double> {
 
     /**
@@ -33,14 +31,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         if (this instanceof BEASTInterface b) {
         	for (BEASTInterface o : b.getOutputs()) {
         		if (o instanceof ScalarDistribution d) {
-        			List<String> arguments = d.getArguments();
-        			if (arguments.contains(b.getID()) && b.getID() != null) {
-        				try {
-        					lower = Math.max(lower, (Double) d.getLowerBoundOfParameter());
-        				} catch (Throwable e) {
-        					// ignore
-        				}
-        			}
+                    lower = BoundUtils.updateLower(lower, d, b);
         		}
         	}
         }
@@ -54,14 +45,7 @@ public interface RealScalar<D extends Real> extends Scalar<D, Double>, Bounded<D
         if (this instanceof BEASTInterface b) {
         	for (BEASTInterface o : b.getOutputs()) {
         		if (o instanceof ScalarDistribution d) {
-        			List<String> arguments = d.getArguments();
-        			if (arguments.contains(b.getID()) && b.getID() != null) {
-        				try {
-        					upper = Math.min(upper, (Double) d.getUpperBoundOfParameter());
-        				} catch (Throwable e) {
-        					// ignore
-        				}
-        			}
+        			upper = BoundUtils.updateUpper(upper, d, b);
         		}
         	}
         }
