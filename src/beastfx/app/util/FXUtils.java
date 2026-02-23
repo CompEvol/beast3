@@ -113,7 +113,7 @@ public class FXUtils {
     }
 
 	public static ImageView getIcon(String iconLocation) {
-		return getIcon("BEAST.app", iconLocation);
+		return getIcon("BEAST.base", iconLocation);
 	}
 	
 	public static ImageView getIcon(String packageName, String iconLocation) {

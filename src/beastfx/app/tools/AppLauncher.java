@@ -266,7 +266,7 @@ public class AppLauncher {
                     packageApp.icon = Utils.getIcon(packageApp.packageName, iconLocation);
                 }
                 if (packageApp.icon == null || iconLocation.trim().isEmpty())
-                    packageApp.icon = Utils.getIcon("BEAST.app", DEFAULT_ICON);
+                    packageApp.icon = Utils.getIcon("BEAST.base", DEFAULT_ICON);
 
                 packageApps.add(packageApp);
             }

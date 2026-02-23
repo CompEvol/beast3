@@ -325,7 +325,6 @@ public class BeastLauncher {
 	 */
 	public static String getPath(boolean useStrictVersions, String beastFile) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
 		installBEASTPackage("BEAST.base", false);
-		installBEASTPackage("BEAST.app", true);
 		PackageManager.initialise();
 
 
@@ -686,12 +685,8 @@ public class BeastLauncher {
 					File jarFile = new File(jarFileName);
 					BEASTClassLoader.classLoader.addURL(jarFile.toURI().toURL(), "BEAST.base", null);
 				}
-				if (jarFileName.toLowerCase().endsWith("beast.app.jar")) {
-					File jarFile = new File(jarFileName);
-					BEASTClassLoader.classLoader.addURL(jarFile.toURI().toURL(), "BEAST.app", null);
-				}
 			}
-			BEASTClassLoader.classLoader.addParent("BEAST.app", "BEAST.base");
+			// BEASTClassLoader.classLoader.addParent("BEAST.app", "BEAST.base");
 			BEASTClassLoader.initServices(classPath);
 		
 			Class<?> mainClass = BEASTClassLoader.forName(main);

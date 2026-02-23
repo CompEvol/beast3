@@ -82,7 +82,6 @@ public class PackageManager {
     
     public final static String BEAST_PACKAGE_NAME = "BEAST";
     public final static String BEAST_BASE_PACKAGE_NAME = "BEAST.base";
-    public final static String BEAST_APP_PACKAGE_NAME = "BEAST.app";
 
     public final static String PACKAGES_XML = "https://raw.githubusercontent.com/CompEvol/CBAN/master/packages" + 
     		BEASTVersion.INSTANCE.getMajorVersion() + ".xml";
@@ -1228,14 +1227,10 @@ public class PackageManager {
 //        findDataTypes();
     } // loadExternalJars
 
-	// BEAST.app and BEAST.base are split, but are used together by beast.pkgmgmt.launcher.XYZLauncher 
 	// classes to launch BEAST, BEAUti etc.
 	// However, because they live in separate BEAST packages, they are loaded using their own
 	// package name, which hinders launchers, so BEAST.app loader is merged with BEAST.base loader
     private static String standardise(String packageName) {
-//    	if (packageName.equals("BEAST.app")) {
-//    		packageName = "BEAST.base";
-//    	}
 		return packageName;
 	}
 
@@ -1986,7 +1981,7 @@ public class PackageManager {
 
         // Print formatted package information
         for (Package pkg : packageList) {
-        	if (pkg.getName().equals(BEAST_BASE_PACKAGE_NAME) || pkg.getName().equals(BEAST_APP_PACKAGE_NAME)) {
+        	if (pkg.getName().equals(BEAST_BASE_PACKAGE_NAME)) {
         		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : "NA"); ps.print(sep);
 		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
@@ -2000,7 +1995,7 @@ public class PackageManager {
         
         // Print formatted package information
         for (Package pkg : packageList) {
-        	if (!pkg.getName().equals(BEAST_BASE_PACKAGE_NAME) && !pkg.getName().equals(BEAST_APP_PACKAGE_NAME)) {
+        	if (!pkg.getName().equals(BEAST_BASE_PACKAGE_NAME)) {
 	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : 
 	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);
@@ -2261,15 +2256,6 @@ public class PackageManager {
     		return -1;
     	}
     	if (s2.equals(BEAST_BASE_PACKAGE_NAME)) {
-    		return 1;
-    	}
-    	if (s1.equals(BEAST_APP_PACKAGE_NAME)) {
-    		if (s2.equals(BEAST_APP_PACKAGE_NAME)) {
-    			return 0;
-    		}
-    		return -1;
-    	}
-    	if (s2.equals(BEAST_APP_PACKAGE_NAME)) {
     		return 1;
     	}
     	return s1.toLowerCase().compareTo(s2.toLowerCase());

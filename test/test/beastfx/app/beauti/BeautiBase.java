@@ -64,17 +64,13 @@ public class BeautiBase extends ApplicationExtension {
 	protected BeautiDoc doc;
 
 	public BeautiBase() {
-		// make sure BEAST.base and BEAST.app are installed
+		// make sure BEAST.base is installed
 		System.setProperty("beast.is.junit.testing", "true");
 		try {
 			Set<String> packages = listInstalledPackages();
 			if (!packages.contains("BEAST.base")) {
 				// install minimal BEAST.base package
 				installBEASTBase();
-			}
-			if (!packages.contains("BEAST.app")) {
-				// install minimal BEAST.base package
-				installBEASTApp();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -125,25 +121,6 @@ public class BeautiBase extends ApplicationExtension {
 		} else {
 			Files.copy(Paths.get("../beast2/build/dist/BEAST.base.jar"), 
 				Paths.get(dir+"/BEAST.base.jar"),
-				StandardCopyOption.REPLACE_EXISTING);
-		}
-	}
-
-	private void installBEASTApp() throws IOException {
-		String dir = PackageManager.getPackageUserDir();
-		dir += "/BEAST.app";
-		new File(dir).mkdirs();
-		Files.copy(Paths.get("../BeastFX/version.xml"), 
-				Paths.get(dir+"/version.xml"),
-				StandardCopyOption.REPLACE_EXISTING);
-		dir += "/lib";
-		new File(dir).mkdirs();
-		if (!new File("../BeastFX/build/dist/BEAST.app.jar").exists()) {
-			new File("../BeastFX/build/dist/").mkdirs();
-			createJar("../BeastFX/build/", dir + "/BEAST.app.jar", "../BeastFX/build/".length());
-		} else {
-			Files.copy(Paths.get("../BeastFX/build/dist/BEAST.app.jar"),
-				Paths.get(dir+"/BEAST.app.jar"),	
 				StandardCopyOption.REPLACE_EXISTING);
 		}
 	}

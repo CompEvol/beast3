@@ -979,11 +979,11 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         	if (new File(STANDARD_TEMPLATE).exists()) {
         		xml = processTemplate(STANDARD_TEMPLATE);
         	} else {
-        		// try BEAST.app package in user package dir 
+        		// try BEAST.base package in user package dir 
         		String pacakgeUseDir = PackageManager.getPackageUserDir();
     			// deal with special characters and spaces in path
         		pacakgeUseDir = URLDecoder.decode(pacakgeUseDir, "UTF-8");
-        		String template1 = pacakgeUseDir + "/BEAST.app/" + STANDARD_TEMPLATE;
+        		String template1 = pacakgeUseDir + "/BEAST.base/" + STANDARD_TEMPLATE;
         		if (new File(template1).exists()) {
         			xml = processTemplate(template1);
         		} else {        		

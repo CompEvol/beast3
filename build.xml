@@ -213,11 +213,12 @@
                 <include name="beastfx/**/*.class" />
                 <include name="beast/base/**/*.properties" />
                 <include name="beast/base/**/*.png" />
+                <include name="beastfx/**/*.png" />
             </fileset>
             <zipgroupfileset dir="${lib}" includes="beagle.jar" />
             <zipgroupfileset dir="${lib}" includes="colt.jar" />
             <zipgroupfileset dir="${lib}" includes="antlr-runtime-4.13.2.jar"/>
-	        <zipgroupfileset dir="${lib}" includes="commons-math3-3.6.1.jar" />
+	        <zipgroupfileset dir="${lib}" includes="commons.jar" />
         </jar>
 
         <jar jarfile="${dist}/BEAST.base.src.jar">

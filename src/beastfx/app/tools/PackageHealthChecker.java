@@ -133,7 +133,7 @@ public class PackageHealthChecker extends Runnable {
 		if (beastClasses.size() > 0) {
 			report("Classes found in jar file that are in the 'beast' package:");
 			report(beastClasses);
-			report("The 'beast' namespace is reserved for the BEAST.base and BEAST.app packages.");
+			report("The 'beast' namespace is reserved for the BEAST.base package.");
 		}
 		
 		if (classOutsideNamespace.size() > 0) {
