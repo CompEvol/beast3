@@ -816,11 +816,21 @@ public class Input<T> {
     } // setStringValue
 
     private T getTensorValue(String stringValue) {
+    	Domain instance = Real.INSTANCE;
+		try {
+			Field field = theClass.getDeclaredField("INSTANCE");
+	        instance = (Domain) field.get(null);
+		} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+    	
 		if (tensorClass.equals(RealScalar.class)) {
-			return (T) new RealScalarParam<Real>((double) Double.valueOf(stringValue), Real.INSTANCE);
+			return (T) new RealScalarParam<Real>((double) Double.valueOf(stringValue), (Real) instance);
 		}
 		if (tensorClass.equals(IntScalar.class)) {
-			return (T) new IntScalarParam<Int>((int) Integer.valueOf(stringValue), Int.INSTANCE);
+			return (T) new IntScalarParam<Int>((int) Integer.valueOf(stringValue), (Int) instance);
 		}
 		if (tensorClass.equals(BoolScalar.class)) {
 			return (T) new BoolScalarParam((boolean) Boolean.valueOf(stringValue));
@@ -839,7 +849,7 @@ public class Input<T> {
 			for (int i = 0; i < values.length; i++) {
 				values[i] = Double.valueOf(strs[i]);
 			}
-			return (T) new RealVectorParam<Real>(values, Real.INSTANCE);
+			return (T) new RealVectorParam<Real>(values, (Real) instance);
 		}
 		if (tensorClass.equals(IntVector.class)) {
 			String [] strs = stringValue.split("\\s+");
@@ -847,7 +857,7 @@ public class Input<T> {
 			for (int i = 0; i < values.length; i++) {
 				values[i] = Integer.valueOf(strs[i]);
 			}
-			return (T) new IntVectorParam<Int>(values, Int.INSTANCE);
+			return (T) new IntVectorParam<Int>(values, (Int) instance);
 		}
 		return null;
 	}
