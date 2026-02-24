@@ -27,8 +27,22 @@ package beast.base.core;
 
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.DomainRegister;
+import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.BoolScalarParam;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.SimplexParam;
+import beast.base.spec.type.BoolScalar;
+import beast.base.spec.type.IntScalar;
+import beast.base.spec.type.IntVector;
+import beast.base.spec.type.RealScalar;
+import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Simplex;
+import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
 
 import java.io.File;
@@ -724,9 +738,14 @@ public class Input<T> {
          * <input id="hky.kappa" spec="RealScalarParam" domain="PositiveReal" value="1.0"/>
          */
         if (Domain.class.isAssignableFrom(theClass)) {
-            value = DomainRegister.fromString(stringValue);
+            if (tensorClass != null && Tensor.class.isAssignableFrom(tensorClass)) {
+            	value = getTensorValue(stringValue);
+            } else {
+            	value = DomainRegister.fromString(stringValue);
+            }
             return;
         }
+
 
         /*
          * Java types
@@ -786,6 +805,7 @@ public class Input<T> {
             }
             throw new IllegalArgumentException("Input 104: value " + stringValue + " not found. Select one of " + Arrays.toString(possibleValues));
         }
+        
 
         // call a string constructor of theClass
         Object o = constructFromString(stringValue);
@@ -795,7 +815,44 @@ public class Input<T> {
         }
     } // setStringValue
 
-    private Object constructFromString(String stringValue) {
+    private T getTensorValue(String stringValue) {
+		if (tensorClass.equals(RealScalar.class)) {
+			return (T) new RealScalarParam<Real>((double) Double.valueOf(stringValue), Real.INSTANCE);
+		}
+		if (tensorClass.equals(IntScalar.class)) {
+			return (T) new IntScalarParam<Int>((int) Integer.valueOf(stringValue), Int.INSTANCE);
+		}
+		if (tensorClass.equals(BoolScalar.class)) {
+			return (T) new BoolScalarParam((boolean) Boolean.valueOf(stringValue));
+		}
+		if (tensorClass.equals(Simplex.class)) {
+			String [] strs = stringValue.split("\\s+");
+			double [] values = new double[strs.length];
+			for (int i = 0; i < values.length; i++) {
+				values[i] = Double.valueOf(strs[i]);
+			}
+			return (T) new SimplexParam(values);
+		}
+		if (tensorClass.equals(RealVector.class)) {
+			String [] strs = stringValue.split("\\s+");
+			double [] values = new double[strs.length];
+			for (int i = 0; i < values.length; i++) {
+				values[i] = Double.valueOf(strs[i]);
+			}
+			return (T) new RealVectorParam<Real>(values, Real.INSTANCE);
+		}
+		if (tensorClass.equals(IntVector.class)) {
+			String [] strs = stringValue.split("\\s+");
+			int [] values = new int[strs.length];
+			for (int i = 0; i < values.length; i++) {
+				values[i] = Integer.valueOf(strs[i]);
+			}
+			return (T) new IntVectorParam<Int>(values, Int.INSTANCE);
+		}
+		return null;
+	}
+
+	private Object constructFromString(String stringValue) {
     	try {
 	        Constructor ctor;
 	        Object v = stringValue;

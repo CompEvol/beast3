@@ -7,6 +7,18 @@ package beast.base.core;
  * where the possibilities of calculations are limitless.
  * *
  */
+/*
+ * @deprecated use any of the strong typed classes instead, such as
+ * beast.base.spec.type.RealScalar/RealVector
+ * beast.base.spec.type.IntScalar/IntVector
+ * beast.base.spec.type.BoolScalar/BoolVector
+ *
+ * with their appropriate domains, e.g.
+ * 
+ * RealScalar<PositiveReal> for positive real scalar function values
+ */
+
+@Deprecated
 public interface Function {
 
     /**

@@ -80,13 +80,15 @@
 <!--            <distribution spec='beast.base.spec.inference.distribution.Prior' scalar='@hky.kappa'>-->
 <!--                <distr spec='beast.base.inference.distribution.OneOnX'/>-->
 <!--            </distribution>-->
-            <distribution spec='beast.base.spec.inference.distribution.LogNormal' param='@hky.kappa' >
+            <distribution spec='beast.base.spec.inference.distribution.LogNormal' param='@hky.kappa' M="1.0" S="0.5"/>
                 <!-- M="1" S="0.5" />-->
+                <!-->
                 <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"
                        value="1.0"/>
                 <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"
                        value="0.5"/>
             </distribution>
+            -->
 
 <!--            <distribution spec='beast.base.spec.inference.distribution.Uniform' param='@hky.kappa' lower="1" upper="10" />-->
 
