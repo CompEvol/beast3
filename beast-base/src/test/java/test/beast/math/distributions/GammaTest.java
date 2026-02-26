@@ -24,9 +24,9 @@ public class GammaTest  {
 		double v = dist.inverseCumulativeProbability(0.5);
 		assertEquals(v, 5.244206e-299, 1e-304);
 		v = dist.inverseCumulativeProbability(0.05);
-		assertEquals(v, 0.0);
+		assertEquals(v, 0.0, 1e-304);
 		v = dist.inverseCumulativeProbability(0.025);
-		assertEquals(v, 0.0);
+		assertEquals(v, 0.0, 1e-304);
 		
 		v = dist.inverseCumulativeProbability(0.95);
 		assertEquals(v, 2.973588e-20, 1e-24);
