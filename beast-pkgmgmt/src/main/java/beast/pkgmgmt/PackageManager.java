@@ -1348,6 +1348,15 @@ public class PackageManager {
 			}
 		}
 		services = BEASTClassLoader.getServices().get(service);
+		// ServiceLoader fallback for JPMS
+		if (services == null) {
+			try {
+				Class<?> serviceClass = BEASTClassLoader.forName(service);
+				services = BEASTClassLoader.loadService(serviceClass);
+			} catch (ClassNotFoundException e) {
+				// ignore
+			}
+		}
 		return services;
 	}
 

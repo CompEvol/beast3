@@ -121,18 +121,66 @@ public class BEASTClassLoader {
 
     /**
      * Return set of provider class names for the given service.
+     * Tries the version.xml-populated registry first, then falls back
+     * to {@link ServiceLoader} for JPMS {@code provides} declarations.
      */
     public static Set<String> loadService(Class<?> service) {
         Set<String> providers = services.get(service.getName());
         if (providers == null) {
             if (services.isEmpty()) {
                 initServices();
-            } else {
-                services.put(service.getName(), new HashSet<>());
             }
             providers = services.get(service.getName());
         }
+        // ServiceLoader fallback for JPMS module-info.java provides
+        if (providers == null || providers.isEmpty()) {
+            Set<String> discovered = loadViaServiceLoader(service);
+            if (!discovered.isEmpty()) {
+                providers = services.computeIfAbsent(service.getName(), k -> new HashSet<>());
+                providers.addAll(discovered);
+            }
+        }
+        if (providers == null) {
+            services.put(service.getName(), new HashSet<>());
+            providers = services.get(service.getName());
+        }
         return providers;
+    }
+
+    /**
+     * Discover service providers by reading {@code provides} declarations
+     * from module descriptors in the boot layer and plugin layers.
+     * This avoids {@link ServiceLoader} (which requires a {@code uses}
+     * declaration in the <em>calling</em> module).
+     */
+    private static Set<String> loadViaServiceLoader(Class<?> service) {
+        String serviceName = service.getName();
+        Set<String> providerNames = new HashSet<>();
+        // Scan boot layer
+        collectProviders(ModuleLayer.boot(), serviceName, providerNames);
+        // Scan plugin layers
+        for (ModuleLayer layer : pluginLayers) {
+            collectProviders(layer, serviceName, providerNames);
+        }
+        return providerNames;
+    }
+
+    private static void collectProviders(ModuleLayer layer, String serviceName, Set<String> out) {
+        for (Module m : layer.modules()) {
+            java.lang.module.ModuleDescriptor desc = m.getDescriptor();
+            if (desc == null) continue;
+            for (java.lang.module.ModuleDescriptor.Provides provides : desc.provides()) {
+                if (provides.service().equals(serviceName)) {
+                    for (String providerName : provides.providers()) {
+                        out.add(providerName);
+                        class2loaderMap.putIfAbsent(providerName, m.getClassLoader());
+                        if (providerName.contains(".")) {
+                            namespaces.add(providerName.substring(0, providerName.lastIndexOf('.')));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /** Initialise services by scanning the classpath for version.xml files. */
