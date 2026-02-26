@@ -29,10 +29,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-//import org.json.JSONWriter;
-import org.json.JSONStringer;
+import beast.base.internal.json.JSONException;
+import beast.base.internal.json.JSONObject;
+//import beast.base.internal.json.JSONWriter;
+import beast.base.internal.json.JSONStringer;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;

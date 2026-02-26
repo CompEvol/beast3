@@ -38,8 +38,8 @@ import beast.base.parser.XMLParserException;
 import beast.base.util.FileUtils;
 import beast.base.util.Randomizer;
 import beast.pkgmgmt.PackageManager;
-import org.json.JSONException;
-import org.json.JSONObject;
+import beast.base.internal.json.JSONException;
+import beast.base.internal.json.JSONObject;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;

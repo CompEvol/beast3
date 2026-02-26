@@ -1,8 +1,8 @@
 package beast.base.inference;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import beast.base.internal.json.JSONArray;
+import beast.base.internal.json.JSONException;
+import beast.base.internal.json.JSONObject;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;

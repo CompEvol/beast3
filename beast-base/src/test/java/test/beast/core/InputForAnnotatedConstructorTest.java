@@ -2,7 +2,7 @@ package test.beast.core;
 
 import java.util.*;
 
-import org.json.JSONException;
+import beast.base.internal.json.JSONException;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import beast.base.core.BEASTInterface;

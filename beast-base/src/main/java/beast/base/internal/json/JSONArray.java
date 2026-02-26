@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.json;
+package beast.base.internal.json;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;

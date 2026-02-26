@@ -14,7 +14,7 @@ import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
 
-import org.json.JSONObject;
+import beast.base.internal.json.JSONObject;
 
 import beagle.BeagleFlag;
 import beagle.BeagleInfo;

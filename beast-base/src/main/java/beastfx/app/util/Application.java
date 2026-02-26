@@ -6,7 +6,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONObject;
+import beast.base.internal.json.JSONObject;
 
 import beast.base.core.Description;
 import beast.base.core.Input;

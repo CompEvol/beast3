@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.json.JSONObject;
+import beast.base.internal.json.JSONObject;
 
 import beastfx.app.beauti.ThemeProvider;
 import beastfx.app.inputeditor.BEASTObjectDialog;

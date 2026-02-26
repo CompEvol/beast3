@@ -33,9 +33,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONStringer;
+import beast.base.internal.json.JSONException;
+import beast.base.internal.json.JSONObject;
+import beast.base.internal.json.JSONStringer;
 
 import beast.base.core.Description;
 import beast.base.core.Function;
