@@ -130,9 +130,7 @@ Development
 
 See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
 
-For guidance on migrating external packages, see:
-- `scripts/migrate.md` — migrating from BEAST v2.6 to v2.7
-- `scripts/migration-guide.md` — migrating from BEAST v2.7 to v3
+For guidance on migrating external packages, see `scripts/migration-guide.md` (migrating from BEAST v2.7 to v3).
 
 Development rules and philosophy are discussed at
 [beast2.org/package-development-guide/core-development-rules](https://www.beast2.org/package-development-guide/core-development-rules/).
