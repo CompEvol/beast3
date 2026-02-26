@@ -12,8 +12,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import beast.base.inference.operator.DeltaExchangeOperator;
-import beast.base.inference.operator.kernel.BactrianDeltaExchangeOperator;
+import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beastfx.app.beauti.BeautiTabPane;
 import javafx.stage.Stage;
 
@@ -59,7 +58,7 @@ public class FixedMeanRateTest extends BeautiBase {
 		
 
 		
-		BactrianDeltaExchangeOperator operator = (BactrianDeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
+		DeltaExchangeOperator operator = (DeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
 		int nrOfParameters = operator.parameterInput.get().size();
 		if(nrOfParameters != 2) {
 			throw new IllegalArgumentException("Expected 2 parameters for deltaExchangeOperator, not " + nrOfParameters);
@@ -82,13 +81,13 @@ public class FixedMeanRateTest extends BeautiBase {
 		clickOnButtonWithText(robot, "Link Site Models");
 		clickOnButtonWithText(robot, "Unlink Site Models");
 		
-		BactrianDeltaExchangeOperator operator = (BactrianDeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
+		DeltaExchangeOperator operator = (DeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
 		int nrOfParameters = operator.parameterInput.get().size();
 		if (nrOfParameters != 3) {
 			throw new IllegalArgumentException("Expected 3 parameters for deltaExchangeOperator, not " + nrOfParameters);
 		}
 
-		List<Integer> weights = operator.parameterWeightsInput.get().valuesInput.get();
+		List<Integer> weights = operator.parameterWeightsInput.get().getElements();
 		assertEquals(weights.size(), 3);
 		assertEquals(weights.get(0), (Integer)614);
 		assertEquals(weights.get(1), (Integer)601);
@@ -97,7 +96,7 @@ public class FixedMeanRateTest extends BeautiBase {
 		selectPartitions(robot, 0, 2);
 		// beautiFrame.table().selectCells(TableCell.row(0).column(1), TableCell.row(2).column(1));
 		clickOnButtonWithText(robot, "Link Site Models");
-		operator = (BactrianDeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
+		operator = (DeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
 		nrOfParameters = operator.parameterInput.get().size();
 		
 		//SiteModelInputEditor.customConnector(doc);
@@ -105,7 +104,7 @@ public class FixedMeanRateTest extends BeautiBase {
 		if (nrOfParameters != 2) {
 			throw new IllegalArgumentException("Expected 2 parameters for deltaExchangeOperator, not " + nrOfParameters);
 		}
-		weights = operator.parameterWeightsInput.get().valuesInput.get();
+		weights = operator.parameterWeightsInput.get().getElements();
 		assertEquals(weights.size(), 2);
 		assertEquals(weights.get(0), (Integer)(614 + 819));
 		assertEquals(weights.get(1), (Integer)601);
