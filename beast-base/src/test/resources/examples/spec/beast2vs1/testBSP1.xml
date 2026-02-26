@@ -139,7 +139,7 @@
     <run spec="MCMC" id="mcmc" chainLength="5000000">
         <state>
             <stateNode id="skyline.popSize" spec='beast.base.spec.inference.parameter.RealVectorParam'
-                       domain="PositiveReal" dimension="5" value="380.0" lower="0.0" upper="38000.0"/>
+                       domain="PositiveReal" dimension="5" value="380.0"/>
             <!--  Note: for group size of BSP, need to set domain="PositiveInt" -->
             <stateNode id='skyline.groupSize' spec='beast.base.spec.inference.parameter.IntSimplexParam'
                        domain="PositiveInt" dimension="5" value="1"/>

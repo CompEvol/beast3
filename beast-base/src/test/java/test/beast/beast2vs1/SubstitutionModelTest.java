@@ -2,6 +2,7 @@ package test.beast.beast2vs1;
 
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import test.beast.beast2vs1.trace.Expectation;
 
@@ -13,6 +14,7 @@ import java.util.List;
  * @author Walter Xie
  */
 @Deprecated
+@Tag("slow")
 public class SubstitutionModelTest extends TestFramework {
 
     private final String[] XML_FILES = new String[]{"testHKY.xml", "testSiteModelAlpha.xml",

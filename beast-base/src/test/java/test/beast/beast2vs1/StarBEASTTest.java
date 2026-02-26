@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import test.beast.beast2vs1.trace.Expectation;
@@ -26,6 +27,7 @@ import test.beast.beast2vs1.trace.Expectation;
  *
  * @author Walter Xie
  */
+@Tag("slow")
 public class StarBEASTTest extends TestFramework {
 
     String[] XML_FILES = new String[]{"testStarBEASTConstant.xml", "testStarBEASTLinear.xml",

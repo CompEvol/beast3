@@ -141,7 +141,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
-                    <workingDirectory>${project.build.outputDirectory}</workingDirectory>
+                    <workingDirectory>${project.build.testOutputDirectory}</workingDirectory>
                     <argLine>
                         --add-reads beast.base=ALL-UNNAMED
                         --add-reads beast.pkgmgmt=ALL-UNNAMED

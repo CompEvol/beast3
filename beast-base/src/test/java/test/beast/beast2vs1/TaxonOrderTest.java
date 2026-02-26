@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import test.beast.beast2vs1.trace.Expectation;
 
+@Tag("slow")
 public class TaxonOrderTest extends TestFramework {
 
     private final String[] XML_FILES = new String[]{"testStarBeast2.xml"};

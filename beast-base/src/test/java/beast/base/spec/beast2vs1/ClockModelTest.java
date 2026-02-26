@@ -2,6 +2,7 @@ package beast.base.spec.beast2vs1;
 
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import test.beast.beast2vs1.trace.Expectation;
 
@@ -11,6 +12,7 @@ import java.util.List;
 /**
  * @author Walter Xie
  */
+@Tag("slow")
 public class ClockModelTest extends TestFramework {
 
     private final String[] XML_FILES = new String[]{"testStrictClock.xml", "testStrictClock2.xml",
