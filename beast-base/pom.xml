@@ -182,6 +182,24 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <!-- Copy fxtemplates/ to target/test-classes so BEAUti tests
+                         find Standard.xml when workingDirectory is test-classes -->
+                    <execution>
+                        <id>copy-fxtemplates-to-test-classes</id>
+                        <phase>generate-test-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.outputDirectory}</directory>
+                                    <includes>
+                                        <include>fxtemplates/**</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <!-- Copy runtime dependencies to target/lib/ for CLI execution -->
