@@ -10,10 +10,7 @@ import java.net.URL;
 import java.util.Properties;
 
 /**
- * The utils that work with Java6.
- *
- * Utils6 cannot depend on Utils class, where Utils6 is Java 6 compatible,
- * but Utils works on Java 8 and later.
+ * Low-level utility methods for the BEAST package manager.
  **/
 public class Utils6 {
 

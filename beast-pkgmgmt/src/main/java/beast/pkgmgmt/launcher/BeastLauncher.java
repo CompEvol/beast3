@@ -20,10 +20,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 /**
- * Loads beast.jar and launches BEAST through the BEASTMain class
- * 
- * This class should be compiled against 1.6 and packaged by itself. The
- * remainder of BEAST can be compiled against Java 1.8
+ * Bootstrap launcher for BEAST.
+ *
+ * <p>Builds the classpath from installed BEAST packages, loads external
+ * packages into JPMS {@link ModuleLayer}s, initialises the service
+ * registry, and launches the main application class.
  **/
 public class BeastLauncher {
 	public final static String ARCHIVE_DIR = "archive";
@@ -170,7 +171,7 @@ public class BeastLauncher {
 		}
 	}
 
-	// copy files using Java 6 code
+	// copy files
 	private static void copyFileUsingStream(File source, File dest) throws IOException {
 		InputStream is = null;
 		OutputStream os = null;
@@ -217,20 +218,6 @@ public class BeastLauncher {
 					}
 				}
 
-//				URLClassLoader sysLoader = (URLClassLoader) clu.getClass().getClassLoader();
-//				Class<?> sysclass = URLClassLoader.class;
-//				try {
-//					// Parameters
-//					Class<?>[] parameters = new Class[] { URL.class };
-//					Method method = sysclass.getDeclaredMethod("addURL", parameters);
-//					method.setAccessible(true);
-//					method.invoke(sysLoader, new Object[] { url });
-//					System.err.println("Loaded URL " + url);
-//					foundOne = true;
-//				} catch (Throwable t) {
-//					t.printStackTrace();
-//					throw new IOException("Error, could not add URL to system classloader");
-//				}
 				foundOne = true;
 				String classpath = System.getProperty("java.class.path");
 				String jar = url + "";
@@ -253,15 +240,15 @@ public class BeastLauncher {
 		return System.getProperty("os.name").toLowerCase().startsWith("linux");
 	}
 
-	/** make sure we run Java version 8 or better **/
+	/** Make sure we run Java 25 or later. **/
 	static protected boolean javaVersionCheck(String app) {
 		try {
 			int majorVersion = Utils6.getMajorJavaVersion();
-			if (majorVersion < 8) {
-				String JAVA_VERSION_MSG = "<html>" + app + " requires Java version at least 8<br>"
+			if (majorVersion < 25) {
+				String JAVA_VERSION_MSG = "<html>" + app + " requires Java 25 or later<br>"
 						+ "but the current version is " + majorVersion + ".<br><br>"
 						+ "Quit to update Java from <br>"
-						+ "<a href='https://www.java.com/en/'>https://www.java.com/</a>.</html>";
+						+ "<a href='https://www.azul.com/downloads/?package=jdk#zulu'>https://www.azul.com/downloads/</a>.</html>";
 				if (!java.awt.GraphicsEnvironment.isHeadless()) {
 					JOptionPane.showMessageDialog(null, JAVA_VERSION_MSG);
 				} else {
@@ -269,7 +256,7 @@ public class BeastLauncher {
 					JAVA_VERSION_MSG = JAVA_VERSION_MSG.replaceAll("<[^<]*>", "");
 					System.err.println(JAVA_VERSION_MSG);
 				}
-				return false; // if majorVersion < 8 then fail
+				return false;
 			}
 		} catch (NumberFormatException e) {
 			// We only get here if the JVM does not return the expected

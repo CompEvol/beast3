@@ -695,20 +695,8 @@ public class PackageManager {
      * 
      */
     private static void closeClassLoader() {
-    	try {
-    		if (Utils6.isWindows() && Utils6.getMajorJavaVersion() == 8) {
-    			// this class cast exception works on java 8, but not java 9 or above
-    			URLClassLoader sysLoader = (URLClassLoader) PackageManager.class.getClassLoader();
-    			// sysLoader.close(); // <= only since Java 1.7, so should be commented out for
-    			// build of launcher.jar with java 6 compatibility 
-    		}		
-    	//} catch (IOException e) {
-        //    System.err.println("Could not close ClassLoader: " + e.getMessage());
-   		
-        } catch (ClassCastException e) {
-            System.err.println("Could not close ClassLoader: " + e.getMessage());
-		}
-	}
+        // No-op: system ClassLoader is no longer a URLClassLoader in modern Java.
+    }
     
     private static void unloadPackage(File dir) {
         File versionFile = new File(dir.getPath() + "/version.xml");
@@ -1128,10 +1116,7 @@ public class PackageManager {
     	Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
         checkInstalledDependencies(packages);
 
-        // jars will only be loaded the classical (pre v2.5.0)
-        // way with java 8 when the -Dbeast.load.jars=true
-        // directive is given. This can be useful for developers
-        // but generally slows down application starting.
+        // Load external package JARs into JPMS ModuleLayers.
 //        if (Boolean.getBoolean("beast.load.jars") == false || Utils6.getMajorJavaVersion() != 8) {
 //            externalJarsLoaded = true;
 //        	Utils6.logToSplashScreen("PackageManager::findDataTypes");
