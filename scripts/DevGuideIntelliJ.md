@@ -39,8 +39,8 @@ If IntelliJ does not automatically pick up JDK 25:
 Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. If you haven't already, install them from the terminal:
 
 ```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 Then reload Maven in IntelliJ (right-click the root `pom.xml` → **Maven → Reload project**).

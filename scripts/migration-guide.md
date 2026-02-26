@@ -10,8 +10,8 @@
 * Install **Maven 3.9+** from [maven.apache.org](https://maven.apache.org/) or via your package manager.
 * One-time setup — install local JARs that are not in Maven Central:
   ```bash
-  mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
-  mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+  mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+  mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
   ```
 * Build:
   ```bash

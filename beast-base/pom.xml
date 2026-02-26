@@ -136,6 +136,41 @@
                     </argLine>
                 </configuration>
             </plugin>
+            <!-- Copy runtime dependencies to target/lib/ for CLI execution -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Run BEAST from the command line:
+                 mvn package -pl beast-pkgmgmt,beast-base
+                 mvn -pl beast-base exec:exec -Dbeast.args="example.xml" -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <arguments>
+                        <argument>--module-path</argument>
+                        <modulepath/>
+                        <argument>-m</argument>
+                        <argument>beast.base/beastfx.app.beast.BeastMain</argument>
+                        <argument>${beast.args}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

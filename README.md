@@ -46,8 +46,8 @@ Building
 Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. Install them to your local repository:
 
 ```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 ### Compile
@@ -65,12 +65,59 @@ mvn test
 Running
 -------
 
-The easiest way to run BEAST during development is from IntelliJ (see `scripts/DevGuideIntelliJ.md`).  IntelliJ resolves the full module path from Maven automatically.
+### From the command line
+
+Build the project, then use the `exec-maven-plugin` to launch BEAST with the correct module path:
+
+```bash
+mvn package -DskipTests
+mvn -pl beast-base exec:exec -Dbeast.args="example.xml"
+```
+
+### From IntelliJ
+
+See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from Maven automatically.
+
+Using BEAST 3 as a library
+--------------------------
+
+Projects like LPhyBEAST can use BEAST 3 as a Maven dependency to build BEAST models in memory and write them to XML.
+
+### 1. Install BEAST 3 to your local Maven repository
+
+In the `beast3modular` directory:
+
+```bash
+mvn install -DskipTests
+```
+
+### 2. Add the dependency to your project's `pom.xml`
+
+```xml
+<dependency>
+    <groupId>beast</groupId>
+    <artifactId>beast-base</artifactId>
+    <version>2.8.0-SNAPSHOT</version>
+</dependency>
+```
+
+Maven resolves all transitive dependencies (JavaFX, Commons Math, ANTLR, etc.) automatically. The consuming project also needs `beagle.jar` and `colt.jar` installed in its local repository (see One-time setup above).
+
+### 3. JPMS module declaration (if your project uses modules)
+
+```java
+open module my.project {
+    requires beast.base;
+    // requires beast.pkgmgmt;  // only if you use package management APIs
+}
+```
+
+If your project does not use JPMS modules, the BEAST classes are accessible from the unnamed module without any extra configuration.
 
 Development
 -----------
 
-See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions.
+See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
 
 For guidance on migrating external packages, see:
 - `scripts/migrate.md` — migrating from BEAST v2.6 to v2.7
