@@ -12,6 +12,7 @@ import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
@@ -22,6 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
+@Tag("slow")
 public class ScaleOperatorTest {//extends RealRandomWalkOperatorTest {
 
     @BeforeEach

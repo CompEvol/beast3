@@ -16,6 +16,7 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.ESS;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @deprecated replaced by {@link beast.base.spec.evolution.operator.RealRandomWalkOperatorTest}
  */
+@Tag("slow")
 @Deprecated
 public class BactrianRandomWalkOperatorTest  {
 

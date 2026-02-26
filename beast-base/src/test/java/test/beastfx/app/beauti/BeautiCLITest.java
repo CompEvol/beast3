@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.File;
 import java.io.PrintStream;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.Start;
 
@@ -13,6 +14,7 @@ import beastfx.app.beauti.BeautiTabPane;
 import beastfx.app.inputeditor.BeautiDoc;
 import javafx.stage.Stage;
 
+@Tag("slow")
 public class BeautiCLITest extends BeautiBase {
 
 	BeautiDoc doc;

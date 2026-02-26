@@ -16,6 +16,7 @@ import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.Simplex;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 import test.beast.evolution.operator.TestOperator;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author gereon
  *
  */
+@Tag("slow")
 public class DeltaExchangeOperatorTest extends TestOperator {
 
 	@Test

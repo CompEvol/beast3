@@ -8,6 +8,7 @@ import beastfx.app.beauti.BeautiTabPane;
 import javafx.stage.Stage;
 
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 
 
 
+@Tag("slow")
 @ExtendWith(ApplicationExtension.class)
 public class BeautiRateTutorialTest extends BeautiBase {
 

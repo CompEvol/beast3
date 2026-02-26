@@ -13,6 +13,7 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.ESS;
 import org.apache.commons.math3.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("slow")
 public class NoPriorVsUniformTest extends BactrianRandomWalkOperatorTest {
 
     final long chainLength = 2000000;

@@ -1,0 +1,3 @@
+module beagle {
+    exports beagle;
+}

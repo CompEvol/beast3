@@ -3,8 +3,11 @@
 # To build the image, run the following from this directory:
 #   docker build -t beast_testing .
 #
-# To run the tests, use
+# To run the tests (fast tests only, slow MCMC tests excluded), use
 #   docker run beast_testing
+#
+# To run all tests including slow MCMC tests, use
+#   docker run beast_testing -Pslow-tests
 #
 # To run the tests interactively, use
 #   docker run --entrypoint /bin/bash -it -p 5900:5900 beast_testing
@@ -44,7 +47,7 @@ RUN ldconfig
 
 ADD . ./
 
-# Install local-only dependencies (beagle.jar, colt.jar)
+# Install local-only modular JARs (beagle.jar, colt.jar)
 RUN mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar -q
 RUN mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar -q
 

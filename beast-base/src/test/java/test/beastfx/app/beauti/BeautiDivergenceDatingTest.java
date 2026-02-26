@@ -2,6 +2,7 @@ package test.beastfx.app.beauti;
 
 
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -24,6 +25,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Tag("slow")
 @ExtendWith(ApplicationExtension.class)
 public class BeautiDivergenceDatingTest extends BeautiBase {
 

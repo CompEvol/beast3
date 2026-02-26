@@ -5,12 +5,14 @@ import beast.base.inference.State;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.inference.operator.IntRandomWalkOperator;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag("slow")
 public class IntRandomWalkOperatorTest {
 
     @Test

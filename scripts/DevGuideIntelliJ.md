@@ -36,7 +36,7 @@ If IntelliJ does not automatically pick up JDK 25:
 
 ## One-time setup: install local JARs
 
-Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. If you haven't already, install them from the terminal:
+Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. If you haven't already, install them from the terminal:
 
 ```bash
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
@@ -78,3 +78,5 @@ To test your own BEAST package against BEAST 3 core in a single IDE session:
 ## Running tests
 
 Right-click a test class or the `src/test/java` directory and select **Run Tests**. IntelliJ picks up the JUnit 5 and JUnit 4 dependencies from Maven automatically.
+
+Several operator and BEAUti tests run long MCMC chains and are tagged `@Tag("slow")`. From the command line these are excluded by default (`mvn test`). To include them use `mvn test -Pslow-tests`. In IntelliJ all tests run regardless of the Maven profile unless you configure the run configuration to pass `-Pslow-tests`.

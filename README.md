@@ -30,7 +30,11 @@ Project Structure
 beast3modular/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module)
-└── lib/                  (beagle.jar, colt.jar)
+└── lib/                  (local JARs + module-info sources)
+    ├── beagle.jar        (modular JAR — module beagle)
+    ├── beagle/           (module-info.java source)
+    ├── colt.jar          (modular JAR — module colt)
+    └── colt/             (module-info.java source)
 ```
 
 Building
@@ -43,7 +47,7 @@ Building
 
 ### One-time setup: install local JARs
 
-Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. Install them to your local repository:
+Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. Install them to your local repository:
 
 ```bash
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
@@ -59,8 +63,12 @@ mvn compile
 ### Test
 
 ```bash
-mvn test
+mvn test                    # fast tests only (skips @Tag("slow"))
+mvn test -Pslow-tests       # all tests including slow
+mvn test -Dgroups=slow      # only slow tests
 ```
+
+Several operator and BEAUti tests run MCMC chains of 1M–11M iterations and are tagged `@Tag("slow")`. They are excluded from the default build via the `surefire.excludedGroups` property. Activate the `slow-tests` profile to include them.
 
 Running
 -------

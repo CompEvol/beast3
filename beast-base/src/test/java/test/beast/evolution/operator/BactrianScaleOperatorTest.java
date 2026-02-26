@@ -13,6 +13,7 @@ import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 import org.apache.commons.math3.stat.StatUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @deprecated replaced by {@link beast.base.spec.evolution.operator.ScaleOperatorTest}
  */
+@Tag("slow")
 @Deprecated
 public class BactrianScaleOperatorTest extends BactrianRandomWalkOperatorTest {
 

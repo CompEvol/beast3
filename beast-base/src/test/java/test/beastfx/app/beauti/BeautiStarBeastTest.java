@@ -3,6 +3,7 @@ package test.beastfx.app.beauti;
 
 
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -16,6 +17,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
+@Tag("slow")
 @ExtendWith(ApplicationExtension.class)
 public class BeautiStarBeastTest extends BeautiBase {
 
