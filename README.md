@@ -70,6 +70,8 @@ mvn test -Dgroups=slow      # only slow tests
 
 Several operator and BEAUti tests run MCMC chains of 1M–11M iterations and are tagged `@Tag("slow")`. They are excluded from the default build via the `surefire.excludedGroups` property. Activate the `slow-tests` profile to include them.
 
+BEAUti GUI tests use [TestFX](https://github.com/TestFX/TestFX) and run headlessly via the Monocle Glass platform (`openjfx-monocle`). The surefire plugin is configured with the required system properties (`testfx.headless`, `glass.platform=Monocle`, etc.) and sets `workingDirectory` to `target/classes` so that BEAUti can discover its `fxtemplates/` at runtime. No display server is needed to run the tests.
+
 Running
 -------
 

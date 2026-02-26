@@ -35,6 +35,8 @@ import org.w3c.dom.Element;
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -55,7 +57,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(ApplicationExtension.class)
 public class BeautiBase extends ApplicationExtension {
 	final static String TEMPLATE_DIR = BeautiConfig.TEMPLATE_DIR;
-	protected final static String NEXUS_DIR = "../beast2/examples/nexus/";
+	protected final static String NEXUS_DIR = resolveNexusDir();
+
+	private static String resolveNexusDir() {
+		// Resolve from classpath (works in Maven with test resources)
+		URL url = BeautiBase.class.getClassLoader().getResource("examples/nexus");
+		if (url != null) {
+			try {
+				return new File(url.toURI()).getAbsolutePath() + "/";
+			} catch (URISyntaxException e) {
+				// fall through to legacy path
+			}
+		}
+		// Legacy layout (beast2 sibling directory)
+		return "../beast2/examples/nexus/";
+	}
 
 	// If skipAssertions = true, the BEAUti status will not be checked
 	// Can be handy for debugging TestFX unit tests
@@ -110,7 +126,7 @@ public class BeautiBase extends ApplicationExtension {
 		String dir = PackageManager.getPackageUserDir();
 		dir += "/BEAST.base";
 		new File(dir).mkdirs();
-		Files.copy(Paths.get("../beast2/version.xml"), 
+		Files.copy(Paths.get("../beast2/version.xml"),
 				Paths.get(dir+"/version.xml"),
 				StandardCopyOption.REPLACE_EXISTING);
 		dir += "/lib";
@@ -119,7 +135,7 @@ public class BeautiBase extends ApplicationExtension {
 			new File("../beast2/build/dist/").mkdirs();
 			createJar("../beast2/build/", dir + "/BEAST.base.jar", "../beast2/build/".length());
 		} else {
-			Files.copy(Paths.get("../beast2/build/dist/BEAST.base.jar"), 
+			Files.copy(Paths.get("../beast2/build/dist/BEAST.base.jar"),
 				Paths.get(dir+"/BEAST.base.jar"),
 				StandardCopyOption.REPLACE_EXISTING);
 		}

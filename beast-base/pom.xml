@@ -127,6 +127,11 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -136,10 +141,23 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                    <workingDirectory>${project.build.outputDirectory}</workingDirectory>
                     <argLine>
                         --add-reads beast.base=ALL-UNNAMED
                         --add-reads beast.pkgmgmt=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.glass.ui.monocle=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                        --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
                     </argLine>
+                    <systemPropertyVariables>
+                        <testfx.robot>glass</testfx.robot>
+                        <testfx.headless>true</testfx.headless>
+                        <glass.platform>Monocle</glass.platform>
+                        <monocle.platform>Headless</monocle.platform>
+                        <prism.order>sw</prism.order>
+                        <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <!-- Copy runtime dependencies to target/lib/ for CLI execution -->
