@@ -4,10 +4,7 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
-import org.apache.commons.math.distribution.NormalDistributionImpl;
+import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
 
 
@@ -23,7 +20,11 @@ public class LogNormalDistributionModel extends ParametricDistribution {
     final public Input<Boolean> hasMeanInRealSpaceInput = new Input<>("meanInRealSpace", "Whether the M parameter is in real space, or in log-transformed space. Default false = log-transformed.", false);
 
     boolean hasMeanInRealSpace;
-    protected LogNormalImpl dist = new LogNormalImpl(0, 1);
+    protected LogNormalDistribution dist = LogNormalDistribution.of(0, 1);
+
+    // cached values for getMeanWithoutOffset
+    private double currentMu = 0;
+    private double currentSigma = 1;
 
     @Override
 	public void initAndValidate() {
@@ -69,63 +70,16 @@ public class LogNormalDistributionModel extends ParametricDistribution {
         if (hasMeanInRealSpace) {
             mean = Math.log(mean) - (0.5 * sigma * sigma);
         }
-        dist.setMeanAndStdDev(mean, sigma);
+        currentMu = mean;
+        currentSigma = sigma;
+        dist = LogNormalDistribution.of(mean, sigma);
     }
 
     @Override
-    public Distribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return dist;
     }
-
-    public class LogNormalImpl implements ContinuousDistribution {
-        double m_fMean;
-        double m_fStdDev;
-        NormalDistributionImpl m_normal = new NormalDistributionImpl(0, 1);
-
-        public LogNormalImpl(double mean, double stdDev) {
-            setMeanAndStdDev(mean, stdDev);
-        }
-
-        @SuppressWarnings("deprecation")
-		public void setMeanAndStdDev(double mean, double stdDev) {
-            m_fMean = mean;
-            m_fStdDev = stdDev;
-            m_normal.setMean(mean);
-            m_normal.setStandardDeviation(stdDev);
-        }
-
-        @Override
-        public double cumulativeProbability(double x) throws MathException {
-            return m_normal.cumulativeProbability(Math.log(x));
-        }
-
-        @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            return cumulativeProbability(x1) - cumulativeProbability(x0);
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
-            return Math.exp(m_normal.inverseCumulativeProbability(p));
-        }
-
-        @Override
-        public double density(double x) {
-            if( x <= 0 ) {
-                return 0;
-            }
-            return m_normal.density(Math.log(x)) / x;
-        }
-
-        @Override
-        public double logDensity(double x) {
-            if( x <= 0 ) {
-                return  Double.NEGATIVE_INFINITY;
-            }
-            return m_normal.logDensity(Math.log(x)) - Math.log(x);
-        }
-    } // class LogNormalImpl
 
     @Override
     protected double getMeanWithoutOffset() {
@@ -139,7 +93,6 @@ public class LogNormalDistributionModel extends ParametricDistribution {
     		double s = SParameterInput.get().getArrayValue();
     		double m = MParameterInput.get().getArrayValue();
     		return Math.exp(m + s * s/2.0);
-    		//throw new RuntimeException("Not implemented yet");
     	}
     }
 

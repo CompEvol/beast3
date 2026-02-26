@@ -3,8 +3,8 @@ package beast.base.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Laplace}
@@ -53,7 +53,7 @@ public class LaplaceDistribution extends ParametricDistribution {
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return dist;
     }
@@ -61,7 +61,7 @@ public class LaplaceDistribution extends ParametricDistribution {
     class LaplaceImpl implements ContinuousDistribution {
 
         @Override
-        public double cumulativeProbability(double x) throws MathException {
+        public double cumulativeProbability(double x) {
             // =0.5\,[1 + \sgn(x-\mu)\,(1-\exp(-|x-\mu|/b))].
             if (x == mu) {
                 return 0.5;
@@ -71,12 +71,7 @@ public class LaplaceDistribution extends ParametricDistribution {
         }
 
         @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            return cumulativeProbability(x1) - cumulativeProbability(x0);
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
+        public double inverseCumulativeProbability(double p) {
             //     \mu - b\,\sgn(p-0.5)\,\ln(1 - 2|p-0.5|).
             return mu - scale * Math.signum(p - 0.5) * Math.log(1.0 - 2.0 * Math.abs(p - 0.5));
         }
@@ -91,8 +86,33 @@ public class LaplaceDistribution extends ParametricDistribution {
         public double logDensity(double x) {
             return Math.log(c) - (Math.abs(x - mu) / scale);
         }
+
+        @Override
+        public double getMean() {
+            return mu;
+        }
+
+        @Override
+        public double getVariance() {
+            return 2.0 * scale * scale;
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return Double.NEGATIVE_INFINITY;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public Sampler createSampler(UniformRandomProvider rng) {
+            return () -> inverseCumulativeProbability(rng.nextDouble());
+        }
     } // class LaplaceImpl
-    
+
     @Override
     protected double getMeanWithoutOffset() {
     	return mu;

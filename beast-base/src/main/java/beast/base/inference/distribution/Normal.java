@@ -5,8 +5,7 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.NormalDistributionImpl;
+import org.apache.commons.statistics.distribution.NormalDistribution;
 
 
 
@@ -22,7 +21,7 @@ public class Normal extends ParametricDistribution {
     final public Input<Function> sigmaInput = new Input<>("sigma", "standard deviation of the normal distribution, defaults to 1");
     final public Input<Function> tauInput = new Input<>("tau", "precision of the normal distribution, defaults to 1", Validate.XOR, sigmaInput);
 
-    org.apache.commons.math.distribution.NormalDistribution dist = new NormalDistributionImpl(0, 1);
+    NormalDistribution dist = NormalDistribution.of(0, 1);
 
     @Override
     public void initAndValidate() {
@@ -32,7 +31,6 @@ public class Normal extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double mean;
         double sigma;
@@ -50,12 +48,11 @@ public class Normal extends ParametricDistribution {
         } else {
             sigma = sigmaInput.get().getArrayValue();
         }
-        dist.setMean(mean);
-        dist.setStandardDeviation(sigma);
+        dist = NormalDistribution.of(mean, sigma);
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return dist;
     }

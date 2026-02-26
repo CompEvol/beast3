@@ -5,7 +5,7 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.parameter.RealParameter;
-import org.apache.commons.math.distribution.PoissonDistributionImpl;
+import org.apache.commons.statistics.distribution.PoissonDistribution;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Poisson}
@@ -17,7 +17,7 @@ import org.apache.commons.math.distribution.PoissonDistributionImpl;
 public class Poisson extends ParametricDistribution {
     final public Input<Function> lambdaInput = new Input<>("lambda", "rate parameter, defaults to 1");
 
-    org.apache.commons.math.distribution.PoissonDistribution dist = new PoissonDistributionImpl(1);
+    PoissonDistribution dist = PoissonDistribution.of(1);
 
 
     // Must provide empty constructor for construction by XML. Note that this constructor DOES NOT call initAndValidate();
@@ -42,7 +42,6 @@ public class Poisson extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double m_fLambda;
         if (lambdaInput.get() == null) {
@@ -53,18 +52,18 @@ public class Poisson extends ParametricDistribution {
                 m_fLambda = 1;
             }
         }
-        dist.setMean(m_fLambda);
+        dist = PoissonDistribution.of(m_fLambda);
     }
 
     @Override
-    public org.apache.commons.math.distribution.Distribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return dist;
     }
-    
+
     @Override
     public double getMeanWithoutOffset() {
     	return lambdaInput.get().getArrayValue();
     }
-    
+
 } // class Poisson

@@ -4,8 +4,7 @@ package beast.base.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.parameter.IntegerParameter;
-import org.apache.commons.math.distribution.ChiSquaredDistributionImpl;
-import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.statistics.distribution.ChiSquaredDistribution;
 
 
 /**
@@ -18,7 +17,7 @@ import org.apache.commons.math.distribution.ContinuousDistribution;
 public class ChiSquare extends ParametricDistribution {
     final public Input<IntegerParameter> dfInput = new Input<>("df", "degrees if freedin, defaults to 1");
 
-    org.apache.commons.math.distribution.ChiSquaredDistribution m_dist = new ChiSquaredDistributionImpl(1);
+    ChiSquaredDistribution m_dist = ChiSquaredDistribution.of(1);
 
     @Override
     public void initAndValidate() {
@@ -28,7 +27,6 @@ public class ChiSquare extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         int dF;
         if (dfInput.get() == null) {
@@ -39,11 +37,11 @@ public class ChiSquare extends ParametricDistribution {
                 dF = 1;
             }
         }
-        m_dist.setDegreesOfFreedom(dF);
+        m_dist = ChiSquaredDistribution.of(dF);
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return m_dist;
     }

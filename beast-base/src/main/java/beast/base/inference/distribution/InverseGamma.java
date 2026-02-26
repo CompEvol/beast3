@@ -4,9 +4,8 @@ package beast.base.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 
 /**
@@ -47,7 +46,7 @@ public class InverseGamma extends ParametricDistribution {
     }
 
     @Override
-    public Distribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return dist;
     }
@@ -65,22 +64,17 @@ public class InverseGamma extends ParametricDistribution {
         public void setAlphaBeta(double alpha, double beta) {
             m_fAlpha = alpha;
             m_fBeta = beta;
-            C = m_fAlpha * Math.log(m_fBeta) - org.apache.commons.math.special.Gamma.logGamma(m_fAlpha);
+            C = m_fAlpha * Math.log(m_fBeta) - org.apache.commons.math3.special.Gamma.logGamma(m_fAlpha);
         }
 
         @Override
-        public double cumulativeProbability(double x) throws MathException {
-            throw new MathException("Not implemented yet");
+        public double cumulativeProbability(double x) {
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
-            throw new MathException("Not implemented yet");
+        public double inverseCumulativeProbability(double p) {
+            throw new UnsupportedOperationException("Not implemented yet");
         }
 
         @Override
@@ -94,6 +88,34 @@ public class InverseGamma extends ParametricDistribution {
             double logP = -(m_fAlpha + 1.0) * Math.log(x) - (m_fBeta / x) + C;
             return logP;
         }
+
+        @Override
+        public double getMean() {
+            if (m_fAlpha > 1) {
+                return m_fBeta / (m_fAlpha - 1);
+            }
+            return Double.NaN;
+        }
+
+        @Override
+        public double getVariance() {
+            return Double.NaN;
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return 0;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public Sampler createSampler(UniformRandomProvider rng) {
+            throw new UnsupportedOperationException("Sampling not supported for InverseGamma");
+        }
     } // class InverseGammaImpl
 
 
@@ -103,5 +125,5 @@ public class InverseGamma extends ParametricDistribution {
     	Function beta = betaInput.get();
     	return (beta != null ? beta.getArrayValue() : 2.0) / (alpha != null ? (alpha.getArrayValue() - 1.0) : 2.0);
     }
-    
+
 } // class InverseGamma

@@ -2,9 +2,8 @@ package beast.base.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 
 /**
@@ -49,23 +48,13 @@ public class Uniform extends ParametricDistribution {
         }
 
         @Override
-        public double cumulativeProbability(double x) throws MathException {
+        public double cumulativeProbability(double x) {
             x = Math.max(x, lower);
             return (x - lower) / (upper - lower);
         }
 
         @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            x0 = Math.max(x0, lower);
-            x1 = Math.min(x1, upper);
-            if (x1 < lower || x1 > upper) {
-                throw new RuntimeException("Value x (" + x1 + ") out of bounds (" + lower + "," + upper + ").");
-            }
-            return (x1 - x0) / (upper - lower);
-        }
-
-        @Override
-        public double inverseCumulativeProbability(final double p) throws MathException {
+        public double inverseCumulativeProbability(final double p) {
             if (p < 0.0 || p > 1.0) {
                 throw new RuntimeException("inverseCumulativeProbability::argument out of range [0...1]");
             }
@@ -96,11 +85,43 @@ public class Uniform extends ParametricDistribution {
         public double logDensity(final double x) {
             return Math.log(density(x));
         }
+
+        @Override
+        public double getMean() {
+            if (Double.isInfinite(lower) || Double.isInfinite(upper)) {
+                return Double.NaN;
+            }
+            return (lower + upper) / 2.0;
+        }
+
+        @Override
+        public double getVariance() {
+            if (Double.isInfinite(lower) || Double.isInfinite(upper)) {
+                return Double.NaN;
+            }
+            double range = upper - lower;
+            return range * range / 12.0;
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return lower;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return upper;
+        }
+
+        @Override
+        public Sampler createSampler(UniformRandomProvider rng) {
+            return () -> inverseCumulativeProbability(rng.nextDouble());
+        }
     } // class UniformImpl
 
 
     @Override
-    public Distribution getDistribution() {
+    public Object getDistribution() {
         return distr;
     }
 
@@ -113,7 +134,7 @@ public class Uniform extends ParametricDistribution {
             return 0;
         }
     }
-    
+
     @Override
     protected double getMeanWithoutOffset() {
     	if (Double.isInfinite(_lower) || Double.isInfinite(_upper)) {

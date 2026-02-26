@@ -3,8 +3,7 @@ package beast.base.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import org.apache.commons.math.distribution.BetaDistributionImpl;
-import org.apache.commons.math.distribution.ContinuousDistribution;
+import org.apache.commons.statistics.distribution.BetaDistribution;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Beta}
@@ -18,7 +17,11 @@ public class Beta extends ParametricDistribution {
     final public Input<Function> alphaInput = new Input<>("alpha", "first shape parameter, defaults to 1");
     final public Input<Function> betaInput = new Input<>("beta", "the other shape parameter, defaults to 1");
 
-    org.apache.commons.math.distribution.BetaDistribution m_dist = new BetaDistributionImpl(1, 1);
+    BetaDistribution m_dist = BetaDistribution.of(1, 1);
+
+    // cached values for getMeanWithoutOffset
+    private double currentAlpha = 1;
+    private double currentBeta = 1;
 
     @Override
     public void initAndValidate() {
@@ -28,7 +31,6 @@ public class Beta extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double alpha;
         double beta;
@@ -42,18 +44,19 @@ public class Beta extends ParametricDistribution {
         } else {
             beta = betaInput.get().getArrayValue();
         }
-        m_dist.setAlpha(alpha);
-        m_dist.setBeta(beta);
+        currentAlpha = alpha;
+        currentBeta = beta;
+        m_dist = BetaDistribution.of(alpha, beta);
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return m_dist;
     }
 
     @Override
     protected double getMeanWithoutOffset() {
-    	return m_dist.getAlpha() / (m_dist.getAlpha() + m_dist.getBeta());
+    	return currentAlpha / (currentAlpha + currentBeta);
     }
 } // class Beta

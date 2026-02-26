@@ -4,8 +4,8 @@ package beast.base.inference.distribution;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.commons.math.distribution.GammaDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
+import org.apache.commons.statistics.distribution.GammaDistribution;
+import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
@@ -14,7 +14,6 @@ import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.core.Input.Validate;
 import beast.base.inference.*;
-import beast.base.inference.distribution.LogNormalDistributionModel.LogNormalImpl;
 
 
 
@@ -42,7 +41,7 @@ public class MarkovChainDistribution extends Distribution {
     final public Input<Function> initialMeanInput = new Input<>("initialMean", "the mean of the prior distribution on the first element. This is an alternative boundary condition to Jeffrey's on the first value.", Validate.OPTIONAL);
 
     final public Input<Boolean> useLogNormalInput = new Input<>("useLogNormal", "use Log Normal distribution instead of Gamma (default false)", false);
-  
+
     // **************************************************************
     // Private instance variables
     // **************************************************************
@@ -53,7 +52,7 @@ public class MarkovChainDistribution extends Distribution {
     private boolean uselog = false;
     private double shape = 1.0;
     GammaDistribution gamma;
-    LogNormalImpl logNormal;
+    LogNormalDistribution logNormal;
     boolean useLogNormal;
     private static int warningCount = 0;
 
@@ -66,8 +65,8 @@ public class MarkovChainDistribution extends Distribution {
         chainParameter = parameterInput.get();
         initialMean = initialMeanInput.get();
         useLogNormal = useLogNormalInput.get();
-        gamma = new GammaDistributionImpl(shape, 1);
-        logNormal = new LogNormalDistributionModel().new LogNormalImpl(1, 1);
+        gamma = GammaDistribution.of(shape, 1);
+        logNormal = LogNormalDistribution.of(0, 1);
 
         if (jeffreys && initialMean != null) {
             throw new RuntimeException("Must specify either Jeffrey's prior or an initial mean, but not both");
@@ -98,11 +97,11 @@ public class MarkovChainDistribution extends Distribution {
 	            final double sigma = 1.0 / shape; // shape = precision
 	            // convert mean to log space
 	            final double M = Math.log(mean) - (0.5 * sigma * sigma);
-	            logNormal.setMeanAndStdDev(M, sigma);
+	            logNormal = LogNormalDistribution.of(M, sigma);
 	            logP += logNormal.logDensity(x);
             } else {
                 final double scale = mean / shape;
-                gamma.setBeta(scale);
+                gamma = GammaDistribution.of(shape, scale);
                 logP += gamma.logDensity(x);
             }
         }
@@ -116,7 +115,7 @@ public class MarkovChainDistribution extends Distribution {
         }
         return logP;
     }
-    
+
     private double getChainValue(int i) {
         if (i == -1) {
             if (initialMean != null){
@@ -154,4 +153,3 @@ public class MarkovChainDistribution extends Distribution {
     public void sample(State state, Random random) {
     }
 }
-

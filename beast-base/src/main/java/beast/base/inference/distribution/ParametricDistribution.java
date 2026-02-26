@@ -32,9 +32,9 @@ import beast.base.inference.CalculationNode;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.IntegerDistribution;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+import org.apache.commons.statistics.distribution.DiscreteDistribution;
 
 /**
  * A class that describes a parametric distribution
@@ -55,7 +55,7 @@ import org.apache.commons.math.distribution.IntegerDistribution;
 public abstract class ParametricDistribution extends CalculationNode implements ContinuousDistribution {
     public final Input<Double> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", 0.0);
 
-    abstract public org.apache.commons.math.distribution.Distribution getDistribution();
+    abstract public Object getDistribution();
 
     /**
      * Calculate log probability of a valuable x for this distribution.
@@ -94,7 +94,7 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      * Must be overwritten for multivariate ones.
      * @size sample size = number of samples to produce
      */
-    public Double[][] sample(final int size) throws MathException {
+    public Double[][] sample(final int size) {
         final Double[][] sample = new Double[size][];
         for (int i = 0; i < sample.length; i++) {
             final double p = Randomizer.nextDouble();
@@ -109,18 +109,15 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      *
      * @param p the cumulative probability.
      * @return x.
-     * @throws MathException if the inverse cumulative probability can not be
-     *                       computed due to convergence or other numerical errors.
      */
-    //@Override
     @Override
-	public double inverseCumulativeProbability(final double p) throws MathException {
-        final org.apache.commons.math.distribution.Distribution dist = getDistribution();
+	public double inverseCumulativeProbability(final double p) {
+        final Object dist = getDistribution();
         double offset = getOffset();
         if (dist instanceof ContinuousDistribution) {
             return offset + ((ContinuousDistribution) dist).inverseCumulativeProbability(p);
-        } else if (dist instanceof IntegerDistribution) {
-            return offset + ((IntegerDistribution)dist).inverseCumulativeProbability(p);
+        } else if (dist instanceof DiscreteDistribution) {
+            return offset + ((DiscreteDistribution)dist).inverseCumulativeProbability(p);
         }
         return 0.0;
     }
@@ -132,30 +129,29 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      * @param x The point at which the density should be computed.
      * @return The pdf at point x.
      */
-    //@Override
     @Override
 	public double density(double x) {
         final double offset = getOffset();
  //       if( x >= offset ) {
             x -= offset;
-            final org.apache.commons.math.distribution.Distribution dist = getDistribution();
+            final Object dist = getDistribution();
             if (dist instanceof ContinuousDistribution) {
                 return ((ContinuousDistribution) dist).density(x);
-            } else if (dist instanceof IntegerDistribution) {
-                return ((IntegerDistribution) dist).probability(x);
+            } else if (dist instanceof DiscreteDistribution) {
+                return ((DiscreteDistribution) dist).probability((int) x);
             }
    //     }
         return 0.0;
     }
-    
+
     private double logDensity(double x, final double offset) {
    //     if( x >= offset ) {
             x -= offset;
-            final org.apache.commons.math.distribution.Distribution dist = getDistribution();
+            final Object dist = getDistribution();
             if (dist instanceof ContinuousDistribution) {
                 return ((ContinuousDistribution) dist).logDensity(x);
-            } else if (dist instanceof IntegerDistribution) {
-                final double probability = ((IntegerDistribution) dist).probability(x);
+            } else if (dist instanceof DiscreteDistribution) {
+                final double probability = ((DiscreteDistribution) dist).probability((int) x);
                 if( probability > 0 ) {
                     return Math.log(probability);
                 }
@@ -164,7 +160,6 @@ public abstract class ParametricDistribution extends CalculationNode implements 
         return Double.NEGATIVE_INFINITY;
     }
 
-    //@Override
     @Override
 	public double logDensity(final double x) {
         return logDensity(x, getOffset());
@@ -179,13 +174,16 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      * @param x the value at which the distribution function is evaluated.
      * @return the probability that a random variable with this
      *         distribution takes a value less than or equal to <code>x</code>
-     * @throws MathException if the cumulative probability can not be
-     *                       computed due to convergence or other numerical errors.
      */
-    //@Override
     @Override
-	public double cumulativeProbability(final double x) throws MathException {
-        return getDistribution().cumulativeProbability(x);
+	public double cumulativeProbability(final double x) {
+        final Object dist = getDistribution();
+        if (dist instanceof ContinuousDistribution) {
+            return ((ContinuousDistribution) dist).cumulativeProbability(x);
+        } else if (dist instanceof DiscreteDistribution) {
+            return ((DiscreteDistribution) dist).cumulativeProbability((int) x);
+        }
+        return 0.0;
     }
 
     /**
@@ -197,14 +195,10 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      * @return the probability that a random variable with this distribution
      *         will take a value between <code>x0</code> and <code>x1</code>,
      *         including the endpoints
-     * @throws MathException            if the cumulative probability can not be
-     *                                  computed due to convergence or other numerical errors.
-     * @throws IllegalArgumentException if <code>x0 > x1</code>
+     * @throws IllegalArgumentException if <code>x0 &gt; x1</code>
      */
-    //@Override
-    @Override
-	public double cumulativeProbability(final double x0, final double x1) throws MathException {
-        return getDistribution().cumulativeProbability(x0, x1);
+	public double cumulativeProbability(final double x0, final double x1) {
+        return cumulativeProbability(x1) - cumulativeProbability(x0);
     }
 
     /**
@@ -219,14 +213,51 @@ public abstract class ParametricDistribution extends CalculationNode implements 
     }
 
     /** returns mean of distribution, if implemented **/
+    @Override
     public double getMean() {
         return getMeanWithoutOffset() + getOffset();
     }
-    
+
+    @Override
+    public double getVariance() {
+        final Object dist = getDistribution();
+        if (dist instanceof ContinuousDistribution) {
+            return ((ContinuousDistribution) dist).getVariance();
+        }
+        return Double.NaN;
+    }
+
+    @Override
+    public double getSupportLowerBound() {
+        final Object dist = getDistribution();
+        if (dist instanceof ContinuousDistribution) {
+            return ((ContinuousDistribution) dist).getSupportLowerBound();
+        }
+        return Double.NEGATIVE_INFINITY;
+    }
+
+    @Override
+    public double getSupportUpperBound() {
+        final Object dist = getDistribution();
+        if (dist instanceof ContinuousDistribution) {
+            return ((ContinuousDistribution) dist).getSupportUpperBound();
+        }
+        return Double.POSITIVE_INFINITY;
+    }
+
+    @Override
+    public ContinuousDistribution.Sampler createSampler(UniformRandomProvider rng) {
+        final Object dist = getDistribution();
+        if (dist instanceof ContinuousDistribution) {
+            return ((ContinuousDistribution) dist).createSampler(rng);
+        }
+        return () -> inverseCumulativeProbability(rng.nextDouble());
+    }
+
     /**
      * @return true if the distribution is an integer distribution
      */
     public boolean isIntegerDistribution() {
-        return getDistribution() instanceof IntegerDistribution;
+        return getDistribution() instanceof DiscreteDistribution;
     }
 }

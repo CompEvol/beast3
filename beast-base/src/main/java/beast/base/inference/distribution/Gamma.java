@@ -4,8 +4,7 @@ package beast.base.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
+import org.apache.commons.statistics.distribution.GammaDistribution;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Gamma}
@@ -29,10 +28,14 @@ public class Gamma extends ParametricDistribution {
     		+ "For ShapeMean beta is interpreted as mean."
     		+ "For OneParameter beta is ignored.", mode.ShapeScale, mode.values());
 
-    org.apache.commons.math.distribution.GammaDistribution m_dist = new GammaDistributionImpl(1, 1);
+    GammaDistribution m_dist = GammaDistribution.of(1, 1);
+
+    // cached values for getMeanWithoutOffset
+    private double currentAlpha = 1;
+    private double currentBeta = 1;
 
     mode parameterisation = mode.ShapeScale;
-    		
+
     @Override
     public void initAndValidate() {
     	parameterisation = modeInput.get();
@@ -42,7 +45,6 @@ public class Gamma extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double alpha;
         double beta = 2.0;
@@ -51,7 +53,7 @@ public class Gamma extends ParametricDistribution {
         } else {
             alpha = alphaInput.get().getArrayValue();
         }
-        
+
         switch (parameterisation) {
         case ShapeScale:
             if (betaInput.get() != null) {
@@ -72,12 +74,13 @@ public class Gamma extends ParametricDistribution {
         	beta = 1.0 / alpha;
         	break;
         }
-        m_dist.setAlpha(alpha);
-        m_dist.setBeta(beta);
+        currentAlpha = alpha;
+        currentBeta = beta;
+        m_dist = GammaDistribution.of(alpha, beta);
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return m_dist;
     }
@@ -85,6 +88,6 @@ public class Gamma extends ParametricDistribution {
     @Override
     protected double getMeanWithoutOffset() {
     	refresh();
-    	return m_dist.getAlpha() * m_dist.getBeta();
+    	return currentAlpha * currentBeta;
     }
 } // class Gamma

@@ -5,8 +5,7 @@ import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.ExponentialDistributionImpl;
+import org.apache.commons.statistics.distribution.ExponentialDistribution;
 
 /**
  * @deprecated replaced by {@link beast.base.spec.inference.distribution.Exponential}
@@ -18,22 +17,10 @@ import org.apache.commons.math.distribution.ExponentialDistributionImpl;
 public class Exponential extends ParametricDistribution {
     final public Input<Function> lambdaInput = new Input<>("mean", "mean parameter, defaults to 1");
 
-    final org.apache.commons.math.distribution.ExponentialDistribution m_dist = new ExponentialDistributionImpl(1) {
-		private static final long serialVersionUID = 1L;
+    ExponentialDistribution m_dist = ExponentialDistribution.of(1);
 
-		@Override
-    	public double logDensity(double x) {
-            if (x < 0) {
-                return Double.NEGATIVE_INFINITY;
-            }
-            double mean = getMean();
-            // logDensity(x) = Math.log(density(x))
-            // = Math.log(Math.exp(-x / mean) / mean)
-            // = Math.log(Math.exp(-x / mean)) - Math.log(mean)
-            // = (-x / mean) - Math.log(mean);
-            return (-x / mean) - Math.log(mean);
-    	}
-    };
+    // cached mean for getMeanWithoutOffset
+    private double currentMean = 1;
 
     @Override
     public void initAndValidate() {
@@ -43,7 +30,6 @@ public class Exponential extends ParametricDistribution {
     /**
      * make sure internal state is up to date *
      */
-    @SuppressWarnings("deprecation")
 	void refresh() {
         double lambda;
         if (lambdaInput.get() == null) {
@@ -55,18 +41,19 @@ public class Exponential extends ParametricDistribution {
                 lambda = 1;
             }
         }
-        m_dist.setMean(lambda);
+        currentMean = lambda;
+        m_dist = ExponentialDistribution.of(lambda);
     }
 
     @Override
-    public ContinuousDistribution getDistribution() {
+    public Object getDistribution() {
         refresh();
         return m_dist;
     }
-    
+
     @Override
     protected double getMeanWithoutOffset() {
-    	return m_dist.getMean();
+    	return currentMean;
     }
 
 } // class Exponential

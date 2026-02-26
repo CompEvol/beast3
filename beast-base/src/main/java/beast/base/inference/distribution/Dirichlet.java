@@ -6,9 +6,6 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
 
 
 /**
@@ -21,53 +18,18 @@ public class Dirichlet extends ParametricDistribution {
     final public Input<Function> alphaInput = new Input<>("alpha", "coefficients of the Dirichlet distribution", Validate.REQUIRED);
     final public Input<Double> sumInput = new Input<>("sum", "expected sum of the values", 1.0);
 
-    
+
     protected double expectedSum = 1.0;
-    
+
     @Override
     public void initAndValidate() {
     	expectedSum = sumInput.get();
     }
 
     @Override
-    public Distribution getDistribution() {
+    public Object getDistribution() {
         return null;
     }
-
-    class DirichletImpl implements ContinuousDistribution {
-        Double[] m_fAlpha;
-
-        void setAlpha(Double[] alpha) {
-            m_fAlpha = alpha;
-        }
-
-        @Override
-        public double cumulativeProbability(double x) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double density(double x) {
-            return Double.NaN;
-        }
-
-        @Override
-        public double logDensity(double x) {
-            return Double.NaN;
-        }
-        
-    } // class DirichletImpl
-
 
     @Override
     public double calcLogP(Function pX) {
@@ -94,11 +56,11 @@ public class Dirichlet extends ParametricDistribution {
             double x = pX.getArrayValue(i) / sumX;
 
             logP += (alpha[i] - 1) * Math.log(x);
-            logP -= org.apache.commons.math.special.Gamma.logGamma(alpha[i]);
+            logP -= org.apache.commons.math3.special.Gamma.logGamma(alpha[i]);
             sumAlpha += alpha[i];
-        }        
+        }
 
-        logP += org.apache.commons.math.special.Gamma.logGamma(sumAlpha);
+        logP += org.apache.commons.math3.special.Gamma.logGamma(sumAlpha);
         // area = sumX^(dim-1)
         logP -= (pX.getDimension() - 1) * Math.log(sumX);
         return logP;

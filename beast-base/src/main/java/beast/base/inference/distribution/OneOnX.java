@@ -2,9 +2,8 @@ package beast.base.inference.distribution;
 
 
 import beast.base.core.Description;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.distribution.ContinuousDistribution;
-import org.apache.commons.math.distribution.Distribution;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 
 /**
@@ -23,25 +22,20 @@ public class OneOnX extends ParametricDistribution {
     }
 
     @Override
-    public Distribution getDistribution() {
+    public Object getDistribution() {
         return dist;
     }
 
     class OneOnXImpl implements ContinuousDistribution {
 
         @Override
-        public double cumulativeProbability(double x) throws MathException {
-            throw new MathException("Not implemented yet");
+        public double cumulativeProbability(double x) {
+            throw new UnsupportedOperationException("Not implemented for improper prior");
         }
 
         @Override
-        public double cumulativeProbability(double x0, double x1) throws MathException {
-            throw new MathException("Not implemented yet");
-        }
-
-        @Override
-        public double inverseCumulativeProbability(double p) throws MathException {
-            throw new MathException("Not implemented yet");
+        public double inverseCumulativeProbability(double p) {
+            throw new UnsupportedOperationException("Not implemented for improper prior");
         }
 
         @Override
@@ -52,6 +46,31 @@ public class OneOnX extends ParametricDistribution {
         @Override
         public double logDensity(double x) {
             return -Math.log(x);
+        }
+
+        @Override
+        public double getMean() {
+            return Double.NaN;
+        }
+
+        @Override
+        public double getVariance() {
+            return Double.NaN;
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return 0;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public Sampler createSampler(UniformRandomProvider rng) {
+            throw new UnsupportedOperationException("Sampling not supported for improper prior");
         }
     } // class OneOnXImpl
 
