@@ -38,9 +38,26 @@ Some API changes to keep in mind:
 
 BEAST 3 core is split into two JPMS modules: `beast.pkgmgmt` and `beast.base`. Both are declared as `open module` in their `module-info.java`.
 
-**For external packages:**
-- External packages loaded at runtime do not need their own `module-info.java`. BEAST loads each external package JAR as a child `ModuleLayer`, so service providers declared in `version.xml` continue to work as before.
-- If you do want to create a modular package, add a `module-info.java` with `provides` declarations for your service implementations. This is optional — `version.xml` service registration is still the primary mechanism.
+**For packages under active development** (recommended):
+
+Add a `module-info.java` to your package with `provides` declarations for your service implementations.  This is the primary service discovery mechanism — BEAST scans module descriptors in the boot layer and plugin layers.  When you open both BEAST 3 and your package in IntelliJ, the IDE places both on the module path, and BEAST discovers your services automatically with no extra configuration.
+
+Example `module-info.java` for an external package:
+
+```java
+open module my.beast.package {
+    requires beast.pkgmgmt;
+    requires beast.base;
+
+    provides beast.base.core.BEASTInterface with
+        my.beast.package.MyModel,
+        my.beast.package.MyOperator;
+}
+```
+
+**For deployed packages** (installed via Package Manager):
+
+Deployed package JARs are loaded at runtime into a child `ModuleLayer` per package.  Both `module-info.java` `provides` declarations and `version.xml` service entries are discovered.  If your package JAR has no `module-info.java`, it is treated as an automatic module and services are registered from `version.xml` as before.
 
 ## 2. Migrate package to use strongly typed classes
 

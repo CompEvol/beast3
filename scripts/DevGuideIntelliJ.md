@@ -20,7 +20,7 @@ https://www.jetbrains.com/idea/download/
 
 ## Open the project
 
-1. **File → Open** and select the `beast3maven` repository root directory.
+1. **File → Open** and select the `beast3modular` repository root directory.
 2. IntelliJ will detect the Maven `pom.xml` and automatically import the project structure, modules, and dependencies.
 3. If prompted, select **Trust Project** and **Open as Project**.
 
@@ -54,6 +54,26 @@ Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-ru
 3. Set **Main class** to `beastfx.app.beast.BeastMain` (or `beastfx.app.beauti.Beauti` for BEAUti)
 4. Set **Program arguments** to your XML file path (for BeastMain)
 5. IntelliJ automatically configures the module path from Maven — no manual `--module-path` or `--add-modules` flags are needed.
+
+## Developing an external package alongside BEAST 3
+
+To test your own BEAST package against BEAST 3 core in a single IDE session:
+
+1. Open the `beast3modular` project as described above.
+2. **File → New → Module from Existing Sources** and select your package's root directory (or its `pom.xml`).
+3. Add a `module-info.java` to your package with `provides` declarations for your service implementations:
+   ```java
+   open module my.beast.package {
+       requires beast.pkgmgmt;
+       requires beast.base;
+
+       provides beast.base.core.BEASTInterface with
+           my.beast.package.MyModel,
+           my.beast.package.MyOperator;
+   }
+   ```
+4. Set your package module to depend on `beast-base` (IntelliJ will resolve this from the Maven reactor if your package is also a Maven module, or you can add a module dependency manually).
+5. Run `BeastMain` — BEAST discovers your package's services automatically from the module descriptors in the boot layer.  No `version.xml` or manual package installation needed during development.
 
 ## Running tests
 

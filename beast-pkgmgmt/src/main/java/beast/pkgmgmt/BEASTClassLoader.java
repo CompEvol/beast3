@@ -45,6 +45,12 @@ public class BEASTClassLoader {
     /** Known namespaces (package prefixes) of registered providers. */
     static private Set<String> namespaces = new HashSet<>();
 
+    /** Whether version.xml classpath scanning has been performed. */
+    private static boolean versionXmlScanned = false;
+
+    /** Service types for which module descriptors have already been scanned. */
+    private static final Set<String> scannedServiceTypes = new HashSet<>();
+
     private BEASTClassLoader() { }
 
     // ------------------------------------------------------------------
@@ -93,18 +99,8 @@ public class BEASTClassLoader {
      * {@code service}.
      */
     public static Class<?> forName(String className, String service) throws ClassNotFoundException {
-        if (!services.containsKey(service)) {
-            if (services.isEmpty()) {
-                services.put(service, new HashSet<>());
-                initServices();
-                return forName(className, service);
-            } else {
-                throw new IllegalArgumentException(
-                    "Could not find service " + service +
-                    " while trying to forName class " + className);
-            }
-        }
-        if (!services.get(service).contains(className)) {
+        Set<String> providers = ensureServicesLoaded(service);
+        if (!providers.contains(className)) {
             throw new ClassNotFoundException(
                 "Could not find class " + className + " as service " + service + "\n"
                 + "Perhaps the package is missing or the package is not correctly configured by the developer "
@@ -121,48 +117,82 @@ public class BEASTClassLoader {
 
     /**
      * Return set of provider class names for the given service.
-     * Tries the version.xml-populated registry first, then falls back
-     * to {@link ServiceLoader} for JPMS {@code provides} declarations.
+     * Discovers providers from JPMS module descriptors (primary) and
+     * version.xml files on the classpath (supplement for non-modular packages).
      */
     public static Set<String> loadService(Class<?> service) {
-        Set<String> providers = services.get(service.getName());
-        if (providers == null) {
-            if (services.isEmpty()) {
-                initServices();
-            }
-            providers = services.get(service.getName());
-        }
-        // ServiceLoader fallback for JPMS module-info.java provides
-        if (providers == null || providers.isEmpty()) {
-            Set<String> discovered = loadViaServiceLoader(service);
-            if (!discovered.isEmpty()) {
-                providers = services.computeIfAbsent(service.getName(), k -> new HashSet<>());
-                providers.addAll(discovered);
-            }
-        }
-        if (providers == null) {
-            services.put(service.getName(), new HashSet<>());
-            providers = services.get(service.getName());
-        }
-        return providers;
+        return ensureServicesLoaded(service.getName());
     }
 
     /**
-     * Discover service providers by reading {@code provides} declarations
-     * from module descriptors in the boot layer and plugin layers.
-     * This avoids {@link ServiceLoader} (which requires a {@code uses}
-     * declaration in the <em>calling</em> module).
+     * Ensure all provider sources have been consulted for the given service type.
+     * <ol>
+     *   <li><b>Primary</b>: JPMS module descriptors ({@code provides} in
+     *       {@code module-info.java}) from the boot layer and any plugin layers.
+     *       This is the recommended mechanism for packages under active
+     *       development — IntelliJ and other IDEs place modules on the
+     *       module-path automatically, so {@code provides} declarations are
+     *       discovered without any extra configuration.</li>
+     *   <li><b>Supplement</b>: {@code version.xml} files discovered on the
+     *       classpath, for non-modular or legacy packages.</li>
+     * </ol>
      */
-    private static Set<String> loadViaServiceLoader(Class<?> service) {
-        String serviceName = service.getName();
+    private static Set<String> ensureServicesLoaded(String serviceName) {
+        // Primary: scan module descriptors for this service type (once per type)
+        if (scannedServiceTypes.add(serviceName)) {
+            Set<String> discovered = discoverFromModuleDescriptors(serviceName);
+            if (!discovered.isEmpty()) {
+                services.computeIfAbsent(serviceName, k -> new HashSet<>()).addAll(discovered);
+            }
+        }
+
+        // Supplement: scan classpath for version.xml files (once)
+        if (!versionXmlScanned) {
+            versionXmlScanned = true;
+            initServices();
+        }
+
+        return services.computeIfAbsent(serviceName, k -> new HashSet<>());
+    }
+
+    /**
+     * Discover service providers for a single service type by reading
+     * {@code provides} declarations from module descriptors in the boot
+     * layer and plugin layers.
+     */
+    private static Set<String> discoverFromModuleDescriptors(String serviceName) {
         Set<String> providerNames = new HashSet<>();
-        // Scan boot layer
         collectProviders(ModuleLayer.boot(), serviceName, providerNames);
-        // Scan plugin layers
         for (ModuleLayer layer : pluginLayers) {
             collectProviders(layer, serviceName, providerNames);
         }
         return providerNames;
+    }
+
+    /**
+     * Scan <em>all</em> {@code provides} declarations from a layer's modules
+     * and merge them into the service registry.  Called when a new plugin
+     * layer is registered so that module-info.java declarations are picked up
+     * alongside version.xml services.
+     */
+    private static void mergeAllProviders(ModuleLayer layer) {
+        for (Module m : layer.modules()) {
+            java.lang.module.ModuleDescriptor desc = m.getDescriptor();
+            if (desc == null) continue;
+            for (java.lang.module.ModuleDescriptor.Provides provides : desc.provides()) {
+                Set<String> providerSet = services.computeIfAbsent(
+                    provides.service(), k -> new HashSet<>());
+                for (String providerName : provides.providers()) {
+                    providerSet.add(providerName);
+                    class2loaderMap.putIfAbsent(providerName, m.getClassLoader());
+                    if (providerName.contains(".")) {
+                        namespaces.add(providerName.substring(0, providerName.lastIndexOf('.')));
+                    }
+                }
+                // Mark scanned so ensureServicesLoaded won't re-scan
+                scannedServiceTypes.add(provides.service());
+            }
+        }
     }
 
     private static void collectProviders(ModuleLayer layer, String serviceName, Set<String> out) {
@@ -185,6 +215,7 @@ public class BEASTClassLoader {
 
     /** Initialise services by scanning the classpath for version.xml files. */
     public static void initServices() {
+        versionXmlScanned = true;
         String classPath = System.getProperty("java.class.path");
         try {
             classPath = URLDecoder.decode(classPath, "UTF-8");
@@ -196,6 +227,7 @@ public class BEASTClassLoader {
 
     /** Initialise services from a given classpath string. */
     public static void initServices(String classPath) {
+        versionXmlScanned = true;
         for (String jarFileName : classPath.substring(1, classPath.length() - 1).split(File.pathSeparator)) {
             File jarFile = new File(jarFileName);
             try {
@@ -282,13 +314,7 @@ public class BEASTClassLoader {
      * Add a single service provider — useful for testing.
      */
     public static void addService(String service, String className, String packageName) {
-        if (!BEASTClassLoader.services.containsKey(service)) {
-            if (BEASTClassLoader.services.isEmpty()) {
-                initServices();
-            }
-            BEASTClassLoader.services.computeIfAbsent(service, k -> new HashSet<>());
-        }
-        BEASTClassLoader.services.get(service).add(className);
+        ensureServicesLoaded(service).add(className);
         class2loaderMap.put(className, fallbackClassLoader());
     }
 
@@ -370,10 +396,13 @@ public class BEASTClassLoader {
     /**
      * Register a {@link ModuleLayer} created for an external BEAST package.
      * The layer's class-loaders become searchable by {@link #forName},
-     * and the services are merged into the registry.
+     * and the services are merged into the registry.  Both version.xml
+     * services and module-info.java {@code provides} declarations from the
+     * layer are incorporated.
      */
     public static void registerPluginLayer(ModuleLayer layer, Map<String, Set<String>> layerServices) {
         pluginLayers.add(layer);
+        // Merge version.xml services
         if (layerServices != null) {
             for (Map.Entry<String, Set<String>> entry : layerServices.entrySet()) {
                 services.computeIfAbsent(entry.getKey(), k -> new HashSet<>()).addAll(entry.getValue());
@@ -390,6 +419,8 @@ public class BEASTClassLoader {
                 }
             }
         }
+        // Also scan module descriptors from the new layer
+        mergeAllProviders(layer);
     }
 
     // ------------------------------------------------------------------

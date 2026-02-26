@@ -21,13 +21,13 @@ BEAST 3 is a major update from BEAST 2. Key changes:
 - **JPMS modules** — the codebase is split into `beast.pkgmgmt` and `beast.base` Java modules with explicit `module-info.java` descriptors.
 - **Java 25** — requires JDK 25 or later.
 - **Strongly typed inputs** — new `beast.base.spec` hierarchy replaces loosely-typed parameters with compile-time-checked typed inputs.
-- **External packages** — still loaded dynamically via `version.xml` service declarations (JPMS `ModuleLayer` per package).
+- **External packages** — discovered via `module-info.java` `provides` declarations (primary) or `version.xml` service entries (for legacy/non-modular JARs). Deployed packages are loaded into a JPMS `ModuleLayer` per package.
 
 Project Structure
 -----------------
 
 ```
-beast3maven/              (parent POM)
+beast3modular/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module)
 └── lib/                  (beagle.jar, colt.jar)
@@ -65,13 +65,7 @@ mvn test
 Running
 -------
 
-Run BeastMain with an XML input file:
-
-```bash
-java --module-path beast-pkgmgmt/target/classes:beast-base/target/classes \
-     --add-modules beast.base \
-     -m beast.base/beastfx.app.beast.BeastMain example.xml
-```
+The easiest way to run BEAST during development is from IntelliJ (see `scripts/DevGuideIntelliJ.md`).  IntelliJ resolves the full module path from Maven automatically.
 
 Development
 -----------
