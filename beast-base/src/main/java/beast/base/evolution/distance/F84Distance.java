@@ -33,7 +33,6 @@ import beast.base.evolution.alignment.Alignment;
  * compute HKY corrected distance matrix
  *
  * @author Andrew Rambaut
- * @version $Id: F84DistanceMatrix.java,v 1.3 2005/05/24 20:25:56 rambaut Exp $
  */
 @Description("compute HKY corrected distance")
 public class F84Distance extends Distance.Base {

@@ -30,7 +30,6 @@ package beast.base.evolution.tree;
  *
  * @author Andrew Rambaut
  * @author Alexei Drummond
- * @version $Id: IntervalType.java,v 1.9 2005/05/24 20:25:56 rambaut Exp $
  */
 public enum IntervalType {
 

@@ -3,7 +3,7 @@
 *
 * Copyright (C) 2010 Remco Bouckaert remco@cs.auckland.ac.nz
 *
-* This file is part of BEAST2.
+* This file is part of BEAST.
 * See the NOTICE file distributed with this work for additional
 * information regarding copyright ownership and licensing.
 *
@@ -58,7 +58,6 @@ import java.util.Map;
  * @author Matthew Goode
  * @author Alexei Drummond
  * @author Gerton Lunter
- * @version $Id: MathUtils.java,v 1.13 2006/08/31 14:57:24 rambaut Exp $
  */
 public class Randomizer {
     private Randomizer() {

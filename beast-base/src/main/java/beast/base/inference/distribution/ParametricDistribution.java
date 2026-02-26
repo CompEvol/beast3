@@ -42,7 +42,6 @@ import org.apache.commons.statistics.distribution.DiscreteDistribution;
  * * (FIXME) cumulative functions disregard offset. Serious bug if they are used.
  *
  * @author Alexei Drummond
- * @version $Id: ParametricDistributionModel.java,v 1.4 2005/05/24 20:25:59 rambaut Exp $
  */
 
 /**

@@ -41,7 +41,6 @@ import beast.base.inference.State;
  *
  * @author Andrew Rambaut
  * @author Alexei Drummond
- * @version $Id: SpeciationLikelihood.java,v 1.10 2005/05/18 09:51:11 rambaut Exp $
  */
 @Description("A likelihood function for speciation processes.")
 abstract public class SpeciesTreeDistribution extends TreeDistribution {

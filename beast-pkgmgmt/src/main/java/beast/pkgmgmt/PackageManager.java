@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2010 Remco Bouckaert remco@cs.auckland.ac.nz
  *
- * This file is part of BEAST2.
+ * This file is part of BEAST.
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership and licensing.
  *
@@ -681,21 +681,8 @@ public class PackageManager {
     }
 
 
-    /**
-     * Close class loader so that locks on jar files are released, which may prevent
-     * files being replaced on Windows.
-     * http://docs.oracle.com/javase/7/docs/api/java/net/URLClassLoader.html#close%28%29
-     * 
-     * This allows smooth upgrading of BEAST versions using the package manager. Without 
-     * this, there is no way to upgrade BEAST since the PackageManager is part of the 
-     * BEAST.jar file that is loaded and needs to be replaced.
-     * 
-     * Side effect is that after installing a package, opening a new BEAUti instance
-     * will fail (Windows only).
-     * 
-     */
+    /** No-op: system ClassLoader is no longer a URLClassLoader in modern Java. */
     private static void closeClassLoader() {
-        // No-op: system ClassLoader is no longer a URLClassLoader in modern Java.
     }
     
     private static void unloadPackage(File dir) {
@@ -1117,14 +1104,6 @@ public class PackageManager {
         checkInstalledDependencies(packages);
 
         // Load external package JARs into JPMS ModuleLayers.
-//        if (Boolean.getBoolean("beast.load.jars") == false || Utils6.getMajorJavaVersion() != 8) {
-//            externalJarsLoaded = true;
-//        	Utils6.logToSplashScreen("PackageManager::findDataTypes");
-//            findDataTypes();
-//        	Utils6.logToSplashScreen("PackageManager::Done");
-//    		return;
-//    	}
-
         System.err.print("Loading package ");
         for (String jarDirName : getBeastDirectories()) {
         	loadPackage(jarDirName);
@@ -1510,30 +1489,6 @@ public class PackageManager {
     @Deprecated
     public static void addURL(URL u) throws IOException {
     	BEASTClassLoader.classLoader.addURL(u);
-//        // ClassloaderUtil clu = new ClassloaderUtil();
-//        PackageManager clu = new PackageManager();
-//        // URLClassLoader sysLoader = (URLClassLoader)
-//        // ClassLoader.getSystemClassLoader();
-//        URLClassLoader sysLoader = (URLClassLoader) clu.getClass().getClassLoader();
-//        URL urls[] = sysLoader.getURLs();
-//        for (URL url : urls) {
-//            if (url.toString().toLowerCase().equals(u.toString().toLowerCase())) {
-//                System.err.println("URL " + u + " is already in the CLASSPATH");
-//                return;
-//            }
-//        }
-//        Class<?> sysclass = URLClassLoader.class;
-//        try {
-//            // Parameters
-//            Class<?>[] parameters = new Class[]{URL.class};
-//            Method method = sysclass.getDeclaredMethod("addURL", parameters);
-//            method.setAccessible(true);
-//            method.invoke(sysLoader, u);
-//            System.err.println("Loaded URL " + u);
-//        } catch (Throwable t) {
-//            t.printStackTrace();
-//            throw new IOException("Error, could not add URL to system classloader");
-//        }
         String classpath = System.getProperty("java.class.path");
         String jar = u + "";
         classpath += System.getProperty("path.separator") + jar.substring(5);

@@ -9,7 +9,6 @@ import java.util.List;
  *
  * @author Alexei Drummond
  * @author Korbinian Strimmer
- * @version $Id: HeapSort.java,v 1.7 2006/02/20 17:36:23 rambaut Exp $
  */
 public class HeapSort {
 

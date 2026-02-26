@@ -168,12 +168,12 @@ public class JarHealthChecker extends Runnable {
 					input.skipBytes(4);
 					int minorVersion = input.readUnsignedShort();
 					int majorVersion = input.readUnsignedShort();
-					if (majorVersion > 61) {
+					if (majorVersion > 69) {
 						input.close();
 						zip.close();
 						jar.close();
-						throw new Error("Fatal error: Class " + name + " is compiled with java version > java 17. "
-								+ "BEAST only handles java classes up to java 17");
+						throw new Error("Fatal error: Class " + name + " is compiled with Java version > Java 25. "
+								+ "BEAST only handles Java classes up to Java 25");
 					}
 				}
 			}

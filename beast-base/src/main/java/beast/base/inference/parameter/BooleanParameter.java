@@ -3,7 +3,7 @@
 *
 * Copyright (C) 2010 Joseph Heled jheled@gmail.com
 *
-* This file is part of BEAST2.
+* This file is part of BEAST.
 * See the NOTICE file distributed with this work for additional
 * information regarding copyright ownership and licensing.
 *

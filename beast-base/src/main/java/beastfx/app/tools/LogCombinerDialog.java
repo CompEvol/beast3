@@ -74,7 +74,7 @@ public class LogCombinerDialog extends Console {
         }
         
         System.out.println("\nLogCombiner " + BEASTVersion2.INSTANCE.getVersionString());
-        System.out.println("Part of the BEAST 2 packages: http://www.beast2.org");
+        System.out.println("Part of the BEAST package: http://beast2.org");
 
         // Showing the dialog on clicking the button
         Optional<String> result = dialog.showAndWait();

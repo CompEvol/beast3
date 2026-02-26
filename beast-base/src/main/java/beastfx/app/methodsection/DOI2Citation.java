@@ -134,7 +134,7 @@ public class DOI2Citation extends beast.base.inference.Runnable {
 		con.setRequestMethod("GET");
 		//con.setRequestProperty("Accept", "text/bibliography; style=bibtex");
 		con.setRequestProperty("Accept", "text/x-bibliography; style=" + styleInput.get());
-		con.setRequestProperty("User-Agent", "BEAST 2/2.7 (https://beast2.org/; mailto:r.bouckaert@auckland.ac.nz) BeastFX/2.7");
+		con.setRequestProperty("User-Agent", "BEAST/2.8 (https://beast2.org/; mailto:r.bouckaert@auckland.ac.nz)");
 		con.setDoOutput(true);
 		
 		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));

@@ -30,7 +30,6 @@ package beast.base.util;
  *
  * @author Korbinian Strimmer
  * @author Alexei Drummond
- * @version $Id: DiscreteStatistics.java,v 1.11 2006/07/02 21:14:53 rambaut Exp $
  */
 public class DiscreteStatistics {
     /**

@@ -203,7 +203,7 @@ The website for beast is here:
 
 Source code distributed under the GNU Lesser General Public License:
 
-<https://github.com/CompEvol/beast2>
+<https://github.com/alexeid/beast3modular>
 
 ___________________________________________________________________________
 9) ACKNOWLEDGMENTS

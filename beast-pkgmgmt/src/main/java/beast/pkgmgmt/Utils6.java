@@ -15,9 +15,7 @@ import java.util.Properties;
 public class Utils6 {
 
     //++++++ Java version
-    // Detect or compare the Java major number from a Java version string, such as "1.7.0_25" or "10.0.1".
-    public static final int JAVA_1_8 = 8;
-    public static final int JAVA_9 = 9;
+    public static final int JAVA_25 = 25;
 
     /**
      * Get the current Java version from "java.version".
@@ -54,11 +52,11 @@ public class Utils6 {
     }
 
     /**
-     * parse a Java version string to an integer of major version like 7, 8, 9, 10, ...
+     * Parse a Java version string to an integer of major version (e.g. 25).
      */
     public static int getMajorJavaVersion() {
         String javaVersion = getCurrentJavaVersion();
-        // javaVersion should be something like "1.7.0_25"
+        // javaVersion is something like "25.0.2" or legacy "1.8.0_25"
         String[] version = javaVersion.split("\\.");
         if (version.length > 2) {
             int majorVersion = Integer.parseInt(version[0]);

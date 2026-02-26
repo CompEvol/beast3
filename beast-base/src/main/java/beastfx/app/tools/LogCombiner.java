@@ -533,7 +533,7 @@ public class LogCombiner extends LogAnalyser {
                 "<a href=\"mailto:a.rambaut@ed.ac.uk\">a.rambaut@ed.ac.uk</a></p>" +
                 "<p>Department of Computer Science, University of Auckland<br>" +
                 "<a href=\"mailto:alexei@cs.auckland.ac.nz\">alexei@cs.auckland.ac.nz</a></p>" +
-                "<p>Part of the BEAST 2 package:<br>" +
+                "<p>Part of the BEAST package:<br>" +
                 "<a href=\"http://beast2.org/\">http://beast2.org/</a></p>" +
                 "</center></html>";
 

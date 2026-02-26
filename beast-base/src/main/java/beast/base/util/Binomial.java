@@ -30,7 +30,6 @@ package beast.base.util;
  * @author Andrew Rambaut
  * @author Alexei Drummond
  * @author Korbinian Strimmer
- * @version $Id: Binomial.java,v 1.11 2005/05/24 20:26:00 rambaut Exp $
  */
 public class Binomial {
     //

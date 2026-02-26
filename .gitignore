@@ -11,6 +11,11 @@ target/
 *.swp
 *~
 
+# BEAST runtime output
+*.log
+*.state
+state.backup.xml
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -1,13 +1,7 @@
 package beast.pkgmgmt;
 
 /**
- * This class provides a mechanism for returning the version number of the
- * dr software. It relies on the administrator of the dr source using the
- * module tagging system in CVS. The method getVersion() will return
- * the version of dr under the following condition: <BR>
- * 1. the dr source has been checked out *by tag* before being packaged for
- * distribution.
- * <p/>
+ * Version information for BEAST.
  *
  * @author Alexei Drummond
  * @author Andrew Rambaut
@@ -25,9 +19,9 @@ public class BEASTVersion extends Version {
 
     private static final String PROGRAM_NAME = "BEAST";
 
-    private static final String BEAST2_WEBPAGE = "http://beast2.org/";
-    
-    private static final String BEAST2_SOURCE = "http://github.com/CompEvol/beast2";
+    private static final String BEAST_WEBPAGE = "http://beast2.org/";
+
+    private static final String BEAST_SOURCE = "https://github.com/alexeid/beast3modular";
 
     @Override
 	public String getVersion() {
@@ -65,10 +59,10 @@ public class BEASTVersion extends Version {
                 "",
                 "Downloads, Help & Resources:",
 
-                BEAST2_WEBPAGE,
+                BEAST_WEBPAGE,
                 "",
                 "Source code distributed under the GNU Lesser General Public License:",
-                BEAST2_SOURCE,
+                BEAST_SOURCE,
                 "",
                 "BEAST developers:",
                 "Alex Alekseyenko, Trevor Bedford, Erik Bloomquist, Joseph Heled, ",
@@ -92,9 +86,9 @@ public class BEASTVersion extends Version {
                         "<a href=\"mailto:a.rambaut@ed.ac.uk\">a.rambaut@ed.ac.uk</a></p>" +
                         "<p>David Geffen School of Medicine, University of California, Los Angeles<br>" +
                         "<a href=\"mailto:msuchard@ucla.edu\">msuchard@ucla.edu</a></p>" +
-                        "<p><a href=\"" + BEAST2_WEBPAGE + "\">" + BEAST2_WEBPAGE + "</a></p>" +
+                        "<p><a href=\"" + BEAST_WEBPAGE + "\">" + BEAST_WEBPAGE + "</a></p>" +
                         "<p>Source code distributed under the GNU LGPL:<br>" +
-                        "<a href=\"" + BEAST2_SOURCE + "\">" + BEAST2_SOURCE + "</a></p>" +
+                        "<a href=\"" + BEAST_SOURCE + "\">" + BEAST_SOURCE + "</a></p>" +
                         "<p>BEAST developers:<br>" +
                         "Alex Alekseyenko, Erik Bloomquist, Joseph Heled, Sebastian Hoehna, Philippe Lemey,<br>" +
                         "Wai Lok Sibon Li, Gerton Lunter, Sidney Markowitz, Vladimir Minin,<br>" +

@@ -752,11 +752,7 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
         helpMenu.getItems().add(a_citation);
         helpMenu.getItems().add(a_viewModel);
         addCustomHelpMenus(helpMenu);
-        if (!Utils.isMac() || Utils6.isMajorLower(Utils6.JAVA_1_8)) {
-            helpMenu.getItems().add(a_about);
-        } else {
-            helpMenu.getItems().add(a_about);
-        }
+        helpMenu.getItems().add(a_about);
 
         return menuBar;
     } // makeMenuBar

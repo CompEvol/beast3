@@ -44,8 +44,8 @@ public class EBSPAnalyser extends Runnable {
                 "Department of Computer Science, University of Auckland\n" +
                 "                  jheled@gmail.com\n" +
                 "               remco@cs.auckland.ac.nz\n" +
-                "             Part of the BEAST 2 package\n" +
-                "                http://www.beast2.org\n" +
+                "             Part of the BEAST package\n" +
+                "                http://beast2.org\n" +
                 "\n";
         Log.warning(aboutString);
 	}

@@ -5,7 +5,6 @@ package beast.pkgmgmt;
  *
  * @author Alexei Drummond
  * @author Andrew Rambaut
- * @version $Id: Version.java,v 1.13 2005/07/11 14:06:25 rambaut Exp $
  */
 public abstract class Version {
 
