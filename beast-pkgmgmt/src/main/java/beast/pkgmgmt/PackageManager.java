@@ -48,14 +48,18 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.io.*;
+import java.lang.module.Configuration;
+import java.lang.module.ModuleFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -1142,17 +1146,8 @@ public class PackageManager {
         	System.err.print(' ');
         }
         System.err.println();
-        
-        for (String packageName : packages.keySet()) {
-        	Package p = packages.get(packageName);
-        	for (PackageDependency dep : p.installedVersionDeps) {        		
-            	BEASTClassLoader.classLoader.addParent(standardise(packageName), standardise(dep.dependencyName));
-        	}
-        }
-        
+
         externalJarsLoaded = true;
-//    	Utils6.logToSplashScreen("PackageManager::findDataTypes");
-//        findDataTypes();
     	Utils6.logToSplashScreen("PackageManager::Done");
     } // loadExternalJars
     
@@ -1216,15 +1211,7 @@ public class PackageManager {
         	}
         }
         
-        for (String packageName : packages.keySet()) {
-        	Package p = packages.get(packageName);
-        	for (PackageDependency dep : p.installedVersionDeps) {        		
-            	BEASTClassLoader.classLoader.addParent(standardise(packageName), standardise(dep.dependencyName));
-        	}
-        }
-
         externalJarsLoaded = true;
-//        findDataTypes();
     } // loadExternalJars
 
 	// classes to launch BEAST, BEAUti etc.
@@ -1241,80 +1228,60 @@ public class PackageManager {
             Map<String,Set<String>> services = null;
             if (versionFile.exists()) {
                 try {
-                    // print name and version of package
                     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                     Document doc = factory.newDocumentBuilder().parse(versionFile);
                     Element packageElement = doc.getDocumentElement();
-                    String packageNameAndVersion = null;
                     packageName = packageElement.getAttribute("name");
-                    packageNameAndVersion = packageName + " v" + packageElement.getAttribute("version");
+                    String packageNameAndVersion = packageName + " v" + packageElement.getAttribute("version");
                     System.err.print(packageNameAndVersion);
                     Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
                     services = parseServices(doc);
-
                 } catch (Exception e) {
-                    // too bad, won't print out any info
-
                     // File is called version.xml, but is not a Beast2 version file
-                    // Log.debug.print("Skipping "+jarDirName+" (not a Beast2 package)");
                 }
-            } else {
-            	// TODO: return?;
             }
+
+            // Collect JARs from lib/
             File jarDir = new File(jarDirName + "/lib");
             if (!jarDir.exists()) {
                 jarDir = new File(jarDirName + "\\lib");
             }
+            List<Path> jarPaths = new ArrayList<>();
             if (jarDir.exists() && jarDir.isDirectory()) {
                 for (String fileName : jarDir.list()) {
                     if (fileName.endsWith(".jar")) {
-//                        Log.debug.print("Probing: " + fileName + " ");
-//                        // check that we are not reload existing classes
-//                        String loadedClass = null;
-//                        try {
-//                            JarInputStream jarFile = new JarInputStream
-//                                    (new FileInputStream(jarDir.getAbsolutePath() + "/" + fileName));
-//                            JarEntry jarEntry;
-//
-//                            while (loadedClass == null) {
-//                                jarEntry = jarFile.getNextJarEntry();
-//                                if (jarEntry == null) {
-//                                    break;
-//                                }
-//                                if ((jarEntry.getName().endsWith(".class"))) {
-//                                    String className = jarEntry.getName().replaceAll("/", "\\.");
-//                                    className = className.substring(0, className.lastIndexOf('.'));
-//                                    try {
-//                                        /*Object o =*/
-//                                    	BEASTClassLoader.forName(className);
-//                                        loadedClass = className;
-//                                    } catch (Throwable e) {
-//                                        // TODO: handle exception
-//                                    	e.printStackTrace();
-//                                    }
-//                                    if (loadedClass == null && packageNameAndVersion != null) {
-//                                        classToPackageMap.put(className, packageNameAndVersion);
-//                                    }
-//                                }
-//                            }
-//                            jarFile.close();
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//
-//
-//                        @SuppressWarnings("deprecation")
-                        URL url = new File(jarDir.getAbsolutePath() + "/" + fileName).toURI().toURL();
-//                        if (loadedClass == null) {
-                        addURL(url, packageName, services);
-//                        } else {
-//                            System.err.println("Skip loading " + url + ": contains class " + loadedClass + " that is already loaded");
-//                        }
+                        jarPaths.add(Path.of(jarDir.getAbsolutePath(), fileName));
                     }
                 }
             }
+
+            if (!jarPaths.isEmpty()) {
+                // Create a ModuleLayer for this package's JARs
+                try {
+                    ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
+                    ModuleLayer parent = ModuleLayer.boot();
+                    Set<String> moduleNames = finder.findAll().stream()
+                        .map(ref -> ref.descriptor().name())
+                        .collect(Collectors.toSet());
+                    Configuration config = parent.configuration()
+                        .resolveAndBind(finder, ModuleFinder.of(), moduleNames);
+                    ModuleLayer layer = parent.defineModulesWithOneLoader(
+                        config, ClassLoader.getSystemClassLoader());
+                    BEASTClassLoader.registerPluginLayer(layer, services);
+                } catch (Exception e) {
+                    // ModuleLayer creation failed (e.g. split packages);
+                    // fall back to registering services only
+                    System.err.println("Warning: could not create ModuleLayer for " +
+                        jarDirName + ": " + e.getMessage());
+                    if (services != null && packageName != null) {
+                        BEASTClassLoader.classLoader.addServices(packageName, services);
+                    }
+                }
+            } else if (services != null && packageName != null) {
+                // No JARs but services found (e.g. running from IDE)
+                BEASTClassLoader.classLoader.addServices(packageName, services);
+            }
         } catch (Exception e) {
-            // File exists, but cannot load the jar file for some reason
             System.err.println("Skip loading of " + jarDirName + " : " + e.getMessage());
         }
 	}

@@ -84,20 +84,16 @@
             <artifactId>javafx-web</artifactId>
         </dependency>
 
-        <!-- System-scoped JARs -->
+        <!-- Local-repo JARs (installed from lib/) -->
         <dependency>
             <groupId>beast</groupId>
             <artifactId>beagle</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../lib/beagle.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>beast</groupId>
             <artifactId>colt</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../lib/colt.jar</systemPath>
         </dependency>
 
         <!-- Testing -->
@@ -127,4 +123,19 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        --add-reads beast.base=ALL-UNNAMED
+                        --add-reads beast.pkgmgmt=ALL-UNNAMED
+                    </argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

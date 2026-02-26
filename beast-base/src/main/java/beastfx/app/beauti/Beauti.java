@@ -62,7 +62,7 @@ public class Beauti extends Application {
 
     @Override
     public void init() {
-    	URL url = BEASTClassLoader.getSystemClassLoader().getResource("beast/pkgmgmt/icons/beauti.png");
+    	URL url = ClassLoader.getSystemClassLoader().getResource("beast/pkgmgmt/icons/beauti.png");
 		ImageView splash = new ImageView(url.toExternalForm());
         
         progressText = new Label("Initialising BEAUti . . .");

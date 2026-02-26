@@ -1336,7 +1336,7 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
             frame.setTitle("BEAUti 3: " + doc.getTemplateName()
                     + " " + doc.getFileName());
             beauti.frame = frame;
-        	URL url = BEASTClassLoader.getSystemClassLoader().getResource("beast/pkgmgmt/icons/beauti.png");
+        	URL url = ClassLoader.getSystemClassLoader().getResource("beast/pkgmgmt/icons/beauti.png");
     		ImageView icon = new ImageView(url.toExternalForm());
             if (icon != null) {
                 frame.getIcons().add(icon.getImage());

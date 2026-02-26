@@ -665,30 +665,25 @@ public class BeastLauncher {
 
 	public static void run(String classPath, String main, String[] args) {
 		try {
-
 	        for (int i = 0; i < args.length; i++) {
 	        	String arg = args[i];
 	        	if (arg.startsWith("-Xmx") ||
 	        		arg.startsWith("-Xms") ||
 	        	    arg.startsWith("-Xss")) {
-	        		// warn BEAST v2.5.x users that memory/stack allocation uses a different mechanism now
 	        		System.err.println("WARNING: the -Xmx, -Xms and -Xss arguments will be ignored for setting memory/stack space");
 	        		System.err.println("WARNING: If you want to use any of these arguments you must either change the script, or");
 	        		System.err.println("WARNING: call `java -Xmx16g -cp /path/to/launcher.jar " + main + " arg1 arg2 ...` instead");
 	        		System.err.println("WARNING: where `/path/to/` is replaced by the path to where the launcher.jar file is, and");
 	        		System.err.println("WARNING: arg1 the first argument, arg2, the second, etc.");
 	        	}
-	        }            
-           	        	
-			for (String jarFileName : classPath.substring(1, classPath.length() - 1).split(File.pathSeparator)) {
-				if (jarFileName.toLowerCase().endsWith("beast.base.jar")) {
-					File jarFile = new File(jarFileName);
-					BEASTClassLoader.classLoader.addURL(jarFile.toURI().toURL(), "BEAST.base", null);
-				}
-			}
-			// BEASTClassLoader.classLoader.addParent("BEAST.app", "BEAST.base");
+	        }
+
+			// Load external BEAST packages (creates ModuleLayers for each)
+			PackageManager.loadExternalJars();
+
+			// Populate service registry from version.xml files on classpath
 			BEASTClassLoader.initServices(classPath);
-		
+
 			Class<?> mainClass = BEASTClassLoader.forName(main);
 			Method mainMethod = mainClass.getMethod("main", String [].class);
 			mainMethod.invoke(null, (Object) args);
