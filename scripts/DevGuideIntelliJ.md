@@ -1,107 +1,60 @@
-# Setup BEAST-FX in IntelliJ
+# Setup BEAST 3 in IntelliJ
 
-This is the developer guide to show you how to setup BEAST 2.7.x core packages in IntelliJ.
+This is the developer guide for setting up the BEAST 3 project in IntelliJ IDEA.
 
-## Core 
+## Prerequisites
 
-https://github.com/CompEvol/beast2
+### JDK 25
 
-https://github.com/CompEvol/BeastFX
+Install JDK 25 from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution. A bundled JavaFX JDK is no longer needed — JavaFX is resolved as a Maven dependency.
 
-## Azul JDK 17 
+### Maven
 
-BEAST 2.7.x is based on Java 17 (LTS) and GUI is developed from JavaFX.
-The following link (filters are applied) to lead you to download Azul Zulu builds of OpenJDK with JavaFX:
+Maven 3.9+ must be installed. IntelliJ bundles Maven, but you can also install it separately.
 
-https://www.azul.com/downloads/?version=java-17-lts&package=jdk-fx
+### IntelliJ IDEA
 
-Scroll the page to the bottom to select the correct one according to your operating system and CPU.
-
-## IntelliJ
-
-Download/upgrade to the last version of IntelliJ:
+Download or upgrade to the latest version of IntelliJ:
 
 https://www.jetbrains.com/idea/download/
 
-## Open "beast2" project
+## Open the project
 
-__Open__ your `beast2` project. If it does not exist, you can follow the tutorial
-to [create it from existing sources](https://www.jetbrains.com/help/idea/import-project-or-module-wizard.html#create-from-sources).
-Do not worry about libraries, you can fix them later.
+1. **File → Open** and select the `beast3maven` repository root directory.
+2. IntelliJ will detect the Maven `pom.xml` and automatically import the project structure, modules, and dependencies.
+3. If prompted, select **Trust Project** and **Open as Project**.
 
-## Project Structure
+That's it — no manual library setup, module configuration, or package prefixes are needed. Maven handles all dependency resolution.
 
-After the project is opened (be patient with IntelliJ loading time), 
-open [Project Structure](https://www.jetbrains.com/help/idea/project-settings-and-structure.html) to configure the project.
+## Configure JDK
 
-Here is the final setting you need to achieve:
+If IntelliJ does not automatically pick up JDK 25:
 
-<a href="./figures/IntelliJProject.png"><img src="./figures/IntelliJProject.png" ></a>
+1. Open **File → Project Structure → Project**.
+2. Set **SDK** to your JDK 25 installation.
+3. Set **Language level** to **25**.
 
-If you did not have the Zulu 17, then you need to add it, otherwise you can skip the next section.
+## One-time setup: install local JARs
 
-## Add Zulu JDK
+Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. If you haven't already, install them from the terminal:
 
-Go to `SDKs` on the left, and add Zulu 17 from the downloaded Azul Zulu builds of OpenJDK with JavaFX.
-If you are not familiar with this process, you can read the tutorials [SDKs](https://www.jetbrains.com/help/idea/sdk.html). 
+```bash
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+```
 
-In the end, you should have Zulu 17 in your SDKs list:
-
-<a href="./figures/zulu-17.png"><img src="./figures/zulu-17.png" width="750"></a>
-
-## Setup modules
-
-### Global libraries
-
-Personally I recommend you to create [global libraries](https://www.jetbrains.com/help/idea/library.html),
-so that they will be available for other projects.
-
-1. beast2 library
-
-<a href="./figures/b2-lib.png"><img src="./figures/b2-lib.png" width="500"></a>
-
-2. beast2 junit test
-
-<a href="./figures/b2-junit.png"><img src="./figures/b2-junit.png" width="500"></a>
-
-3. BeastFx library
-
-<a href="./figures/b2fx-lib.png"><img src="./figures/b2fx-lib.png" width="500"></a>
-
-### beast2 module
-
-Add or modify the `beast2` module to make it same as the configuration below:
-
-<a href="./figures/b2Src.png"><img src="./figures/b2Src.png" ></a>
-
-Then setup the dependencies:
-
-<a href="./figures/b2Dep.png"><img src="./figures/b2Dep.png" ></a>
-
-
-### BeastFx module
-
-Add or modify the `BeastFx` module to make it same as the configuration below:
-
-<a href="./figures/b2fxSrc.png"><img src="./figures/b2fxSrc.png" ></a>
-
-Because the test code is in a different folder structure, 
-you need to add the package prefix to make them compile in IntelliJ.
-Click the "pen" icon, and add "test" to the prefix.
-
-<a href="./figures/PkgPref.png"><img src="./figures/PkgPref.png" width="400"></a>
-
-Then setup the dependencies:
-
-<a href="./figures/b2fxDep.png"><img src="./figures/b2fxDep.png" ></a>
+Then reload Maven in IntelliJ (right-click the root `pom.xml` → **Maven → Reload project**).
 
 ## Run application in IntelliJ
 
-Create the [run configuration](https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html#create_jar_run_config) for BEAUti:
+Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html#create_jar_run_config):
 
-<a href="./figures//BEAUti.png"><img src="./figures/BEAUti.png" ></a>
+1. **Run → Edit Configurations → Add New → Application**
+2. Set **Module** to `beast-base`
+3. Set **Main class** to `beastfx.app.beast.BeastMain` (or `beastfx.app.beauti.Beauti` for BEAUti)
+4. Set **Program arguments** to your XML file path (for BeastMain)
+5. IntelliJ automatically configures the module path from Maven — no manual `--module-path` or `--add-modules` flags are needed.
 
+## Running tests
 
-
-
-
+Right-click a test class or the `src/test/java` directory and select **Run Tests**. IntelliJ picks up the JUnit 5 and JUnit 4 dependencies from Maven automatically.

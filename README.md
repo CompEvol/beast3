@@ -1,7 +1,5 @@
-BEAST 2
+BEAST 3
 =======
-
-[![Build Status](https://github.com/CompEvol/beast2/workflows/Core%20tests/badge.svg)](https://github.com/CompEvol/beast2/actions?query=workflow%3A%22Core+tests%22)
 
 BEAST is a cross-platform program for Bayesian inference using MCMC of
 molecular sequences. It is entirely oriented towards rooted,
@@ -11,25 +9,86 @@ but is also a framework for testing evolutionary hypotheses without
 conditioning on a single tree topology. BEAST uses MCMC to average
 over tree space, so that each tree is weighted proportional to its
 posterior probability. We include a simple to use user-interface
-program for setting up standard analyses and a suit of programs for
+program for setting up standard analyses and a suite of programs for
 analysing the results.
 
-NOTE: This directory contains the BEAST 2 source code, and is
-therefore of interest primarily to BEAST 2 developers.  For binary
-releases, user tutorials and other information you should visit the
-project website at [beast2.org](https://www.beast2.org).
+What's New in BEAST 3
+---------------------
 
-Development Rules and Philosophy
---------------------------------
+BEAST 3 is a major update from BEAST 2. Key changes:
 
-Aspects relating to BEAST 2 development such as coding style, version
-numbering and design philosophy are discussed on the BEAST 2 web page at
+- **Maven build system** — replaces the previous Ant build. Dependencies are declared in `pom.xml` and resolved automatically.
+- **JPMS modules** — the codebase is split into `beast.pkgmgmt` and `beast.base` Java modules with explicit `module-info.java` descriptors.
+- **Java 25** — requires JDK 25 or later.
+- **Strongly typed inputs** — new `beast.base.spec` hierarchy replaces loosely-typed parameters with compile-time-checked typed inputs.
+- **External packages** — still loaded dynamically via `version.xml` service declarations (JPMS `ModuleLayer` per package).
+
+Project Structure
+-----------------
+
+```
+beast3maven/              (parent POM)
+├── beast-pkgmgmt/        (package manager module)
+├── beast-base/           (core BEAST module)
+└── lib/                  (beagle.jar, colt.jar)
+```
+
+Building
+--------
+
+### Prerequisites
+
+- **Java 25** — install from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution.
+- **Maven 3.9+** — install from [maven.apache.org](https://maven.apache.org/) or via your package manager.
+
+### One-time setup: install local JARs
+
+Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. Install them to your local repository:
+
+```bash
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+```
+
+### Compile
+
+```bash
+mvn compile
+```
+
+### Test
+
+```bash
+mvn test
+```
+
+Running
+-------
+
+Run BeastMain with an XML input file:
+
+```bash
+java --module-path beast-pkgmgmt/target/classes:beast-base/target/classes \
+     --add-modules beast.base \
+     -m beast.base/beastfx.app.beast.BeastMain example.xml
+```
+
+Development
+-----------
+
+See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions.
+
+For guidance on migrating external packages, see:
+- `scripts/migrate.md` — migrating from BEAST v2.6 to v2.7
+- `scripts/migration-guide.md` — migrating from BEAST v2.7 to v3
+
+Development rules and philosophy are discussed at
 [beast2.org/package-development-guide/core-development-rules](https://www.beast2.org/package-development-guide/core-development-rules/).
 
 License
 -------
 
-BEAST 2 is free software; you can redistribute it and/or modify it
+BEAST is free software; you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published
 by the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version. A copy of the license is contained

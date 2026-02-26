@@ -1,23 +1,46 @@
-# Guide for migration BEAST v2.7 packages to this version
+# Guide for migrating BEAST v2.7 packages to BEAST 3
 
-## 0. Setting up a beast3 + BeastFX3 project
+## 0. Setting up a BEAST 3 project
 
-* git clone git@github.com:CompEvol/beast3.git
-  git clone git@github.com:CompEvol/BeastFX3.git
-* update JDK to v25. Make sure to include Java FX (the JDK+FX version from https://www.azul.com/downloads/?package=jdk#zulu)
+* Clone the repository:
+  ```
+  git clone git@github.com:alexeid/beast3modular.git
+  ```
+* Install **JDK 25** from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution. A bundled JavaFX JDK is no longer needed — JavaFX is resolved as a Maven dependency.
+* Install **Maven 3.9+** from [maven.apache.org](https://maven.apache.org/) or via your package manager.
+* One-time setup — install local JARs that are not in Maven Central:
+  ```bash
+  mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beagle -DartifactId=beagle -Dversion=4.0.1 -Dpackaging=jar
+  mvn install:install-file -Dfile=lib/colt.jar -DgroupId=colt -DartifactId=colt -Dversion=1.2.0 -Dpackaging=jar
+  ```
+* Build:
+  ```bash
+  mvn compile
+  ```
+
 ## 1. Make sure your package compiles
 
-* include jar files
+If your external package uses Ant, include the following JARs on the classpath:
   * beagle.jar
   * colt.jar
-  * antlr-runtime-4.13.2.ja <= new version
-  * commons.jar <= contains commons-math3-3.6.1 + other commons jars
-  
-Some changes to keep in mind:
-* StateNode is not a Function any more -- plan is to use Typed version to produce values, but making your class implement Function works as intermediate step
-* StateNode does not have a `scale` method any more -- implement the `Scalable` interface if you want your StateNode to scale
-* `beast.base.inference.Evaluator` removed -- impacts MCMC derived classes
-* `beast.base.evolution.alignment.AscertainedAlignment` removed -- use standard Alignment instead
+  * antlr-runtime-4.13.2.jar
+  * commons-math3-3.6.1.jar + other commons JARs (commons-numbers, commons-rng, commons-statistics)
+
+If your package uses Maven, add BEAST 3 modules as dependencies in your `pom.xml`.
+
+Some API changes to keep in mind:
+* StateNode is not a Function any more — plan is to use Typed version to produce values, but making your class implement Function works as intermediate step
+* StateNode does not have a `scale` method any more — implement the `Scalable` interface if you want your StateNode to scale
+* `beast.base.inference.Evaluator` removed — impacts MCMC derived classes
+* `beast.base.evolution.alignment.AscertainedAlignment` removed — use standard Alignment instead
+
+## JPMS modules
+
+BEAST 3 core is split into two JPMS modules: `beast.pkgmgmt` and `beast.base`. Both are declared as `open module` in their `module-info.java`.
+
+**For external packages:**
+- External packages loaded at runtime do not need their own `module-info.java`. BEAST loads each external package JAR as a child `ModuleLayer`, so service providers declared in `version.xml` continue to work as before.
+- If you do want to create a modular package, add a `module-info.java` with `provides` declarations for your service implementations. This is optional — `version.xml` service registration is still the primary mechanism.
 
 ## 2. Migrate package to use strongly typed classes
 
@@ -43,7 +66,7 @@ For your package
 Old set:
 ```
 <operator id="$(m)BICEPSEpochTop.t:$(n)" spec="beast.base.evolution.operator.EpochFlexOperator" tree="@Tree.t:$(n)" weight="2.0" scaleFactor="0.1"/>
-<operator id="$(m)BICEPSEpochAll.t:$(n)" spec="beast.base.evolution.operator.EpochFlexOperator" tree="@Tree.t:$(n)" weight="2.0" scaleFactor="0.1" fromOldestTipOnly="false"/>      
+<operator id="$(m)BICEPSEpochAll.t:$(n)" spec="beast.base.evolution.operator.EpochFlexOperator" tree="@Tree.t:$(n)" weight="2.0" scaleFactor="0.1" fromOldestTipOnly="false"/>
 <operator id="$(m)BICEPSTreeFlex.t:$(n)" spec="beast.base.evolution.operator.TreeStretchOperator" scaleFactor="0.01" tree="@Tree.t:$(n)" weight="2.0"/>
 <operator id='$(m)TreeRootScaler.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianScaleOperator' scaleFactor="0.1" weight="3" tree="@Tree.t:$(n)" rootOnly='true'/>
 <operator id='$(m)UniformOperator.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianNodeOperator' weight="30" tree="@Tree.t:$(n)"/>
