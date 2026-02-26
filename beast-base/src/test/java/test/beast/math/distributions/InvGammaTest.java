@@ -1,8 +1,6 @@
 package test.beast.math.distributions;
 
 import beast.base.inference.distribution.InverseGamma;
-import org.apache.commons.math.MathException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -93,7 +91,7 @@ public class InvGammaTest  {
     };
 
 
-    public void testInvGamma() throws MathException {
+    public void testInvGamma() {
         for( TestData td : tests ) {
             InverseGamma d = new InverseGamma();
             d.initByName("alpha", td.getShape() + "" , "beta", td.getScale() + "");

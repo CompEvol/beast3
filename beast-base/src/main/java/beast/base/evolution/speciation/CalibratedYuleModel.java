@@ -16,8 +16,6 @@ import beast.base.inference.Distribution;
 import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
-import org.apache.commons.math.MathException;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -281,7 +279,7 @@ public class CalibratedYuleModel extends SpeciesTreeDistribution {
         }
     }
 
-    public Tree compatibleInitialTree() throws MathException {
+    public Tree compatibleInitialTree() {
         final int calCount = orderedCalibrations.length;
         final double[] lowBound = new double[calCount];
         final double[] cladeHeight = new double[calCount];

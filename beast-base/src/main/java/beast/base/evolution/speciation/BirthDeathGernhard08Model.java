@@ -35,7 +35,7 @@ import beast.base.inference.parameter.RealParameter;
 
 import java.util.Arrays;
 
-import static org.apache.commons.math.special.Gamma.logGamma;
+import static org.apache.commons.math3.special.Gamma.logGamma;
 
 /** @deprecated replaced by {@link beast.base.spec.evolution.speciation.BirthDeathGernhard08Model}
  * Ported from Beast 1.6

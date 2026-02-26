@@ -7,8 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.math.MathException;
-
 import java.util.List;
 
 @Description("Offsets a real valued distribution.")
@@ -92,7 +90,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
     
     @Override
-    public Double inverseCumulativeProbability(double p) throws MathException {
+    public Double inverseCumulativeProbability(double p) {
     	return dist.inverseCumulativeProbability(p) + offset.get();
     }
 

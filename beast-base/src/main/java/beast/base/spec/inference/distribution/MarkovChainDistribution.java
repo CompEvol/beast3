@@ -10,8 +10,7 @@ import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
-import org.apache.commons.math.distribution.GammaDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
+import org.apache.commons.statistics.distribution.GammaDistribution;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
 import java.util.List;
@@ -68,7 +67,7 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
         chainParameter = paramInput.get();
         initialMean = initialMeanInput.get();
         useLogNormal = useLogNormalInput.get();
-        gamma = new GammaDistributionImpl(shape, 1);
+        gamma = GammaDistribution.of(shape, 1);
         logNormal = LogNormalDistribution.of(1.0, 1.0);
 
         if (jeffreys && initialMean != null) {
@@ -105,7 +104,7 @@ public class MarkovChainDistribution extends TensorDistribution<RealVector<Posit
 	            logP += logNormal.logDensity(x);
             } else {
                 final double scale = mean / shape;
-                gamma.setBeta(scale);
+                gamma = GammaDistribution.of(shape, scale);
                 logP += gamma.logDensity(x);
             }
         }

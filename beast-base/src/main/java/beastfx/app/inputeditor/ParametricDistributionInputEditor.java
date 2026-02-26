@@ -8,8 +8,6 @@ package beastfx.app.inputeditor;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.apache.commons.math.MathException;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.spec.evolution.tree.MRCAPrior;
@@ -298,7 +296,7 @@ public class ParametricDistributionInputEditor extends BEASTObjectInputEditor {
             for (k = 0; k < 5; k++) {
                 try {
                     info2 += format(m_distr.inverseCumulativeProbability(quantiles[k]));
-                } catch (MathException | RuntimeException e) {
+                } catch (RuntimeException e) {
                 	info2 += "not available";
                 }
                 info1 += strs[k] + "\n";

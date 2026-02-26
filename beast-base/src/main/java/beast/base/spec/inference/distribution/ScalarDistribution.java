@@ -6,7 +6,6 @@ import beast.base.core.Description;
 import beast.base.inference.Distribution;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
-import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.apache.commons.statistics.distribution.DiscreteDistribution;
 
@@ -136,10 +135,10 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      *
      * @param p the cumulative probability.
      * @return x.
-     * @throws MathException if the inverse cumulative probability can not be
+     * @throws RuntimeException if the inverse cumulative probability can not be
      *                       computed due to convergence or other numerical errors.
      */
-    public T inverseCumulativeProbability(double p) throws MathException {
+    public T inverseCumulativeProbability(double p) {
         if (p <= 0) {
         	return getLowerBoundOfParameter();
         } else if (p >= 1) {

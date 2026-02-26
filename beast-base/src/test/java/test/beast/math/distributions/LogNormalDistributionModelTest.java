@@ -5,7 +5,6 @@ import beast.base.inference.distribution.LogNormalDistributionModel;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -158,7 +157,7 @@ public class LogNormalDistributionModelTest  {
 //    }
 
 
-    public void testMedian() throws MathException {
+    public void testMedian() {
 
         System.out.println("Testing 10000 random quantile(0.5) calls");
 
@@ -178,7 +177,7 @@ public class LogNormalDistributionModelTest  {
         }
     }
 
-    public void testCDFAndQuantile() throws MathException {
+    public void testCDFAndQuantile() {
 
         System.out.println("Testing 10000 random quantile/cdf pairs");
 

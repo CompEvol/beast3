@@ -7,7 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 
 import java.util.List;
@@ -118,9 +117,9 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     }
 
     @Override
-    public Double inverseCumulativeProbability(double p) throws MathException {
+    public Double inverseCumulativeProbability(double p) {
         if (p < 0.0 || p > 1.0) {
-            throw new MathException("Probability p must be in [0, 1]");
+            throw new IllegalArgumentException("Probability p must be in [0, 1]");
         }
         double lowerP = getLowerCDF();
         double upperP = getUpperCDF();
@@ -175,7 +174,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         double x;
         try {
             x = getInnerDistribution().inverseCumulativeProbability(u);
-        } catch (MathException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to sample from truncated distribution", e);
             // TODO use rejection sampling as fallback?
         }
@@ -226,7 +225,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
             double x;
             try {
                 x = dist.inverseCumulativeProbability(u);
-            } catch (MathException e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Failed to compute inverse CDF during mean calculation", e);
             }
             

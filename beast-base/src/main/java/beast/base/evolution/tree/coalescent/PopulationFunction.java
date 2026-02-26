@@ -2,10 +2,9 @@ package beast.base.evolution.tree.coalescent;
 
 import java.util.List;
 
-import org.apache.commons.math.FunctionEvaluationException;
-import org.apache.commons.math.MaxIterationsExceededException;
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.integration.RombergIntegrator;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.integration.RombergIntegrator;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
 
 import beast.base.core.Description;
 import beast.base.inference.CalculationNode;
@@ -20,7 +19,7 @@ import beast.base.util.Randomizer;
  * @author Andrew Rambaut
  * @author Korbinian Strimmer
  */
-public interface PopulationFunction extends UnivariateRealFunction {
+public interface PopulationFunction extends UnivariateFunction {
 
     /**
      * @return a list of the unique identifiers for the parameters describing this population function
@@ -161,10 +160,8 @@ public interface PopulationFunction extends UnivariateRealFunction {
             }
 
             try {
-                return numericalIntegrator.integrate(this, start, finish);
-            } catch (MaxIterationsExceededException e) {
-                throw new RuntimeException(e);
-            } catch (FunctionEvaluationException e) {
+                return numericalIntegrator.integrate(Integer.MAX_VALUE, this, start, finish);
+            } catch (TooManyEvaluationsException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -179,7 +176,7 @@ public interface PopulationFunction extends UnivariateRealFunction {
 
 
         // **************************************************************
-        // UnivariateRealFunction IMPLEMENTATION
+        // UnivariateFunction IMPLEMENTATION
         // **************************************************************
 
         /**

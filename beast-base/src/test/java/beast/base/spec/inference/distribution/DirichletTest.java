@@ -5,7 +5,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
-import org.apache.commons.math.special.Gamma;
+import org.apache.commons.math3.special.Gamma;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -13,8 +13,6 @@
     import beast.base.spec.inference.parameter.RealScalarParam;
     import beast.base.spec.type.RealScalar;
     import beast.base.spec.type.RealVector;
-    import org.apache.commons.math.MathException;
-
     import java.util.ArrayList;
     import java.util.List;
     import java.util.Random;
@@ -174,7 +172,7 @@ public class Prior extends Distribution {
 //		            }
 //            	}
 //            }
-        } catch (MathException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to sample!");
         }

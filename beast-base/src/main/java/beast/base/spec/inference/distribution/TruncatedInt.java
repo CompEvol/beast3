@@ -7,7 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
-import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
 
 import java.util.List;
@@ -115,7 +114,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
     
     @Override
-    public Integer inverseCumulativeProbability(double p) throws MathException {
+    public Integer inverseCumulativeProbability(double p) {
         double lowerP = getLowerCDF();
         double upperP = getUpperCDF();
         double adjustedP = lowerP + p * (upperP - lowerP);
@@ -165,7 +164,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         int x;
         try {
             x = getInnerDistribution().inverseCumulativeProbability(u);
-        } catch (MathException e) {
+        } catch (Exception e) {
             throw new RuntimeException("Failed to sample from truncated distribution", e);
             // TODO use rejection sampling as fallback?
         }

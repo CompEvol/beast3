@@ -2,7 +2,6 @@ package test.beast.math.distributions;
 
 import beast.base.inference.distribution.LaplaceDistribution;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import test.beast.BEASTTestCase;
@@ -78,7 +77,7 @@ public class LaplaceDistributionTest  {
     }
 
     @Test
-    public void testMedian() throws MathException {
+    public void testMedian() {
 
         System.out.println("Testing 10000 random quantile(0.5) calls");
 
@@ -97,7 +96,7 @@ public class LaplaceDistributionTest  {
     }
 
     @Test
-    public void testCDFAndQuantile() throws MathException {
+    public void testCDFAndQuantile() {
 
         System.out.println("Testing 10000 random quantile/cdf pairs");
 

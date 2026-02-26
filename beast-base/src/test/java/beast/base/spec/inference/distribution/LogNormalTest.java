@@ -5,7 +5,6 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
 import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -165,7 +164,7 @@ public class LogNormalTest {
 //    }
 
     @Test
-    public void testMedian() throws MathException {
+    public void testMedian() {
 
         System.out.println("Testing 10000 random quantile(0.5) calls");
 
@@ -185,7 +184,7 @@ public class LogNormalTest {
         }
     }
     @Test
-    public void testCDFAndQuantile() throws MathException {
+    public void testCDFAndQuantile() {
 
         System.out.println("Testing 10000 random quantile/cdf pairs");
 

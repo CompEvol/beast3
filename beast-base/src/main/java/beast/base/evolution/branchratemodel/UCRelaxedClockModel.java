@@ -9,8 +9,6 @@ import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
-
 import java.util.Arrays;
 
 /**
@@ -156,7 +154,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
                     Double[][] initialRates0 = null;
 					try {
 						initialRates0 = distribution.sample(branchCount);
-					} catch (MathException e) {
+					} catch (RuntimeException e) {
 						e.printStackTrace();
 					}
                     Double [] initialRates = new Double[branchCount];
@@ -267,7 +265,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
         if (rates[category] == 0.0) {
             try {
                 rates[category] = distribution.inverseCumulativeProbability((category + 0.5) / rates.length);
-            } catch (MathException e) {
+            } catch (RuntimeException e) {
                 throw new RuntimeException("Failed to compute inverse cumulative probability!");
             }
         }
@@ -285,7 +283,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
         if (rates == null) {
 	        try {
 	        	return distribution.inverseCumulativeProbability(quantiles.getValue(nodeNumber));
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }
@@ -303,7 +301,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
 	        	} else {
 	        		rates[i] = distribution.inverseCumulativeProbability(0.1 / (rates.length-1));
 	        	}
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }
@@ -314,7 +312,7 @@ public class UCRelaxedClockModel extends BranchRateModel.Base {
 	        	} else {
 	        		rates[i + 1] = distribution.inverseCumulativeProbability((rates.length - 1 - 0.1) / (rates.length-1));
 	        	}
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }

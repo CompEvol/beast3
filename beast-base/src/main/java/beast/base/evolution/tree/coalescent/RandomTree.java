@@ -42,8 +42,6 @@ import beast.base.inference.StateNodeInitialiser;
 import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.util.HeapSort;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
-
 import java.util.*;
 
 
@@ -239,7 +237,7 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
 		                	bounds.lower = bounds.upper;
 		                	bounds.upper = tmp;
 		                }
-					} catch (MathException e) {
+					} catch (RuntimeException e) {
 						Log.warning.println("At RandomTree::initStateNodes, bound on MRCAPrior could not be set " + e.getMessage());
 					}
 	            }

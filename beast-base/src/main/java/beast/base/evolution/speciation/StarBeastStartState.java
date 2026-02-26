@@ -19,8 +19,6 @@ import beast.base.evolution.tree.coalescent.RandomTree;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 import beast.base.inference.parameter.RealParameter;
-import org.apache.commons.math.MathException;
-
 import java.util.*;
 
 import static java.lang.Math.*;
@@ -102,7 +100,7 @@ public class StarBeastStartState extends Tree implements StateNodeInitialiser {
             }
             try {
 				initWithCalibrations();
-			} catch (MathException e) {
+			} catch (RuntimeException e) {
 				throw new IllegalArgumentException(e);
 			}
         } else {
@@ -398,7 +396,7 @@ public class StarBeastStartState extends Tree implements StateNodeInitialiser {
 //        }
     }
 
-    private void initWithCalibrations() throws MathException {
+    private void initWithCalibrations() {
         final CalibratedYuleModel cYule = calibratedYule.get();
         final Tree spTree = (Tree) cYule.treeInput.get();
 

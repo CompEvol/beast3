@@ -15,8 +15,6 @@ import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
-import org.apache.commons.math.MathException;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -299,7 +297,7 @@ public class CalibratedBirthDeathModel extends SpeciesTreeDistribution {
         }
     }
 
-    Tree compatibleInitialTree() throws MathException {
+    Tree compatibleInitialTree() {
         final int calCount = orderedCalibrations.length;
         final double[] lowBound = new double[calCount];
         final double[] cladeHeight = new double[calCount];

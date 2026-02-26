@@ -29,8 +29,7 @@ package beast.base.evolution.sitemodel;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math.distribution.GammaDistribution;
-import org.apache.commons.math.distribution.GammaDistributionImpl;
+import org.apache.commons.statistics.distribution.GammaDistribution;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
@@ -288,7 +287,7 @@ public class SiteModel extends SiteModelInterface.Base {
             double mean = 0.0;
             final int gammaCatCount = categoryCount - cat;
 
-            final GammaDistribution g = new GammaDistributionImpl(a, 1.0 / a);
+            final GammaDistribution g = GammaDistribution.of(a, 1.0 / a);
             for (int i = 0; i < gammaCatCount; i++) {
                 try {
                     // RRB: alternative implementation that seems equally good in

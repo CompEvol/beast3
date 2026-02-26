@@ -4,12 +4,9 @@ package test.beast.math.distributions;
 import beast.base.inference.distribution.Gamma;
 import beast.base.util.GammaFunction;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.ConvergenceException;
-import org.apache.commons.math.FunctionEvaluationException;
-import org.apache.commons.math.MathException;
-import org.apache.commons.math.analysis.UnivariateRealFunction;
-import org.apache.commons.math.analysis.integration.RombergIntegrator;
-import org.apache.commons.math.analysis.integration.UnivariateRealIntegrator;
+import org.apache.commons.math3.exception.TooManyEvaluationsException;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.integration.RombergIntegrator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -49,7 +46,7 @@ public class GammaTest  {
         return Math.exp((shape-1) * Math.log(value) - value/scale - GammaFunction.lnGamma(shape) - shape * Math.log(scale) );
     }
 
-	public void testPdf() throws MathException  {
+	public void testPdf()  {
 
         final int numberOfTests = 300;
         double totErr = 0;
@@ -96,18 +93,16 @@ public class GammaTest  {
             //assertEquals("" + shape + "," + scale + "," + value, mypdf,gamma.pdf(value),1e-10);
 
             final double cdf = gamma.cumulativeProbability(value);
-            UnivariateRealFunction f = new UnivariateRealFunction() {
-                public double value(double v) throws FunctionEvaluationException {
+            UnivariateFunction f = new UnivariateFunction() {
+                public double value(double v) {
                     return mypdf(v, shape, scale);
                 }
             };
-            final UnivariateRealIntegrator integrator = new RombergIntegrator();
-            integrator.setAbsoluteAccuracy(1e-14);
-            integrator.setMaximalIterationCount(16);  // fail if it takes too much time
+            final RombergIntegrator integrator = new RombergIntegrator(1e-14, 1e-14, 2, 16);
 
             double x;
             try {
-                x = integrator.integrate(f, 0, value);
+                x = integrator.integrate(Integer.MAX_VALUE, f, 0, value);
                 ptotErr += cdf != 0.0 ? Math.abs(x-cdf)/cdf : x;
                 np += 1;
                 //assertTrue("" + shape + "," + scale + "," + value + " " + Math.abs(x-cdf)/x + "> 1e-6", Math.abs(1-cdf/x) < 1e-6);
@@ -115,7 +110,7 @@ public class GammaTest  {
                 final double q = gamma.inverseCumulativeProbability(cdf);
                 qtotErr += q != 0 ? Math.abs(q-value)/q : value;
                 //System.out.println(shape + ","  + scale + " " + value);
-            } catch( ConvergenceException e ) {
+            } catch( TooManyEvaluationsException e ) {
                  // can't integrate , skip test
                  //System.out.print(" theta(" + shape + ","  + scale + ") skipped");
             }

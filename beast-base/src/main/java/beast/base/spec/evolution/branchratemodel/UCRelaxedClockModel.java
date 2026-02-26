@@ -22,7 +22,6 @@ import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.util.Randomizer;
-import org.apache.commons.math.MathException;
 
 import java.util.Arrays;
 
@@ -179,7 +178,7 @@ public class UCRelaxedClockModel extends Base {
 //	                    Double[][] initialRates0 = null;
 //						try {
 //							initialRates0 = distribution.sample(branchCount);
-//						} catch (MathException e) {
+//						} catch (RuntimeException e) {
 //							e.printStackTrace();
 //						}
 	                    double [] initialRates = new double[branchCount];
@@ -188,7 +187,7 @@ public class UCRelaxedClockModel extends Base {
                             final double p = Randomizer.nextDouble();
                             try {
                                 initialRates[i] = distribution.inverseCumulativeProbability(p);
-                            } catch (MathException e) {
+                            } catch (RuntimeException e) {
 							    e.printStackTrace();
 						    }
 	                    }
@@ -300,7 +299,7 @@ public class UCRelaxedClockModel extends Base {
         if (rates[category] == 0.0) {
             try {
                 rates[category] = distribution.inverseCumulativeProbability((category + 0.5) / rates.length);
-            } catch (MathException e) {
+            } catch (RuntimeException e) {
                 throw new RuntimeException("Failed to compute inverse cumulative probability!");
             }
         }
@@ -318,7 +317,7 @@ public class UCRelaxedClockModel extends Base {
         if (rates == null) {
 	        try {
 	        	return distribution.inverseCumulativeProbability(quantiles.get(nodeNumber));
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }
@@ -336,7 +335,7 @@ public class UCRelaxedClockModel extends Base {
 	        	} else {
 	        		rates[i] = distribution.inverseCumulativeProbability(0.1 / (rates.length-1));
 	        	}
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }
@@ -347,7 +346,7 @@ public class UCRelaxedClockModel extends Base {
 	        	} else {
 	        		rates[i + 1] = distribution.inverseCumulativeProbability((rates.length - 1 - 0.1) / (rates.length-1));
 	        	}
-	        } catch (MathException e) {
+	        } catch (RuntimeException e) {
 	            throw new RuntimeException("Failed to compute inverse cumulative probability!");
 	        }
         }

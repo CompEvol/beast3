@@ -31,7 +31,6 @@ import beast.base.core.Input;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
-import org.apache.commons.math.MathException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +71,7 @@ public class CalibratedYuleInitialTree extends Tree implements StateNodeInitiali
         Tree t;
 		try {
 			t = cym.compatibleInitialTree();
-		} catch (MathException e) {
+		} catch (RuntimeException e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
         m_initial.get().assignFromWithoutID(t);

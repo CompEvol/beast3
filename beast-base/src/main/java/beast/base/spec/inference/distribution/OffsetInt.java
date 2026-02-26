@@ -7,8 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
-import org.apache.commons.math.MathException;
-
 import java.util.List;
 
 @Description("Offsets a integer valued distribution.")
@@ -92,7 +90,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
     
     @Override
-    public Integer inverseCumulativeProbability(double p) throws MathException {
+    public Integer inverseCumulativeProbability(double p) {
     	return dist.inverseCumulativeProbability(p) + offset.get();
     }
     

@@ -31,8 +31,6 @@ import javafx.scene.chart.XYChart.Data;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import org.apache.commons.math.MathException;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
@@ -487,7 +485,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             for (k = 0; k < 5; k++) {
                 try {
                     info2 += format(inverseCumulativeProbability(m_distr, quantiles[k]));
-                } catch (MathException | RuntimeException e) {
+                } catch (RuntimeException e) {
                 	info2 += "not available";
                 }
                 info1 += strs[k] + "\n";
@@ -508,7 +506,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             infoLabel3.setText(info3);
         }
 
-		private double inverseCumulativeProbability(ScalarDistribution<?, ?> m_distr, double level) throws MathException {
+		private double inverseCumulativeProbability(ScalarDistribution<?, ?> m_distr, double level) {
             Object o = m_distr.inverseCumulativeProbability(level);
             if (o instanceof Double d) {
             	return d;

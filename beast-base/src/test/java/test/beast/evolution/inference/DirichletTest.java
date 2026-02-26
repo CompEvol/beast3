@@ -2,7 +2,7 @@ package test.beast.evolution.inference;
 
 import beast.base.inference.distribution.Dirichlet;
 import beast.base.inference.parameter.RealParameter;
-import org.apache.commons.math.special.Gamma;
+import org.apache.commons.math3.special.Gamma;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;

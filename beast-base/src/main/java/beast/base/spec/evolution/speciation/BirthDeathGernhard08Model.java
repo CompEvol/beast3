@@ -38,7 +38,7 @@ import beast.base.spec.type.RealScalar;
 
 import java.util.Arrays;
 
-import static org.apache.commons.math.special.Gamma.logGamma;
+import static org.apache.commons.math3.special.Gamma.logGamma;
 
 /* Ported from Beast 1.6
  * @author Joseph Heled
