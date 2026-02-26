@@ -67,12 +67,23 @@ Running
 
 ### From the command line
 
-Build the project, then use the `exec-maven-plugin` to launch BEAST with the correct module path:
+Build the project, then use the `exec-maven-plugin` to launch BEAST applications with the correct module path:
 
 ```bash
 mvn package -DskipTests
+
+# Run BEAST on an XML file
 mvn -pl beast-base exec:exec -Dbeast.args="example.xml"
+
+# Run BEAUti
+mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
+
+# Run other tools (LogCombiner, TreeAnnotator, etc.)
+mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
+mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
 ```
+
+The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application.
 
 ### From IntelliJ
 
