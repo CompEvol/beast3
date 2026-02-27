@@ -100,22 +100,41 @@ The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.be
 
 See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from Maven automatically.
 
-Using BEAST 3 as a library
---------------------------
+Using BEAST 3 as a Maven dependency
+-------------------------------------
 
-Projects like LPhyBEAST can use BEAST 3 as a Maven dependency to build BEAST models in memory and write them to XML.
+BEAST 3 artifacts are published to [GitHub Packages](https://github.com/CompEvol/beast3/packages). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
 
-### 1. Install BEAST 3 to your local Maven repository
+### 1. Configure GitHub Packages authentication
 
-In the `beast3modular` directory:
+GitHub Packages requires authentication even for public packages. Add a server entry to your `~/.m2/settings.xml`:
 
-```bash
-mvn install -DskipTests
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github-beast3</id>
+      <username>YOUR_GITHUB_USERNAME</username>
+      <password>YOUR_GITHUB_PAT</password>
+    </server>
+  </servers>
+</settings>
 ```
 
-### 2. Add the dependency to your project's `pom.xml`
+Replace `YOUR_GITHUB_USERNAME` with your GitHub username and `YOUR_GITHUB_PAT` with a [personal access token](https://github.com/settings/tokens) that has the `read:packages` scope.
 
-For **headless / library** usage (no JavaFX dependency):
+### 2. Add the repository and dependencies to your project's `pom.xml`
+
+```xml
+<repositories>
+    <repository>
+        <id>github-beast3</id>
+        <url>https://maven.pkg.github.com/CompEvol/beast3</url>
+    </repository>
+</repositories>
+```
+
+Then add BEAST dependencies. For **headless / library** usage (no JavaFX dependency):
 
 ```xml
 <dependency>
@@ -135,7 +154,7 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 </dependency>
 ```
 
-Maven resolves all transitive dependencies (Commons Math, ANTLR, and optionally JavaFX) automatically. The consuming project also needs `beagle.jar` and `colt.jar` installed in its local repository (see One-time setup above).
+Maven resolves all transitive dependencies (Commons Math, ANTLR, `beagle`, `colt`, and optionally JavaFX) automatically from GitHub Packages.
 
 ### 3. JPMS module declaration (if your project uses modules)
 
@@ -148,6 +167,19 @@ open module my.project {
 ```
 
 If your project does not use JPMS modules, the BEAST classes are accessible from the unnamed module without any extra configuration.
+
+### Alternative: local install
+
+If you prefer to build from source instead of using GitHub Packages, you can install BEAST 3 to your local Maven repository:
+
+```bash
+cd /path/to/beast3modular
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install -DskipTests
+```
+
+In this case, no `<repositories>` block or `settings.xml` configuration is needed.
 
 Development
 -----------

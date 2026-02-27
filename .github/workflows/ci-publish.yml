@@ -1,0 +1,84 @@
+name: CI & Publish
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Azul Zulu)
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Install beagle.jar to local Maven repo
+        run: >
+          mvn install:install-file
+          -Dfile=lib/beagle.jar
+          -DgroupId=beast
+          -DartifactId=beagle
+          -Dversion=1.0
+          -Dpackaging=jar
+
+      - name: Install colt.jar to local Maven repo
+        run: >
+          mvn install:install-file
+          -Dfile=lib/colt.jar
+          -DgroupId=beast
+          -DartifactId=colt
+          -Dversion=1.0
+          -Dpackaging=jar
+
+      - name: Build and test
+        run: mvn verify
+
+      - name: Deploy beagle.jar to GitHub Packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: >
+          mvn deploy:deploy-file
+          -Dfile=lib/beagle.jar
+          -DgroupId=beast
+          -DartifactId=beagle
+          -Dversion=1.0
+          -Dpackaging=jar
+          -DrepositoryId=github
+          -Durl=https://maven.pkg.github.com/CompEvol/beast3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy colt.jar to GitHub Packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: >
+          mvn deploy:deploy-file
+          -Dfile=lib/colt.jar
+          -DgroupId=beast
+          -DartifactId=colt
+          -Dversion=1.0
+          -Dpackaging=jar
+          -DrepositoryId=github
+          -Durl=https://maven.pkg.github.com/CompEvol/beast3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy all modules to GitHub Packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: mvn deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
