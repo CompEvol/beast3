@@ -59,7 +59,7 @@ public class BeautiSimpleTest extends BeautiBase {
 		assertEquals(Arrays.toString(tc[0]),"[anolis, anolis, 29, 1456, nucleotide, anolis, anolis, anolis, false]");
 		assertThat(f).isNotNull();
 		assertStateEquals("Tree.t:anolis", "birthRate.t:anolis");
-		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelBICEPSEpochTop.t:anolis", "YuleModelBICEPSEpochAll.t:anolis", "YuleModelBICEPSTreeFlex.t:anolis");
+		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelTreeScaler.t:anolis");
 		assertPriorsEqual("YuleModel.t:anolis", "YuleBirthRatePrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "YuleModel.t:anolis", "birthRate.t:anolis");
 
@@ -77,7 +77,7 @@ public class BeautiSimpleTest extends BeautiBase {
 
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "birthRate.t:anolis", "kappa.s:anolis", "freqParameter.s:anolis");
-		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelBICEPSEpochTop.t:anolis", "YuleModelBICEPSEpochAll.t:anolis", "YuleModelBICEPSTreeFlex.t:anolis", "KappaScaler.s:anolis", "FrequenciesExchanger.s:anolis");
+		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelTreeScaler.t:anolis", "KappaScaler.s:anolis", "FrequenciesExchanger.s:anolis");
 		assertPriorsEqual("YuleModel.t:anolis", "YuleBirthRatePrior.t:anolis", "KappaPrior.s:anolis", "FrequenciesPrior.s:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "YuleModel.t:anolis", "birthRate.t:anolis", "kappa.s:anolis", "freqParameter.s:anolis");
 
@@ -88,7 +88,7 @@ public class BeautiSimpleTest extends BeautiBase {
 		
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "birthRate.t:anolis", "kappa.s:anolis", "gammaShape.s:anolis", "freqParameter.s:anolis");
-		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelBICEPSEpochTop.t:anolis", "YuleModelBICEPSEpochAll.t:anolis", "YuleModelBICEPSTreeFlex.t:anolis", "KappaScaler.s:anolis", "gammaShapeScaler.s:anolis", "FrequenciesExchanger.s:anolis");
+		assertOperatorsEqual("YuleBirthRateScaler.t:anolis", "YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelTreeScaler.t:anolis", "KappaScaler.s:anolis", "gammaShapeScaler.s:anolis", "FrequenciesExchanger.s:anolis");
 		assertPriorsEqual("YuleModel.t:anolis", "YuleBirthRatePrior.t:anolis", "KappaPrior.s:anolis", "GammaShapePrior.s:anolis", "FrequenciesPrior.s:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "YuleModel.t:anolis", "birthRate.t:anolis", "kappa.s:anolis", "gammaShape.s:anolis", "freqParameter.s:anolis");
 
@@ -103,7 +103,7 @@ public class BeautiSimpleTest extends BeautiBase {
 
 		printBeautiState();
 		assertStateEquals("Tree.t:tree", "birthRate.t:tree", "kappa.s:anolis", "gammaShape.s:anolis", "freqParameter.s:anolis");
-		assertOperatorsEqual("YuleBirthRateScaler.t:tree", "YuleModelTreeRootScaler.t:tree", "YuleModelUniformOperator.t:tree", "YuleModelSubtreeSlide.t:tree", "YuleModelNarrow.t:tree", "YuleModelWide.t:tree", "YuleModelWilsonBalding.t:tree", "YuleModelBICEPSEpochTop.t:tree", "YuleModelBICEPSEpochAll.t:tree", "YuleModelBICEPSTreeFlex.t:tree", "KappaScaler.s:anolis", "gammaShapeScaler.s:anolis", "FrequenciesExchanger.s:anolis");
+		assertOperatorsEqual("YuleBirthRateScaler.t:tree", "YuleModelTreeRootScaler.t:tree", "YuleModelUniformOperator.t:tree", "YuleModelSubtreeSlide.t:tree", "YuleModelNarrow.t:tree", "YuleModelWide.t:tree", "YuleModelWilsonBalding.t:tree", "YuleModelTreeScaler.t:tree", "KappaScaler.s:anolis", "gammaShapeScaler.s:anolis", "FrequenciesExchanger.s:anolis");
 		assertPriorsEqual("YuleModel.t:tree", "YuleBirthRatePrior.t:tree", "GammaShapePrior.s:anolis", "KappaPrior.s:anolis", "FrequenciesPrior.s:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:tree", "YuleModel.t:tree", "birthRate.t:tree", "kappa.s:anolis", "gammaShape.s:anolis", "freqParameter.s:anolis");
 

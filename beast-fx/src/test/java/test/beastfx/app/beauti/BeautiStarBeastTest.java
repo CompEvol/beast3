@@ -3,6 +3,7 @@ package test.beastfx.app.beauti;
 
 
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import javafx.stage.Stage;
 
 import java.io.File;
 
+@Disabled("StarBeast.xml template not yet ported to BEAST 3")
 @Tag("slow")
 @ExtendWith(ApplicationExtension.class)
 public class BeautiStarBeastTest extends BeautiBase {

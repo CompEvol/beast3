@@ -39,12 +39,8 @@ public class ExampleXmlParsingTest  {
 
     @Test
     public void test_ThatXmlExamplesParse() {
-        String dir;
-        dir = System.getProperty("user.dir") + "/../beast2/examples/benchmark/II";
-    	test_ThatXmlExamplesParse(dir);
-        dir = System.getProperty("user.dir") + "/../beast2/examples/";
-    	test_ThatXmlExamplesParse(dir);
-        dir = System.getProperty("user.dir") + "/../beast2/examples/beast2vs1";
+        // Examples are copied from beast-base test resources to target/test-classes/examples/
+        String dir = System.getProperty("user.dir") + "/examples";
     	test_ThatXmlExamplesParse(dir);
     }
     
@@ -54,6 +50,7 @@ public class ExampleXmlParsingTest  {
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test XML Examples in " + dir);
             File exampleDir = new File(dir);
+            assertTrue(exampleDir.exists(), "Example directory does not exist: " + dir);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {
                 @Override
 				public boolean accept(File dir, String name) {
@@ -91,9 +88,6 @@ public class ExampleXmlParsingTest  {
     @Test
     public void test_ThatXmlExamplesRun() {
         String dir = System.getProperty("user.dir") + "/examples";
-        if (!new File(dir).exists()) {
-        	dir = System.getProperty("user.dir") + "/../beast2/examples";
-        }
         test_ThatXmlExamplesRun(dir);
     }
     
@@ -102,6 +96,7 @@ public class ExampleXmlParsingTest  {
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test that XML Examples run in " + dir);
             File exampleDir = new File(dir);
+            assertTrue(exampleDir.exists(), "Example directory does not exist: " + dir);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {
                 @Override
 				public boolean accept(File dir, String name) {
