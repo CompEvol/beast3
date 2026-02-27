@@ -54,13 +54,22 @@ public class XMLParserTest  {
     	BEASTClassLoader.addService(BEASTInterface.class.getName(), "beast.base.evolution.substitutionmodel.JoMamma", "BEAST.base");
     	
     	
+    	// Reset static class map so XMLParser re-reads version.xml
+    	try {
+    		java.lang.reflect.Field f = XMLParser.class.getDeclaredField("element2ClassMap");
+    		f.setAccessible(true);
+    		f.set(null, null);
+    	} catch (ReflectiveOperationException e) {
+    		throw new RuntimeException(e);
+    	}
+
     	// parse XML containing entry in map
     	Object o = null;
     	try {
 	    	String xml = "<beast namespace=\"beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood\" version=\"2.7\">"
 	    			+ "<input spec='JoMamma'/>"
 	    			+ "</beast>";
-	    
+
 	    	XMLParser parser = new XMLParser();
     		o = parser.parseBareFragment(xml, false);
     	} catch (Throwable e) {
