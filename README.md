@@ -18,7 +18,7 @@ What's New in BEAST 3
 BEAST 3 is a major update from BEAST 2. Key changes:
 
 - **Maven build system** — replaces the previous Ant build. Dependencies are declared in `pom.xml` and resolved automatically.
-- **JPMS modules** — the codebase is split into `beast.pkgmgmt` and `beast.base` Java modules with explicit `module-info.java` descriptors.
+- **JPMS modules** — the codebase is split into `beast.pkgmgmt`, `beast.base`, and `beast.fx` Java modules with explicit `module-info.java` descriptors. The core inference engine (`beast.base`) has no JavaFX dependency and can be used headlessly; the GUI (`beast.fx`) is a separate module.
 - **Java 25** — requires JDK 25 or later.
 - **Strongly typed inputs** — new `beast.base.spec` hierarchy replaces loosely-typed parameters with compile-time-checked typed inputs.
 - **External packages** — discovered via `module-info.java` `provides` declarations (primary) or `version.xml` service entries (for legacy/non-modular JARs). Deployed packages are loaded into a JPMS `ModuleLayer` per package.
@@ -29,7 +29,8 @@ Project Structure
 ```
 beast3modular/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
-├── beast-base/           (core BEAST module)
+├── beast-base/           (core BEAST module — no JavaFX dependency)
+├── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
 └── lib/                  (local JARs + module-info sources)
     ├── beagle.jar        (modular JAR — module beagle)
     ├── beagle/           (module-info.java source)
@@ -80,17 +81,17 @@ Running
 Build the project, then use the `exec-maven-plugin` to launch BEAST applications with the correct module path:
 
 ```bash
-mvn package -DskipTests
+mvn install -DskipTests
 
 # Run BEAST on an XML file
-mvn -pl beast-base exec:exec -Dbeast.args="example.xml"
+mvn -pl beast-fx exec:exec -Dbeast.args="example.xml"
 
 # Run BEAUti
-mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
 
 # Run other tools (LogCombiner, TreeAnnotator, etc.)
-mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
-mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
 ```
 
 The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application.
@@ -114,6 +115,8 @@ mvn install -DskipTests
 
 ### 2. Add the dependency to your project's `pom.xml`
 
+For **headless / library** usage (no JavaFX dependency):
+
 ```xml
 <dependency>
     <groupId>beast</groupId>
@@ -122,13 +125,24 @@ mvn install -DskipTests
 </dependency>
 ```
 
-Maven resolves all transitive dependencies (JavaFX, Commons Math, ANTLR, etc.) automatically. The consuming project also needs `beagle.jar` and `colt.jar` installed in its local repository (see One-time setup above).
+For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
+
+```xml
+<dependency>
+    <groupId>beast</groupId>
+    <artifactId>beast-fx</artifactId>
+    <version>2.8.0-SNAPSHOT</version>
+</dependency>
+```
+
+Maven resolves all transitive dependencies (Commons Math, ANTLR, and optionally JavaFX) automatically. The consuming project also needs `beagle.jar` and `colt.jar` installed in its local repository (see One-time setup above).
 
 ### 3. JPMS module declaration (if your project uses modules)
 
 ```java
 open module my.project {
     requires beast.base;
+    // requires beast.fx;       // only if you need the GUI components
     // requires beast.pkgmgmt;  // only if you use package management APIs
 }
 ```

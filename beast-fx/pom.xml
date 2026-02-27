@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>beast</groupId>
+        <artifactId>beast3modular</artifactId>
+        <version>2.8.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>beast-fx</artifactId>
+    <name>BEAST FX</name>
+
+    <properties>
+        <beast.main>beastfx.app.beast.BeastMain</beast.main>
+        <beast.args></beast.args>
+    </properties>
+
+    <dependencies>
+        <!-- Internal -->
+        <dependency>
+            <groupId>beast</groupId>
+            <artifactId>beast-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>beast</groupId>
+            <artifactId>beast-pkgmgmt</artifactId>
+        </dependency>
+
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-web</artifactId>
+        </dependency>
+
+        <!-- Local-repo JARs (installed from lib/) -->
+        <dependency>
+            <groupId>beast</groupId>
+            <artifactId>beagle</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>beast</groupId>
+            <artifactId>colt</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                    <workingDirectory>${project.build.testOutputDirectory}</workingDirectory>
+                    <argLine>
+                        --add-reads beast.fx=ALL-UNNAMED
+                        --add-reads beast.base=ALL-UNNAMED
+                        --add-reads beast.pkgmgmt=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.glass.ui.monocle=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                        --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
+                    </argLine>
+                    <systemPropertyVariables>
+                        <testfx.robot>glass</testfx.robot>
+                        <testfx.headless>true</testfx.headless>
+                        <glass.platform>Monocle</glass.platform>
+                        <monocle.platform>Headless</monocle.platform>
+                        <prism.order>sw</prism.order>
+                        <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <!-- Copy version.xml to target/ so BEASTClassLoader.initServices()
+                 finds it when scanning classpath entry target/classes -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-version-xml</id>
+                        <phase>generate-test-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>version.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- Copy fxtemplates/ and examples/ to target/test-classes so BEAUti tests
+                         find Standard.xml when workingDirectory is test-classes -->
+                    <execution>
+                        <id>copy-fxtemplates-to-test-classes</id>
+                        <phase>generate-test-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.outputDirectory}</directory>
+                                    <includes>
+                                        <include>fxtemplates/**</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- Copy test examples from beast-base so integration tests can find them -->
+                    <execution>
+                        <id>copy-examples-to-test-classes</id>
+                        <phase>generate-test-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../beast-base/src/test/resources</directory>
+                                    <includes>
+                                        <include>examples/**</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Copy runtime dependencies to target/lib/ for CLI execution -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Run BEAST applications from the command line:
+                 mvn -pl beast-fx exec:exec -Dbeast.args="example.xml"
+                 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
+                 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <configuration>
+                    <executable>java</executable>
+                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                    <arguments>
+                        <argument>--module-path</argument>
+                        <modulepath/>
+                        <argument>-DBEAST_PACKAGE_PATH=${project.build.outputDirectory}</argument>
+                        <argument>-m</argument>
+                        <argument>beast.fx/${beast.main}</argument>
+                        <argument>${beast.args}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

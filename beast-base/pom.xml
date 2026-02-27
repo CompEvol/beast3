@@ -13,11 +13,6 @@
     <artifactId>beast-base</artifactId>
     <name>BEAST Base</name>
 
-    <properties>
-        <beast.main>beastfx.app.beast.BeastMain</beast.main>
-        <beast.args></beast.args>
-    </properties>
-
     <dependencies>
         <!-- Internal -->
         <dependency>
@@ -71,24 +66,6 @@
             <artifactId>commons-statistics-distribution</artifactId>
         </dependency>
 
-        <!-- JavaFX -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-fxml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-swing</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-web</artifactId>
-        </dependency>
-
         <!-- Local-repo JARs (installed from lib/) -->
         <dependency>
             <groupId>beast</groupId>
@@ -113,23 +90,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>openjfx-monocle</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -145,17 +107,8 @@
                     <argLine>
                         --add-reads beast.base=ALL-UNNAMED
                         --add-reads beast.pkgmgmt=ALL-UNNAMED
-                        --add-exports javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
-                        --add-exports javafx.graphics/com.sun.glass.ui.monocle=ALL-UNNAMED
-                        --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
-                        --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
                     </argLine>
                     <systemPropertyVariables>
-                        <testfx.robot>glass</testfx.robot>
-                        <testfx.headless>true</testfx.headless>
-                        <glass.platform>Monocle</glass.platform>
-                        <monocle.platform>Headless</monocle.platform>
-                        <prism.order>sw</prism.order>
                         <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
                     </systemPropertyVariables>
                 </configuration>
@@ -182,24 +135,6 @@
                             </resources>
                         </configuration>
                     </execution>
-                    <!-- Copy fxtemplates/ to target/test-classes so BEAUti tests
-                         find Standard.xml when workingDirectory is test-classes -->
-                    <execution>
-                        <id>copy-fxtemplates-to-test-classes</id>
-                        <phase>generate-test-resources</phase>
-                        <goals><goal>copy-resources</goal></goals>
-                        <configuration>
-                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.outputDirectory}</directory>
-                                    <includes>
-                                        <include>fxtemplates/**</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin>
             <!-- Copy runtime dependencies to target/lib/ for CLI execution -->
@@ -218,27 +153,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <!-- Run BEAST applications from the command line:
-                 mvn -pl beast-base exec:exec -Dbeast.args="example.xml"
-                 mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
-                 mvn -pl beast-base exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <configuration>
-                    <executable>java</executable>
-                    <workingDirectory>${project.build.outputDirectory}</workingDirectory>
-                    <arguments>
-                        <argument>--module-path</argument>
-                        <modulepath/>
-                        <argument>-DBEAST_PACKAGE_PATH=${project.build.outputDirectory}</argument>
-                        <argument>-m</argument>
-                        <argument>beast.base/${beast.main}</argument>
-                        <argument>${beast.args}</argument>
-                    </arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>
