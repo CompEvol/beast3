@@ -4,9 +4,9 @@ package test.beast.math.distributions;
 import beast.base.inference.distribution.Gamma;
 import beast.base.util.GammaFunction;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.exception.TooManyEvaluationsException;
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.RombergIntegrator;
+import org.apache.commons.math4.legacy.exception.TooManyEvaluationsException;
+import org.apache.commons.math4.legacy.analysis.UnivariateFunction;
+import org.apache.commons.math4.legacy.analysis.integration.RombergIntegrator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

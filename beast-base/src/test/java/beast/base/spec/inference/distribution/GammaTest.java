@@ -5,15 +5,15 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.GammaFunction;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.RombergIntegrator;
-import org.apache.commons.math3.analysis.integration.UnivariateIntegrator;
-import org.apache.commons.math3.exception.MaxCountExceededException;
+import org.apache.commons.math4.legacy.analysis.UnivariateFunction;
+import org.apache.commons.math4.legacy.analysis.integration.RombergIntegrator;
+import org.apache.commons.math4.legacy.analysis.integration.UnivariateIntegrator;
+import org.apache.commons.math4.legacy.exception.MaxCountExceededException;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 import org.junit.jupiter.api.Test;
 
-import static org.apache.commons.math3.analysis.integration.BaseAbstractUnivariateIntegrator.DEFAULT_MIN_ITERATIONS_COUNT;
-import static org.apache.commons.math3.analysis.integration.BaseAbstractUnivariateIntegrator.DEFAULT_RELATIVE_ACCURACY;
+import static org.apache.commons.math4.legacy.analysis.integration.BaseAbstractUnivariateIntegrator.DEFAULT_MIN_ITERATIONS_COUNT;
+import static org.apache.commons.math4.legacy.analysis.integration.BaseAbstractUnivariateIntegrator.DEFAULT_RELATIVE_ACCURACY;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GammaTest  {

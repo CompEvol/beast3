@@ -8,7 +8,7 @@ import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.TensorUtils;
 import beast.base.spec.type.Vector;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.StatUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;

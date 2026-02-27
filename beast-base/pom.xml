@@ -20,11 +20,12 @@
             <artifactId>beast-pkgmgmt</artifactId>
         </dependency>
 
-        <!-- Commons Math -->
+        <!-- Commons Math 4 (JPMS-friendly replacement for commons-math3) -->
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
+            <artifactId>commons-math4-legacy</artifactId>
         </dependency>
+
 
         <!-- ANTLR Runtime -->
         <dependency>

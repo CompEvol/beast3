@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.math3.geometry.partitioning.NodesSet;
 
 import beast.base.core.Description;
 import beast.base.core.Function;

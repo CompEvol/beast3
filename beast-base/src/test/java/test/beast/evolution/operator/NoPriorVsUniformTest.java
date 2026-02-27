@@ -11,7 +11,7 @@ import beast.base.inference.operator.RealRandomWalkOperator;
 import beast.base.inference.operator.kernel.BactrianRandomWalkOperator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.ESS;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

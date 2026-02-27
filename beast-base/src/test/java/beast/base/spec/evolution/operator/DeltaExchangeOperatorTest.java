@@ -15,7 +15,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.Simplex;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;

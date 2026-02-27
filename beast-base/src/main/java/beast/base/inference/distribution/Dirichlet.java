@@ -56,11 +56,11 @@ public class Dirichlet extends ParametricDistribution {
             double x = pX.getArrayValue(i) / sumX;
 
             logP += (alpha[i] - 1) * Math.log(x);
-            logP -= org.apache.commons.math3.special.Gamma.logGamma(alpha[i]);
+            logP -= org.apache.commons.numbers.gamma.LogGamma.value(alpha[i]);
             sumAlpha += alpha[i];
         }
 
-        logP += org.apache.commons.math3.special.Gamma.logGamma(sumAlpha);
+        logP += org.apache.commons.numbers.gamma.LogGamma.value(sumAlpha);
         // area = sumX^(dim-1)
         logP -= (pX.getDimension() - 1) * Math.log(sumX);
         return logP;

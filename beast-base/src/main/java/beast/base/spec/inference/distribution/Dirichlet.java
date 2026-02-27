@@ -7,7 +7,7 @@ import beast.base.core.Log;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.numbers.gamma.LogGamma;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 
 import java.util.Arrays;
@@ -92,10 +92,10 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
         double logP = 0;
         for (int i = 0; i < value.size(); i++) {
             logP += (alpha.get(i) - 1) * Math.log(value.get(i));
-            logP -= Gamma.logGamma(alpha.get(i));
+            logP -= LogGamma.value(alpha.get(i));
         }
         double alphaSum = alpha.stream().mapToDouble(Double::doubleValue).sum();
-        logP += Gamma.logGamma(alphaSum);
+        logP += LogGamma.value(alphaSum);
 
         // area = sumX^(dim-1)
         double sumX = value.stream()              // Stream<Double>

@@ -2,9 +2,9 @@ package beast.base.evolution.tree.coalescent;
 
 import java.util.List;
 
-import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.RombergIntegrator;
-import org.apache.commons.math3.exception.TooManyEvaluationsException;
+import org.apache.commons.math4.legacy.analysis.UnivariateFunction;
+import org.apache.commons.math4.legacy.analysis.integration.RombergIntegrator;
+import org.apache.commons.math4.legacy.exception.TooManyEvaluationsException;
 
 import beast.base.core.Description;
 import beast.base.inference.CalculationNode;

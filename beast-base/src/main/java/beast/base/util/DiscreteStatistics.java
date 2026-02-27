@@ -253,7 +253,7 @@ public class DiscreteStatistics {
      * compute the q-th quantile for a distribution of x
      * (= inverse cdf)
      *
-     * @param q       quantile (0 < q ≤ 1)
+     * @param q       quantile ({@code 0 < q} ≤ 1)
      * @param x       discrete distribution (an unordered list of numbers)
      * @param indices index sorting x
      * @return q-th quantile

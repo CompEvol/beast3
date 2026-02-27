@@ -38,7 +38,7 @@ import beast.base.spec.type.RealScalar;
 
 import java.util.Arrays;
 
-import static org.apache.commons.math3.special.Gamma.logGamma;
+import org.apache.commons.numbers.gamma.LogGamma;
 
 /**
  * Birth-death tree prior based on Gernhard (2008), conditioned on a fixed number
@@ -117,17 +117,17 @@ public class BirthDeathGernhard08Model extends YuleModel {
             case UNSCALED:
                 break;
             case TIMESONLY:
-                return logGamma(taxonCount + 1);
+                return LogGamma.value(taxonCount + 1);
             case ORIENTED:
                 return Math.log(taxonCount);
             case LABELED: {
                 final double two2nm1 = (taxonCount - 1) * Math.log(2.0);
                 if (conditionalOnRoot) {
-                    return two2nm1 - Math.log(taxonCount - 1) - logGamma(taxonCount + 1);
+                    return two2nm1 - Math.log(taxonCount - 1) - LogGamma.value(taxonCount + 1);
                 } else if (conditionalOnOrigin) {
-                	return two2nm1 - logGamma(taxonCount + 1);
+                	return two2nm1 - LogGamma.value(taxonCount + 1);
                 } else {
-                    return two2nm1 - logGamma(taxonCount);
+                    return two2nm1 - LogGamma.value(taxonCount);
                 }
             }
         }

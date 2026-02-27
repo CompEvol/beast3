@@ -2,7 +2,7 @@ package test.beast.evolution.inference;
 
 import beast.base.inference.distribution.Dirichlet;
 import beast.base.inference.parameter.RealParameter;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.numbers.gamma.LogGamma;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,11 +35,11 @@ public class DirichletTest {
             sumAlpha += alpha[i];
         }
 
-        double logGammaSumAlpha = Gamma.logGamma(sumAlpha);
+        double logGammaSumAlpha = LogGamma.value(sumAlpha);
 
         double sumLogGammaAlpha = 0.0;
         for (int i = 0; i < n; i++) {
-            sumLogGammaAlpha += Gamma.logGamma(alpha[i]);
+            sumLogGammaAlpha += LogGamma.value(alpha[i]);
         }
 
         double sumLogX = 0.0;
@@ -81,11 +81,11 @@ public class DirichletTest {
             sumAlpha += alpha[i];
         }
 
-        double logGammaSumAlpha = Gamma.logGamma(sumAlpha);
+        double logGammaSumAlpha = LogGamma.value(sumAlpha);
 
         double sumLogGammaAlpha = 0.0;
         for (int i = 0; i < n; i++) {
-            sumLogGammaAlpha += Gamma.logGamma(alpha[i]);
+            sumLogGammaAlpha += LogGamma.value(alpha[i]);
         }
 
         // Normalised x (so xi / sumX)

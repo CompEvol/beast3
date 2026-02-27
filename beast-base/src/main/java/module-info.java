@@ -13,9 +13,11 @@ open module beast.base {
     requires org.apache.commons.rng.simple;
     requires org.apache.commons.rng.sampling;
     requires org.apache.commons.statistics.distribution;
+    requires org.apache.commons.math4.legacy;
+    requires org.apache.commons.math4.legacy.exception;
+    requires org.apache.commons.math4.legacy.core;
 
     // Automatic modules
-    requires commons.math3;
     requires org.antlr.antlr4.runtime;
     requires beagle;
     requires colt;

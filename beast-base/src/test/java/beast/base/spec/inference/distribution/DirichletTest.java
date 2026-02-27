@@ -5,7 +5,7 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
-import org.apache.commons.math3.special.Gamma;
+import org.apache.commons.numbers.gamma.LogGamma;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,11 +33,11 @@ public class DirichletTest {
             sumAlpha += a[i];
         }
 
-        double logGammaSumAlpha = Gamma.logGamma(sumAlpha);
+        double logGammaSumAlpha = LogGamma.value(sumAlpha);
 
         double sumLogGammaAlpha = 0.0;
         for (int i = 0; i < n; i++) {
-            sumLogGammaAlpha += Gamma.logGamma(a[i]);
+            sumLogGammaAlpha += LogGamma.value(a[i]);
         }
 
         double sumLogX = 0.0;
@@ -113,11 +113,11 @@ public class DirichletTest {
 //            sumAlpha += alpha[i];
 //        }
 //
-//        double logGammaSumAlpha = Gamma.logGamma(sumAlpha);
+//        double logGammaSumAlpha = LogGamma.value(sumAlpha);
 //
 //        double sumLogGammaAlpha = 0.0;
 //        for (int i = 0; i < n; i++) {
-//            sumLogGammaAlpha += Gamma.logGamma(alpha[i]);
+//            sumLogGammaAlpha += LogGamma.value(alpha[i]);
 //        }
 //
 //        // Normalised x (so xi / sumX)

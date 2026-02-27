@@ -14,7 +14,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

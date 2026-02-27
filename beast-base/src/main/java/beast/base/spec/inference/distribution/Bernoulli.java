@@ -7,7 +7,7 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.BoolScalar;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.util.FastMath;
+
 
 import java.util.List;
 
@@ -57,15 +57,14 @@ public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
     @Override
     public double calculateLogP() {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
-        // FastMath : faster performance with tiny accuracy cost
-    	logP = param.get() ? FastMath.log(p) : FastMath.log(1 - p);
+    	logP = param.get() ? Math.log(p) : Math.log(1 - p);
     	return logP;
     }
 
     @Override
     protected double calcLogP(Boolean value) {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
-        return value ? FastMath.log(p) : FastMath.log(1 - p);
+        return value ? Math.log(p) : Math.log(1 - p);
     }
 
     @Override

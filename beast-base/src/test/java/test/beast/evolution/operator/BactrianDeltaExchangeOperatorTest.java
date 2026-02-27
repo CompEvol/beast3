@@ -12,7 +12,7 @@ import beast.base.inference.operator.kernel.BactrianDeltaExchangeOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;

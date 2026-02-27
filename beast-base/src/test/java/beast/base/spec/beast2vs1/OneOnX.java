@@ -5,7 +5,7 @@ import beast.base.core.Description;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.type.RealScalar;
-import org.apache.commons.math3.util.FastMath;
+
 
 import java.util.List;
 
@@ -41,8 +41,7 @@ public class OneOnX extends ScalarDistribution<RealScalar<Real>, Double> {
 
     @Override
     public double calculateLogP() {
-        // FastMath : faster performance with tiny accuracy cost
-        logP = - FastMath.log(param.get());
+        logP = - Math.log(param.get());
         return logP;
     }
 

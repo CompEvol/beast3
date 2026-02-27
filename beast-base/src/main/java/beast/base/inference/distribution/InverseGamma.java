@@ -64,7 +64,7 @@ public class InverseGamma extends ParametricDistribution {
         public void setAlphaBeta(double alpha, double beta) {
             m_fAlpha = alpha;
             m_fBeta = beta;
-            C = m_fAlpha * Math.log(m_fBeta) - org.apache.commons.math3.special.Gamma.logGamma(m_fAlpha);
+            C = m_fAlpha * Math.log(m_fBeta) - org.apache.commons.numbers.gamma.LogGamma.value(m_fAlpha);
         }
 
         @Override

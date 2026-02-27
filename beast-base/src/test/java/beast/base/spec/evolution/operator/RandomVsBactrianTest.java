@@ -3,8 +3,8 @@ package beast.base.spec.evolution.operator;
 import beast.base.inference.operator.kernel.KernelDistribution;
 import beast.base.spec.inference.util.ESS;
 import beast.base.util.Randomizer;
-import org.apache.commons.math3.stat.StatUtils;
-import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
+import org.apache.commons.math4.legacy.stat.StatUtils;
+import org.apache.commons.math4.legacy.stat.inference.KolmogorovSmirnovTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

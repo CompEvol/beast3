@@ -65,7 +65,7 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
     public void refresh() {
         alpha = (alphaInput.get() != null) ? alphaInput.get().get() : 1.0;
         beta  = (betaInput.get()  != null) ? betaInput.get().get()  : 1.0;
-        C = alpha * Math.log(beta) - org.apache.commons.math3.special.Gamma.logGamma(alpha);
+        C = alpha * Math.log(beta) - org.apache.commons.numbers.gamma.LogGamma.value(alpha);
 
         // Floating point comparison
         if (isNotEqual(dist.getShape(), alpha) ||  isNotEqual(dist.getScale(), 1.0 / beta)) {
