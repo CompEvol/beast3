@@ -19,7 +19,7 @@ import java.util.List;
  * The domain is fixed to {@link Bool}.
  * Supports named dimensions via {@link KeyVectorParam}.
  */
-@Description("A boolean-valued vector")
+@Description("A boolean-valued vector parameter for MCMC inference.")
 public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector{ //VectorParam<Bool, Boolean> {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",

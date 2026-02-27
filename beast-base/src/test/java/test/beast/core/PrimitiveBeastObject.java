@@ -129,6 +129,7 @@ public class PrimitiveBeastObject extends BEASTObject {
 		this.b = b.clone();
 	}
 
+	@Description("Inner class to test nested BEASTObject behaviour")
 	public class InnerClass extends PrimitiveBeastObject {
 
 		public InnerClass() {}

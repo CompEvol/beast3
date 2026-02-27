@@ -11,12 +11,12 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.math3.optim.MaxEval;
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
-import org.apache.commons.math3.optim.univariate.BrentOptimizer;
-import org.apache.commons.math3.optim.univariate.SearchInterval;
-import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
-import org.apache.commons.math3.optim.univariate.UnivariatePointValuePair;
+import org.apache.commons.math4.legacy.optim.MaxEval;
+import org.apache.commons.math4.legacy.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math4.legacy.optim.univariate.BrentOptimizer;
+import org.apache.commons.math4.legacy.optim.univariate.SearchInterval;
+import org.apache.commons.math4.legacy.optim.univariate.UnivariateObjectiveFunction;
+import org.apache.commons.math4.legacy.optim.univariate.UnivariatePointValuePair;
 
 import beast.base.core.Log;
 import beast.base.evolution.substitutionmodel.Frequencies;

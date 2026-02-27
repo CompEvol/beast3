@@ -1,6 +1,7 @@
 package test.beast.beast2vs1.tutorials;
 
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import test.beast.beast2vs1.TestFramework;
 import test.beast.beast2vs1.trace.Expectation;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DivergenceDatingTest {
+    @Disabled("Missing x.xml tutorial file")
     @Test
     public void DivergenceDatingTutorial() throws Exception {
         DivergenceDatingRunner runner = new DivergenceDatingRunner(Files.createTempDirectory("tmp").toFile());

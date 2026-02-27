@@ -22,10 +22,9 @@ Set up GitHub Pages (or similar) to host generated javadoc, and link from README
 ## 5. CHANGELOG
 Summarize BEAST 2 → 3 differences beyond what the migration guide covers.
 
-## 6. Verify beast-package-skeleton
-Confirm the skeleton template compiles, tests pass, and works end-to-end against current
-beast-base SNAPSHOT. Check that the example XML runs, module-info is correct, and the
-README instructions are accurate.
+## 6. ~~Verify beast-package-skeleton~~ DONE
+Fixed dead README links, removed unnecessary surefire `--add-reads` flags, corrected XML
+version attribute. Skeleton compiles, all 4 tests pass, no warnings.
 
 ## 7. Version / release strategy
 Currently `2.8.0-SNAPSHOT`. Decide whether to cut a release or tag before the call so

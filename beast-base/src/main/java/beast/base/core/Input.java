@@ -423,7 +423,7 @@ public class Input<T> {
             try {
                 setStringValue((String) value, beastObject);
             } catch (Exception e) {
-            	String msg = "Failed to set the string value to '" + value + "' for beast object id=" + beastObject.getID() +
+            	String msg = "Failed to set the string value to '" + value + "' for beastobject id=" + beastObject.getID() +
             			(BEASTInterface.class.isAssignableFrom(theClass)? "\nPerhaps forgot to add a `@` in the attribute value?" :  "");
             	Log.warning(msg);
                 throw new RuntimeException(msg);

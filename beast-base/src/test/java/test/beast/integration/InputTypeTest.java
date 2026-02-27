@@ -67,6 +67,10 @@ public class InputTypeTest  {
 		System.err.println("Testing " + beastObjectNames.size() + " classes");
 		List<String> failingInputs = new ArrayList<String>();
 		for (String beastObject : beastObjectNames) {
+			// Skip test fixture classes — they intentionally use primitives and arrays
+			if (beastObject.startsWith("test.")) {
+				continue;
+			}
 			try {
 				Class<?> _class = BEASTClassLoader.forName(beastObject);
 			    Constructor<?>[] allConstructors = _class.getDeclaredConstructors();

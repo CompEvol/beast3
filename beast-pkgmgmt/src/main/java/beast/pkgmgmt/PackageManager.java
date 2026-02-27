@@ -1224,8 +1224,14 @@ public class PackageManager {
                 try {
                     ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
                     ModuleLayer parent = ModuleLayer.boot();
+                    // Only resolve modules not already in the boot layer to avoid
+                    // "reads more than one module" errors from duplicate modules
+                    Set<String> bootModuleNames = parent.modules().stream()
+                        .map(Module::getName)
+                        .collect(Collectors.toSet());
                     Set<String> moduleNames = finder.findAll().stream()
                         .map(ref -> ref.descriptor().name())
+                        .filter(name -> !bootModuleNames.contains(name))
                         .collect(Collectors.toSet());
                     Configuration config = parent.configuration()
                         .resolveAndBind(finder, ModuleFinder.of(), moduleNames);

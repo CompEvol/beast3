@@ -24,6 +24,25 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math4-legacy</artifactId>
+            <exclusions>
+                <!-- Exclude unused transitive commons-numbers pulled by math4-legacy -->
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-numbers-complex</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-numbers-angle</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-numbers-quaternion</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-numbers-arrays</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
 

@@ -1,5 +1,6 @@
 package beast.base.spec.inference.distribution;
 
+import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.spec.domain.Domain;
 import beast.base.spec.type.Scalar;
@@ -16,6 +17,7 @@ import java.util.List;
  *            (The domain extends {@link Domain}.)
  * @param <T>  Java type
  */
+@Description("A collection of independent and identically distributed scalar random variables.")
 public class IID<V extends Vector<?, T>,
         S extends Scalar<?, T>,
         T> extends TensorDistribution<V, T> {
