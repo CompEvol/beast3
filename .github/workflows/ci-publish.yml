@@ -59,7 +59,7 @@ jobs:
           -Dversion=1.0
           -Dpackaging=jar
           -DrepositoryId=github
-          -Durl=https://maven.pkg.github.com/CompEvol/beast3
+          -Durl=https://maven.pkg.github.com/alexeid/beast3modular
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -73,7 +73,7 @@ jobs:
           -Dversion=1.0
           -Dpackaging=jar
           -DrepositoryId=github
-          -Durl=https://maven.pkg.github.com/CompEvol/beast3
+          -Durl=https://maven.pkg.github.com/alexeid/beast3modular
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
