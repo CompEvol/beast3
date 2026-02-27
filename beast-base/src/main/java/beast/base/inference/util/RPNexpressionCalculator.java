@@ -8,7 +8,7 @@ import beast.base.core.Description;
 
 /**
  * Simple RPN expression evaluator.
- * <p/>
+ * <p>
  * Limitations:
  * - variables are statistics of 1 dimension.
  * - Four basic operations (easy to extend, though)

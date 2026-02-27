@@ -42,6 +42,11 @@ import beast.pkgmgmt.BEASTClassLoader;
 
 
 
+/**
+ * Abstract base for general substitution models that work with any number of states.
+ * Provides rate matrix setup, eigendecomposition, and transition probability
+ * computation from user-supplied rate parameters and equilibrium frequencies.
+ */
 @Description("Abstract class for general substituiton models that works for any number of states.")
 abstract public class BasicGeneralSubstitutionModel extends Base {
 

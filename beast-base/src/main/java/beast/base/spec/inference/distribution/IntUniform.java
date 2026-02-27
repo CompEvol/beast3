@@ -10,7 +10,8 @@ import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
 import java.util.List;
 
 /**
- * bounds do not support Inf and -Inf
+ * Discrete uniform distribution over a finite integer interval [lower, upper].
+ * Both endpoints are included. Infinite bounds are not supported.
  */
 @Description("Uniform distribution over a given interval (including lower and upper values). " +
         "An exception is thrown if any bound is set to infinity.")

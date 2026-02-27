@@ -70,7 +70,7 @@ public class State extends BEASTObject {
   public Input<Boolean> experimentalInput = new Input<>("experimental", "Use experimental code to calculate calcNodePath.", false);
   private boolean experimental;
     /**
-     * The components of the state, for instance tree & parameters.
+     * The components of the state, for instance tree and parameters.
      * This represents the current state, but a copy is kept so that when
      * an operation is applied to the State but the proposal is not accepted,
      * the state can be restored. This is currently implemented by having
@@ -131,7 +131,7 @@ public class State extends BEASTObject {
     /**
      * Code that represents configuration of StateNodes that have changed
      * during an operation.
-     * <p/>
+     * <p>
      * Every time an operation requests a StateNode, an entry is added to changeStateNodes
      * changeStateNodes records how many StateNodes are changed.
      * The code is reset when the state is stored, and every time a StateNode
@@ -248,7 +248,7 @@ public class State extends BEASTObject {
      * Return StateNode that can be changed, but later restored
      * if necessary. If there is no copy stored already, a copy is
      * made first, and the StateNode is marked as being dirty.
-     * <p/>
+     * <p>
      * NB This should only be called from an Operator that wants to
      * change the particular StateNode through the Input.get(Operator)
      * method on the input associated with this StateNode.
@@ -268,11 +268,10 @@ public class State extends BEASTObject {
      * This copies the state for possible later restoration
      * but does not affect any inputs, which are all still connected
      * to the original StateNodes
-     * <p/>
+     * <p>
      * Also, store the state to disk for resumption of analysis later on.
      *
      * @param sample chain state number
-     * @return  true if stored  to disk
      */
     public void store(final long sample) {
         //Arrays.fill(changeStateNodes, -1);
@@ -292,17 +291,17 @@ public class State extends BEASTObject {
 
     /**
      * Visit all calculation nodes in partial order determined by the BEASTObject-input relations
-     * (i.e. if A is input of B then A < B). There are 4 operations that can be propagated this
+     * (i.e. if A is input of B then A precedes B). There are 4 operations that can be propagated this
      * way:
-     * <p/>
+     * <p>
      * store() makes sure all calculation nodes store their internal state
-     * <p/>
+     * <p>
      * checkDirtiness() makes all calculation nodes check whether they give a different answer
      * when interrogated by one of its outputs
-     * <p/>
+     * <p>
      * accept() allows all calculation nodes to mark themselves as being clean without further
      * calculation
-     * <p/>
+     * <p>
      * restore() if a proposed state is not accepted, all calculation nodes need to restore
      * themselves
      */

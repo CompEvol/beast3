@@ -15,6 +15,10 @@ import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 
 /**
+ * Random local clock model where rate changes are allowed on a subset of branches,
+ * indicated by boolean flags. Branches without a rate change inherit the rate
+ * from their parent, creating locally constant rate regions.
+ *
  * @author Alexei Drummond
  */
 @Description("Random Local Clock Model.")

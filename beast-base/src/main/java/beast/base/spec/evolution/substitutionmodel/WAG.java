@@ -5,6 +5,9 @@ import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 import beast.base.util.DiscreteStatistics;
 
+/**
+ * WAG empirical model of amino acid evolution (Whelan and Goldman, 2001).
+ */
 @Description("WAG model of amino acid evolution by " +
         "S. Whelan and N. Goldman. 2001. Molecular biology and evolution 18.5 (2001): 691-699 ")
 

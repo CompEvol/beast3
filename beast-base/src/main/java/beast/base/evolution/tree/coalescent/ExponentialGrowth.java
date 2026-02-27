@@ -65,21 +65,13 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
         return growthRateParameterInput.get().getArrayValue();
     }
 
-    /**
-     * sets growth rate to r.
-     *
-     * @param r
-     */
+// sets growth rate to r.
 //    public void setGrowthRate(double r) {
 //        this.r = r;
 //    }
 
-    /**
-     * An alternative parameterization of this model. This
-     * function sets growth rate for a given doubling time.
-     *
-     * @param doublingTime
-     */
+// An alternative parameterization of this model. This
+// function sets growth rate for a given doubling time.
 //    public void setDoublingTime(double doublingTime) {
 //        setGrowthRate(Math.log(2) / doublingTime);
 //    }

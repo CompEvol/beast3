@@ -19,7 +19,9 @@ import java.util.Random;
 
 
 /**
- * Initial version Ported from Beast 1.7 ExponentialMarkovModel
+ * Markov chain prior on a vector parameter where each element is gamma-distributed
+ * with its mean equal to the previous element. Useful for modelling smooth
+ * variation along an ordered sequence of values (e.g. population sizes through time).
  */
 @Description("A class that produces a distribution chaining values in a parameter through the Gamma distribution. " +
         "The value of a parameter is assumed to be Gamma distributed with mean as the previous value in the parameter. " +

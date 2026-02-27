@@ -11,7 +11,8 @@ public interface KernelDistribution {
 	public static Input<Integer> defaultBurninInput = new Input<>("defaultBurnin", "Number of proposals skipped before any learned information is applied" , 500);
 
 	/**
-	 * @param m determines shape of Bactrian distribution. m=0.95 is recommended
+	 * @param dim the dimension index
+	 * @param value the current value
 	 * @param scaleFactor determines range of scale values, larger is bigger random scale changes
 	 * @return random scale factor for scaling parameters
 	 */

@@ -4,6 +4,9 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 
+/**
+ * BLOSUM62 empirical model of amino acid evolution (Henikoff and Henikoff, 1992).
+ */
 @Description("BLOSUM62 model of amino acid evolution " +
         "Henikoff, S., and J. G. Henikoff. 1992. PNAS USA 89:10915-10919.")
 public class Blosum62 extends EmpiricalSubstitutionModel {

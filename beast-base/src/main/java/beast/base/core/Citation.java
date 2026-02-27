@@ -33,13 +33,12 @@ import java.lang.annotation.RetentionPolicy;
 /**
  * This is an annotation that can be used to add a reference
  * to a class.
- * <p/>
- * Example: @Citation("Darwin & Wallace (1858) 'On the Tendency
+ * <p>
+ * Example: {@code @Citation("Darwin & Wallace (1858) 'On the Tendency}
  * of Species to form Varieties and on the Perpetuation of Varieties
  * and Species by Natural Means of Selection.' Linnean Society")
  * just before class declarations of plug-ins. Applications
  * like DocMaker then can pick it up through introspection.
- * <p/>
  */
 //@Target({ElementType.TYPE}) //<- does not work together with @Repeatable
 @Retention(RetentionPolicy.RUNTIME)

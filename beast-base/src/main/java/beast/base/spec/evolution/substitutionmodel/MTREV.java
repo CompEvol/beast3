@@ -4,6 +4,10 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 
+/**
+ * MTREV24 empirical model of amino acid evolution for mitochondrial DNA
+ * (Adachi and Hasegawa, 1996).
+ */
 @Description("MTREV24 model of amino acid evolution " +
         " (complete sequence data of mtDNA from 24 vertebrate species) " +
         " Adachi, J., and Hasegawa, M. 1996. J. Mol. Evol. 42:459-468.")

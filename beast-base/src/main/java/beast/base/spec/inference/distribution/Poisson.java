@@ -16,6 +16,11 @@ import org.apache.commons.statistics.distribution.PoissonDistribution;
 import java.util.List;
 
 
+/**
+ * Poisson distribution parameterised by its mean (lambda).
+ * Supports both integer and real-valued parameters. When applied to a
+ * multidimensional parameter, each dimension is treated as an independent component.
+ */
 @Description("Poisson distribution, used as prior  f(k; lambda)=\\frac{lambda^k e^{-lambda}}{k!}  " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

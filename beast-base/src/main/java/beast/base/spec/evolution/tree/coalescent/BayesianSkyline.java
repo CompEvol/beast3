@@ -23,6 +23,10 @@ import java.util.Random;
 
 
 /**
+ * Bayesian skyline plot: a piecewise-constant demographic model that estimates
+ * population size changes through time from coalescent intervals. The number of
+ * coalescent intervals grouped per population size is controlled by the group sizes parameter.
+ *
  * @author Alexei Drummond
  */
 @Description("Bayesian skyline: A likelihood function for the generalized skyline plot coalescent.")

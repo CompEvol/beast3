@@ -7,6 +7,10 @@ import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
 import beast.base.spec.inference.parameter.SimplexParam;
 
+/**
+ * Abstract base for empirical substitution models where rates and frequencies
+ * are derived from observed data (e.g. amino acid models like WAG, JTT, Dayhoff).
+ */
 @Description("A substitution model where the rates and frequencies are obtained from " +
         "empirical evidence. Especially, amino acid models like WAG.")
 public abstract class EmpiricalSubstitutionModel extends BasicGeneralSubstitutionModel {

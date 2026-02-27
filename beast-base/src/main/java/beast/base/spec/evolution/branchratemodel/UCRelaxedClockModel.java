@@ -26,6 +26,11 @@ import beast.base.util.Randomizer;
 import java.util.Arrays;
 
 /**
+ * Uncorrelated relaxed clock model where each branch has an independent rate
+ * drawn from a parametric distribution (e.g. lognormal, exponential).
+ * Rates are assigned to branches via a category system with optional
+ * number-of-categories discretization.
+ *
  * @author Alexei Drummond
  */
 

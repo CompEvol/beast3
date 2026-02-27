@@ -15,6 +15,10 @@ import beast.base.spec.type.RealScalar;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Species tree prior for *BEAST analysis that places a gamma hyperprior
+ * on branch population sizes.
+ */
 @Description("Species tree prior for *BEAST analysis")
 public class SpeciesTreePrior extends SpeciesTreePopFunction {
 

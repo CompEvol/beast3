@@ -9,6 +9,11 @@ import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
 
+/**
+ * Jukes-Cantor (1969) substitution model of nucleotide evolution.
+ * All substitution rates are equal and base frequencies are uniform (0.25 each).
+ * The simplest nucleotide substitution model with no free parameters.
+ */
 @Description("Jukes Cantor substitution model: all rates equal and " + "uniformly distributed frequencies")
 public class JukesCantor extends Base {
 

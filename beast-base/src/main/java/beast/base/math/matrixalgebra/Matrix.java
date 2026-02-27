@@ -86,7 +86,7 @@ public class Matrix {
 
 	/**
 	 * @param a MatrixAlgebra.Matrix
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          if the supplied matrix
 	 *          does not have the same dimensions.
 	 */
@@ -107,7 +107,7 @@ public class Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix		sum of the receiver with the
 	 *         supplied matrix.
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          if the supplied matrix
 	 *          does not have the same dimensions.
 	 */
@@ -163,7 +163,7 @@ public class Matrix {
 
 	/**
 	 * @return double
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          if the supplied
 	 *          matrix is not square.
 	 */
@@ -262,7 +262,7 @@ public class Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix		product of the receiver with the
 	 *         supplied matrix
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          If the number of
 	 *          columns of the receiver are not equal to the
 	 *          number of rows of the supplied matrix.
@@ -318,7 +318,7 @@ public class Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix	product of the receiver with the
 	 *         tranpose of the supplied matrix
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          If the number of
 	 *          columns of the receiver are not equal to
 	 *          the number of columns of the supplied matrix.
@@ -406,7 +406,7 @@ public class Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix		subtract the supplied matrix to
 	 *         the receiver.
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          if the supplied matrix
 	 *          does not have the same dimensions.
 	 */
@@ -518,7 +518,7 @@ public class Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix	product of the tranpose of the
 	 *         receiver with the supplied matrix
-	 * @throws dr.math.matrixAlgebra.IllegalDimension
+	 * @throws IllegalDimension
 	 *          If the number of rows
 	 *          of the receiver are not equal to
 	 *          the number of rows of the supplied matrix.

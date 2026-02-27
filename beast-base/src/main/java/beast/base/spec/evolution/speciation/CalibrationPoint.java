@@ -8,9 +8,11 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 
 /**
-* @author Joseph Heled
+ * A single calibration point for the calibrated Yule or birth-death model.
+ * Associates a taxon set with a prior distribution on the age of its MRCA.
+ *
+ * @author Joseph Heled
  */
-
 @Description("Specification of a single calibration point of the calibrated Yule.")
 public class CalibrationPoint extends BEASTObject {
     final public Input<TaxonSet> taxonsetInput = new Input<>("taxonset",

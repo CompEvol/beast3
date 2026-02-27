@@ -4,6 +4,9 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 
+/**
+ * JTT empirical model of amino acid evolution (Jones, Taylor, and Thornton, 1992).
+ */
 @Description(" * JTT model for amino acid evolution " +
         " D.T. Jones, W.R. Taylor, and J.M. Thornton " +
         " The rapid generation of mutation data matrices from protein sequences " +

@@ -22,8 +22,10 @@ import java.util.List;
 
 
 /**
- * @author joseph
- *         Date: 26/08/2010
+ * Compound population function that reconstructs effective population size
+ * through time from coalescent times across a set of gene trees.
+ *
+ * @author Joseph Heled
  */
 @Description("An effective population size function based on coalescent times from a set of trees.")
 public class CompoundPopulationFunction extends PopulationFunction.Abstract implements Loggable {

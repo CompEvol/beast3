@@ -26,7 +26,7 @@ import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 
 /**
- * @author Tim Vaughan <tgvaughan@gmail.com>
+ * @author Tim Vaughan (tgvaughan@gmail.com)
  */
 @Description("Operator which allows multiple operators to be chained together."
         + " This is only correct when each operator acts on a different part"

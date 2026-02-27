@@ -11,7 +11,11 @@ import org.apache.commons.statistics.distribution.LogNormalDistribution;
 import java.util.List;
 
 
-/** TODO x is PositiveReal or NonNegativeReal
+/**
+ * Log-normal distribution parameterised by M (log-space mean) and S (log-space standard deviation).
+ * When {@code meanInRealSpace} is true, the M parameter is interpreted as the mean
+ * on the natural scale and internally converted to the log-scale parameterisation.
+ *
  * @author Alexei Drummond
  */
 @Description("A log-normal distribution with mean and variance parameters.")

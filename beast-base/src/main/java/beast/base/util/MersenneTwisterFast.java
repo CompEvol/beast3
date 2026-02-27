@@ -55,10 +55,10 @@ import java.io.Serializable;
 
 /**
  * MersenneTwisterFast:
- * <p/>
+ * <p>
  * A simulation quality fast random number generator (MT19937)
  * with the  same public methods as java.beast.util.Random.
- * <p/>
+ * <p>
  * <p>About the Mersenne Twister.
  * This is a Java version of the C-program for MT19937: Integer version.
  * next(32) generates one pseudorandom unsigned integer (32bit)
@@ -68,14 +68,14 @@ import java.io.Serializable;
  * setSeed(seed) set initial values to the working area
  * of 624 words. For setSeed(seed), seed is any 32-bit integer
  * except for 0.
- * <p/>
+ * <p>
  * Reference.
  * M. Matsumoto and T. Nishimura,
  * "Mersenne Twister: A 623-Dimensionally Equidistributed Uniform
  * Pseudo-Random Number Generator",
  * <i>ACM Transactions on Modeling and Computer Simulation,</i>
  * Vol. 8, No. 1, January 1998, pp 3--30.
- * <p/>
+ * <p>
  * <p>Bug Fixes. This implementation implements the bug fixes made
  * in Java 1.2's version of Random, which means it can be used with
  * earlier versions of Java.  See
@@ -84,21 +84,21 @@ import java.io.Serializable;
  * on the random-number generation contracts made.  Additionally, there's
  * an undocumented bug in the JDK java.beast.util.Random.nextBytes() method,
  * which this code fixes.
- * <p/>
+ * <p>
  * <p> Important Note.  Just like java.beast.util.Random, this
  * generator accepts a long seed but doesn't use all of it.  java.beast.util.Random
  * uses 48 bits.  The Mersenne Twister instead uses 32 bits (int size).
  * So it's best if your seed does not exceed the int range.
- * <p/>
+ * <p>
  * <p><a href="http://www.cs.umd.edu/users/seanl/">Sean Luke's web page</a>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * - added shuffling method (Alexei Drummond)
- * <p/>
+ * <p>
  * - added gamma RV method (Marc Suchard)
- * <p/>
+ * <p>
  * - thread safety (Remco Bouckaert)
- * <p/>
+ * <p>
  * This is now package private - it should be accessed using the instance in Randomizer
  */
 public class MersenneTwisterFast implements Serializable {
@@ -212,7 +212,7 @@ public class MersenneTwisterFast implements Serializable {
      * and mti = N - 1, the condition (mit >= N) is false for both threads,
      * but the first increase mti before the second results in an out-of-bounds
      * exception when 'return mt[mti++] is called.
-     * <p/>
+     * <p>
      * To prevent this, this part of the code should be synchronized
      */
     synchronized private int next() {

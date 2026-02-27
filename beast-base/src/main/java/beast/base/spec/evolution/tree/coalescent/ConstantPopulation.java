@@ -14,6 +14,10 @@ import java.util.List;
 
 
 /**
+ * Constant-size population function for coalescent models.
+ * The effective population size remains fixed over time, providing the
+ * simplest demographic model for computing coalescent intervals.
+ *
  * @author Andrew Rambaut
  * @author Alexei Drummond
  */

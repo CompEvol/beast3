@@ -14,6 +14,10 @@ import java.util.List;
 
 
 /**
+ * Exponential growth population function for coalescent models.
+ * The population size grows (or shrinks) exponentially from the present-day
+ * size at a specified growth rate.
+ *
  * @author Andrew Rambaut
  * @author Alexei Drummond
  */
@@ -66,21 +70,13 @@ public class ExponentialGrowth extends PopulationFunction.Abstract {
         return growthRateParameterInput.get().get();
     }
 
-    /**
-     * sets growth rate to r.
-     *
-     * @param r
-     */
+// sets growth rate to r.
 //    public void setGrowthRate(double r) {
 //        this.r = r;
 //    }
 
-    /**
-     * An alternative parameterization of this model. This
-     * function sets growth rate for a given doubling time.
-     *
-     * @param doublingTime
-     */
+// An alternative parameterization of this model. This
+// function sets growth rate for a given doubling time.
 //    public void setDoublingTime(double doublingTime) {
 //        setGrowthRate(Math.log(2) / doublingTime);
 //    }

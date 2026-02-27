@@ -354,7 +354,7 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
     }
 
     /**
-     * @returns an array of taxon names in order of their node numbers.
+     * @return an array of taxon names in order of their node numbers.
      * Note that in general no special order of taxa is assumed, just the order
      * assumed in this tree. Consider using tree.m_taxonset.get().asStringList()
      * instead.

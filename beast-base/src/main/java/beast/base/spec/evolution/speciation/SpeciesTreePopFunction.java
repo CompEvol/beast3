@@ -15,6 +15,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Species tree prior for *BEAST multi-species coalescent analysis.
+ * Models population sizes along species tree branches using constant
+ * or linear population functions.
+ */
 @Description("Species tree prior for *BEAST analysis")
 public class SpeciesTreePopFunction extends TreeDistribution {
 

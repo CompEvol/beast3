@@ -10,6 +10,10 @@ import org.apache.commons.statistics.distribution.LaplaceDistribution;
 
 import java.util.List;
 
+/**
+ * Laplace (double-exponential) distribution parameterised by location (mu) and scale (b).
+ * Has heavier tails than the normal distribution.
+ */
 @Description("Laplace distribution.    f(x|\\mu,b) = \\frac{1}{2b} \\exp \\left( -\\frac{|x-\\mu|}{b} \\right)" +
         "The probability density function of the Laplace distribution is also reminiscent of the normal distribution; " +
         "however, whereas the normal distribution is expressed in terms of the squared difference from the mean ?, " +

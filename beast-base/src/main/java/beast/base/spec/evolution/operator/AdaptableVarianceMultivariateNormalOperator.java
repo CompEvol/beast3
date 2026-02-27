@@ -53,7 +53,10 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
 /**
- * Adapted from BEAST 1
+ * Multivariate normal operator that learns the correlation structure among
+ * parameters during the MCMC run and proposes joint moves accordingly.
+ * Parameters can be transformed (log, logit, etc.) before being moved.
+ *
  * @author Guy Baele
  * @author Marc A. Suchard
  */

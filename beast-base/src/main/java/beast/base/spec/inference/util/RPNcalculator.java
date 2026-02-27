@@ -20,7 +20,7 @@ import java.util.Map;
 
 /**
  * A statistic based on evaluating simple expressions.
- * <p/>
+ * <p>
  * The expressions are in RPN, so no parsing issues. whitespace separated. Variables (other statistics),
  * constants and operations. Currently just the basic four, but easy to extend.
  *

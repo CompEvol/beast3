@@ -12,7 +12,7 @@ public class InputUtil {
 	/**
      * As Input.get() but with this difference that the State can manage
      * whether to make a copy and register the operator.
-     * <p/>
+     * <p>
      * Only Operators should call this method.
      * Also Operators should never call Input.get(), always Input.get(operator).
      *

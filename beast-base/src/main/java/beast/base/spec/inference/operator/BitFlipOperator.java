@@ -35,6 +35,11 @@ import beast.base.util.Randomizer;
  * @author Joseph Heled
  */
 
+/**
+ * Operator that flips a single randomly chosen bit in a boolean vector parameter.
+ * The Hastings ratio ensures correct sampling when combined with an indicator
+ * variable that controls which subset of parameters is active.
+ */
 @Description("Flip one bit in an array of boolean bits. The hastings ratio is designed so that all subsets of vectors with the" +
         " same number of 'on' bits are equiprobable.")
 public class BitFlipOperator extends Operator {

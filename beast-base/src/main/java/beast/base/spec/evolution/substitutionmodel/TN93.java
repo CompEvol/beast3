@@ -38,16 +38,16 @@ import beast.base.spec.type.RealScalar;
 
 /**
  * Tamura and Nei model of nucleotide evolution.
- * <p/>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
+ * <p>
  * pr = p[0]+p[1]
  * py = 1 - pr
- * <p/>
+ * <p>
  * eigen values
- * <p/>
+ * <p>
  * [0, -1, -(k[0]*pr + py), -(k[1]*py + pr)]
- * <p/>
+ * <p>
  * unnormalized eigen vectors
  * [1,1,1,1],
  * [1,1,-pr/py,-pr/py],
@@ -143,7 +143,7 @@ public class TN93 extends Base {
 
     /**
      * get the complete transition probability matrix for the given distance.
-     * <p/>
+     * <p>
      * Based on work Joseph Heled did during his 691 project.
      *
      * @param matrix an array to store the matrix

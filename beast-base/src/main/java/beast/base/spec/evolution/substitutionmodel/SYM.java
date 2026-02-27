@@ -10,6 +10,10 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * Symmetrical (SYM) model of nucleotide evolution with equal base frequencies
+ * and six independent substitution rate parameters.
+ */
 @Description("Symmetrical model of nucleotide evolution with equal base frequencies." +
         "Rates that are not specified are assumed to be 1.")
 public class SYM extends BasicGeneralSubstitutionModel {

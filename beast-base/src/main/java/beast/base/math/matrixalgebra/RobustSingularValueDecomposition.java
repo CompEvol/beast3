@@ -35,9 +35,8 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
     /**
     Constructs and returns a new singular value decomposition object;
     The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
-    @param      A rectangular matrix.
-    @return     A decomposition object to access <tt>U</tt>, <tt>S</tt> and <tt>V</tt>.
-    @throws IllegalArgumentException if <tt>A.rows() < A.columns()</tt>.
+    @param Arg  A rectangular matrix. Returns a decomposition object to access {@code U}, {@code S} and {@code V}.
+    @throws IllegalArgumentException if {@code A.rows() < A.columns()}.
     */
     public RobustSingularValueDecomposition(DoubleMatrix2D Arg) throws ArithmeticException {
         this(Arg,maxIterationsDefault);
@@ -462,7 +461,7 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
               }
        }
     /**
-    Returns the two norm condition number, which is <tt>max(S) / min(S)</tt>.
+    Returns the two norm condition number, which is {@code max(S) / min(S)}.
     */
     public double cond() {
             return s[0]/s[Math.min(m,n)-1];
@@ -482,29 +481,29 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
             return DoubleFactory2D.dense.make(S);
     }
     /**
-    Returns the diagonal of <tt>S</tt>, which is a one-dimensional array of singular values
-    @return     diagonal of <tt>S</tt>.
+    Returns the diagonal of {@code S}, which is a one-dimensional array of singular values
+    @return     diagonal of {@code S}.
     */
     public double[] getSingularValues() {
             return s;
     }
     /**
-    Returns the left singular vectors <tt>U</tt>.
-    @return     <tt>U</tt>
+    Returns the left singular vectors {@code U}.
+    @return     {@code U}
     */
     public DoubleMatrix2D getU() {
             //return new DoubleMatrix2D(U,m,Math.min(m+1,n));
             return DoubleFactory2D.dense.make(U).viewPart(0,0,m,Math.min(m+1,n));
     }
     /**
-    Returns the right singular vectors <tt>V</tt>.
-    @return     <tt>V</tt>
+    Returns the right singular vectors {@code V}.
+    @return     {@code V}
     */
     public DoubleMatrix2D getV() {
             return DoubleFactory2D.dense.make(V);
     }
     /**
-    Returns the two norm, which is <tt>max(S)</tt>.
+    Returns the two norm, which is {@code max(S)}.
     */
     public double norm2() {
             return s[0];

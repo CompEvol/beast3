@@ -85,7 +85,7 @@ public class Input<T> {
     protected Class<?> theClass;
     
     /**
-     * if theClass is parameterised (e.g. Scalar<Real>) theParameterisedClass
+     * if theClass is parameterised (e.g. {@code Scalar<Real>}) theParameterisedClass
      * contains the class of the parameter (e.g. Scalar) and theClass the
      * other type (e.g. Real)
      */
@@ -138,7 +138,7 @@ public class Input<T> {
     /**
      * simple constructor as above but with type pre-specified.
      * This allows inputs of types that cannot be determined through
-     * introspection, such as template class inputs, e.g. Input<Parameter<?>>
+     * introspection, such as template class inputs, e.g. {@code Input<Parameter<?>>}
      */
     public Input(String name, String tipText, Class<?> theClass) {
         this(name, tipText);
@@ -146,7 +146,7 @@ public class Input<T> {
     } // c'tor
 
     /**
-     * constructor for List<>
+     * constructor for {@code List<>}
      */
     public Input(String name, String tipText, T startValue) {
         this(name, tipText);
@@ -155,7 +155,7 @@ public class Input<T> {
     } // c'tor
 
     /**
-     * constructor for List<> with type specified
+     * constructor for {@code List<>} with type specified
      */
     public Input(String name, String tipText, T startValue, Class<?> theClass) {
         this(name, tipText, startValue);
@@ -163,7 +163,7 @@ public class Input<T> {
     } // c'tor
 
     /**
-     * constructor for List<> with XOR rules
+     * constructor for {@code List<>} with XOR rules
      */
     public Input(String name, String tipText, T startValue, Validate rule, Input<?> other) {
         this(name, tipText, startValue);
@@ -178,7 +178,7 @@ public class Input<T> {
     } // c'tor
 
     /**
-     * constructor for List<> with XOR rules with type specified
+     * constructor for {@code List<>} with XOR rules with type specified
      */
     public Input(String name, String tipText, T startValue, Validate rule, Input<?> other, Class<?> theClass) {
         this(name, tipText, startValue, rule, other);
@@ -360,7 +360,7 @@ public class Input<T> {
     /**
      * As get() but with this difference that the State can manage
      * whether to make a copy and register the operator.
-     * <p/>
+     * <p>
      * Only Operators should call this method.
      * Also Operators should never call Input.get(), always Input.get(operator).
      *
@@ -545,7 +545,7 @@ public class Input<T> {
      * For an input with name "name", the method canSetName will be invoked,
      * that is, 'canSet' + the name of the input with first letter capitalised.
      * The canSetName(Object o) method should have one argument of type Object.
-     * <p/>
+     * <p>
      * It is best for Beauti to throw an Exception from canSetName() with some
      * diagnostic info when the value cannot be set.
      */
@@ -573,8 +573,8 @@ public class Input<T> {
 
     /**
      * Determine class through introspection,
-     * This sets the theClass member of Input<T> to the actual value of T.
-     * If T is a vector, i.e. Input<List<S>>, the actual value of S
+     * This sets the theClass member of {@code Input<T>} to the actual value of T.
+     * If T is a vector, i.e. {@code Input<List<S>>}, the actual value of S
      * is assigned instead
      *
      * @param beastObject whose type is to be determined

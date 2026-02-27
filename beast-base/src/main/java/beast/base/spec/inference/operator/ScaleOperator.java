@@ -33,6 +33,12 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
+/**
+ * Scale operator that multiplies a parameter value by a random scale factor
+ * drawn from a Bactrian kernel (Yang and Rodriguez, 2013).
+ * Supports scaling of real scalars, real vectors (element-wise or jointly),
+ * and trees. An optional indicator vector can restrict which elements are scaled.
+ */
 @Description("Scale operator that finds scale factor according to a Bactrian distribution (Yang & Rodriguez, 2013), "
         + "which is a mixture of two Gaussians: p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
 public class ScaleOperator extends AbstractScale {

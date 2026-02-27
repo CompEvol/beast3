@@ -41,10 +41,9 @@ import java.util.ArrayList;
 
 
 /**
- * Site model with
- * o gamma site model,
- * o proportion of sites that are invariant
- * *
+ * Site model combining a substitution model with optional among-site rate variation.
+ * Supports gamma-distributed rate categories and a proportion of invariant sites.
+ * When no rate heterogeneity is specified, all sites evolve at the same mutation rate.
  */
 @Description("Defines mutation rate " +
         "and gamma distributed rates across sites (optional) " +

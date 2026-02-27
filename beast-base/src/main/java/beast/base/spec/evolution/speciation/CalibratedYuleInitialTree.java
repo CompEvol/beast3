@@ -36,9 +36,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
-* @author Joseph Heled
+ * Generates an initial tree compatible with a set of monophyletic calibration
+ * constraints and hard limits on clade root ages. Used as a starting tree
+ * for calibrated Yule analyses.
+ *
+ * @author Joseph Heled
  */
-
 @Description("A tree compatible with a set of monophyletic clades and hard limits on the clade root.")
 public class CalibratedYuleInitialTree extends Tree implements StateNodeInitialiser {
 

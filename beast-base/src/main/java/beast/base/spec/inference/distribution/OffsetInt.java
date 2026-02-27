@@ -9,6 +9,10 @@ import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
 import java.util.List;
 
+/**
+ * Wrapper that shifts an integer-valued distribution by a fixed offset,
+ * so that the effective parameter is {@code x - offset}.
+ */
 @Description("Offsets a integer valued distribution.")
 public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 

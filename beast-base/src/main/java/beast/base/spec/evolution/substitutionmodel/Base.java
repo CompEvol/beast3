@@ -34,7 +34,8 @@ import beast.base.inference.CalculationNode;
 
 
     /**
-     * basic implementation of a SubstitutionModel bringing together relevant super class*
+     * Abstract base implementation of a substitution model, providing shared infrastructure
+     * for equilibrium frequencies, eigendecomposition caching, and transition probability matrices.
      */
     @Description(value = "Base implementation of a substitution model.", isInheritable = false)
     public abstract class Base extends CalculationNode implements SubstitutionModel {

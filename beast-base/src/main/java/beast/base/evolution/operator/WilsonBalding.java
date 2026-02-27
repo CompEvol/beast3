@@ -59,7 +59,7 @@ import beast.base.util.Randomizer;
 /**
  * WILSON, I. J. and D. J. BALDING, 1998  Genealogical inference from microsatellite data.
  * Genetics 150:499-51
- * http://www.genetics.org/cgi/ijlink?linkType=ABST&journalCode=genetics&resid=150/1/499
+ * {@code http://www.genetics.org/cgi/ijlink?linkType=ABST&journalCode=genetics&resid=150/1/499}
  */
 @Description("Implements the unweighted Wilson-Balding branch swapping move. " +
         "This move is similar to one proposed by WILSON and BALDING 1998  " +

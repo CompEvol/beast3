@@ -31,7 +31,7 @@ package beast.base.evolution.likelihood;
  * J Mol Evol 17 (6): 368-376.). It does this by calculating the partial
  * results for all sites, node by node. The order in which the nodes
  * are visited is controlled by the TreeLikelihood. T
- * <p/>
+ * <p>
  * In order to reuse computations of previous likelihood calculations,
  * a current state, and a stored state are maintained. Again, the TreeLikelihood
  * controls when to update from current to stored and vice versa. So, in

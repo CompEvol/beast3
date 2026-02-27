@@ -54,6 +54,10 @@ import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.inference.State;
 
 
+/**
+ * Multi-threaded tree likelihood that partitions the alignment into segments
+ * and computes partial likelihoods in parallel using Felsenstein's peeling algorithm.
+ */
 @Description("Calculates the likelihood of sequence data on a beast.tree given a site and substitution model using " +
 		"a variant of the 'peeling algorithm'. For details, see" +
 		"Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")

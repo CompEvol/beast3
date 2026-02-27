@@ -143,14 +143,14 @@ public abstract class Operator extends BEASTObject {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
     public void optimize(final double logAlpha) {
         // must be overridden by operator implementation to have an effect
     }
 
     /**
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      * @return change of value of a parameter for MCMC chain optimisation
      */
     protected double calcDelta(final double logAlpha) {

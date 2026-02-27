@@ -9,6 +9,10 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import java.util.List;
 
+/**
+ * Wrapper that shifts a real-valued distribution by a fixed offset,
+ * so that the effective parameter is {@code x - offset}.
+ */
 @Description("Offsets a real valued distribution.")
 public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 

@@ -147,8 +147,7 @@ public class ESS extends BEASTObject implements Loggable {
      * return ESS time of a sample, batch version.
      * Can be used to calculate effective sample size
      *
-     * @param trace:         values from which the ACT is calculated
-     * @param sampleInterval time between samples *
+     * @param trace values from which the ESS is calculated
      */
     public static double calcESS(List<Double> trace) {
         return calcESS(trace.toArray(new Double[0]), 1);

@@ -12,6 +12,11 @@ import beast.base.util.Randomizer;
 
 import java.text.DecimalFormat;
 
+/**
+ * Bactrian interval operator for bounded parameters. Applies a Hastings scaling
+ * move that maps the bounded parameter to an unbounded space, scales, and maps
+ * back. More efficient than a standard uniform operator.
+ */
 @Description("A Bactrian interval operator applies standard Hastings scaling move to a parameter that is bounded " +
         "between (lower, upper). The transformation is undefined when the parameter value lies exactly on either boundary." +
         "For vector-valued parameters, a random dimension is selected and scaled by a random factor " +
@@ -163,7 +168,7 @@ public class IntervalOperator extends KernelOperator {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
 
     @Override

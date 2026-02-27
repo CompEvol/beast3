@@ -14,6 +14,11 @@ import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
 
 
+/**
+ * Random walk operator for real-valued parameters using a Bactrian kernel
+ * (Yang and Rodriguez, 2013). Selects a random dimension and perturbs it
+ * by a draw from a mixture of two Gaussians.
+ */
 @Description("A random walk operator that selects a random dimension of the real parameter and perturbs the value a " +
         "random amount according to a Bactrian distribution (Yang & Rodriguez, 2013), which is a mixture of two Gaussians:"
         + "p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
@@ -88,7 +93,7 @@ public class RealRandomWalkOperator extends KernelOperator {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
     @Override
     public void optimize(double logAlpha) {

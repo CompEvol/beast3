@@ -14,10 +14,11 @@ import java.util.List;
 
 
 /**
+ * Wrapper that scales a population function by a constant multiplicative factor.
+ * Useful for adjusting population sizes across loci with different ploidy levels.
+ *
  * @author Joseph Heled
- *         Date: 2/03/2011
  */
-
 @Description("Scale a demographic function by a constant factor")
 public class ScaledPopulationFunction extends PopulationFunction.Abstract {
     final public Input<PopulationFunction> popParameterInput = new Input<>("population",

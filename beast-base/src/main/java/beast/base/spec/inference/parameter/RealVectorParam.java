@@ -294,8 +294,8 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     }
 
     /**
-     * If the new dimension > current, then use the current values to supplement the rest empty elements.
-     * If the new dimension < current, then cut the current values.
+     * If the new dimension is greater than current, uses the current values to supplement the rest.
+     * If the new dimension is less than current, truncates the current values.
      * @param dimension
      */
     public void setDimension(final int dimension) {

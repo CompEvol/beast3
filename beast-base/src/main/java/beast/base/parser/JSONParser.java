@@ -191,7 +191,7 @@ public class JSONParser {
 	} // parseFile
 	
     /**
-     * @param node the node to do variable replacement in
+     * @param json the JSON object to do variable replacement in
      * @param var the variable name to replace
      * @param value the value to replace the variable name with
      */

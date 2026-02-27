@@ -15,6 +15,11 @@ import java.io.PrintStream;
 import java.util.*;
 
 
+/**
+ * Prior distribution on the most recent common ancestor (MRCA) time of a set of taxa.
+ * Can enforce monophyly and/or apply a parametric distribution to the MRCA age.
+ * Also supports tip-date sampling priors.
+ */
 @Description("Prior over set of taxa, useful for defining monophyletic constraints and "
         + "distributions over MRCA times or (sets of) tips of trees. "
 		+ "Be aware that the distribution is in units equal to that used in the tree: "

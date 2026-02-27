@@ -16,6 +16,11 @@ import java.util.List;
 
 //import beast.core.Distribution;
 
+/**
+ * Computes and logs the effective sample size (ESS) of a parameter or distribution
+ * during an MCMC run. Uses the same autocorrelation-based criterion as Tracer,
+ * with a 10% burn-in.
+ */
 @Description("Report effective sample size of a parameter or log values from a distribution. " +
         "This uses the same criterion as Tracer and assumes 10% burn in.")
 public class ESS extends BEASTObject implements Loggable {

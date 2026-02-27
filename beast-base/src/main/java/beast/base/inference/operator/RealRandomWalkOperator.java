@@ -83,7 +83,7 @@ public class RealRandomWalkOperator extends Operator {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
     @Override
     public void optimize(double logAlpha) {

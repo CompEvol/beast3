@@ -10,6 +10,12 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * General Time Reversible (GTR) model of nucleotide evolution.
+ * The most general neutral, independent, finite-sites, time-reversible model,
+ * with six substitution rate parameters and four equilibrium base frequencies.
+ * Rates that are not specified default to 1.
+ */
 @Description("General Time Reversible model of nucleotide evolution. " +
         "Rates that are not specified are assumed to be 1. ")
 public class GTR extends BasicGeneralSubstitutionModel {

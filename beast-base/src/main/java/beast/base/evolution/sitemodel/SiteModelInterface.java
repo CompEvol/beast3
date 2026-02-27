@@ -175,8 +175,8 @@ public interface SiteModelInterface {
         }
 
         /**
-         * add item to the list *
-         * @param stateNode
+         * add item to the list
+         * @param stateNodeInput the input containing the state node to add
          */
         public void addCondition(final Input<?> stateNodeInput) {
             if (stateNodeInput.get() == null) return;

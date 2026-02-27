@@ -6,9 +6,11 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 
 /**
+ * Strict molecular clock model where all branches evolve at the same rate.
+ * The clock rate defaults to 1.0 if not specified.
+ *
  * @author Alexei Drummond
  */
-
 @Description("Defines a mean rate for each branch in the beast.tree.")
 public class StrictClockModel extends Base {
 

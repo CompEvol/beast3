@@ -5,7 +5,7 @@ import beast.base.spec.domain.Domain;
 /**
  * Tensor type - ordered value or values.
  *
- * @param <D> the type of {@link Domain <T>}.
+ * @param <D> the type of {@link Domain}.
  * @param <T> the primitive type in Java.
  */
 public interface Tensor<D extends Domain<T>, T> {

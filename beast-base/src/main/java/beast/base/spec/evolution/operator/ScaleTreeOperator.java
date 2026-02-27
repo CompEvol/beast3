@@ -5,6 +5,10 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.spec.inference.operator.AbstractScale;
 
+/**
+ * Scale operator specialised for trees. Scales all divergence times in a tree
+ * by the same factor, optionally scaling only the root node.
+ */
 public class ScaleTreeOperator extends AbstractScale {
 
     public final Input<Tree> treeInput = new Input<>("tree",

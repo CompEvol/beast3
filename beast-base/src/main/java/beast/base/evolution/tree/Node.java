@@ -884,7 +884,7 @@ public class Node extends BEASTObject {
     }
 
     /**
-     * This sets the i'th child of this node. Will pad out the children with null's if getChildCount() <= childIndex.
+     * This sets the i'th child of this node. Will pad out the children with null's if {@code getChildCount() <= childIndex}.
      */
     public void setChild(final int childIndex, final Node node) {
         while (children.size() <= childIndex) {

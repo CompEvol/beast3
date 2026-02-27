@@ -119,7 +119,7 @@ public class Frequencies extends CalculationNode {
 
     /**
      * Estimate from sequence alignment.
-     * This version matches the implementation in Beast 1 & PAUP  *
+     * This version matches the implementation in Beast 1 and PAUP  *
      */
     protected void estimateFrequencies() {
         Alignment alignment = dataInput.get();

@@ -4,6 +4,9 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 
+/**
+ * CPREV45 empirical model of amino acid evolution (Adachi et al., 2000).
+ */
 @Description(" CPREV 45 model of amino acid evolution " +
         " Adachi, J., P.J. Waddell, W. Martin, and M. Hasegawa. 2000. JME 50:348-358")
 public class CPREV extends EmpiricalSubstitutionModel {

@@ -26,6 +26,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Yule tree prior with calibrated monophyletic clades.
+ * Computes the marginal prior on the tree by analytically integrating
+ * over calibrated clade ages using the pure-birth process.
+ *
  * @author Joseph Heled
  */
 

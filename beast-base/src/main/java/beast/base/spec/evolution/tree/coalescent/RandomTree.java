@@ -49,6 +49,11 @@ import beast.base.util.Randomizer;
 import java.util.*;
 
 
+/**
+ * Generates a random coalescent tree under a given demographic model.
+ * Supports monophyletic constraints and MRCA calibrations for initialisation
+ * of the starting tree in an MCMC analysis.
+ */
 @Description("This class provides the basic engine for coalescent simulation of a given demographic model over a given time period. ")
 public class RandomTree extends Tree implements StateNodeInitialiser {
     final public Input<Alignment> taxaInput = new Input<>("taxa", "set of taxa to initialise tree specified by alignment");

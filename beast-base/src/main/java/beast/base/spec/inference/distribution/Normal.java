@@ -13,6 +13,11 @@ import org.apache.commons.statistics.distribution.NormalDistribution;
 import java.util.List;
 
 
+/**
+ * Normal (Gaussian) distribution parameterised by mean and standard deviation (or precision).
+ * When applied to a multidimensional parameter, each dimension is treated as an
+ * independent component.
+ */
 @Description("Normal distribution.  f(x) = frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{ -\\frac{(x-\\mu)^2}{2\\sigma^2} } " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

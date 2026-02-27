@@ -20,6 +20,10 @@ import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
 
+/**
+ * Operator that scales one group of parameters up and another group down
+ * by the same factor, maintaining their ratio. Uses a Bactrian proposal distribution.
+ */
 @Description("This element represents an operator that scales "
 		+ "one or more Scalables (like parameters or trees) in different directions, "
 		+ "but uses a Bactrian proposal distribution for the scale value. "

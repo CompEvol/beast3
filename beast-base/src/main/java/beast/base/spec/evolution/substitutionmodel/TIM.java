@@ -11,6 +11,10 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * Transition model (TIM) of nucleotide evolution with two independent transition
+ * rates and two transversion rates. A submodel of GTR.
+ */
 @Description("Transition model of nucleotide evolution (variable transition rates, two transversion rates). " +
         "Rates that are not specified are assumed to be 1.")
 public class TIM extends BasicGeneralSubstitutionModel {

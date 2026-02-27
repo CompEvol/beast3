@@ -24,7 +24,7 @@ public class InputType {
 	}
 
 	
-	/** getters & setters **/
+	/** getters and setters **/
 	public String getName() {
 		return name;
 	}

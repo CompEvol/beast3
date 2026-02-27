@@ -36,6 +36,11 @@ import beast.base.evolution.tree.Node;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * Hasegawa-Kishino-Yano (HKY85) substitution model of nucleotide evolution.
+ * Distinguishes transitions from transversions via a single kappa parameter,
+ * with unequal base frequencies.
+ */
 @Description("HKY85 (Hasegawa, Kishino & Yano, 1985) substitution model of nucleotide evolution.")
 @Citation(value =
         "Hasegawa M, Kishino H, Yano T (1985) Dating the human-ape splitting by a\n"+

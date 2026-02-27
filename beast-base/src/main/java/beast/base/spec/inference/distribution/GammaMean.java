@@ -11,6 +11,10 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 import java.util.List;
 
 
+/**
+ * Gamma distribution parameterised by shape (alpha) and mean (alpha * scale)
+ * rather than the usual shape-scale or shape-rate parameterisation.
+ */
 @Description("Gamma distribution using a different parameterization.")
 public class GammaMean extends ScalarDistribution<RealScalar<PositiveReal>, Double> {
 

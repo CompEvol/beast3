@@ -38,6 +38,11 @@ import beast.base.spec.type.Simplex;
 
 // RRB: TODO: make this an interface?
 
+/**
+ * Character state frequencies, typically used as the equilibrium distribution
+ * at the root of a phylogenetic tree. Can estimate frequencies empirically
+ * from alignment data or assume a uniform distribution.
+ */
 @Description("Represents character frequencies typically used as distribution of the root of the tree. " +
         "Calculates empirical frequencies of characters in sequence data, or simply assumes a uniform " +
         "distribution if the estimate flag is set to false.")
@@ -125,7 +130,7 @@ public class Frequencies extends CalculationNode {
 
     /**
      * Estimate from sequence alignment.
-     * This version matches the implementation in Beast 1 & PAUP  *
+     * This version matches the implementation in Beast 1 and PAUP  *
      */
     protected void estimateFrequencies() {
         Alignment alignment = dataInput.get();

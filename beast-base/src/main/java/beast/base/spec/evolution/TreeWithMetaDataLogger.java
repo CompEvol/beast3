@@ -18,6 +18,10 @@ import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
 
+/**
+ * Logger that outputs a tree in Newick/NEXUS format annotated with metadata
+ * (parameter values at nodes) and optionally branch rates from a clock model.
+ */
 @Description("Logs tree annotated with metadata and/or rates")
 public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
     final public Input<Tree> treeInput = new Input<>("tree", "tree to be logged", Validate.REQUIRED);

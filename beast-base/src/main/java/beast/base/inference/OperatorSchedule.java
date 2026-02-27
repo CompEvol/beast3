@@ -406,7 +406,7 @@ public class OperatorSchedule extends BEASTObject {
      * optimisation
      *
      * @param operator
-     * @param logAlpha difference in posterior between previous state & proposed
+     * @param logAlpha difference in posterior between previous state and proposed
      *                 state + hasting ratio
      * @return change of value of a parameter for MCMC chain optimisation
      */

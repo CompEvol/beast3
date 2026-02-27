@@ -322,7 +322,6 @@ public interface BEASTInterface extends Citable {
      * added to the list.
      *
      * @return list of all active plug-ins
-     * @throws IllegalAccessException
      */
     default List<BEASTInterface> listActiveBEASTObjects() {
         final List<BEASTInterface> beastObjects = new ArrayList<>();

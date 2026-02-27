@@ -25,6 +25,11 @@ import beast.base.inference.util.InputUtil;
  * 
  * TODO: make sure it is compatible with sampled ancestor trees.
  */
+/**
+ * Operator that scales the intervals between consecutive node heights in a tree,
+ * rather than scaling absolute heights. This preserves the tree topology while
+ * changing relative branch lengths.
+ */
 @Description("Performs a scale move on the intervals between nodes.")
 public class IntervalScaleOperator extends TreeOperator {
     public final Input<KernelDistribution> kernelDistributionInput = new Input<>("kernelDistribution", "provides sample distribution for proposals", 

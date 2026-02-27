@@ -25,7 +25,7 @@ import java.util.Random;
  * Strong typed {@link Distribution} for {@link Tensor}.
  * @param <S> the shape for sampled value, which could be {@link Vector},
  *           but for {@link Scalar}, use {@link ScalarDistribution}.
-// * @param <D> the domain for sampled value, which extends either {@link Real} or {@link Int}.
+ *            (The domain for sampled value extends either {@link Real} or {@link Int}.)
  * @param <T> the Java primitive type for sampled value, either Double or Integer.
  */
 @Description("The BEAST Distribution over a tensor.")

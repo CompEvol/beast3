@@ -42,6 +42,9 @@ import beast.base.spec.type.RealVector;
 /**
  * <b>A general irreversible class for any
  * data type; allows complex eigenstructures.</b>
+ * Complex-diagonalizable, irreversible substitution model.
+ * Extends {@link BasicComplexSubstitutionModel} to use complex eigendecomposition
+ * for non-reversible rate matrices where eigenvalues may be complex.
  *
  * @author Marc Suchard
  */

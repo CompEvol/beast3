@@ -4,6 +4,9 @@ import beast.base.core.Description;
 import beast.base.evolution.datatype.Aminoacid;
 import beast.base.evolution.datatype.DataType;
 
+/**
+ * Dayhoff (PAM) empirical model of amino acid evolution (Dayhoff et al., 1978).
+ */
 @Description(" Dayhoff model for amino acid evolution " +
         " Dayhoff, M.O., Schwartz, R.M., Orcutt, B.C. (1978) " +
         " A model of evolutionary change in proteins. " +

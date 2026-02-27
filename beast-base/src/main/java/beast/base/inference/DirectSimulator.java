@@ -13,7 +13,7 @@ import beast.base.util.Randomizer;
  * Runnable for generating a fixed number of samples from a prior distribution using
  * direct simulation.
  *
- * Created by Tim Vaughan <tgvaughan@gmail.com> on 16/06/17.
+ * Created by Tim Vaughan (tgvaughan@gmail.com) on 16/06/17.
  */
 @Description("Runnable for generating a fixed number of samples from a prior distribution" +
              "using direct simulation.")

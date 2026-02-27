@@ -386,9 +386,10 @@ public class ThreadedBeerLikelihoodCore extends ThreadedLikelihoodCore {
 
 	/**
 	 * Calculates pattern log likelihoods at a node.
-	 * @param fPartials the partials used to calculate the likelihoods
+	 * @param iThread the thread index
 	 * @param fFrequencies an array of state frequencies
-	 * @param fOutLogLikelihoods an array into which the likelihoods will go
+	 * @param iFrom start pattern index
+	 * @param iTo end pattern index
 	 */
 	//@Override
 	public void calculateLogLikelihoods(int iThread, double[] fFrequencies, int iFrom, int iTo)
@@ -605,9 +606,12 @@ public class ThreadedBeerLikelihoodCore extends ThreadedLikelihoodCore {
     /**
      * Calculates partial likelihoods at a node.
      *
-     * @param iNodeIndex1 the 'child 1' node
-     * @param iNodeIndex2 the 'child 2' node
-     * @param iNodeIndex3 the 'parent' node
+     * @param cacheNode1 the 'child 1' node indices
+     * @param cacheNode2 the 'child 2' node indices
+     * @param cacheNode3 the 'parent' node indices
+     * @param cacheNodeCount the number of cached nodes
+     * @param iFrom start pattern index
+     * @param iTo end pattern index
      */
     public void calculateAllPartials(int [] cacheNode1, int [] cacheNode2, int [] cacheNode3, int cacheNodeCount, int iFrom, int iTo) {
     	for (int i = 0; i < cacheNodeCount; i++) {
@@ -711,7 +715,7 @@ public class ThreadedBeerLikelihoodCore extends ThreadedLikelihoodCore {
     /**
      * Scale the partials at a given node. This uses a scaling suggested by Ziheng Yang in
      * Yang (2000) J. Mol. Evol. 51: 423-432
-     * <p/>
+     * <p>
      * This function looks over the partial likelihoods for each state at each pattern
      * and finds the largest. If this is less than the scalingThreshold (currently set
      * to 1E-40) then it rescales the partials for that pattern by dividing by this number

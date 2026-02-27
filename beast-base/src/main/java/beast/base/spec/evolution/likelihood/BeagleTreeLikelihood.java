@@ -58,6 +58,10 @@ import beast.base.inference.CalculationNode;
  * @version $Id$
  */
 
+/**
+ * Tree likelihood implementation that delegates computation to the BEAGLE
+ * high-performance library for GPU-accelerated phylogenetic calculations.
+ */
 @Description("Uses Beagle library to calculate Tree likelihood")
 public class BeagleTreeLikelihood extends TreeLikelihood {
 

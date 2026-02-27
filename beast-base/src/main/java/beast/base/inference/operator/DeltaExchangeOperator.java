@@ -23,7 +23,7 @@ import beast.base.util.Randomizer;
  *
  * @author Alexei Drummond
  * @author Andrew Rambaut
- *         <p/>
+ *         <p>
  *         Migrated to BEAST 2 by CHW and Walter
  */
 @Description("A generic operator for use with a sum-constrained (possibly weighted) vector parameter.")
@@ -357,7 +357,7 @@ public class DeltaExchangeOperator extends Operator {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
     @Override
     public void optimize(final double logAlpha) {

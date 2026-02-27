@@ -12,8 +12,8 @@ import beast.base.evolution.tree.TreeParser;
 public class CudaDetector {
 
 	 /**
-     * Used to detect whether CUDA with BEAGLE is installed on OS X in {@link Utils6#testCudaStatusOnMac()},
-     * which is used by {@link beast.pkgmgmt.launcher.BeastLauncher#main(String[])}.
+     * Used to detect whether CUDA with BEAGLE is installed on OS X,
+     * which is used by BeastLauncher.
      * @see <a href="https://github.com/CompEvol/beast2/issues/500">issues 500</a>.
      */
     public static void main(String[] args) {

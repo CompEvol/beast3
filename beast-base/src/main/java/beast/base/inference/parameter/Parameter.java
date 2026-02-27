@@ -232,7 +232,7 @@ public interface Parameter<T> extends Function {
 
 
         /**
-         * upper & lower bound These are located before the inputs (instead of
+         * upper and lower bound These are located before the inputs (instead of
          * after the inputs, as usual) so that valuesInput can determines the
          * class
          */
@@ -336,11 +336,11 @@ public interface Parameter<T> extends Function {
 
         /**
          * Change the dimension of a parameter
-         * <p/>
+         * <p>
          * This should only be called from initAndValidate() when a parent
          * beastObject can easily calculate the dimension of a parameter, but it is
          * awkward to do this by hand.
-         * <p/>
+         * <p>
          * Values are sourced from the original parameter values.
          *
          * @param dimension

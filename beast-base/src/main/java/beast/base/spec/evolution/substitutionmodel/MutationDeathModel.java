@@ -9,6 +9,11 @@ import beast.base.evolution.tree.Node;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * Mutation-death substitution model, also known as the Stochastic Dollo model.
+ * Models character evolution where gain occurs by mutation and loss by "death",
+ * with an absorbing death state.
+ */
 @Description("Mutation Death substitution model, can be used as Stochastic Dollo model.")
 public class MutationDeathModel extends Base {
 

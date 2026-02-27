@@ -11,7 +11,8 @@ import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 import java.util.List;
 
 /**
- * bounds do not support Inf and -Inf
+ * Continuous uniform distribution over a finite interval [lower, upper].
+ * Both endpoints are included. Infinite bounds are not supported.
  */
 @Description("Uniform distribution over a given interval (including lower and upper values). " +
         "An exception is thrown if any bound is set to infinity.")

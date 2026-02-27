@@ -11,6 +11,10 @@ import org.apache.commons.math3.util.FastMath;
 
 import java.util.List;
 
+/**
+ * Bernoulli distribution for boolean-valued parameters, parameterised by
+ * the probability of success (p).
+ */
 @Description("Bernoulli distribution, coin toss distribution prior.")
 public class Bernoulli extends ScalarDistribution<BoolScalar, Boolean> {
 

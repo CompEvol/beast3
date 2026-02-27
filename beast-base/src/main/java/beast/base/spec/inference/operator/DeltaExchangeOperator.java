@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Delta-exchange operator for sum-constrained parameters. Adds a random amount
+ * to one element and subtracts it from another, preserving the total sum.
+ * Supports optional weighting of elements.
+ */
 @Description("A generic operator for use with a sum-constrained (possibly weighted) parameter.")
 public class DeltaExchangeOperator extends KernelOperator {
 	public final Input<List<Tensor<?,?>>> parameterInput = new Input<>("parameter",
@@ -288,7 +293,7 @@ public class DeltaExchangeOperator extends KernelOperator {
      * a parameter can be optimised for better acceptance hence faster
      * mixing
      *
-     * @param logAlpha difference in posterior between previous state & proposed state + hasting ratio
+     * @param logAlpha difference in posterior between previous state and proposed state + hasting ratio
      */
     @Override
     public void optimize(final double logAlpha) {

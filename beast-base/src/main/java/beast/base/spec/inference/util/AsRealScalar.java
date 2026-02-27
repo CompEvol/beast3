@@ -12,6 +12,12 @@ import beast.base.spec.type.Tensor;
 
 import java.io.PrintStream;
 
+/**
+ * Type adapter that casts a {@link Tensor} to {@link RealScalar} with a specified
+ * real domain. If the tensor is a vector, only the first element is used.
+ *
+ * @param <D> the target real domain type
+ */
 @Description("Cast the type of a tensor to RealScalar of a particular domain. "
 		+ "If the tensor is a Vector, only the first value is used.")
 public class AsRealScalar<D extends Real> extends CalculationNode implements RealScalar<D>, Loggable {

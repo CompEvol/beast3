@@ -21,6 +21,10 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Random;
 
+/**
+ * Multi-species coalescent distribution that computes the probability of a
+ * gene tree conditioned on a species tree with branch-specific population sizes.
+ */
 @Description("Calculates probability of gene tree conditioned on a species tree (multi-species coalescent)")
 public class GeneTreeForSpeciesTreeDistribution extends TreeDistribution {
     final public Input<TreeInterface> speciesTreeInput =

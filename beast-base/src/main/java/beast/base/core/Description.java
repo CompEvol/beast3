@@ -34,11 +34,11 @@ import java.lang.annotation.Target;
  * This is an annotation that can be used to both
  * + document a class at the top of the code and
  * + create user documentation for XML Beast files.
- * <p/>
+ * <p>
  * The idea is to add @Description("bla bla bla")
  * just before class declarations of plug-ins. Applications
  * like DocMaker then can pick it up through introspection.
- * <p/>
+ * <p>
  * To indicate that the description applies to all derived
  * classes, the isInheritable flag is set true by default.
  * This does not always apply, for instance when the description

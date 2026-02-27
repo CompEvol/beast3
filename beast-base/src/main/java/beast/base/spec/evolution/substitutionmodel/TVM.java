@@ -10,6 +10,10 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 
+/**
+ * Transversion model (TVM) of nucleotide evolution with four independent
+ * transversion rates and equal transition rates. A submodel of GTR.
+ */
 @Description("Transversion model of nucleotide evolution (variable transversion rates, equal transition rates)." +
         "Rates that are not specified are assumed to be 1.")
 public class TVM extends BasicGeneralSubstitutionModel {

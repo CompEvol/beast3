@@ -18,13 +18,17 @@ import beast.base.inference.State;
 
 
 
+/**
+ * Base class for tree likelihood calculations.
+ * Combines an alignment, a tree, a site model (with substitution model),
+ * and an optional branch rate model to compute the likelihood of
+ * sequence data given a phylogenetic tree.
+ *
+ * <p>Subclass this and override {@code calculateLogP()} to implement
+ * non-standard tree likelihood computations.
+ */
 @Description("Generic tree likelihood for an alignment given a generic SiteModel, " +
 		"a beast tree and a branch rate model")
-// Use this as base class to define any non-standard TreeLikelihood.
-// Override Distribution.calculatLogP() to make this class functional.
-//
-// TODO: This could contain a generic traverse() method that takes dirty trees in account.
-//
 public class GenericTreeLikelihood extends Distribution {
     
     final public Input<Alignment> dataInput = new Input<>("data", "sequence data for the beast.tree", Validate.REQUIRED);

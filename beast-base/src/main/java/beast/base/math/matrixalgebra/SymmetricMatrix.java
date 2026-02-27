@@ -46,7 +46,7 @@ public class SymmetricMatrix extends Matrix {
 	/**
 	 * @param n int
 	 * @throws java.lang.NegativeArraySizeException
-	 *          if n <= 0
+	 *          if n ≤ 0
 	 */
 	public SymmetricMatrix(int n) throws NegativeArraySizeException {
 		super(n, n);
@@ -58,7 +58,7 @@ public class SymmetricMatrix extends Matrix {
 	 * @param n int
 	 * @param m int
 	 * @throws java.lang.NegativeArraySizeException
-	 *          if n,m <= 0
+	 *          if n,m ≤ 0
 	 */
 	public SymmetricMatrix(int n, int m) throws NegativeArraySizeException {
 		super(n, m);
@@ -101,8 +101,8 @@ public class SymmetricMatrix extends Matrix {
 
 	/**
 	 * @return MatrixAlgebra.SymmetricMatrix
-	 * @throws matrixAlgebra.IllegalDimension The supplied components are not those of a square matrix.
-	 * @throws matrixAlgebra.NonSymmetricComponents
+	 * @throws IllegalDimension The supplied components are not those of a square matrix.
+	 * @throws NonSymmetricComponents
 	 *                                        The supplied components are not symmetric.
 	 * @param	comp double[][]	components of the matrix
 	 */
@@ -240,7 +240,7 @@ public class SymmetricMatrix extends Matrix {
 	 * @param a MatrixAlgebra.Matrix
 	 * @return MatrixAlgebra.Matrix	product of the receiver with
 	 *         the transpose of the supplied matrix
-	 * @throws MatrixAlgebra.IllegalDimension If the number of
+	 * @throws IllegalDimension If the number of
 	 *                                        columns of the receiver are not equal to the number of
 	 *                                        columns of the supplied matrix.
 	 */
@@ -317,7 +317,7 @@ public class SymmetricMatrix extends Matrix {
 	/**
 	 * @param a matrixAlgebra.SymmetricMatrix
 	 * @return matrixAlgebra.SymmetricMatrix
-	 * @throws matrixAlgebra.IllegalDimension (from constructor).
+	 * @throws IllegalDimension (from constructor).
 	 */
 	public SymmetricMatrix subtract(SymmetricMatrix a)
 			throws IllegalDimension {
@@ -335,7 +335,7 @@ public class SymmetricMatrix extends Matrix {
 	 * @param a MatrixAlgebra.SymmetricMatrix
 	 * @return MatrixAlgebra.SymmetricMatrix	product of the tranpose
 	 *         of the receiver with the supplied matrix
-	 * @throws MatrixAlgebra.IllegalDimension If the number of
+	 * @throws IllegalDimension If the number of
 	 *                                        rows of the receiver are not equal to
 	 *                                        the number of rows of the supplied matrix.
 	 */

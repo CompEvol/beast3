@@ -40,9 +40,13 @@ import java.util.Arrays;
 
 import static org.apache.commons.math3.special.Gamma.logGamma;
 
-/* Ported from Beast 1.6
+/**
+ * Birth-death tree prior based on Gernhard (2008), conditioned on a fixed number
+ * of taxa. Extends the Yule model with a death (extinction) rate. Parameterised
+ * by the net diversification rate (birth - death) and the relative extinction
+ * rate (death/birth).
+ *
  * @author Joseph Heled
- *         Date: 24/02/2008
  */
 @Description("Birth Death model based on Gernhard 2008. <br/>" +
         "This derivation conditions directly on fixed N taxa. <br/>" +

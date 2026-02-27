@@ -26,7 +26,7 @@ public abstract class CalculationNode extends BEASTObject {
      * Store internal calculations. Called before a calculation node
      * is asked to perform any calculations, but after some part of the
      * state has changed through a operator proposal.
-     * <p/>
+     * <p>
      * This is not meant to be used to calculate anything, just store
      * intermediate results of calculations. Input values should not
      * be accessed because some StateNodes may have been changed.
@@ -38,7 +38,7 @@ public abstract class CalculationNode extends BEASTObject {
 
     /**
      * Check whether internal calculations need to be updated
-     * <p/>
+     * <p>
      * This is called after a proposal of a new state.
      * A CalculationNode that needs a custom implementation should
      * override requiresRecalculation()
@@ -50,12 +50,12 @@ public abstract class CalculationNode extends BEASTObject {
     /**
      * @return whether the API for the particular BEASTObject returns different
      *         answers than before the operation was applied.
-     *         <p/>
+     *         <p>
      *         This method is called before the CalculationNode do their calculations.
      *         Called in order of the partial order defined by Input-BEASTObject relations.
      *         Called only on those CalculationNodes potentially affected by a
      *         StateNode change.
-     *         <p/>
+     *         <p>
      *         Default implementation return 'true', since requiresRecalculation is
      *         called for a node only if one of its arguments has changed.
      */
@@ -63,12 +63,12 @@ public abstract class CalculationNode extends BEASTObject {
         return true;
 
 
-//        *         <p/>
+//        *         <p>
 //        *         Default implementation inspects all input beastObjects
 //        *         and checks if there is any dirt anywhere.
 //        *         Derived classes can provide a more efficient implementation
 //        *         by checking which part of any input StateNode or BEASTObject has changed.
-//        *         <p/>
+//        *         <p>
 //        *         Note this default implementation is relative expensive since it uses
 //        *         introspection, so overrides should be preferred.
 //        *         After the operation has changed the state.state
@@ -92,7 +92,7 @@ public abstract class CalculationNode extends BEASTObject {
 
     /**
      * Restore internal calculations
-     * <p/>
+     * <p>
      * This is called when a proposal is rejected
      */
     protected void restore() {
@@ -101,7 +101,7 @@ public abstract class CalculationNode extends BEASTObject {
 
     /**
      * Accept internal state and mark internal calculations as current
-     * <p/>
+     * <p>
      * This is called when a proposal is accepted
      */
     protected void accept() {
@@ -111,7 +111,7 @@ public abstract class CalculationNode extends BEASTObject {
     /**
      * @return true if the node became dirty - that is needs to recalculate due to
      *         changes in the inputs.
-     *         <p/>
+     *         <p>
      *         CalcalationNodes typically know whether an input is a CalculationNode or StateNode
      *         and also know whether the input is Validate.REQUIRED, hence cannot be null.
      *         Further, for CalculationNodes, a shadow parameter can be kept so that a

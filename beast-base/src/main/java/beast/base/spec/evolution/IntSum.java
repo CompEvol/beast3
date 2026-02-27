@@ -16,6 +16,10 @@ import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.Tensor;
 
 
+/**
+ * Calculates the sum of one or more integer-valued parameters and exposes the result
+ * as an {@link IntScalar}. Useful for derived quantities in logging and priors.
+ */
 @Description("calculates sum of a valuable")
 public class IntSum extends CalculationNode implements IntScalar<Int>, Loggable {
     final public Input<List<Tensor<?,?>>> functionInput = new Input<>("arg", "argument to be summed", new ArrayList<>(), Validate.REQUIRED);

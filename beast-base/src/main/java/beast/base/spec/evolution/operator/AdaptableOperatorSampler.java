@@ -33,8 +33,12 @@ import beast.base.evolution.tree.TreeMetric;
 
 /**
  * 
+ * Adaptively selects among a set of candidate operators based on their
+ * observed effectiveness at exploring the parameter space. After a burn-in
+ * period, favours operators that produce the best exploration.
+ *
  * @author Jordan Douglas
- */ 
+ */
 @Description("An operator which selects samples from a series of other operators, with respect to their ability to explore one or more real/int parameters " +
 "Training for each operator occurs following a burn-in period " +
 "After a learning period, AdaptableOperatorSampler should pick the operator which is giving the best results n a particular data set")
@@ -637,9 +641,9 @@ public class AdaptableOperatorSampler extends Operator {
     
     /**
      * Returns a variance using a mean and a mean sum of squares
-     * @param sum
-     * @param SS
-     * @return
+     * @param mean the mean value
+     * @param meanSS the mean sum of squares
+     * @return the variance
      */
     public double getVar(double mean, double meanSS) {
     	return meanSS - mean*mean;

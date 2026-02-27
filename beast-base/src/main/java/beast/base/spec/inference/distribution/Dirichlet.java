@@ -14,6 +14,10 @@ import java.util.Arrays;
 import java.util.List;
 
 
+/**
+ * Dirichlet distribution over simplex-valued parameters, parameterised by
+ * a vector of concentration parameters (alpha). The input must sum to 1.
+ */
 @Description("Dirichlet distribution.  p(x_1,...,x_n;alpha_1,...,alpha_n) = 1/B(alpha) prod_{i=1}^K x_i^{alpha_i - 1} " +
         "where B() is the beta function B(alpha) = prod_{i=1}^K Gamma(alpha_i)/ Gamma(sum_{i=1}^K alpha_i}. ")
 public class Dirichlet extends TensorDistribution<Simplex, Double> {

@@ -37,6 +37,11 @@ import java.lang.reflect.InvocationTargetException;
 
 
 
+/**
+ * General substitution model with user-specified rate matrix.
+ * Extends {@link BasicGeneralSubstitutionModel} to handle eigendecomposition
+ * and transition probability calculations for any number of states.
+ */
 @Description("Specifies transition probability matrix with no restrictions on the rates other " +
         "than that one of the is equal to one and the others are specified relative to " +
         "this unit rate. Works for any number of states.")

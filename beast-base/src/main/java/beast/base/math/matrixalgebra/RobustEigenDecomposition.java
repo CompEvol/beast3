@@ -63,9 +63,8 @@ public class RobustEigenDecomposition implements java.io.Serializable {
 Constructs and returns a new eigenvalue decomposition object;
 The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
 Checks for symmetry, then constructs the eigenvalue decomposition.
-@param A    A square matrix.
-@return     A decomposition object to access <tt>D</tt> and <tt>V</tt>.
-@throws IllegalArgumentException if <tt>A</tt> is not square.
+@param A    A square matrix. Returns a decomposition object to access {@code D} and {@code V}.
+@throws IllegalArgumentException if {@code A} is not square.
 */
 public RobustEigenDecomposition(DoubleMatrix2D A) throws ArithmeticException {
     this(A,maxIterationsDefault);
@@ -132,8 +131,8 @@ private void cdiv(double xr, double xi, double yr, double yi) {
 	}
 }
 /**
-Returns the block diagonal eigenvalue matrix, <tt>D</tt>.
-@return     <tt>D</tt>
+Returns the block diagonal eigenvalue matrix, {@code D}.
+@return     {@code D}
 */
 public DoubleMatrix2D getD() {
 	double[][] D = new double[n][n];
@@ -166,8 +165,8 @@ public DoubleMatrix1D getRealEigenvalues () {
 	return DoubleFactory1D.dense.make(d);
 }
 /**
-Returns the eigenvector matrix, <tt>V</tt>
-@return     <tt>V</tt>
+Returns the eigenvector matrix, {@code V}
+@return     {@code V}
 */
 public DoubleMatrix2D getV () {
 	return DoubleFactory2D.dense.make(V);

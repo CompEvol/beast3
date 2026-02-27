@@ -29,6 +29,10 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 
+/**
+ * A phylogenetic tree that allows sampled ancestor nodes (tips that are
+ * direct ancestors of other nodes rather than terminal leaves).
+ */
 @Description("A tree that allows sampled ancestor nodes.")
 public class SATree extends Tree {
 

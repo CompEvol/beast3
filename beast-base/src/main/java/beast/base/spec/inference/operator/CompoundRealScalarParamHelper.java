@@ -10,6 +10,13 @@ import beast.base.spec.type.RealVector;
 import java.util.List;
 
 
+/**
+ * Helper that wraps a list of individual {@link RealScalarParam} instances as a
+ * single {@link RealVector} view, allowing operators to treat compound scalar
+ * parameters as a vector.
+ *
+ * @param <D> the domain type of the scalar parameters
+ */
 @Description("A temporary helper class to solve compound state nodes for operators, " +
         "but it cannot be used as input, before the framework is modified.")
 public class CompoundRealScalarParamHelper<D extends Real> implements RealVector<D> {

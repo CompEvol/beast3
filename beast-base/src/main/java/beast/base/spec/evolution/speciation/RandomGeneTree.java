@@ -11,6 +11,10 @@ import beast.base.spec.evolution.tree.coalescent.RandomTree;
 import java.util.List;
 
 
+/**
+ * Generates a random gene tree conditioned on a species tree, ensuring all
+ * coalescent events occur above the species tree root.
+ */
 @Description("Generates a random gene tree conditioned on a species tree, such " +
         "that the root of the species tree is lower than any coalescent events in " +
         "the gene tree")

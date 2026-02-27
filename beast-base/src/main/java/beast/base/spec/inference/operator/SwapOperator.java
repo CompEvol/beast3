@@ -20,6 +20,10 @@ import beast.base.util.Randomizer;
 
 
 
+/**
+ * Operator that swaps one or more randomly chosen pairs of elements
+ * in a multi-dimensional parameter (real, integer, or key vector).
+ */
 @Description("A generic operator swapping a one or more pairs in a multi-dimensional parameter")
 public class SwapOperator extends Operator {
     final public Input<RealVectorParam<Real>> parameterInput = new Input<>("parameter", "a real parameter to swap individual values for");

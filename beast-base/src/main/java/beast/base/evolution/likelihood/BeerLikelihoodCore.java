@@ -685,7 +685,7 @@ public class BeerLikelihoodCore extends LikelihoodCore {
     /**
      * Scale the partials at a given node. This uses a scaling suggested by Ziheng Yang in
      * Yang (2000) J. Mol. Evol. 51: 423-432
-     * <p/>
+     * <p>
      * This function looks over the partial likelihoods for each state at each pattern
      * and finds the largest. If this is less than the scalingThreshold (currently set
      * to 1E-40) then it rescales the partials for that pattern by dividing by this number

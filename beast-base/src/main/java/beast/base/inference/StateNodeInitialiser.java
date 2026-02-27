@@ -7,11 +7,11 @@ import java.util.List;
  * too complex for this approach to work. For example, initialisation may require additional information not
  * provided by the inputs, or several dependent beastObjects need to initialise together,
  * such as gene trees and a species tree.
- * <p/>
+ * <p>
  * StateNodeInitialisers take one or more StateNodes as input and  initializes them in initStateNodes().
  * getInitialisedStateNodes() reports back which nodes has been initialized, but this is currently only used to
  * check for multiple initialiser for the same object.
- *  <p/>
+ *  <p>
  * Like any other isEASTObject, a state initialiser must have an initAndValidate(), which is called once.
  * getInitialisedStateNodes(), on the other hand,  may be called multiple times as its inputs change while the system
  * tries to establish a valid starting state. initAndValidate is executed in order that the XML parser see objects,
@@ -28,9 +28,9 @@ public interface StateNodeInitialiser {
     void initStateNodes();
 
     /**
-     * @return list of StateNodes that are initialised
-     *         This information is used to ensure StateNode are not initialised more than once.
-     * @param stateNodes
+     * Populates the given list with the StateNodes that are initialised.
+     * This information is used to ensure StateNodes are not initialised more than once.
+     * @param stateNodes list to populate with initialised state nodes
      */
     public void getInitialisedStateNodes(List<StateNode> stateNodes);
 }

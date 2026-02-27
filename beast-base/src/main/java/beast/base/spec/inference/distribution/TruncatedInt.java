@@ -12,6 +12,9 @@ import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
 import java.util.List;
 
 
+/**
+ * Wrapper that truncates an integer-valued distribution to the interval [lower, upper].
+ */
 @Description("Distribution that truncates a integer valued distribution to the interval [lower,upper].")
 public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 

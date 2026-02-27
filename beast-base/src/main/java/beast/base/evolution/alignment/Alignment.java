@@ -200,17 +200,7 @@ public class Alignment extends StateNode {
     }
 
     /**
-     * Constructor for testing purposes.        } else {
-            // alignment defined by a map of id -> sequence
-            List<String> taxa = new ArrayList<>();
-            taxa.addAll(map.keySet());
-            sequences.clear();
-            for (String key : taxa) {
-                String sequence = map.get(key);
-                sequences.add(new Sequence(key, sequence));
-            }
-        }
-
+     * Constructor for testing purposes.
      *
      * @param sequences
      * @param stateCount

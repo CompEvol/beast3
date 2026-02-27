@@ -12,6 +12,11 @@ import org.apache.commons.statistics.distribution.ExponentialDistribution;
 import java.util.List;
 
 
+/**
+ * Exponential distribution parameterised by its mean (1/rate).
+ * When applied to a multidimensional parameter, each dimension is treated as an
+ * independent component.
+ */
 @Description("Exponential distribution.  f(x;\\theta) = 1/\\theta e^{-x/\\theta}, if x >= 0 " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

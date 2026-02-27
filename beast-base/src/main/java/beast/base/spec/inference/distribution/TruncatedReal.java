@@ -12,6 +12,11 @@ import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 import java.util.List;
 
 
+/**
+ * Wrapper that truncates a real-valued distribution to the interval [lower, upper].
+ * The base distribution should not define its own parameter; all parameters are
+ * passed through this wrapper.
+ */
 @Description("Truncates a real valued distribution to the interval [lower,upper]. " +
              "The base distribution itself should not define any parameters. " +
         "All parameters should be passed via TruncatedRealDistribution.")

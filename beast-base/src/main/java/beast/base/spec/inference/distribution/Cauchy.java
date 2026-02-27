@@ -12,6 +12,10 @@ import org.apache.commons.statistics.distribution.ContinuousDistribution;
 import java.util.List;
 
 
+/**
+ * Cauchy distribution parameterised by location and scale.
+ * A heavy-tailed distribution useful as a weakly informative prior.
+ */
 @Description("Cauchy distribution. The probability density function of \\( X \\) is:\n" +
         "\\[ f(x; x_0, \\gamma) = { 1 \\over \\pi \\gamma } \\left[ { \\gamma^2 \\over (x - x_0)^2 + \\gamma^2 } \\right] \\]\n" +
         "for \\( x_0 \\) the location, \\( \\gamma > 0 \\) the scale, and \\( x \\in (-\\infty, \\infty) \\).")

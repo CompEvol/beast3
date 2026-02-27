@@ -148,7 +148,7 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     }
 
     /**
-     * For this distribution, X, this method returns x such that P(X &lt; x) = p.
+     * For this distribution, X, this method returns x such that {@code P(X < x) = p}.
      *
      * @param p the cumulative probability.
      * @return x.

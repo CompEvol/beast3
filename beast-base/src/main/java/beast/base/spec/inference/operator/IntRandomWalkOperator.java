@@ -8,6 +8,11 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 
+/**
+ * Random walk operator for integer-valued vector parameters.
+ * Selects a random dimension and perturbs it by a uniform integer
+ * amount within the specified window size.
+ */
 @Description("A random walk operator that selects a random dimension of the integer parameter and perturbs the value a " +
         "random amount within +/- windowSize.")
 public class IntRandomWalkOperator extends Operator {

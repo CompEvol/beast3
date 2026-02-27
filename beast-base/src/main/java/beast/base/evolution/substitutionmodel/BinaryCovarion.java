@@ -13,7 +13,7 @@ import beast.base.inference.parameter.RealParameter;
 
 
 /**
- * <p/>
+ * <p>
  * a	the rate of the slow rate class
  * 1	the rate of the fast rate class
  * p0	the equilibrium frequency of zero states
@@ -21,9 +21,9 @@ import beast.base.inference.parameter.RealParameter;
  * f0	the equilibrium frequency of slow rate class
  * f1	1 - f0, the equilibrium frequency of fast rate class
  * s, s1, s2 the rate of switching
- * <p/>
+ * <p>
  * then the (unnormalized) instantaneous rate matrix (unnormalized Q) should be (depending on mode)
- * <p/>
+ * <p>
  * 
  * mode = BEAST -- using classic BEAST implementation, reversible iff hfrequencies = (0.5, 0.5)
  * FLAGS: reversible = false, TSParameterisation = false
@@ -63,7 +63,7 @@ import beast.base.inference.parameter.RealParameter;
  * [ p0 * s2/(s1+s2), p1, * s2/(s1+s2), p0 * s1/(s1+s2), p1, * s1/(s1+s2) ]
  *
  *
- * Note: to use Tuffley & Steel's methods, set a = 0.
+ * Note: to use Tuffley and Steel's methods, set a = 0.
  */
 @Description("Covarion model for Binary data")
 /**

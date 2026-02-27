@@ -10,6 +10,10 @@ import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
+/**
+ * Uniform operator for integer parameters. Assigns one or more randomly chosen
+ * elements to a uniformly selected value within the parameter's valid range.
+ */
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
 public class IntUniformOperator extends Operator {
 

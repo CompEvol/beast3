@@ -26,7 +26,11 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
-* @author Joseph Heled
+ * Birth-death tree prior with calibrated monophyletic clades.
+ * Computes the marginal prior on the tree by analytically integrating
+ * over calibrated clade ages using the birth-death process.
+ *
+ * @author Joseph Heled
  */
 
 

@@ -10,6 +10,12 @@ import beast.base.spec.domain.Int;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.Tensor;
 
+/**
+ * Type adapter that casts a {@link Tensor} to {@link IntScalar} with a specified
+ * integer domain. Useful for connecting outputs of one type to inputs expecting another.
+ *
+ * @param <D> the target integer domain type
+ */
 @Description("Cast the type of a tensor to IntScalar of a particular domain")
 public class AsIntScalar<D extends Int> extends CalculationNode implements IntScalar<D> {
     final public Input<Tensor<?,?>> argumentInput = new Input<>("arg", "argument to be converted", Validate.REQUIRED);

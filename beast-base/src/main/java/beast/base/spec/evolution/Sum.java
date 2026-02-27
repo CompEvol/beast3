@@ -17,6 +17,10 @@ import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Tensor;
 
 
+/**
+ * Calculates the sum of one or more real-valued parameters and exposes the result
+ * as a {@link RealScalar}. Useful for derived quantities in logging and priors.
+ */
 @Description("calculates sum of a valuable")
 public class Sum extends CalculationNode implements RealScalar<Real>, Loggable {
     final public Input<List<Tensor<?,?>>> functionInput = new Input<>("arg", "argument to be summed", new ArrayList<>(), Validate.REQUIRED);

@@ -29,6 +29,10 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
 
+/**
+ * A phylogenetic tree restricted to strict binary topology: every internal
+ * node has exactly two children, with no sampled ancestors or polytomies.
+ */
 @Description("A strict binary tree (no sampled ancestors or polytomies).")
 public class StrictBinaryTree extends Tree {
 

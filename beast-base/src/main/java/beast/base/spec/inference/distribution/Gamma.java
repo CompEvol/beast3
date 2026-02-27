@@ -11,6 +11,11 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 import java.util.List;
 
 
+/**
+ * Gamma distribution parameterised by shape (alpha) and either scale (theta) or rate (lambda).
+ * The scale and rate inputs are mutually exclusive (XOR). When applied to a
+ * multidimensional parameter, each dimension is treated as an independent component.
+ */
 @Description("Gamma distribution. for x>0  g(x;alpha,theta) = 1/{Gamma(alpha) theta^alpha} x^{alpha - 1} e^{-\frac{x}{theta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
         "separate independent component.")

@@ -84,8 +84,11 @@ public class ComplexSubstitutionModel extends GeneralSubstitutionModel {
     /**
      * get the complete transition probability matrix for the given distance
      *
-     * @param distance the expected number of substitutions
-     * @param matrix   an array to store the matrix
+     * @param node   the tree node
+     * @param startTime start time
+     * @param endTime end time
+     * @param rate   the rate
+     * @param matrix an array to store the matrix
      */
     @Override
     public void getTransitionProbabilities(Node node, double startTime, double endTime, double rate, double[] matrix) {

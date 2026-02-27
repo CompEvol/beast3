@@ -46,6 +46,11 @@ import beast.base.inference.State;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.pkgmgmt.BEASTClassLoader;
 
+/**
+ * Standard tree likelihood using Felsenstein's peeling algorithm.
+ * Computes the probability of sequence data given a tree, site model, and
+ * optional branch rate model. Supports proportional likelihoods and ambiguity handling.
+ */
 @Description("Calculates the probability of sequence data on a beast.tree given a site and substitution model using " +
         "a variant of the 'peeling algorithm'. For details, see" +
         "Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")

@@ -48,8 +48,7 @@ public class LUPDecomposition {
 	 * Constructor method
 	 *
 	 * @param components double[][]
-	 * @throws DhbMatrixAlgebra.DhbIllegalDimension
-	 *          the supplied matrix is not square
+	 * @throws IllegalDimension the supplied matrix is not square
 	 */
 	public LUPDecomposition(double[][] components)
 			throws IllegalDimension {
@@ -64,9 +63,8 @@ public class LUPDecomposition {
 	/**
 	 * Constructor method.
 	 *
-	 * @param m DhbMatrixAlgebra.Matrix
-	 * @throws DhbMatrixAlgebra.DhbIllegalDimension
-	 *          the supplied matrix is not square
+	 * @param m Matrix
+	 * @throws IllegalDimension the supplied matrix is not square
 	 */
 	public LUPDecomposition(Matrix m) throws IllegalDimension {
 		if (!m.isSquare())
@@ -126,8 +124,7 @@ public class LUPDecomposition {
 	}
 
 	/**
-	 * @param c double[]
-	 * @return double[]
+	 * @return the determinant of the matrix
 	 */
 	public double determinant() {
 		if (!decomposed())
@@ -181,8 +178,7 @@ public class LUPDecomposition {
 	}
 
 	/**
-	 * @param c double[]
-	 * @return double[]
+	 * @return the components of the inverse matrix, or null if decomposition failed
 	 */
 	public double[][] inverseMatrixComponents() {
 		if (!decomposed())

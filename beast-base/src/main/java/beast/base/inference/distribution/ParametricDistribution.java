@@ -104,7 +104,7 @@ public abstract class ParametricDistribution extends CalculationNode implements 
     }
 
     /**
-     * For this distribution, X, this method returns x such that P(X &lt; x) = p.
+     * For this distribution, X, this method returns x such that {@code P(X < x) = p}.
      *
      * @param p the cumulative probability.
      * @return x.
@@ -194,7 +194,7 @@ public abstract class ParametricDistribution extends CalculationNode implements 
      * @return the probability that a random variable with this distribution
      *         will take a value between <code>x0</code> and <code>x1</code>,
      *         including the endpoints
-     * @throws IllegalArgumentException if <code>x0 &gt; x1</code>
+     * @throws IllegalArgumentException if {@code x0 > x1}
      */
 	public double cumulativeProbability(final double x0, final double x1) {
         return cumulativeProbability(x1) - cumulativeProbability(x0);

@@ -13,7 +13,7 @@ import java.util.List;
  * A collection of ({@link Scalar}) is independent and identically distributed.
  * @param <V>  params
  * @param <S>  the sample type S of the distribution, see {@link TensorDistribution}.
-// * @param <D>  domain {@link Domain}
+ *            (The domain extends {@link Domain}.)
  * @param <T>  Java type
  */
 public class IID<V extends Vector<?, T>,

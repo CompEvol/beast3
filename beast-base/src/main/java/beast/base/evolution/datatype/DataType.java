@@ -200,7 +200,7 @@ public interface DataType {
 		/**
 		 * length of the encoding (i.e. how many characters give one code), e.g.
 		 * 1 for nucleotide, 3 for codons. For variable code length data types,
-		 * codeLength<1 (usually -1).
+		 * {@code codeLength < 1} (usually -1).
 		 */
 		public int getCodeLength() {
 			return codeLength;
@@ -361,9 +361,9 @@ public interface DataType {
 
 		/**
 		 * Default implementations represent non-ambiguous characters as codes 0
-		 * ... stateCount-1, and ambiguous characters using codes >= stateCount
-		 * For data types that count something -- like microsattelites, or
-		 * number of lineages in SNAPP -- a codes < 0 represents missing data.
+		 * ... stateCount-1, and ambiguous characters using codes ≥ stateCount.
+		 * For data types that count something -- like microsatellites, or
+		 * number of lineages in SNAPP -- a {@code code < 0} represents missing data.
 		 */
 		@Override
 		@Deprecated

@@ -16,8 +16,8 @@ public interface TreeMetric {
     
     /**
      * Distance between a tree and a reference tree. Must set the reference tree first using setReference
-     * @param tree1
-     * @return
+     * @param tree the tree to compare against the reference
+     * @return the distance
      */
     public double distance(TreeInterface tree);
     

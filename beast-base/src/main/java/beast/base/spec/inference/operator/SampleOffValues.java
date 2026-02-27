@@ -12,8 +12,11 @@ import beast.base.spec.type.Scalar;
 import beast.base.util.Randomizer;
 
 /**
+ * Operator that samples parameter values from a specified distribution.
+ * Uses an indicator vector to determine which elements are resampled,
+ * leaving others unchanged.
+ *
  * @author Joseph Heled
- *         Date: 2/03/2011
  */
 @Description("Sample values from a distribution")
 public class SampleOffValues extends Operator {

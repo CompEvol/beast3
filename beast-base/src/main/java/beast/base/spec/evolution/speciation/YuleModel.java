@@ -26,6 +26,11 @@ import java.util.Random;
 //    p *= exp(-lambda*height[i])
 // }
 
+/**
+ * Yule pure-birth speciation model.
+ * Models a constant rate of speciation (birth) with no extinction (death),
+ * providing a prior on tree topology and node heights.
+ */
 @Description("Pure birth model (i.e. no deaths)")
 public class YuleModel extends SpeciesTreeDistribution {
     final public Input<RealScalar<? extends PositiveReal>> birthDiffRateParameterInput =

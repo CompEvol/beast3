@@ -150,7 +150,7 @@ public abstract class Distribution extends CalculationNode implements Loggable, 
 
     /**
      * This method draws new values for the arguments conditional on the current value(s) of the conditionals.
-     * <p/>
+     * <p>
      * The new values are overwrite the argument values in the provided state.
      *
      * @param state  the state
@@ -240,7 +240,7 @@ public abstract class Distribution extends CalculationNode implements Loggable, 
     }
 
     /**
-     * RealScalar<Real> implementation
+     * RealScalar implementation
      */
     
     @Override

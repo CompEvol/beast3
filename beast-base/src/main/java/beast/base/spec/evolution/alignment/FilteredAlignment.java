@@ -15,6 +15,11 @@ import java.util.Arrays;
 import java.util.List;
 
 
+/**
+ * An alignment that selects a subset of sites from another alignment using
+ * a filter expression. Supports ranges, step sizes, and comma-separated
+ * specifications.
+ */
 @Description("Alignment based on a filter operation on another alignment")
 public class FilteredAlignment extends Alignment {
     final public Input<String> filterInput = new Input<>("filter", "specifies which of the sites in the input alignment should be selected " +

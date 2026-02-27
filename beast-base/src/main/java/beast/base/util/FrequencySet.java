@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * modified from BEAST 1 FrequencySet<T>
+ * modified from BEAST 1 {@code FrequencySet<T>}
  * Stores a set of objects with frequencies
  *
  * @author Andrew Rambaut

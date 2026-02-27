@@ -44,7 +44,9 @@ import java.util.*;
 
 
 /**
- * Adapted from Weka's HierarchicalClustering class *
+ * Builds an initial tree by hierarchical clustering of pairwise distances from an alignment.
+ * Supports classic agglomerative methods (single, complete, UPGMA, Ward) and
+ * neighbour joining. Useful for generating starting trees for MCMC.
  */
 @Description("Create initial beast.tree by hierarchical clustering, either through one of the classic link methods " +
         "or by neighbor joining. The following link methods are supported: " +

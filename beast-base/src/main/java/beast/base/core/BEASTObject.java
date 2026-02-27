@@ -37,7 +37,7 @@ import java.util.Set;
 abstract public class BEASTObject implements BEASTInterface{
     /**
      * set of Objects that have this Object in one of its Inputs *
-     * @deprecate use getOuputs() or BEASTObject.getOuputs(object) instead
+     * @deprecated use getOutputs() or BEASTObject.getOutputs(object) instead
      */
 	@Deprecated
     public Set<BEASTInterface> outputs = new HashSet<>();

@@ -55,78 +55,78 @@ import static beast.base.parser.XMLParserUtils.replaceVariable;
 
 
 /**
- * XMLParser process Beast 2 XML and constructs an MCMC object
- * <p/>
- * <p/>
- * Reserved elements (present in element2class map)
- * <distribution>
- * <operator>
- * <logger>
- * <data>
- * <sequence>
- * <state>
- * <parameter>
- * <tree>
- * <beast version='2.0' namespace='x.y.z:'>
- * <map name='elementName'>x.y.z.Class</map>
- * <run>
- * <plate>
+ * XMLParser process Beast 2 XML and constructs an MCMC object.
+ *
+ * <p>Reserved elements (present in element2class map):
+ * {@code distribution}, {@code operator}, {@code logger}, {@code data},
+ * {@code sequence}, {@code state}, {@code parameter}, {@code tree},
+ * {@code beast}, {@code map}, {@code run}, {@code plate}, {@code input}.
+ *
+ * <p>Reserved attributes:
+ * <pre>{@code <input id='myId' idRef='otherId' name='inputName' spec='x.y.z.MyClass'/>}</pre>
+ *
+ * <p>Reserved attribute formats — shortcut for idref inputs:
+ * <pre>{@code <input xyz='@ref'/>}</pre>
+ * is equivalent to
+ * <pre>{@code
  * <input>
- * <p/>
- * Reserved attributes:
- * <input id='myId' idRef='otherId' name='inputName' spec='x.y.z.MyClass'/>
- * <p/>
- * Reserved attribute formats:
- * shortcut for idref inputs
- * <input xyz='@ref'/>
- * ==
- * <input>
- * <input name='xyz' idref='ref'/>
+ *   <input name='xyz' idref='ref'/>
  * </input>
- * <p/>
- * plate notations
- * <plate var='n' range='1,2,3'><xyz id='id$(n)'/></plate>
- * ==
+ * }</pre>
+ *
+ * <p>Plate notations:
+ * <pre>{@code <plate var='n' range='1,2,3'><xyz id='id$(n)'/></plate>}</pre>
+ * is equivalent to
+ * <pre>{@code
  * <xyz id='id1'/>
  * <xyz id='id2'/>
  * <xyz id='id3'/>
- * <p/>
- * Resolving class:
- * 1. specified in spec attribute
- * 2. if not, get from element2class map
- * 3. if not, use element name (and hope it shows up in the namespace somewhere).
- * <p/>
- * Resolving name:
- * 1. specified in name attribute
- * 2. if not, use (non-reserved) attribute name
- * 3. if not, use element name
- * 4. if input, use 'value' when there is text content, but no element content
- * <p/>
- * Resolving value:
- * 0. if idref is specified, use the referred object
- * 1. specified in value attribute
- * 2. if not, use value of (non-reserved) attribute
- * 3. if not, use text content when there is text content, but no element content
- * <p/>
- * Parsing rules:
- * <p/>
- * Processing non reserved attributes
- * <input otherAttribute="xyz"/>
+ * }</pre>
+ *
+ * <p>Resolving class:
+ * <ol>
+ * <li>specified in spec attribute</li>
+ * <li>if not, get from element2class map</li>
+ * <li>if not, use element name (and hope it shows up in the namespace somewhere)</li>
+ * </ol>
+ *
+ * <p>Resolving name:
+ * <ol>
+ * <li>specified in name attribute</li>
+ * <li>if not, use (non-reserved) attribute name</li>
+ * <li>if not, use element name</li>
+ * <li>if input, use 'value' when there is text content, but no element content</li>
+ * </ol>
+ *
+ * <p>Resolving value:
+ * <ol>
+ * <li>if idref is specified, use the referred object</li>
+ * <li>specified in value attribute</li>
+ * <li>if not, use value of (non-reserved) attribute</li>
+ * <li>if not, use text content when there is text content, but no element content</li>
+ * </ol>
+ *
+ * <p>Parsing rules:
+ *
+ * <p>Processing non-reserved attributes:
+ * <pre>{@code <input otherAttribute="xyz"/>}</pre>
  * equals
+ * <pre>{@code
  * <input>
- * <input name='otherAttribute' value='xyz'/>
+ *   <input name='otherAttribute' value='xyz'/>
  * </input>
- * <p/>
- * Processing non reserved element names
- * <myElement/>
- * ==
- * <input spec='myElement' name='myElement'/>
- * unless 'spec' is a specified attribute, then that overrides, likewise for 'name'
- * <p/>
- * Processing of text content (only when there are no enclosing elements)
- * <input name='data'>xyz</input>
- * ==
- * <input name='data' value='xyz/>
+ * }</pre>
+ *
+ * <p>Processing non-reserved element names:
+ * <pre>{@code <myElement/>}</pre>
+ * equals
+ * <pre>{@code <input spec='myElement' name='myElement'/>}</pre>
+ * unless 'spec' is a specified attribute, then that overrides, likewise for 'name'.
+ *
+ * <p>Processing of text content (only when there are no enclosing elements):
+ * <pre>{@code <input name='data'>xyz</input>}</pre>
+ * equals
+ * <pre>{@code <input name='data' value='xyz'/>}</pre>
  *
  * @author rrb
  */
@@ -533,7 +533,7 @@ public class XMLParser {
     /**
      * Parse an XML fragment representing a Plug-in
      * Only the run element or if that does not exist the last child element of
-     * the top level <beast> element is considered.
+     * the top level {@code <beast>} element is considered.
      * @throws XMLParserException 
      */
     public BEASTInterface parseFragment(final String xml, final boolean initialise) throws XMLParserException  {
@@ -589,7 +589,7 @@ public class XMLParser {
      * Parse XML fragment that will be wrapped in a beast element
      * before parsing. This allows for ease of creating beast objects,
      * like this:
-     * Tree tree = (Tree) new XMLParser().parseBareFragment("<tree spec='beast.util.TreeParser' newick='((1:1,3:1):1,2:2)'/>");
+     * {@code Tree tree = (Tree) new XMLParser().parseBareFragment("<tree spec='beast.util.TreeParser' newick='((1:1,3:1):1,2:2)'/>");}
      * to create a simple tree.
      */
     public BEASTInterface parseBareFragment(String xml, final boolean initialise) throws XMLParserException {

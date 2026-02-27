@@ -12,7 +12,8 @@ public class SMMDistance extends Distance.Base {
     /**
      * constructor taking a pattern source
      *
-     * @param patterns a pattern of a microsatellite locus
+     * @param taxon1 first taxon index
+     * @param taxon2 second taxon index
      */
     @Override
     public double pairwiseDistance(int taxon1, int taxon2) {

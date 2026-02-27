@@ -616,9 +616,9 @@ public class AdaptableOperatorSampler extends Operator {
     
     /**
      * Returns a variance using a mean and a mean sum of squares
-     * @param sum
-     * @param SS
-     * @return
+     * @param mean the mean value
+     * @param meanSS the mean sum of squares
+     * @return the variance
      */
     public double getVar(double mean, double meanSS) {
     	return meanSS - mean*mean;

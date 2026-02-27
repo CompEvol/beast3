@@ -11,6 +11,11 @@ import org.apache.commons.statistics.distribution.GammaDistribution;
 
 import java.util.List;
 
+/**
+ * Inverse gamma distribution parameterised by shape (alpha) and scale (beta).
+ * When applied to a multidimensional parameter, each dimension is treated as an
+ * independent component.
+ */
 // TODO need to test
 @Description("Inverse Gamma distribution, used as prior.    for x>0  f(x; alpha, beta) = \frac{beta^alpha}{Gamma(alpha)} (1/x)^{alpha + 1}exp(-beta/x) " +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
