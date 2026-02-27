@@ -142,7 +142,7 @@
     <run spec="MCMC" id="mcmc" chainLength="10000000">
         <state>
 			<parameter name='stateNode' id="skyline.popSize" dimension="5" value="380.0" lower="0.0" upper="38000.0"/>
-			<stateNode spec='parameter.IntegerParameter' id='skyline.groupSize' dimension="5" value="0"/>
+			<stateNode spec='parameter.IntegerParameter' id='skyline.groupSize' dimension="5" value="1"/>
             <stateNode idref="hky.kappa"/>
             <stateNode idref="tree"/>
             <stateNode idref="clock.rate"/>
