@@ -16,6 +16,14 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
 
+/**
+ * A real-valued ({@code double[]}) vector parameter in the MCMC state.
+ * Implements {@link RealVector} for typed access and {@link Scalable} for scale operators.
+ * The domain (e.g. {@link beast.base.spec.domain.PositiveReal}) constrains the permissible range.
+ * Supports named dimensions via {@link KeyVectorParam}.
+ *
+ * @param <D> the real domain type
+ */
 @Description("A real-valued vector with domain constraints")
 public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, Scalable { //VectorParam<D, Double> {
 
@@ -167,19 +175,25 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
     }
 
+    /**
+     * Returns the domain that constrains this parameter's value range.
+     *
+     * @return the domain instance
+     */
     @Override
     public D getDomain() {
         if (domain == null) return (D) domainTypeInput.get(); // used before init
         return domain;
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<Double> getElements() {
         // TODO unmodified ?
         return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
-    // Fast (no boxing)
+    /** {@inheritDoc} */
     @Override
     public double get(int i) {
         return values[i]; // unboxed
@@ -197,6 +211,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return values.length;
@@ -231,11 +246,22 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     //*** setters ***
 
+    /**
+     * Sets the first element's value.
+     *
+     * @param value the new value
+     */
     public void set(final double value) {
         set(0, value);
     }
-    // when knowing the class, use setValue (fast), otherwise use set (boxed).
-    // Fast (no boxing)
+
+    /**
+     * Sets the value at the given index, validating against domain and bound constraints.
+     *
+     * @param i     the index
+     * @param value the new value
+     * @throws IllegalArgumentException if the value is outside the valid range
+     */
     public void set(final int i, final double value) {
         startEditing(null);
         if (! isValid(value)) {

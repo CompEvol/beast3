@@ -36,6 +36,8 @@ import java.io.PrintStream;
 
 
 /**
+ * A scalar boolean-valued parameter in the MCMC state.
+ * Implements {@link BoolScalar} for typed access.
  * The domain is fixed to {@link Bool}.
  */
 @Description("A Boolean-valued parameter represents a value (or array of values if the dimension is larger than one) " +
@@ -76,12 +78,13 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean get() {
         return value;
     }
 
-    // enforce the correct domain
+    /** {@inheritDoc} */
     @Override
     public Bool getDomain() {
         return Bool.INSTANCE;
@@ -89,7 +92,12 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     //*** setValue ***
 
-    // Fast (no boxing)
+    /**
+     * Sets the parameter value.
+     *
+     * @param value the new boolean value
+     * @throws IllegalArgumentException if the value fails domain validation
+     */
     public void set(boolean value) {
         startEditing(null);
 

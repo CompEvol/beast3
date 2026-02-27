@@ -11,6 +11,13 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A compound parameter that aggregates multiple {@link RealScalarParam} instances
+ * and exposes them as a single {@link RealVectorParam}.
+ * Each element delegates to its underlying scalar parameter for storage and state management.
+ *
+ * @param <D> the real domain type shared by all constituent scalars
+ */
 @Description("Parameter consisting of 2 or more RealScalarParam but behaving like a single RealVectorParam")
 public class CompoundRealScalarParam<D extends Real> extends RealVectorParam<D> {
 
@@ -38,6 +45,7 @@ public class CompoundRealScalarParam<D extends Real> extends RealVectorParam<D> 
         return parameters.getFirst().getDomain();
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<Double> getElements() {
         return parameters.stream()
@@ -45,11 +53,13 @@ public class CompoundRealScalarParam<D extends Real> extends RealVectorParam<D> 
                 .toList();
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return parameters.size();
     }
 
+    /** {@inheritDoc} */
     @Override
 	public double get(int i) {
 		return parameters.get(i).get();

@@ -44,11 +44,21 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
         return 0.0;
     }
 
+    /**
+     * Varargs overload is not supported for scalar distributions.
+     *
+     * @throws IllegalArgumentException always
+     */
     @Override
     protected double calcLogP(T... value) {
         throw new IllegalArgumentException("Illegal operation !");
     }
 
+    /**
+     * Computes the log probability (density) of the current parameter value.
+     *
+     * @return the log probability (density)
+     */
     @Override
     public double calculateLogP() {
         // refresh(); has been called in getApacheDistribution();
@@ -95,6 +105,13 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     }
 
 
+    /**
+     * Returns the cumulative distribution function (CDF) value at point x.
+     *
+     * @param x the point at which the CDF should be computed
+     * @return the cumulative probability P(X &le; x)
+     * @throws RuntimeException if the distribution is not implemented
+     */
     public double cumulativeProbability(double x) {
         // Attempt to get the Apache distribution
         Object dist = getApacheDistribution();
@@ -163,6 +180,12 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
          throw new RuntimeException("Unknown distribution type");
      }
      
+     /**
+      * Returns the lower bound of the distribution's support, derived from
+      * the underlying Apache Commons Statistics distribution.
+      *
+      * @return the support lower bound
+      */
      @Override
      public T getLowerBoundOfParameter() {
          Object dist = getApacheDistribution();
@@ -185,6 +208,12 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     	 return null;
      }
      
+     /**
+      * Returns the upper bound of the distribution's support, derived from
+      * the underlying Apache Commons Statistics distribution.
+      *
+      * @return the support upper bound
+      */
      @Override
      public T getUpperBoundOfParameter() {
          Object dist = getApacheDistribution();
@@ -223,6 +252,13 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
      }
 
      
+     /**
+      * Checks whether the given tensor type is compatible with this distribution's
+      * expected parameter type.
+      *
+      * @param t the tensor to check
+      * @return {@code true} if the tensor's class is assignable to this distribution's parameter type
+      */
      public boolean isCompatible(Tensor<?,?> t) {
     	 Class thisType = paramInput.getType();
     	 return  (t.getClass().isAssignableFrom(thisType));

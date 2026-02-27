@@ -8,6 +8,12 @@ import beast.base.spec.type.IntSimplex;
 import java.util.stream.IntStream;
 
 
+/**
+ * An integer-valued simplex parameter in the MCMC state whose non-negative
+ * elements must sum to a specified total (defaulting to the vector size).
+ *
+ * @param <D> the non-negative integer domain type
+ */
 @Description("A int-valued vector whose elements sum to a given sum")
 public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D> implements IntSimplex<D> {// VectorParam<D, Integer> {
 

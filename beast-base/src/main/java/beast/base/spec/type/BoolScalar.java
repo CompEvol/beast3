@@ -3,6 +3,10 @@ package beast.base.spec.type;
 
 import beast.base.spec.domain.Bool;
 
+/**
+ * Scalar type for boolean-valued parameters.
+ * The domain is fixed to {@link Bool} and has no configurable bounds.
+ */
 public interface BoolScalar extends Scalar<Bool, Boolean> {
 
     /**

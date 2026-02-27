@@ -11,6 +11,13 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A compound parameter that aggregates multiple {@link IntScalarParam} instances
+ * and exposes them as a single {@link IntVectorParam}.
+ * Each element delegates to its underlying scalar parameter for storage and state management.
+ *
+ * @param <D> the integer domain type shared by all constituent scalars
+ */
 @Description("Parameter consisting of 2 or more IntScalarParam but behaving like a single IntVectorParam")
 public class CompoundIntScalarParam<D extends Int> extends IntVectorParam<D> {
 
@@ -38,6 +45,7 @@ public class CompoundIntScalarParam<D extends Int> extends IntVectorParam<D> {
         return parameters.getFirst().getDomain();
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<Integer> getElements() {
         return parameters.stream()
@@ -45,11 +53,13 @@ public class CompoundIntScalarParam<D extends Int> extends IntVectorParam<D> {
                 .toList();
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return parameters.size();
     }
 
+    /** {@inheritDoc} */
     @Override
 	public int get(int i) {
 		return parameters.get(i).get();

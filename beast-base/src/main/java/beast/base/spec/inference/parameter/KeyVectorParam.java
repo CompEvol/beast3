@@ -5,6 +5,14 @@ import beast.base.inference.StateNode;
 
 import java.util.*;
 
+/**
+ * Abstract base class for vector parameters that support named dimensions (keys).
+ * Each dimension can optionally be assigned a unique string key, allowing
+ * lookup by name rather than index. Subclasses implement the concrete
+ * value storage for specific types (Double, Integer, Boolean).
+ *
+ * @param <T> the boxed element type
+ */
 public abstract class KeyVectorParam<T> extends StateNode {
 
     public final Input<String> keysInput = new Input<>("keys",
@@ -13,6 +21,12 @@ public abstract class KeyVectorParam<T> extends StateNode {
     protected List<String> keys = null; // unmodifiableList
     protected Map<String, Integer> keyToIndexMap = null;
 
+    /**
+     * Retrieves the value associated with a named key.
+     *
+     * @param key the unique key for a dimension
+     * @return the value, or {@code null} if the key is not found
+     */
     public abstract T get(String key);
 
     /**

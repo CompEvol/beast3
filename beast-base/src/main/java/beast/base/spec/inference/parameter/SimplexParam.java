@@ -7,6 +7,11 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.type.Simplex;
 
 
+/**
+ * A real-valued simplex parameter in the MCMC state whose elements
+ * are constrained to [0, 1] and must sum to 1.
+ * The domain is fixed to {@link UnitInterval}.
+ */
 @Description("A real-valued vector whose elements sum to 1")
 public class SimplexParam extends RealVectorParam<UnitInterval> implements Simplex { // VectorParam<UnitInterval, Double> {
 

@@ -13,6 +13,12 @@ import java.util.Arrays;
 import java.util.List;
 
 
+/**
+ * A boolean-valued ({@code boolean[]}) vector parameter in the MCMC state.
+ * Implements {@link BoolVector} for typed access.
+ * The domain is fixed to {@link Bool}.
+ * Supports named dimensions via {@link KeyVectorParam}.
+ */
 @Description("A boolean-valued vector")
 public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector{ //VectorParam<Bool, Boolean> {
 
@@ -125,6 +131,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         return list;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean get(final int i) {
         return values[i];
@@ -142,6 +149,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return values.length;
@@ -164,8 +172,13 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         }
     }
 
-    //*** setValue ***
-    // Fast (no boxing)
+    /**
+     * Sets the value at the given index.
+     *
+     * @param i     the index
+     * @param value the new boolean value
+     * @throws IllegalArgumentException if the value fails domain validation
+     */
     public void set(final int i, final boolean value) {
         startEditing(null);
         if (! isValid(value)) {
@@ -177,6 +190,11 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         lastDirty = i;
     }
 
+    /**
+     * Sets the first element's value.
+     *
+     * @param value the new boolean value
+     */
     public void set(final boolean value) {
         set(0, value);
     }

@@ -15,7 +15,11 @@ import beast.base.spec.domain.UnitInterval;
  */
 public interface Simplex extends RealVector<UnitInterval> {
 
-    // Invariant: sum(elements) = 1.0, all elements in [0,1]
+    /**
+     * Computes the sum of all elements. For a valid simplex this should equal 1.0.
+     *
+     * @return the sum of all elements
+     */
     default double sum() {
         double s = 0;
         for(int i = 0; i < size(); i++) {
@@ -24,6 +28,12 @@ public interface Simplex extends RealVector<UnitInterval> {
         return s;
     }
 
+    /**
+     * Validates that all elements are within [0,1] and that they sum to 1.0
+     * (within a tolerance of 1e-10).
+     *
+     * @return {@code true} if all elements are valid and their sum equals 1.0
+     */
     default boolean isValid() {
         for (int i = 0; i < size(); i++)
             if ( !isValid(get(i)))

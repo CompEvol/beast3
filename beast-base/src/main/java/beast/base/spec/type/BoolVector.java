@@ -3,6 +3,10 @@ package beast.base.spec.type;
 
 import beast.base.spec.domain.Bool;
 
+/**
+ * Vector type for boolean-valued parameters.
+ * The domain is fixed to {@link Bool} and has no configurable bounds.
+ */
 public interface BoolVector extends Vector<Bool, Boolean> {
 
     /**
@@ -32,6 +36,12 @@ public interface BoolVector extends Vector<Bool, Boolean> {
 //        return arr;
 //    }
 
+    /**
+     * Validates a value against the {@link Bool} domain.
+     *
+     * @param value the value to validate
+     * @return {@code true} if the value is valid for the boolean domain
+     */
     @Override
     default boolean isValid(Boolean value) {
         return Bool.INSTANCE.isValid(value);

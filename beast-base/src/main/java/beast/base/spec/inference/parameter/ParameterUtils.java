@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Utility methods for serializing and deserializing parameter values to/from XML.
+ * Used by parameter {@link beast.base.inference.StateNode#toString()} and
+ * {@link beast.base.inference.StateNode#fromXML(org.w3c.dom.Node)} implementations.
+ */
 public class ParameterUtils {
 
     /**

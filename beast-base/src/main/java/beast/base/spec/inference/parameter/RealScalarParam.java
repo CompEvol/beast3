@@ -11,6 +11,13 @@ import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 
+/**
+ * A scalar real-valued ({@code double}) parameter in the MCMC state.
+ * Implements {@link RealScalar} for typed access and {@link Scalable} for scale operators.
+ * The domain (e.g. {@link beast.base.spec.domain.PositiveReal}) constrains the permissible range.
+ *
+ * @param <D> the real domain type
+ */
 @Description("A scalar real-valued parameter with domain constraints")
 public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, Scalable {
 
@@ -68,13 +75,17 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     }
 
-    // Fast (no boxing)
+    /** {@inheritDoc} */
     @Override
     public double get() {
         return value;
     }
 
-    // Implement Scalar<D> interface methods
+    /**
+     * Returns the domain that constrains this parameter's value range.
+     *
+     * @return the domain instance
+     */
     @Override
     public D getDomain() {
         if (domain == null) {
@@ -85,7 +96,12 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     //*** setters ***
 
-    // Fast (no boxing)
+    /**
+     * Sets the parameter value, validating against domain and bound constraints.
+     *
+     * @param value the new value
+     * @throws IllegalArgumentException if the value is outside the valid range
+     */
     public void set(double value) {
         startEditing(null);
 
@@ -135,6 +151,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         // nothing to do
     }
 
+    /** {@inheritDoc} */
     @Override
     public int scale(double scale) {
     	startEditing(null);

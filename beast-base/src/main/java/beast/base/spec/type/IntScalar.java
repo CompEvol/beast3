@@ -5,6 +5,14 @@ import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 
+/**
+ * Scalar type for integer-valued parameters with bounded domain constraints.
+ * Combines the {@link Scalar} value semantics with {@link Bounded} range checking,
+ * where effective bounds are tightened by any attached distributions.
+ *
+ * @param <D> the integer domain type, e.g. {@link beast.base.spec.domain.Int},
+ *            {@link beast.base.spec.domain.NonNegativeInt}, or {@link beast.base.spec.domain.PositiveInt}
+ */
 public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<Integer> {
 
     /**
@@ -24,6 +32,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         return get();
     }
 
+    /**
+     * Returns the effective lower bound, starting from the domain lower bound
+     * and tightening it with any attached {@link ScalarDistribution} constraints.
+     *
+     * @return the effective lower bound
+     */
     @Override
     default Integer getLower() {
         D domain = getDomain();
@@ -38,6 +52,12 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         return lower;
     }
 
+    /**
+     * Returns the effective upper bound, starting from the domain upper bound
+     * and tightening it with any attached {@link ScalarDistribution} constraints.
+     *
+     * @return the effective upper bound
+     */
     @Override
     default Integer getUpper() {
         D domain = getDomain();
@@ -62,6 +82,14 @@ public interface IntScalar<D extends Int> extends Scalar<D, Integer>, Bounded<In
         return true;
     }
 
+    /**
+     * Validates a value against both domain constraints and effective bounds.
+     * The effective bounds may be a subset of the domain bounds when distributions
+     * impose tighter restrictions.
+     *
+     * @param value the value to validate
+     * @return {@code true} if the value satisfies both domain and bound constraints
+     */
     @Override
     default boolean isValid(Integer value) {
         // 1st check domain constraints, 2nd check if value is in the real scalar range

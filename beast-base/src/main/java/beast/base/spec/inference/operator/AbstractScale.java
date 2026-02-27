@@ -6,8 +6,10 @@ import beast.base.inference.operator.kernel.KernelOperator;
 import java.text.DecimalFormat;
 
 /**
- * used by {@link beast.base.spec.evolution.operator.ScaleTreeOperator}
- * and {@link beast.base.spec.inference.operator.ScaleOperator}
+ * Abstract base class for scale-based MCMC operators.
+ * Provides the common scale factor management, auto-tuning, and performance
+ * suggestion logic shared by {@link beast.base.spec.inference.operator.ScaleOperator}
+ * and {@link beast.base.spec.evolution.operator.ScaleTreeOperator}.
  */
 public abstract class AbstractScale extends KernelOperator {
 
@@ -59,6 +61,14 @@ public abstract class AbstractScale extends KernelOperator {
 //        return (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
 //    }
 
+    /**
+     * Draws a random scale factor from the kernel distribution for the given
+     * element index and current value.
+     *
+     * @param i     the element index
+     * @param value the current value being scaled
+     * @return the random scale factor
+     */
     protected double getScaler(int i, double value) {
         return kernelDistribution.getScaler(i, value, getCoercableParameterValue());
     }
@@ -75,21 +85,42 @@ public abstract class AbstractScale extends KernelOperator {
         }
     }
 
+    /**
+     * Returns the current scale factor, which is the tunable parameter for this operator.
+     *
+     * @return the scale factor
+     */
     @Override
     public double getCoercableParameterValue() {
         return scaleFactor;
     }
 
+    /**
+     * Sets the scale factor, clamping it within the configured lower and upper limits.
+     *
+     * @param value the new scale factor
+     */
     @Override
     public void setCoercableParameterValue(final double value) {
         scaleFactor = Math.max(Math.min(value, upper), lower);
     }
 
+    /**
+     * Returns the target acceptance probability (0.3) for auto-tuning.
+     *
+     * @return the target acceptance probability
+     */
     @Override
     public double getTargetAcceptanceProbability() {
         return Target_Acceptance_Probability;
     }
 
+    /**
+     * Returns a suggestion for improving operator performance based on current
+     * acceptance rate relative to the target. Empty string if performance is acceptable.
+     *
+     * @return a performance suggestion, or empty string if acceptance rate is within range
+     */
     @Override
     public String getPerformanceSuggestion() {
         double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);

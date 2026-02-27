@@ -9,6 +9,13 @@ import org.w3c.dom.Node;
 
 import java.io.PrintStream;
 
+/**
+ * A scalar integer-valued ({@code int}) parameter in the MCMC state.
+ * Implements {@link IntScalar} for typed access.
+ * The domain (e.g. {@link beast.base.spec.domain.PositiveInt}) constrains the permissible range.
+ *
+ * @param <D> the integer domain type
+ */
 @Description("A scalar int-valued parameter with domain constraints")
 public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D> {
 
@@ -59,13 +66,17 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     }
 
-    // Fast (no boxing)
+    /** {@inheritDoc} */
     @Override
     public int get() {
         return value;
     }
 
-    // Implement Scalar<D> interface methods
+    /**
+     * Returns the domain that constrains this parameter's value range.
+     *
+     * @return the domain instance
+     */
     @Override
     public D getDomain() {
         if (domain == null) return (D) domainTypeInput.get(); // used before init
@@ -74,7 +85,12 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
 
     //*** setValue ***
 
-    // Fast (no boxing)
+    /**
+     * Sets the parameter value, validating against domain and bound constraints.
+     *
+     * @param value the new value
+     * @throws IllegalArgumentException if the value is outside the valid range
+     */
     public void set(int value) {
         startEditing(null);
 

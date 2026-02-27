@@ -44,6 +44,10 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
 
     protected S param;
 
+    /**
+     * Initializes the distribution by reading the tensor parameter input and
+     * validating its current value against type constraints.
+     */
     @Override
     public void initAndValidate() {
         param = paramInput.get(); // optional
@@ -61,6 +65,12 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         return Math.abs(a - b) > EPS;
     }
 
+    /**
+     * Returns the dimension (number of elements) of the attached parameter tensor,
+     * or 0 if no parameter is attached.
+     *
+     * @return the parameter dimension
+     */
     public int dimension() {
         return param != null ? param.size() : 0; //iidparam.size();
     }
@@ -127,6 +137,10 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
 
     //*** Override Distribution methods ***//
 
+    /**
+     * Samples new values from this distribution and assigns them to the parameter tensor.
+     * Handles both scalar and vector parameters, re-sampling until a valid value is found.
+     */
     @Override
     public void sample(State state, Random random) {
 
@@ -200,6 +214,12 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         }
     }
 
+    /**
+     * Returns the IDs of distribution-level parameters (conditions) that this
+     * distribution depends on for its shape.
+     *
+     * @return list of condition IDs
+     */
     @Override
     public List<String> getConditions() {
         List<String> conditions = new ArrayList<>();
@@ -208,6 +228,12 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         return conditions;
     }
 
+    /**
+     * Returns the IDs of the parameters (arguments) whose probability
+     * is computed by this distribution.
+     *
+     * @return list of argument IDs
+     */
     @Override
     public List<String> getArguments() {
         List<String> arguments = new ArrayList<>();

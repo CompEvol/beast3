@@ -16,6 +16,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
+/**
+ * An integer-valued ({@code int[]}) vector parameter in the MCMC state.
+ * Implements {@link IntVector} for typed access.
+ * The domain (e.g. {@link beast.base.spec.domain.NonNegativeInt}) constrains the permissible range.
+ * Supports named dimensions via {@link KeyVectorParam}.
+ *
+ * @param <D> the integer domain type
+ */
 @Description("A int-valued vector with domain constraints")
 public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> { //VectorParam<D, Integer> {
 
@@ -165,18 +173,25 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         }
     }
 
+    /**
+     * Returns the domain that constrains this parameter's value range.
+     *
+     * @return the domain instance
+     */
     @Override
     public D getDomain() {
         if (domain == null) return (D) domainTypeInput.get(); // used before init
         return domain;
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<Integer> getElements() {
         // TODO unmodified ?
         return Arrays.stream(values).boxed().collect(Collectors.toList());
     }
 
+    /** {@inheritDoc} */
     @Override
     public int get(final int i) {
         return values[i];
@@ -194,6 +209,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         return Arrays.copyOf(storedValues, storedValues.length);
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return values.length;
@@ -228,10 +244,22 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     //*** setValue ***
 
+    /**
+     * Sets the first element's value.
+     *
+     * @param value the new value
+     */
     public void set(final int value) {
         set(0, value);
     }
-    // Fast (no boxing)
+
+    /**
+     * Sets the value at the given index, validating against domain and bound constraints.
+     *
+     * @param i     the index
+     * @param value the new value
+     * @throws IllegalArgumentException if the value is outside the valid range
+     */
     public void set(final int i, final int value) {
         startEditing(null);
         if (! isValid(value)) {

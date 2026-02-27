@@ -11,10 +11,14 @@ import beast.base.inference.CalculationNode;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 
-@Description("Converts a tensor to a Function -- will be deleted in the future")
 /**
- * @deprecated once all code has been adapted to the PhyloType stuff, this will be removed
+ * Adapter that wraps a {@link Tensor} to implement the legacy {@link Function} interface,
+ * enabling tensor values to be used with older code that expects {@link Function}.
+ *
+ * @deprecated This bridge class will be removed once all code has been adapted
+ *             to use the strongly-typed tensor API directly.
  */
+@Description("Converts a tensor to a Function -- will be deleted in the future")
 @Deprecated
 public class FunctionOfTensor extends CalculationNode implements Function {
     final public Input<List<Tensor<?,?>>> tensorInput = new Input<>("arg", "argument to be summed", new ArrayList<>(), Validate.REQUIRED);
