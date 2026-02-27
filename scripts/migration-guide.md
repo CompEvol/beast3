@@ -18,6 +18,8 @@
   mvn compile
   ```
 
+A complete working example is available in the [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) repository — a ready-to-copy Maven project with a custom `ScalarDistribution`, operator, tests, and BEAST XML using the strongly-typed spec API.
+
 ## 1. Make sure your package compiles
 
 If your external package uses Ant, include the following JARs on the classpath:
