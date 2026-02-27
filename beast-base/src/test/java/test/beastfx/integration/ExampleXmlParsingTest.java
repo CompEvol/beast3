@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 import beastfx.app.beast.BeastMain;
 import beast.base.inference.Logger;
@@ -157,6 +159,7 @@ public class ExampleXmlParsingTest  {
     // there does not seem to be a viable alternative
     // for blocking System.exit() calls yet
     @SuppressWarnings({ "removal", "deprecation" })
+    @DisabledForJreRange(min = JRE.JAVA_18, disabledReason = "SecurityManager removed in Java 18+")
 	@Test
     public void test_ThatParameterisedXmlExamplesRuns() throws IOException {
         String dir = System.getProperty("user.dir") + "/examples/parameterised";
