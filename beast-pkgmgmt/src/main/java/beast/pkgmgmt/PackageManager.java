@@ -566,7 +566,11 @@ public class PackageManager {
             Document doc = factory.newDocumentBuilder().parse(versionFile);
             services = parseServices(doc);
         }
-    	
+
+        if (services == null) {
+            return null;
+        }
+
     	// check none of the services clashes with already loaded services
         for (String service : services.keySet()) {
         	Set<String> s = services.get(service);
