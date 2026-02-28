@@ -51,8 +51,8 @@ Building
 Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. Install them to your local repository:
 
 ```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 ### Compile
@@ -103,44 +103,15 @@ See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from M
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
-BEAST 3 artifacts are published to [GitHub Packages](https://github.com/CompEvol/beast3/packages). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
+BEAST 3 artifacts are published to [Maven Central](https://central.sonatype.com/). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
 
-### 1. Configure GitHub Packages authentication
-
-GitHub Packages requires authentication even for public packages. Add a server entry to your `~/.m2/settings.xml`:
-
-```xml
-<settings>
-  <servers>
-    <server>
-      <id>github-beast3</id>
-      <username>YOUR_GITHUB_USERNAME</username>
-      <password>YOUR_GITHUB_PAT</password>
-    </server>
-  </servers>
-</settings>
-```
-
-Replace `YOUR_GITHUB_USERNAME` with your GitHub username and `YOUR_GITHUB_PAT` with a [personal access token](https://github.com/settings/tokens) that has the `read:packages` scope.
-
-### 2. Add the repository and dependencies to your project's `pom.xml`
-
-```xml
-<repositories>
-    <repository>
-        <id>github-beast3</id>
-        <url>https://maven.pkg.github.com/CompEvol/beast3</url>
-    </repository>
-</repositories>
-```
-
-Then add BEAST dependencies. For **headless / library** usage (no JavaFX dependency):
+Add BEAST dependencies to your project's `pom.xml`. For **headless / library** usage (no JavaFX dependency):
 
 ```xml
 <dependency>
-    <groupId>beast</groupId>
+    <groupId>io.github.alexeid</groupId>
     <artifactId>beast-base</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.0</version>
 </dependency>
 ```
 
@@ -148,15 +119,15 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 
 ```xml
 <dependency>
-    <groupId>beast</groupId>
+    <groupId>io.github.alexeid</groupId>
     <artifactId>beast-fx</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.0</version>
 </dependency>
 ```
 
-Maven resolves all transitive dependencies (Commons Math, ANTLR, `beagle`, `colt`, and optionally JavaFX) automatically from GitHub Packages.
+No repository configuration or authentication is needed — Maven Central is the default repository.
 
-### 3. JPMS module declaration (if your project uses modules)
+### JPMS module declaration (if your project uses modules)
 
 ```java
 open module my.project {
@@ -174,8 +145,8 @@ If you prefer to build from source instead of using GitHub Packages, you can ins
 
 ```bash
 cd /path/to/beast3modular
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 mvn install -DskipTests
 ```
 

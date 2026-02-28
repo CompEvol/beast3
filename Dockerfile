@@ -48,8 +48,8 @@ RUN ldconfig
 ADD . ./
 
 # Install local-only modular JARs (beagle.jar, colt.jar)
-RUN mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar -q
-RUN mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar -q
+RUN mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar -q
+RUN mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar -q
 
 RUN echo "#!/bin/bash\n" \
         "export USER=root\n" \
