@@ -83,6 +83,8 @@ echo "==> Step 3: Creating application bundles with jpackage..."
 ICON_DIR="$SCRIPT_DIR/../common/icons"
 JAVA_OPTS="-Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8"
 
+FXTEMPLATES="$REPO_ROOT/beast-fx/src/main/resources/fxtemplates"
+
 build_app() {
     local app_name="$1"
     local main_class="$2"
@@ -97,7 +99,13 @@ build_app() {
         --main-jar "$MAIN_JAR" \
         --main-class "$main_class" \
         --java-options "$JAVA_OPTS" \
+        --add-modules ALL-MODULE-PATH \
         --dest "$OUTPUT"
+
+    # BEAUti (and others) look for fxtemplates at Contents/app/../fxtemplates/
+    if [ -d "$FXTEMPLATES" ]; then
+        cp -r "$FXTEMPLATES" "$OUTPUT/$app_name.app/Contents/fxtemplates"
+    fi
 }
 
 build_app "BEAST"          "beast.pkgmgmt.launcher.BeastLauncher"          "beast.icns"
@@ -116,14 +124,15 @@ echo "==> Step 4: Creating DMG..."
 DMG_TITLE="BEAST v${VERSION}"
 DMG_NAME="BEAST_with_JRE.v${VERSION}.dmg"
 DMG_STAGING="$SCRIPT_DIR/dmg-staging"
+APP_FOLDER="BEAST ${VERSION}"
 
 rm -rf "$DMG_STAGING"
-mkdir -p "$DMG_STAGING/.background"
+mkdir -p "$DMG_STAGING/.background" "$DMG_STAGING/$APP_FOLDER"
 
-# Copy all .app bundles
-cp -r "$OUTPUT"/*.app "$DMG_STAGING/"
+# Copy all .app bundles into the versioned folder
+cp -r "$OUTPUT"/*.app "$DMG_STAGING/$APP_FOLDER/"
 
-# Applications symlink for drag-to-install
+# Applications symlink for drag-to-install (drag the folder here)
 ln -s /Applications "$DMG_STAGING/Applications"
 
 # Background image
@@ -135,7 +144,7 @@ hdiutil create -srcfolder "$DMG_STAGING" \
     -fs HFS+ \
     -fsargs "-c c=64,a=16,e=16" \
     -format UDRW \
-    -size 1g \
+    -size 2g \
     "$SCRIPT_DIR/pack.temp.dmg"
 
 DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "$SCRIPT_DIR/pack.temp.dmg" | \
@@ -143,37 +152,36 @@ DEVICE=$(hdiutil attach -readwrite -noverify -noautoopen "$SCRIPT_DIR/pack.temp.
 echo "    Attached device: ${DEVICE}"
 
 # Configure DMG window layout with AppleScript
-osascript <<APPLESCRIPT
+osascript <<APPLESCRIPT || echo "    Warning: AppleScript layout failed (cosmetic only)"
 tell application "Finder"
     tell disk "${DMG_TITLE}"
         open
+        delay 2
         set current view of container window to icon view
         set toolbar visible of container window to false
         set statusbar visible of container window to false
-        set the bounds of container window to {100, 100, 900, 520}
+        set the bounds of container window to {100, 100, 700, 400}
         set theViewOptions to the icon view options of container window
         set arrangement of theViewOptions to not arranged
         set background picture of theViewOptions to file ".background:install.png"
         set icon size of theViewOptions to 72
-        -- Position apps in a row
-        set position of item "BEAST.app" of container window to {80, 200}
-        set position of item "BEAUti.app" of container window to {220, 200}
-        set position of item "TreeAnnotator.app" of container window to {360, 200}
-        set position of item "LogCombiner.app" of container window to {500, 200}
-        set position of item "AppLauncher.app" of container window to {640, 200}
-        set position of item "Applications" of container window to {720, 80}
+        -- Position folder and Applications alias
+        set position of item "${APP_FOLDER}" of container window to {150, 150}
+        set position of item "Applications" of container window to {400, 150}
         close
         open
         update without registering applications
         delay 3
+        close
     end tell
 end tell
 APPLESCRIPT
 
+sleep 2
 chmod -Rf go-w "/Volumes/${DMG_TITLE}"
 sync
 sync
-hdiutil detach "$DEVICE"
+hdiutil detach "$DEVICE" || hdiutil detach -force "$DEVICE"
 echo "    Detached device: ${DEVICE}"
 
 # Convert to compressed DMG
