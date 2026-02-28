@@ -1,7 +1,5 @@
-BEAST 2
+BEAST 3
 =======
-
-[![Build Status](https://github.com/CompEvol/beast2/workflows/Core%20tests/badge.svg)](https://github.com/CompEvol/beast2/actions?query=workflow%3A%22Core+tests%22)
 
 BEAST is a cross-platform program for Bayesian inference using MCMC of
 molecular sequences. It is entirely oriented towards rooted,
@@ -11,25 +9,192 @@ but is also a framework for testing evolutionary hypotheses without
 conditioning on a single tree topology. BEAST uses MCMC to average
 over tree space, so that each tree is weighted proportional to its
 posterior probability. We include a simple to use user-interface
-program for setting up standard analyses and a suit of programs for
+program for setting up standard analyses and a suite of programs for
 analysing the results.
 
-NOTE: This directory contains the BEAST 2 source code, and is
-therefore of interest primarily to BEAST 2 developers.  For binary
-releases, user tutorials and other information you should visit the
-project website at [beast2.org](https://www.beast2.org).
+What's New in BEAST 3
+---------------------
 
-Development Rules and Philosophy
---------------------------------
+BEAST 3 is a major update from BEAST 2. Key changes:
 
-Aspects relating to BEAST 2 development such as coding style, version
-numbering and design philosophy are discussed on the BEAST 2 web page at
+- **Maven build system** — replaces the previous Ant build. Dependencies are declared in `pom.xml` and resolved automatically.
+- **JPMS modules** — the codebase is split into `beast.pkgmgmt`, `beast.base`, and `beast.fx` Java modules with explicit `module-info.java` descriptors. The core inference engine (`beast.base`) has no JavaFX dependency and can be used headlessly; the GUI (`beast.fx`) is a separate module.
+- **Java 25** — requires JDK 25 or later.
+- **Strongly typed inputs** — new `beast.base.spec` hierarchy replaces loosely-typed parameters with compile-time-checked typed inputs.
+- **External packages** — discovered via `module-info.java` `provides` declarations (primary) or `version.xml` service entries (for legacy/non-modular JARs). Deployed packages are loaded into a JPMS `ModuleLayer` per package.
+
+Project Structure
+-----------------
+
+```
+beast3modular/            (parent POM)
+├── beast-pkgmgmt/        (package manager module)
+├── beast-base/           (core BEAST module — no JavaFX dependency)
+├── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
+└── lib/                  (local JARs + module-info sources)
+    ├── beagle.jar        (modular JAR — module beagle)
+    ├── beagle/           (module-info.java source)
+    ├── colt.jar          (modular JAR — module colt)
+    └── colt/             (module-info.java source)
+```
+
+Building
+--------
+
+### Prerequisites
+
+- **Java 25** — install from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution.
+- **Maven 3.9+** — install from [maven.apache.org](https://maven.apache.org/) or via your package manager.
+
+### One-time setup: install local JARs
+
+Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. Install them to your local repository:
+
+```bash
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+```
+
+### Compile
+
+```bash
+mvn compile
+```
+
+### Test
+
+```bash
+mvn test                    # fast tests only (skips @Tag("slow"))
+mvn test -Pslow-tests       # all tests including slow
+mvn test -Dgroups=slow      # only slow tests
+```
+
+Several operator and BEAUti tests run MCMC chains of 1M–11M iterations and are tagged `@Tag("slow")`. They are excluded from the default build via the `surefire.excludedGroups` property. Activate the `slow-tests` profile to include them.
+
+BEAUti GUI tests use [TestFX](https://github.com/TestFX/TestFX) and run headlessly via the Monocle Glass platform (`openjfx-monocle`). The surefire plugin is configured with the required system properties (`testfx.headless`, `glass.platform=Monocle`, etc.) and sets `workingDirectory` to `target/classes` so that BEAUti can discover its `fxtemplates/` at runtime. No display server is needed to run the tests.
+
+Running
+-------
+
+### From the command line
+
+Build the project, then use the `exec-maven-plugin` to launch BEAST applications with the correct module path:
+
+```bash
+mvn install -DskipTests
+
+# Run BEAST on an XML file
+mvn -pl beast-fx exec:exec -Dbeast.args="example.xml"
+
+# Run BEAUti
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
+
+# Run other tools (LogCombiner, TreeAnnotator, etc.)
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
+mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
+```
+
+The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application.
+
+### From IntelliJ
+
+See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from Maven automatically.
+
+Using BEAST 3 as a Maven dependency
+-------------------------------------
+
+BEAST 3 artifacts are published to [GitHub Packages](https://github.com/CompEvol/beast3/packages). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
+
+### 1. Configure GitHub Packages authentication
+
+GitHub Packages requires authentication even for public packages. Add a server entry to your `~/.m2/settings.xml`:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github-beast3</id>
+      <username>YOUR_GITHUB_USERNAME</username>
+      <password>YOUR_GITHUB_PAT</password>
+    </server>
+  </servers>
+</settings>
+```
+
+Replace `YOUR_GITHUB_USERNAME` with your GitHub username and `YOUR_GITHUB_PAT` with a [personal access token](https://github.com/settings/tokens) that has the `read:packages` scope.
+
+### 2. Add the repository and dependencies to your project's `pom.xml`
+
+```xml
+<repositories>
+    <repository>
+        <id>github-beast3</id>
+        <url>https://maven.pkg.github.com/CompEvol/beast3</url>
+    </repository>
+</repositories>
+```
+
+Then add BEAST dependencies. For **headless / library** usage (no JavaFX dependency):
+
+```xml
+<dependency>
+    <groupId>beast</groupId>
+    <artifactId>beast-base</artifactId>
+    <version>2.8.0-SNAPSHOT</version>
+</dependency>
+```
+
+For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
+
+```xml
+<dependency>
+    <groupId>beast</groupId>
+    <artifactId>beast-fx</artifactId>
+    <version>2.8.0-SNAPSHOT</version>
+</dependency>
+```
+
+Maven resolves all transitive dependencies (Commons Math, ANTLR, `beagle`, `colt`, and optionally JavaFX) automatically from GitHub Packages.
+
+### 3. JPMS module declaration (if your project uses modules)
+
+```java
+open module my.project {
+    requires beast.base;
+    // requires beast.fx;       // only if you need the GUI components
+    // requires beast.pkgmgmt;  // only if you use package management APIs
+}
+```
+
+If your project does not use JPMS modules, the BEAST classes are accessible from the unnamed module without any extra configuration.
+
+### Alternative: local install
+
+If you prefer to build from source instead of using GitHub Packages, you can install BEAST 3 to your local Maven repository:
+
+```bash
+cd /path/to/beast3modular
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install -DskipTests
+```
+
+In this case, no `<repositories>` block or `settings.xml` configuration is needed.
+
+Development
+-----------
+
+See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
+
+For guidance on migrating external packages, see `scripts/migration-guide.md` (migrating from BEAST v2.7 to v3).
+
+Development rules and philosophy are discussed at
 [beast2.org/package-development-guide/core-development-rules](https://www.beast2.org/package-development-guide/core-development-rules/).
 
 License
 -------
 
-BEAST 2 is free software; you can redistribute it and/or modify it
+BEAST is free software; you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published
 by the Free Software Foundation; either version 2.1 of the License, or
 (at your option) any later version. A copy of the license is contained

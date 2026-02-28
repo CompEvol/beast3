@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>beast</groupId>
+    <artifactId>beast3modular</artifactId>
+    <version>2.8.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>BEAST 3</name>
+    <description>Bayesian Evolutionary Analysis Sampling Trees</description>
+
+    <modules>
+        <module>beast-pkgmgmt</module>
+        <module>beast-base</module>
+        <module>beast-fx</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.release>25</maven.compiler.release>
+
+        <javafx.version>25.0.2</javafx.version>
+        <commons-math4-legacy.version>4.0-beta1</commons-math4-legacy.version>
+        <antlr4.version>4.13.2</antlr4.version>
+        <commons-numbers.version>1.2</commons-numbers.version>
+        <commons-rng.version>1.6</commons-rng.version>
+        <commons-statistics.version>1.2</commons-statistics.version>
+        <junit.version>5.8.2</junit.version>
+        <junit4.version>4.13.2</junit4.version>
+        <testfx.version>4.0.18</testfx.version>
+        <assertj.version>3.20.2</assertj.version>
+        <surefire.excludedGroups>slow</surefire.excludedGroups>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>beast</groupId>
+                <artifactId>beast-pkgmgmt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>beast</groupId>
+                <artifactId>beast-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Commons Math 4 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math4-legacy</artifactId>
+                <version>${commons-math4-legacy.version}</version>
+            </dependency>
+
+            <!-- ANTLR Runtime -->
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr4.version}</version>
+            </dependency>
+
+            <!-- Commons Numbers -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-numbers-gamma</artifactId>
+                <version>${commons-numbers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-numbers-core</artifactId>
+                <version>${commons-numbers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-numbers-combinatorics</artifactId>
+                <version>${commons-numbers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-numbers-rootfinder</artifactId>
+                <version>${commons-numbers.version}</version>
+            </dependency>
+
+            <!-- Commons RNG -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-rng-simple</artifactId>
+                <version>${commons-rng.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-rng-sampling</artifactId>
+                <version>${commons-rng.version}</version>
+            </dependency>
+
+            <!-- Commons Statistics -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-statistics-distribution</artifactId>
+                <version>${commons-statistics.version}</version>
+            </dependency>
+
+            <!-- JavaFX -->
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-controls</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-fxml</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-swing</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-web</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+
+            <!-- Testing -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit4.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testfx</groupId>
+                <artifactId>testfx-core</artifactId>
+                <version>${testfx.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testfx</groupId>
+                <artifactId>testfx-junit5</artifactId>
+                <version>${testfx.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.testfx</groupId>
+                <artifactId>openjfx-monocle</artifactId>
+                <version>21.0.2</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/alexeid/beast3modular</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                    <configuration>
+                        <release>25</release>
+                        <encoding>UTF-8</encoding>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.1.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>slow-tests</id>
+            <properties>
+                <surefire.excludedGroups/>
+            </properties>
+        </profile>
+    </profiles>
+</project>

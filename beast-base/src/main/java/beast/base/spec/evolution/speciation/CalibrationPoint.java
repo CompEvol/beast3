@@ -1,0 +1,61 @@
+package beast.base.spec.evolution.speciation;
+
+import beast.base.core.BEASTObject;
+import beast.base.core.Description;
+import beast.base.core.Input;
+import beast.base.evolution.alignment.TaxonSet;
+import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.ScalarDistribution;
+
+/**
+ * A single calibration point for the calibrated Yule or birth-death model.
+ * Associates a taxon set with a prior distribution on the age of its MRCA.
+ *
+ * @author Joseph Heled
+ */
+@Description("Specification of a single calibration point of the calibrated Yule.")
+public class CalibrationPoint extends BEASTObject {
+    final public Input<TaxonSet> taxonsetInput = new Input<>("taxonset",
+            "Set of taxa. The prior distribution is applied to their TMRCA.", Input.Validate.REQUIRED);
+
+    // define the type to make the dist related method calls returning double
+    // Real allows Uniform
+    final public Input<ScalarDistribution<? extends Real, Double>> distInput = new Input<>("distr",
+            "Prior distribution applied to time of clade MRCA", Input.Validate.REQUIRED);
+
+//    public Input<Boolean> m_bIsMonophyleticInput = new Input<>("monophyletic",
+//            "whether the taxon set is monophyletic (forms a clade without other taxa) or nor. Default is false.", false);
+
+    final public Input<Boolean> forParentInput = new Input<>("parentOf",
+            "Use time of clade parent. Default is false.", false);
+
+
+    private TaxonSet t;
+    private boolean forPar;
+    private ScalarDistribution<? extends Real, Double> pd;
+
+    public CalibrationPoint() {}
+
+    @Override
+	public void initAndValidate() {
+        t = taxonsetInput.get();
+        forPar = forParentInput.get();
+        pd = distInput.get();
+    }
+
+    public TaxonSet taxa() {
+       return t;
+    }
+
+    public boolean forParent() {
+        return forPar;
+    }
+
+    public ScalarDistribution<? extends Real, Double> dist() {
+      return pd;
+    }
+
+    public double logPdf(final double x) {
+        return pd.logDensity(x);
+    }
+}

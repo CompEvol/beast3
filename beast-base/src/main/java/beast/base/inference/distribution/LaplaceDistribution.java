@@ -1,0 +1,121 @@
+package beast.base.inference.distribution;
+
+import beast.base.core.Description;
+import beast.base.core.Function;
+import beast.base.core.Input;
+import org.apache.commons.rng.UniformRandomProvider;
+import org.apache.commons.statistics.distribution.ContinuousDistribution;
+
+/**
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.Laplace}
+ */
+@Deprecated
+@Description("Laplace distribution.    f(x|\\mu,b) = \\frac{1}{2b} \\exp \\left( -\\frac{|x-\\mu|}{b} \\right)" +
+        "The probability density function of the Laplace distribution is also reminiscent of the normal distribution; " +
+        "however, whereas the normal distribution is expressed in terms of the squared difference from the mean ?, " +
+        "the Laplace density is expressed in terms of the absolute difference from the mean. Consequently the Laplace " +
+        "distribution has fatter tails than the normal distribution.")
+public class LaplaceDistribution extends ParametricDistribution {
+    final public Input<Function> muInput = new Input<>("mu", "location parameter, defaults to 0");
+    final public Input<Function> scaleInput = new Input<>("scale", "scale parameter, defaults to 1");
+
+    // the mean parameter
+    double mu;
+    // the scale parameter
+    double scale;
+    // the maximum density
+    double c;
+    LaplaceImpl dist = new LaplaceImpl();
+
+    @Override
+    public void initAndValidate() {
+        refresh();
+    }
+
+    /**
+     * make sure internal state is up to date *
+     */
+    void refresh() {
+
+        if (muInput.get() == null) {
+            mu = 0;
+        } else {
+            mu = muInput.get().getArrayValue();
+        }
+        if (scaleInput.get() == null || scaleInput.get().getArrayValue()<=0.0) {
+            scale = 1;
+        } else {
+            scale = scaleInput.get().getArrayValue();
+        }
+
+        //Normalizing constant
+        c = 1.0 / (2.0 * scale);
+    }
+
+    @Override
+    public Object getDistribution() {
+        refresh();
+        return dist;
+    }
+
+    class LaplaceImpl implements ContinuousDistribution {
+
+        @Override
+        public double cumulativeProbability(double x) {
+            // =0.5\,[1 + \sgn(x-\mu)\,(1-\exp(-|x-\mu|/b))].
+            if (x == mu) {
+                return 0.5;
+            } else {
+                return (0.5) * (1 + ((x - mu) / Math.abs(x - mu)) * (1 - Math.exp(-Math.abs(x - mu) / scale)));
+            }
+        }
+
+        @Override
+        public double inverseCumulativeProbability(double p) {
+            //     \mu - b\,\sgn(p-0.5)\,\ln(1 - 2|p-0.5|).
+            return mu - scale * Math.signum(p - 0.5) * Math.log(1.0 - 2.0 * Math.abs(p - 0.5));
+        }
+
+        @Override
+        public double density(double x) {
+            // f(x|\mu,b) = \frac{1}{2b} \exp \left( -\frac{|x-\mu|}{b} \right) \,\!
+            return c * Math.exp(-Math.abs(x - mu) / scale);
+        }
+
+        @Override
+        public double logDensity(double x) {
+            return Math.log(c) - (Math.abs(x - mu) / scale);
+        }
+
+        @Override
+        public double getMean() {
+            return mu;
+        }
+
+        @Override
+        public double getVariance() {
+            return 2.0 * scale * scale;
+        }
+
+        @Override
+        public double getSupportLowerBound() {
+            return Double.NEGATIVE_INFINITY;
+        }
+
+        @Override
+        public double getSupportUpperBound() {
+            return Double.POSITIVE_INFINITY;
+        }
+
+        @Override
+        public Sampler createSampler(UniformRandomProvider rng) {
+            return () -> inverseCumulativeProbability(rng.nextDouble());
+        }
+    } // class LaplaceImpl
+
+    @Override
+    protected double getMeanWithoutOffset() {
+    	return mu;
+    }
+
+} // class

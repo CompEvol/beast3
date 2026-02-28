@@ -1,0 +1,21 @@
+# Maven build output
+target/
+
+# IDE files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+*.swp
+*~
+
+# BEAST runtime output
+*.log
+*.state
+state.backup.xml
+
+# OS files
+.DS_Store
+Thumbs.db

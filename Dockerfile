@@ -3,14 +3,17 @@
 # To build the image, run the following from this directory:
 #   docker build -t beast_testing .
 #
-# To run the tests, use
+# To run the tests (fast tests only, slow MCMC tests excluded), use
 #   docker run beast_testing
+#
+# To run all tests including slow MCMC tests, use
+#   docker run beast_testing -Pslow-tests
 #
 # To run the tests interactively, use
 #   docker run --entrypoint /bin/bash -it -p 5900:5900 beast_testing
 # This will give you a shell in the container. From this
 # shell, run
-#   vncserver $DISPLAY -geometry 1920x1080; ant -f build-testing.xml
+#   vncserver $DISPLAY -geometry 1920x1080; mvn test
 #
 # The previous command exposes the VNC session, so while the
 # BEAUti test suite is running you can run a VNC viewer and
@@ -20,8 +23,14 @@
 FROM debian:stable
 WORKDIR /beast3
 
-# Install Apache Ant
-RUN apt-get update && apt-get install -y openjdk-21-jdk openjfx ant
+# Install JDK 25 and Maven
+RUN apt-get update && apt-get install -y wget maven
+RUN wget -q https://cdn.azul.com/zulu/bin/zulu25.32.21-ca-jdk25.0.2-linux_x64.tar.gz -O /tmp/jdk.tar.gz \
+    && mkdir -p /usr/lib/jvm \
+    && tar xzf /tmp/jdk.tar.gz -C /usr/lib/jvm \
+    && rm /tmp/jdk.tar.gz
+ENV JAVA_HOME=/usr/lib/jvm/zulu25.32.21-ca-jdk25.0.2-linux_x64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Install and configure VNC server
 RUN apt-get update && apt-get install -y tightvncserver twm
@@ -38,13 +47,15 @@ RUN ldconfig
 
 ADD . ./
 
+# Install local-only modular JARs (beagle.jar, colt.jar)
+RUN mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar -q
+RUN mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar -q
+
 RUN echo "#!/bin/bash\n" \
         "export USER=root\n" \
         "export DISPLAY=:1\n" \
         "vncserver :1 -geometry 1920x1080\n" \
-        "ant -lib lib -f build-testing.xml \$1\n" > entrypoint.sh
+        "mvn test \$@\n" > entrypoint.sh
 RUN chmod a+x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
-
-CMD ["test-all"]
