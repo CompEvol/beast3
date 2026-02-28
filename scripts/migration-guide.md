@@ -2,21 +2,18 @@
 
 ## 0. Setting up a BEAST 3 project
 
-* Clone the repository:
-  ```
-  git clone git@github.com:alexeid/beast3modular.git
-  ```
 * Install **JDK 25** from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution. A bundled JavaFX JDK is no longer needed — JavaFX is resolved as a Maven dependency.
 * Install **Maven 3.9+** from [maven.apache.org](https://maven.apache.org/) or via your package manager.
-* One-time setup — install local modular JARs that are not in Maven Central (module-info sources live in `lib/beagle/` and `lib/colt/`):
-  ```bash
-  mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=beast -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-  mvn install:install-file -Dfile=lib/colt.jar -DgroupId=beast -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
-  ```
-* Build:
-  ```bash
-  mvn compile
-  ```
+
+Clone and install beast3modular to your local Maven repository:
+
+```bash
+git clone git@github.com:alexeid/beast3modular.git
+cd beast3modular
+mvn install -DskipTests
+```
+
+This installs all BEAST 3 modules (including beagle and colt) into `~/.m2/repository/` so your package can depend on them.
 
 A complete working example is available in the [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) repository — a ready-to-copy Maven project with a custom `ScalarDistribution`, operator, tests, and BEAST XML using the strongly-typed spec API.
 
