@@ -75,6 +75,121 @@ For your package
 * option mostly for packages that have other packages depending on them
 * for `stand alone` packages, just replace the Parameter and Function Inputs with typed versions
 
+### Class mapping: Legacy → Spec
+
+#### Parameters
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `RealParameter` (scalar) | `beast.base.spec.inference.parameter.RealScalarParam` | `lower`/`upper` replaced by `domain` (e.g. `PositiveReal.INSTANCE`, `UnitInterval.INSTANCE`); no `dimension` |
+| `RealParameter` (vector) | `beast.base.spec.inference.parameter.RealVectorParam` | `lower`/`upper` replaced by `domain`; `dimension` retained |
+| `IntegerParameter` (scalar) | `beast.base.spec.inference.parameter.IntScalarParam` | `lower`/`upper` replaced by `domain` (e.g. `PositiveInt.INSTANCE`, `NonNegativeInt.INSTANCE`) |
+| `IntegerParameter` (vector) | `beast.base.spec.inference.parameter.IntVectorParam` | `lower`/`upper` replaced by `domain`; `dimension` retained |
+| `BooleanParameter` (scalar) | `beast.base.spec.inference.parameter.BoolScalarParam` | Domain fixed to `Bool.INSTANCE` |
+| `BooleanParameter` (vector) | `beast.base.spec.inference.parameter.BoolVectorParam` | Domain fixed to `Bool.INSTANCE` |
+| `RealParameter` (simplex) | `beast.base.spec.inference.parameter.SimplexParam` | Extends `RealVectorParam<UnitInterval>` |
+
+#### Domain types (replace explicit `lower`/`upper` bounds)
+
+| Legacy Pattern | Spec Domain |
+|---|---|
+| `RealParameter lower="0"` | `PositiveReal.INSTANCE` |
+| `RealParameter lower="0" upper="1"` | `UnitInterval.INSTANCE` |
+| `RealParameter` (unbounded) | `Real.INSTANCE` |
+| `IntegerParameter lower="1"` | `PositiveInt.INSTANCE` |
+| `IntegerParameter lower="0"` | `NonNegativeInt.INSTANCE` |
+| `IntegerParameter` (unbounded) | `Int.INSTANCE` |
+
+#### Distributions / Priors
+
+**Key architectural change:** In legacy BEAST, a prior is `Prior(x=parameter, distr=distribution)`. In the spec system, **the distribution IS the prior** — each distribution has a `param` input directly (inherited from `TensorDistribution`). No separate `Prior` wrapper is needed.
+
+| Legacy Pattern | Spec Class | Key Changes |
+|---|---|---|
+| `Prior` + `Normal` | `beast.base.spec.inference.distribution.Normal` | `param` replaces `Prior.x`; `mean` → `RealScalar<Real>`; `sigma` → `RealScalar<PositiveReal>` |
+| `Prior` + `LogNormalDistributionModel` | `beast.base.spec.inference.distribution.LogNormal` | `param`; `M` → `RealScalar<Real>`; `S` → `RealScalar<PositiveReal>` |
+| `Prior` + `Gamma` | `beast.base.spec.inference.distribution.Gamma` | `param`; `alpha` → `RealScalar<PositiveReal>`; `theta` (scale) XOR `lambda` (rate) |
+| — | `beast.base.spec.inference.distribution.GammaMean` | New mean parameterization: `alpha` + `mean` |
+| `Prior` + `Exponential` | `beast.base.spec.inference.distribution.Exponential` | `param`; `mean` → `RealScalar<PositiveReal>` |
+| `Prior` + `Beta` | `beast.base.spec.inference.distribution.Beta` | `param` (must be `RealScalar<UnitInterval>`); `alpha`, `beta` → `RealScalar<PositiveReal>` |
+| `Prior` + `Uniform` | `beast.base.spec.inference.distribution.Uniform` | `param`; `lower`, `upper` → `RealScalar<Real>` |
+| `Prior` + `Dirichlet` | `beast.base.spec.inference.distribution.Dirichlet` | `param` (must be `Simplex`); `alpha` → `RealVector<PositiveReal>` |
+| `Prior` + `Poisson` | `beast.base.spec.inference.distribution.Poisson` | `param` → `IntScalar<NonNegativeInt>`; `lambda` → `RealScalar<NonNegativeReal>` |
+| — | `beast.base.spec.inference.distribution.Cauchy` | New; `location` (`RealScalar<Real>`); `scale` (`RealScalar<PositiveReal>`) |
+| — | `beast.base.spec.inference.distribution.ChiSquare` | New; `df` (`RealScalar<PositiveReal>`) |
+| — | `beast.base.spec.inference.distribution.InverseGamma` | New; `alpha`, `beta` (`RealScalar<PositiveReal>`) |
+| — | `beast.base.spec.inference.distribution.Laplace` | New; `mu` (`RealScalar<Real>`); `scale` (`RealScalar<PositiveReal>`) |
+| — | `beast.base.spec.inference.distribution.Bernoulli` | New; `param` (`BoolScalar`); `p` (`RealScalar<UnitInterval>`) |
+| — | `beast.base.spec.inference.distribution.IntUniform` | New discrete uniform; `lower`, `upper` (`IntScalar<Int>`) |
+| `Prior` applying dist to vector elements | `beast.base.spec.inference.distribution.IID` | Applies a `ScalarDistribution` to each element of a `Vector` independently |
+| Offset-prior pattern | `beast.base.spec.inference.distribution.OffsetReal` | `distribution` + `offset` (`RealScalar<Real>`) |
+| — | `beast.base.spec.inference.distribution.TruncatedReal` | `distribution` + `lower`/`upper` (`RealScalar<Real>`) |
+
+#### Substitution Models
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `SubstitutionModel.Base` | `beast.base.spec.evolution.substitutionmodel.Base` | `frequencies` input uses spec `Frequencies` |
+| `GeneralSubstitutionModel` | `beast.base.spec.evolution.substitutionmodel.BasicGeneralSubstitutionModel` | — |
+| `Frequencies` | `beast.base.spec.evolution.substitutionmodel.Frequencies` | `frequencies` now takes `Simplex` (was `RealParameter`) |
+| `HKY` | `beast.base.spec.evolution.substitutionmodel.HKY` | `kappa` → `RealScalar<PositiveReal>` |
+| `GTR` | `beast.base.spec.evolution.substitutionmodel.GTR` | `rateAC`, `rateAG`, etc. → `RealScalar<PositiveReal>` |
+| `TN93` | `beast.base.spec.evolution.substitutionmodel.TN93` | `kappa1`, `kappa2` → `RealScalar<PositiveReal>` |
+
+#### Site Model
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `SiteModel` | `beast.base.spec.evolution.sitemodel.SiteModel` | `mutationRate` → `RealScalar<PositiveReal>`; `shape` → `RealScalar<PositiveReal>`; `proportionInvariant` → `RealScalar<UnitInterval>` |
+
+#### Branch Rate Models
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `StrictClockModel` | `beast.base.spec.evolution.branchratemodel.StrictClockModel` | `clock.rate` → `RealScalar<PositiveReal>` |
+| `UCRelaxedClockModel` | `beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel` | `distr` → `ScalarDistribution`; `rateCategories` → `IntVector<NonNegativeInt>`; `rateQuantiles` → `RealVector<UnitInterval>` |
+| `RandomLocalClockModel` | `beast.base.spec.evolution.branchratemodel.RandomLocalClockModel` | `indicators` → `BoolVector`; `rates` → `RealVector<PositiveReal>` |
+
+#### Likelihood
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `GenericTreeLikelihood` | `beast.base.spec.evolution.likelihood.GenericTreeLikelihood` | `branchRateModel` accepts spec `Base` |
+| `TreeLikelihood` | `beast.base.spec.evolution.likelihood.TreeLikelihood` | Extends spec `GenericTreeLikelihood` |
+
+#### Speciation Models
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `YuleModel` | `beast.base.spec.evolution.speciation.YuleModel` | `birthDiffRate` → `RealScalar<PositiveReal>` |
+
+#### Operators (Parameter)
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `ScaleOperator` (parameter) | `beast.base.spec.inference.operator.ScaleOperator` | `parameter` now takes `Scalable` interface |
+| `RealRandomWalkOperator` | `beast.base.spec.inference.operator.RealRandomWalkOperator` | `parameter` → `RealVectorParam` XOR `scalar` → `RealScalarParam` |
+| `DeltaExchangeOperator` | `beast.base.spec.inference.operator.DeltaExchangeOperator` | Adds typed inputs: `rvparameter`, `ivparameter`, `rsparameter`, `isparameter` |
+| `BitFlipOperator` | `beast.base.spec.inference.operator.BitFlipOperator` | `parameter` → `BoolVectorParam` |
+| `SwapOperator` | `beast.base.spec.inference.operator.SwapOperator` | `parameter` → `RealVectorParam` XOR `intparameter` → `IntVectorParam` |
+| `IntRandomWalkOperator` | `beast.base.spec.inference.operator.IntRandomWalkOperator` | `parameter` → `IntVectorParam` |
+| `IntUniformOperator` | `beast.base.spec.inference.operator.uniform.IntUniformOperator` | `parameter` → `Tensor<? extends Int, Integer>` |
+
+#### Operators (Tree)
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `ScaleOperator` (tree mode) | `beast.base.spec.evolution.operator.ScaleTreeOperator` | Split from parameter ScaleOperator; `tree` required |
+| `UpDownOperator` | `beast.base.spec.evolution.operator.UpDownOperator` | `up`/`down` take `List<Scalable>`; uses Bactrian kernel |
+| — | `beast.base.spec.evolution.operator.IntervalScaleOperator` | New; scales intervals between node heights |
+
+#### Loggers
+
+| Legacy Class | Spec Class | Key Changes |
+|---|---|---|
+| `TreeWithMetaDataLogger` | `beast.base.spec.evolution.TreeWithMetaDataLogger` | — |
+| `ESS` | `beast.base.spec.inference.util.ESS` | — |
+
 
 ## 3a. Update example XMLs
 
