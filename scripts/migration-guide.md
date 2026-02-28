@@ -70,6 +70,8 @@ Links can be found in deprecated classes, for example for RealParameter there is
 
 ``` * @deprecated use {@link RealScalarParam} or {@link RealVectorParam} ```
 
+**Important:** The strongly-typed spec parameters (`RealScalarParam`, `IntVectorParam`, etc.) are only for model parameters that are (or could be) estimated during MCMC sampling. Configuration inputs that are not subject to MCMC — such as dimension counts, category counts, boolean flags, or initializer values — should remain as plain `Input<Integer>`, `Input<Double>`, etc. For example, a `stateNumber` input that configures the size of a rate matrix is not an MCMC parameter and should stay as `Input<Integer>`.
+
 For your package
 * consider using a `<yourpackage>.spec` package if you want to be backward compatible
 * option mostly for packages that have other packages depending on them
