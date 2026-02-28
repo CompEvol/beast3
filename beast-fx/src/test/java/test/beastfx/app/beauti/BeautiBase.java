@@ -4,6 +4,7 @@ package test.beastfx.app.beauti;
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;
 import beast.base.core.Function;
+import beast.base.core.ProgramStatus;
 import beast.base.inference.*;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.Parameter;
@@ -25,6 +26,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -78,6 +80,11 @@ public class BeautiBase extends ApplicationExtension {
 	final static private boolean skipAssertions = false;
 
 	protected BeautiDoc doc;
+
+	@AfterEach
+	void resetProgramStatus() {
+		ProgramStatus.name = "unknown";
+	}
 
 	public BeautiBase() {
 		// make sure BEAST.base is installed
