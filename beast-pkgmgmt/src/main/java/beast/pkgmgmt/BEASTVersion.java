@@ -21,7 +21,7 @@ public class BEASTVersion extends Version {
 
     private static final String BEAST_WEBPAGE = "http://beast2.org/";
 
-    private static final String BEAST_SOURCE = "https://github.com/alexeid/beast3modular";
+    private static final String BEAST_SOURCE = "https://github.com/CompEvol/beast3";
 
     @Override
 	public String getVersion() {

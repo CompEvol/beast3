@@ -5,11 +5,11 @@
 * Install **JDK 25** from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution. A bundled JavaFX JDK is no longer needed — JavaFX is resolved as a Maven dependency.
 * Install **Maven 3.9+** from [maven.apache.org](https://maven.apache.org/) or via your package manager.
 
-Clone and install beast3modular to your local Maven repository:
+Clone and install BEAST 3 to your local Maven repository:
 
 ```bash
-git clone git@github.com:alexeid/beast3modular.git
-cd beast3modular
+git clone git@github.com:CompEvol/beast3.git
+cd beast3
 mvn install -DskipTests
 ```
 
