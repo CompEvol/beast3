@@ -103,15 +103,47 @@ See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from M
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
-BEAST 3 artifacts are published to [Maven Central](https://central.sonatype.com/). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
+BEAST 3 artifacts are published to [GitHub Packages](https://github.com/CompEvol/beast3/packages) (and may also be published to [Maven Central](https://central.sonatype.com/) in the future). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
 
-Add BEAST dependencies to your project's `pom.xml`. For **headless / library** usage (no JavaFX dependency):
+### Repository and authentication
+
+Add the GitHub Packages repository to your project's `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/CompEvol/beast3</url>
+    </repository>
+</repositories>
+```
+
+GitHub Packages requires authentication even for public repositories. Create a [personal access token](https://github.com/settings/tokens) (classic) with `read:packages` scope and add it to `~/.m2/settings.xml`:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>YOUR_GITHUB_USERNAME</username>
+      <password>YOUR_GITHUB_PAT</password>
+    </server>
+  </servers>
+</settings>
+```
+
+If BEAST 3 artifacts are available on Maven Central, the `<repositories>` block and `settings.xml` authentication are not needed — Maven Central is the default repository.
+
+### Add BEAST dependencies
+
+For **headless / library** usage (no JavaFX dependency):
 
 ```xml
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-base</artifactId>
-    <version>2.8.0</version>
+    <version>2.8.0-SNAPSHOT</version>
+    <scope>provided</scope>
 </dependency>
 ```
 
@@ -121,11 +153,10 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-fx</artifactId>
-    <version>2.8.0</version>
+    <version>2.8.0-SNAPSHOT</version>
+    <scope>provided</scope>
 </dependency>
 ```
-
-No repository configuration or authentication is needed — Maven Central is the default repository.
 
 ### JPMS module declaration (if your project uses modules)
 
