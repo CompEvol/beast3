@@ -1115,6 +1115,10 @@ public class PackageManager {
         }
         System.err.println();
 
+        // Load Maven-installed packages
+        Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
+        loadMavenPackages();
+
         externalJarsLoaded = true;
     	Utils6.logToSplashScreen("PackageManager::Done");
     } // loadExternalJars
@@ -1224,33 +1228,7 @@ public class PackageManager {
             }
 
             if (!jarPaths.isEmpty()) {
-                // Create a ModuleLayer for this package's JARs
-                try {
-                    ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
-                    ModuleLayer parent = ModuleLayer.boot();
-                    // Only resolve modules not already in the boot layer to avoid
-                    // "reads more than one module" errors from duplicate modules
-                    Set<String> bootModuleNames = parent.modules().stream()
-                        .map(Module::getName)
-                        .collect(Collectors.toSet());
-                    Set<String> moduleNames = finder.findAll().stream()
-                        .map(ref -> ref.descriptor().name())
-                        .filter(name -> !bootModuleNames.contains(name))
-                        .collect(Collectors.toSet());
-                    Configuration config = parent.configuration()
-                        .resolveAndBind(finder, ModuleFinder.of(), moduleNames);
-                    ModuleLayer layer = parent.defineModulesWithOneLoader(
-                        config, ClassLoader.getSystemClassLoader());
-                    BEASTClassLoader.registerPluginLayer(layer, services);
-                } catch (Exception e) {
-                    // ModuleLayer creation failed (e.g. split packages);
-                    // fall back to registering services only
-                    System.err.println("Warning: could not create ModuleLayer for " +
-                        jarDirName + ": " + e.getMessage());
-                    if (services != null && packageName != null) {
-                        BEASTClassLoader.classLoader.addServices(packageName, services);
-                    }
-                }
+                createAndRegisterModuleLayer(jarPaths, services, packageName, jarDirName);
             } else if (services != null && packageName != null) {
                 // No JARs but services found (e.g. running from IDE)
                 BEASTClassLoader.classLoader.addServices(packageName, services);
@@ -1258,6 +1236,217 @@ public class PackageManager {
         } catch (Exception e) {
             System.err.println("Skip loading of " + jarDirName + " : " + e.getMessage());
         }
+	}
+
+	/**
+	 * Create a JPMS ModuleLayer from a list of JAR paths and register it
+	 * with BEASTClassLoader.  Modules already present in the boot layer
+	 * or previously loaded plugin layers are excluded to avoid
+	 * "reads more than one module" errors.
+	 *
+	 * @param jarPaths    JARs to include in the new layer
+	 * @param services    service map from version.xml (may be null)
+	 * @param packageName the BEAST package name (for fallback service registration)
+	 * @param description human-readable label used in warning messages
+	 */
+	public static void createAndRegisterModuleLayer(List<Path> jarPaths,
+			Map<String, Set<String>> services, String packageName, String description) {
+		try {
+			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
+			ModuleLayer parent = ModuleLayer.boot();
+			Set<String> bootModuleNames = parent.modules().stream()
+				.map(Module::getName)
+				.collect(Collectors.toSet());
+			// Also exclude modules from already-loaded plugin layers
+			for (ModuleLayer layer : BEASTClassLoader.getPluginLayers()) {
+				layer.modules().stream().map(Module::getName).forEach(bootModuleNames::add);
+			}
+			Set<String> moduleNames = finder.findAll().stream()
+				.map(ref -> ref.descriptor().name())
+				.filter(name -> !bootModuleNames.contains(name))
+				.collect(Collectors.toSet());
+			Configuration config = parent.configuration()
+				.resolveAndBind(finder, ModuleFinder.of(), moduleNames);
+			ModuleLayer layer = parent.defineModulesWithOneLoader(
+				config, ClassLoader.getSystemClassLoader());
+			BEASTClassLoader.registerPluginLayer(layer, services);
+		} catch (Exception e) {
+			System.err.println("Warning: could not create ModuleLayer for " +
+				description + ": " + e.getMessage());
+			if (services != null && packageName != null) {
+				BEASTClassLoader.classLoader.addServices(packageName, services);
+			}
+		}
+	}
+
+	// =========================================================================
+	//  Maven package support
+	// =========================================================================
+
+	/** A Maven coordinate triple (groupId, artifactId, version). */
+	public static class MavenCoordinate {
+		public final String groupId, artifactId, version;
+
+		public MavenCoordinate(String groupId, String artifactId, String version) {
+			this.groupId = groupId;
+			this.artifactId = artifactId;
+			this.version = version;
+		}
+
+		@Override
+		public String toString() {
+			return groupId + ":" + artifactId + ":" + version;
+		}
+	}
+
+	private static final String MAVEN_PACKAGES_FILE = "maven-packages.xml";
+
+	/**
+	 * Load the list of Maven package coordinates from
+	 * {@code ~/.beast/2.8/maven-packages.xml}.
+	 */
+	public static List<MavenCoordinate> loadMavenPackageConfig() {
+		List<MavenCoordinate> coords = new ArrayList<>();
+		File configFile = new File(getPackageUserDir(), MAVEN_PACKAGES_FILE);
+		if (!configFile.exists()) return coords;
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			Document doc = factory.newDocumentBuilder().parse(configFile);
+			NodeList nodes = doc.getElementsByTagName("package");
+			for (int i = 0; i < nodes.getLength(); i++) {
+				Element el = (Element) nodes.item(i);
+				String g = el.getAttribute("groupId");
+				String a = el.getAttribute("artifactId");
+				String v = el.getAttribute("version");
+				if (!g.isEmpty() && !a.isEmpty() && !v.isEmpty()) {
+					coords.add(new MavenCoordinate(g, a, v));
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Warning: could not read " + configFile + ": " + e.getMessage());
+		}
+		return coords;
+	}
+
+	/**
+	 * Save the list of Maven package coordinates to
+	 * {@code ~/.beast/2.8/maven-packages.xml}.
+	 */
+	public static void saveMavenPackageConfig(List<MavenCoordinate> coords) {
+		File configFile = new File(getPackageUserDir(), MAVEN_PACKAGES_FILE);
+		configFile.getParentFile().mkdirs();
+		try (PrintWriter pw = new PrintWriter(new FileWriter(configFile))) {
+			pw.println("<packages>");
+			for (MavenCoordinate c : coords) {
+				pw.println("    <package groupId=\"" + c.groupId
+						+ "\" artifactId=\"" + c.artifactId
+						+ "\" version=\"" + c.version + "\" />");
+			}
+			pw.println("</packages>");
+		} catch (IOException e) {
+			System.err.println("Warning: could not write " + configFile + ": " + e.getMessage());
+		}
+	}
+
+	/**
+	 * Load all Maven-installed packages at startup.  Each coordinate in
+	 * {@code maven-packages.xml} is resolved, and its JARs are loaded into
+	 * a new JPMS ModuleLayer.
+	 */
+	public static void loadMavenPackages() {
+		List<MavenCoordinate> coords = loadMavenPackageConfig();
+		if (coords.isEmpty()) return;
+
+		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
+		MavenPackageResolver resolver = new MavenPackageResolver(localRepo);
+
+		for (MavenCoordinate coord : coords) {
+			try {
+				System.err.print("Loading Maven package " + coord + "...");
+				List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
+
+				Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
+				createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.toString());
+				System.err.println(" done");
+			} catch (Exception e) {
+				System.err.println(" FAILED: " + e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * Install a Maven package: resolve the coordinate, download JARs,
+	 * persist the coordinate in {@code maven-packages.xml}, and load the
+	 * package into the current runtime.
+	 */
+	public static void installMavenPackage(String groupId, String artifactId, String version)
+			throws Exception {
+		// 1. Resolve to verify the coordinate is valid and downloadable
+		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
+		MavenPackageResolver resolver = new MavenPackageResolver(localRepo);
+		List<Path> jars = resolver.resolve(groupId, artifactId, version);
+
+		// 2. Add to maven-packages.xml
+		List<MavenCoordinate> coords = loadMavenPackageConfig();
+		coords.removeIf(c -> c.groupId.equals(groupId) && c.artifactId.equals(artifactId));
+		coords.add(new MavenCoordinate(groupId, artifactId, version));
+		saveMavenPackageConfig(coords);
+
+		// 3. Load into current runtime
+		Map<String, Set<String>> services = parseServicesFromJar(jars,
+				new MavenCoordinate(groupId, artifactId, version));
+		createAndRegisterModuleLayer(jars, services, artifactId, groupId + ":" + artifactId + ":" + version);
+	}
+
+	/**
+	 * Uninstall a Maven package by removing its coordinate from
+	 * {@code maven-packages.xml}.  The cached JARs in maven-repo are left
+	 * in place (they serve as a cache and won't be loaded if not in config).
+	 */
+	public static void uninstallMavenPackage(String groupId, String artifactId) {
+		List<MavenCoordinate> coords = loadMavenPackageConfig();
+		coords.removeIf(c -> c.groupId.equals(groupId) && c.artifactId.equals(artifactId));
+		saveMavenPackageConfig(coords);
+	}
+
+	/**
+	 * Parse service declarations from the main artifact JAR.  Looks for
+	 * {@code version.xml} at the JAR root or at
+	 * {@code META-INF/beast/version.xml}, then delegates to
+	 * {@link #parseServices(Document)}.
+	 */
+	public static Map<String, Set<String>> parseServicesFromJar(List<Path> jars, MavenCoordinate coord) {
+		// Find the main artifact JAR (matches artifactId in filename)
+		Path mainJar = null;
+		for (Path p : jars) {
+			String name = p.getFileName().toString();
+			if (name.startsWith(coord.artifactId + "-")) {
+				mainJar = p;
+				break;
+			}
+		}
+		if (mainJar == null && !jars.isEmpty()) {
+			mainJar = jars.get(0);
+		}
+		if (mainJar == null) return null;
+
+		try (JarFile jar = new JarFile(mainJar.toFile())) {
+			// Try root version.xml first, then META-INF/beast/version.xml
+			JarEntry entry = jar.getJarEntry("version.xml");
+			if (entry == null) {
+				entry = jar.getJarEntry("META-INF/beast/version.xml");
+			}
+			if (entry != null) {
+				try (InputStream is = jar.getInputStream(entry)) {
+					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+					Document doc = factory.newDocumentBuilder().parse(new InputSource(is));
+					return parseServices(doc);
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("Warning: could not read services from " + mainJar + ": " + e.getMessage());
+		}
+		return null;
 	}
 
 	/**

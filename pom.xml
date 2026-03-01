@@ -56,6 +56,8 @@
         <junit4.version>4.13.2</junit4.version>
         <testfx.version>4.0.18</testfx.version>
         <assertj.version>3.20.2</assertj.version>
+        <maven-resolver.version>2.0.16</maven-resolver.version>
+        <slf4j.version>2.0.16</slf4j.version>
         <surefire.excludedGroups>slow</surefire.excludedGroups>
     </properties>
 
@@ -126,6 +128,18 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-statistics-distribution</artifactId>
                 <version>${commons-statistics.version}</version>
+            </dependency>
+
+            <!-- Maven Resolver -->
+            <dependency>
+                <groupId>org.apache.maven.resolver</groupId>
+                <artifactId>maven-resolver-supplier-mvn4</artifactId>
+                <version>${maven-resolver.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-nop</artifactId>
+                <version>${slf4j.version}</version>
             </dependency>
 
             <!-- JavaFX -->

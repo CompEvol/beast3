@@ -498,6 +498,35 @@ public class JPackageDialog extends DialogPane {
             });
         box.getChildren().add(packageRepoButton);
 
+        Button mavenInstallButton = new Button("Install from Maven");
+        mavenInstallButton.setOnAction(e -> {
+            Optional<String> result = Alert.showInputDialog(null,
+                    "Enter Maven coordinate (groupId:artifactId:version):",
+                    "Install Maven Package",
+                    Alert.QUESTION_MESSAGE,
+                    "");
+            if (result.isEmpty() || result.get().isBlank()) return;
+            String coordinate = result.get().trim();
+
+            dataTable.setCursor(Cursor.WAIT);
+            try {
+                String[] parts = coordinate.split(":");
+                if (parts.length != 3) {
+                    throw new IllegalArgumentException(
+                            "Expected format: groupId:artifactId:version");
+                }
+                PackageManager.installMavenPackage(parts[0], parts[1], parts[2]);
+                dataTable.setCursor(Cursor.DEFAULT);
+                Alert.showMessageDialog(null,
+                        "Maven package " + coordinate + " installed successfully.\n"
+                        + "Changes will appear after restarting BEAUti.");
+            } catch (Exception ex) {
+                dataTable.setCursor(Cursor.DEFAULT);
+                Alert.showMessageDialog(null,
+                        "Maven install failed: " + ex.getMessage());
+            }
+        });
+        box.getChildren().add(mavenInstallButton);
 
         Button button = new Button("?");
         button.setTooltip(new Tooltip(getPackageUserDir() + " " + getPackageSystemDir()));
