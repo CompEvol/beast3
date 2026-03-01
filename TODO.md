@@ -44,10 +44,11 @@ Enable external BEAST packages to be distributed as plain Maven Central JARs ins
 (or in addition to) ZIP archives. Roadmap:
 - ~~**Step 1: Load fxtemplates from JAR resources**~~ DONE — `BeautiDoc.processTemplate()` now
   scans JPMS module resources in addition to filesystem directories
-- **Step 2: Maven-based package resolution** — resolve packages from Maven coordinates,
-  create JPMS `ModuleLayer` per package, discover services and templates from JARs
-- **Step 3: Package manager UI** — update BEAUti package manager dialog to support Maven
-  coordinates alongside ZIP URLs
+- ~~**Step 2: Maven-based package resolution**~~ DONE — `MavenPackageResolver` resolves Maven
+  coordinates to local JAR paths via Apache Maven Resolver; `PackageManager` loads, installs,
+  and uninstalls Maven packages alongside ZIP packages; config persisted in `maven-packages.xml`
+- ~~**Step 3: Package manager UI**~~ DONE — "Install from Maven" button added to BEAUti
+  package manager dialog
 - **Step 4: Migrate existing packages** — update beast-package-skeleton and existing packages
   to publish to Maven Central; document the process in the package developer guide
 
