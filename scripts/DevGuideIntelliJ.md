@@ -50,7 +50,7 @@ Then reload Maven in IntelliJ (right-click the root `pom.xml` → **Maven → Re
 Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html#create_jar_run_config):
 
 1. **Run → Edit Configurations → Add New → Application**
-2. Set **Module** to `beast-base`
+2. Set **Module** to `beast-fx`
 3. Set **Main class** to `beastfx.app.beast.BeastMain` (or `beastfx.app.beauti.Beauti` for BEAUti)
 4. Set **Program arguments** to your XML file path (for BeastMain)
 5. IntelliJ automatically configures the module path from Maven — no manual `--module-path` or `--add-modules` flags are needed.

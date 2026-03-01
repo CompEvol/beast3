@@ -100,6 +100,10 @@ The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.be
 
 See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from Maven automatically.
 
+### From Eclipse
+
+See `scripts/DevGuideEclipse.md`. Eclipse with m2e resolves the full module path from Maven automatically.
+
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
@@ -234,7 +238,7 @@ which includes a `release` profile and full publishing instructions.
 Development
 -----------
 
-See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup instructions, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
+See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup or `scripts/DevGuideEclipse.md` for Eclipse setup, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
 
 For guidance on migrating external packages, see `scripts/migration-guide.md` (migrating from BEAST v2.7 to v3).
 
