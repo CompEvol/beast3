@@ -152,6 +152,54 @@ mvn install -DskipTests
 
 In this case, no `<repositories>` block or `settings.xml` configuration is needed.
 
+Installing packages from Maven Central
+---------------------------------------
+
+External BEAST packages that are published to Maven Central can be installed
+directly — no ZIP download or CBAN entry required.
+
+### From BEAUti
+
+Open the Package Manager (`File > Manage Packages`), click **Install from Maven**,
+and enter the Maven coordinates:
+
+```
+groupId:artifactId:version
+```
+
+For example: `io.github.alexeid:beast-morph-models:1.3.0`
+
+### From the command line
+
+```bash
+packagemanager -maven io.github.alexeid:beast-morph-models:1.3.0
+```
+
+Maven packages are resolved via [Apache Maven Resolver](https://maven.apache.org/resolver/),
+downloaded to a local cache (`~/.beast/2.8/maven-repo/`), and loaded into a JPMS
+`ModuleLayer` at runtime — just like ZIP-installed packages. The package's `version.xml`
+(embedded at the JAR root) is used for service discovery.
+
+Installed Maven packages are tracked in `maven-packages.xml` alongside the
+standard `beauti.cfg` package list.
+
+### Custom Maven repositories
+
+By default, packages are resolved from Maven Central. To add an additional
+Maven repository (e.g. one hosted by your organisation):
+
+```bash
+packagemanager -addMavenRepository https://beast2.org/maven/
+packagemanager -listMavenRepositories
+packagemanager -delMavenRepository https://beast2.org/maven/
+```
+
+### For package developers
+
+To publish your package to Maven Central (or another Maven repository), see the
+[beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) template
+which includes a `release` profile and full publishing instructions.
+
 Development
 -----------
 

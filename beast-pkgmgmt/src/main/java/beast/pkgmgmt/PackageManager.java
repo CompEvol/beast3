@@ -1348,6 +1348,43 @@ public class PackageManager {
 		}
 	}
 
+	// ---- Maven repository management ----
+
+	/**
+	 * Load extra Maven repository URLs from
+	 * {@code beauti.properties} (key {@code maven.repositories}).
+	 * Maven Central is always included and need not be listed.
+	 */
+	public static List<String> getMavenRepositoryURLs() {
+		List<String> urls = new ArrayList<>();
+		String prop = Utils6.getBeautiProperty("maven.repositories");
+		if (prop != null && !prop.isBlank()) {
+			for (String s : prop.split(",")) {
+				s = s.trim();
+				if (!s.isEmpty()) urls.add(s);
+			}
+		}
+		return urls;
+	}
+
+	/**
+	 * Save extra Maven repository URLs to {@code beauti.properties}.
+	 */
+	public static void saveMavenRepositoryURLs(List<String> urls) {
+		Utils6.saveBeautiProperty("maven.repositories",
+				urls.isEmpty() ? null : String.join(",", urls));
+	}
+
+	private static MavenPackageResolver createMavenResolver() {
+		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
+		List<String> repoURLs = getMavenRepositoryURLs();
+		List<org.eclipse.aether.repository.RemoteRepository> extras = new ArrayList<>();
+		for (int i = 0; i < repoURLs.size(); i++) {
+			extras.add(MavenPackageResolver.remoteRepository("extra-" + i, repoURLs.get(i)));
+		}
+		return new MavenPackageResolver(localRepo, extras);
+	}
+
 	/**
 	 * Load all Maven-installed packages at startup.  Each coordinate in
 	 * {@code maven-packages.xml} is resolved, and its JARs are loaded into
@@ -1357,8 +1394,7 @@ public class PackageManager {
 		List<MavenCoordinate> coords = loadMavenPackageConfig();
 		if (coords.isEmpty()) return;
 
-		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
-		MavenPackageResolver resolver = new MavenPackageResolver(localRepo);
+		MavenPackageResolver resolver = createMavenResolver();
 
 		for (MavenCoordinate coord : coords) {
 			try {
@@ -1382,8 +1418,7 @@ public class PackageManager {
 	public static void installMavenPackage(String groupId, String artifactId, String version)
 			throws Exception {
 		// 1. Resolve to verify the coordinate is valid and downloadable
-		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
-		MavenPackageResolver resolver = new MavenPackageResolver(localRepo);
+		MavenPackageResolver resolver = createMavenResolver();
 		List<Path> jars = resolver.resolve(groupId, artifactId, version);
 
 		// 2. Add to maven-packages.xml
@@ -2130,6 +2165,10 @@ public class PackageManager {
         System.out.println("packagemanager -useAppDir -add SNAPP");
         System.out.println("packagemanager -del SNAPP");
         System.out.println("packagemanager -addRepository URL");
+        System.out.println("packagemanager -maven io.github.alexeid:beast-morph-models:1.3.0");
+        System.out.println("packagemanager -delMaven io.github.alexeid:beast-morph-models");
+        System.out.println("packagemanager -listMaven");
+        System.out.println("packagemanager -addMavenRepository https://beast2.org/maven/");
         System.exit(0);
     }
 
@@ -2149,6 +2188,12 @@ public class PackageManager {
                             new Arguments.StringOption("addRepository", "URL", "Add an external repository URL"),
                             new Arguments.StringOption("delRepository", "URL", "Remove an external repository URL"),
                             new Arguments.Option("listRepositories", "List installed external repositories."),
+                            new Arguments.StringOption("maven", "COORD", "Install a Maven package (groupId:artifactId:version)"),
+                            new Arguments.StringOption("delMaven", "COORD", "Uninstall a Maven package (groupId:artifactId)"),
+                            new Arguments.Option("listMaven", "List installed Maven packages"),
+                            new Arguments.StringOption("addMavenRepository", "URL", "Add an extra Maven repository URL"),
+                            new Arguments.StringOption("delMavenRepository", "URL", "Remove an extra Maven repository URL"),
+                            new Arguments.Option("listMavenRepositories", "List configured Maven repositories"),
                     });
             try {
                 arguments.parseArguments(args);
@@ -2171,6 +2216,81 @@ public class PackageManager {
             if (arguments.hasOption("updatenow")) {
             	updatePackages(UpdateStatus.AUTO_UPDATE, false);
             	return;
+            }
+
+            // ---- Maven package commands (independent of CBAN package list) ----
+
+            if (arguments.hasOption("maven")) {
+                String coord = arguments.getStringOption("maven");
+                String[] parts = coord.split(":");
+                if (parts.length != 3) {
+                    System.err.println("Expected format groupId:artifactId:version, got: " + coord);
+                    System.exit(1);
+                }
+                System.err.println("Installing Maven package " + coord + "...");
+                installMavenPackage(parts[0], parts[1], parts[2]);
+                System.out.println("Maven package " + coord + " installed successfully.");
+                return;
+            }
+
+            if (arguments.hasOption("delMaven")) {
+                String coord = arguments.getStringOption("delMaven");
+                String[] parts = coord.split(":");
+                if (parts.length < 2) {
+                    System.err.println("Expected format groupId:artifactId, got: " + coord);
+                    System.exit(1);
+                }
+                uninstallMavenPackage(parts[0], parts[1]);
+                System.out.println("Maven package " + parts[0] + ":" + parts[1] + " uninstalled.");
+                return;
+            }
+
+            if (arguments.hasOption("listMaven")) {
+                List<MavenCoordinate> coords = loadMavenPackageConfig();
+                if (coords.isEmpty()) {
+                    System.out.println("No Maven packages installed.");
+                } else {
+                    System.out.println("Installed Maven packages:");
+                    for (MavenCoordinate c : coords) {
+                        System.out.println("  " + c);
+                    }
+                }
+                return;
+            }
+
+            if (arguments.hasOption("addMavenRepository")) {
+                String url = arguments.getStringOption("addMavenRepository");
+                List<String> repos = getMavenRepositoryURLs();
+                if (repos.contains(url)) {
+                    System.err.println("Maven repository '" + url + "' is already configured.");
+                } else {
+                    repos.add(url);
+                    saveMavenRepositoryURLs(repos);
+                    System.out.println("Added Maven repository: " + url);
+                }
+                return;
+            }
+
+            if (arguments.hasOption("delMavenRepository")) {
+                String url = arguments.getStringOption("delMavenRepository");
+                List<String> repos = getMavenRepositoryURLs();
+                if (repos.remove(url)) {
+                    saveMavenRepositoryURLs(repos);
+                    System.out.println("Removed Maven repository: " + url);
+                } else {
+                    System.err.println("Maven repository '" + url + "' not found.");
+                }
+                return;
+            }
+
+            if (arguments.hasOption("listMavenRepositories")) {
+                List<String> repos = getMavenRepositoryURLs();
+                System.out.println("Maven repositories:");
+                System.out.println("  https://repo.maven.apache.org/maven2/ (Maven Central, always included)");
+                for (String url : repos) {
+                    System.out.println("  " + url);
+                }
+                return;
             }
 
             boolean useAppDir = arguments.hasOption("useAppDir");

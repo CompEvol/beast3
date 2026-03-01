@@ -49,8 +49,9 @@ Enable external BEAST packages to be distributed as plain Maven Central JARs ins
   and uninstalls Maven packages alongside ZIP packages; config persisted in `maven-packages.xml`
 - ~~**Step 3: Package manager UI**~~ DONE — "Install from Maven" button added to BEAUti
   package manager dialog
-- **Step 4: Migrate existing packages** — update beast-package-skeleton and existing packages
-  to publish to Maven Central; document the process in the package developer guide
+- ~~**Step 4: Migrate existing packages**~~ DONE — beast-package-skeleton updated with Maven
+  Central metadata, release profile, version.xml JAR embedding, and publishing docs; morph-models
+  updated with io.github.alexeid groupId, release profile, and version.xml JAR embedding
 
 ## 10. Custom domain extension limitation
 The current domain system (Real, PositiveReal, etc.) is a closed set of enum-like classes.

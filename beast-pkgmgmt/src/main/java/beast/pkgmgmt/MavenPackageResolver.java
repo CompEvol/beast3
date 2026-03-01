@@ -11,6 +11,9 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
+import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.TransferEvent;
+import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
 
 import java.nio.file.Path;
@@ -36,13 +39,26 @@ public class MavenPackageResolver {
                     "https://repo.maven.apache.org/maven2/").build();
 
     private final Path localRepoDir;
+    private final List<RemoteRepository> repositories;
 
     /**
      * @param localRepoDir path to the local Maven repository cache,
      *                     e.g. {@code ~/.beast/2.8/maven-repo/}
      */
     public MavenPackageResolver(Path localRepoDir) {
+        this(localRepoDir, List.of());
+    }
+
+    /**
+     * @param localRepoDir       path to the local Maven repository cache
+     * @param extraRepositories  additional Maven repositories to search
+     *                           (Maven Central is always included)
+     */
+    public MavenPackageResolver(Path localRepoDir, List<RemoteRepository> extraRepositories) {
         this.localRepoDir = localRepoDir;
+        this.repositories = new ArrayList<>();
+        this.repositories.add(MAVEN_CENTRAL);
+        this.repositories.addAll(extraRepositories);
     }
 
     /**
@@ -60,7 +76,9 @@ public class MavenPackageResolver {
             Artifact artifact = new DefaultArtifact(groupId, artifactId, "jar", version);
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot(new Dependency(artifact, "compile"));
-            collectRequest.addRepository(MAVEN_CENTRAL);
+            for (RemoteRepository repo : repositories) {
+                collectRequest.addRepository(repo);
+            }
 
             DependencyRequest depRequest = new DependencyRequest(collectRequest,
                     DependencyFilterUtils.classpathFilter("compile", "runtime"));
@@ -109,7 +127,8 @@ public class MavenPackageResolver {
         return system.createSessionBuilder()
                 .withLocalRepositoryBaseDirectories(localRepoDir)
                 .setSystemProperties(System.getProperties())
-                // Only resolve from our explicit Maven Central repository,
+                .setTransferListener(new ProgressListener())
+                // Only resolve from our explicitly configured repositories,
                 // not from repositories declared in artifact POMs/parent POMs
                 // (e.g. Sonatype snapshots).  This prevents hangs caused by
                 // unreachable or misbehaving third-party repositories.
@@ -119,6 +138,40 @@ public class MavenPackageResolver {
                 // Set request timeout (milliseconds)
                 .setConfigProperty("aether.connector.requestTimeout", 30_000)
                 .build();
+    }
+
+    /** Prints download progress to stderr. */
+    private static class ProgressListener extends AbstractTransferListener {
+        @Override
+        public void transferStarted(TransferEvent event) {
+            TransferResource r = event.getResource();
+            String name = r.getResourceName();
+            // shorten "org/foo/bar/baz-1.0.jar" to "baz-1.0.jar"
+            int slash = name.lastIndexOf('/');
+            if (slash >= 0) name = name.substring(slash + 1);
+            long size = r.getContentLength();
+            if (size > 0) {
+                System.err.printf("  Downloading %s (%d KB)%n", name, size / 1024);
+            } else {
+                System.err.printf("  Downloading %s%n", name);
+            }
+        }
+
+        @Override
+        public void transferFailed(TransferEvent event) {
+            TransferResource r = event.getResource();
+            String name = r.getResourceName();
+            int slash = name.lastIndexOf('/');
+            if (slash >= 0) name = name.substring(slash + 1);
+            System.err.printf("  Failed: %s (%s)%n", name, event.getException().getMessage());
+        }
+    }
+
+    /**
+     * Create a {@link RemoteRepository} from a URL string.
+     */
+    public static RemoteRepository remoteRepository(String id, String url) {
+        return new RemoteRepository.Builder(id, "default", url).build();
     }
 
     /**

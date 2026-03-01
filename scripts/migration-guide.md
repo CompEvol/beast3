@@ -58,6 +58,28 @@ open module my.beast.package {
 
 Deployed package JARs are loaded at runtime into a child `ModuleLayer` per package.  Both `module-info.java` `provides` declarations and `version.xml` service entries are discovered.  If your package JAR has no `module-info.java`, it is treated as an automatic module and services are registered from `version.xml` as before.
 
+## Publishing to Maven Central
+
+BEAST 3 packages can be distributed as plain Maven Central JARs in addition to
+(or instead of) ZIP archives submitted to CBAN. This lets users install your
+package with a single Maven coordinate (e.g. `io.github.alexeid:beast-morph-models:1.3.0`)
+via BEAUti's **Install from Maven** button or the command line.
+
+Requirements for Maven Central distribution:
+
+1. Your `pom.xml` must include Maven Central metadata (`<url>`, `<licenses>`,
+   `<developers>`, `<scm>`) and a `release` profile with source, javadoc, GPG
+   signing, and the `central-publishing-maven-plugin`
+2. Your JAR must embed `version.xml` at the root (via `maven-resources-plugin`)
+   so that `PackageManager.parseServicesFromJar()` can discover the package's
+   service providers
+3. Your `groupId` must be a verified namespace on
+   [central.sonatype.com](https://central.sonatype.com/)
+
+The [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton)
+template includes all of this pre-configured. See its README for full setup
+and deployment instructions.
+
 ## 2. Migrate package to use strongly typed classes
 
 Your IDE should show where you are using deprecated classes (e.g. shown as line through in Eclipse). Identify where this happens by navigating your code.
