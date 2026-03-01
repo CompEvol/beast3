@@ -51,6 +51,7 @@ jobs:
 
       - name: Deploy beagle.jar to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        continue-on-error: true  # 409 Conflict if already published
         run: >
           mvn deploy:deploy-file
           -Dfile=lib/beagle.jar
@@ -65,6 +66,7 @@ jobs:
 
       - name: Deploy colt.jar to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        continue-on-error: true  # 409 Conflict if already published
         run: >
           mvn deploy:deploy-file
           -Dfile=lib/colt.jar
