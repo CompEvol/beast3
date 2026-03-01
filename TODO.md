@@ -39,7 +39,19 @@ Several beast-fx tests are disabled pending deeper fixes:
 - **Update assertParameterCountInPriorIs** in BeautiBase to handle new spec distributions (Gamma, Beta, etc.) which are not `instanceof beast.base.inference.distribution.Prior`
 - **Investigate testBSP.xml intermittent failure** — passes in isolation but fails in full suite due to Randomizer state pollution from BEAUti JavaFX threads
 
-## 9. Custom domain extension limitation
+## 9. Maven Central package distribution ([#40](https://github.com/CompEvol/beast3/issues/40))
+Enable external BEAST packages to be distributed as plain Maven Central JARs instead of
+(or in addition to) ZIP archives. Roadmap:
+- ~~**Step 1: Load fxtemplates from JAR resources**~~ DONE — `BeautiDoc.processTemplate()` now
+  scans JPMS module resources in addition to filesystem directories
+- **Step 2: Maven-based package resolution** — resolve packages from Maven coordinates,
+  create JPMS `ModuleLayer` per package, discover services and templates from JARs
+- **Step 3: Package manager UI** — update BEAUti package manager dialog to support Maven
+  coordinates alongside ZIP URLs
+- **Step 4: Migrate existing packages** — update beast-package-skeleton and existing packages
+  to publish to Maven Central; document the process in the package developer guide
+
+## 10. Custom domain extension limitation
 The current domain system (Real, PositiveReal, etc.) is a closed set of enum-like classes.
 Document the recommended approach for packages that need custom domains (e.g., correlation
 matrices, probability simplices with specific constraints).
