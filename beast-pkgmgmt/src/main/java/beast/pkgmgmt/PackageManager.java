@@ -1376,13 +1376,19 @@ public class PackageManager {
 	}
 
 	private static MavenPackageResolver createMavenResolver() {
-		Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
-		List<String> repoURLs = getMavenRepositoryURLs();
-		List<org.eclipse.aether.repository.RemoteRepository> extras = new ArrayList<>();
-		for (int i = 0; i < repoURLs.size(); i++) {
-			extras.add(MavenPackageResolver.remoteRepository("extra-" + i, repoURLs.get(i)));
+		try {
+			Path localRepo = Path.of(getPackageUserDir(), "maven-repo");
+			List<String> repoURLs = getMavenRepositoryURLs();
+			List<org.eclipse.aether.repository.RemoteRepository> extras = new ArrayList<>();
+			for (int i = 0; i < repoURLs.size(); i++) {
+				extras.add(MavenPackageResolver.remoteRepository("extra-" + i, repoURLs.get(i)));
+			}
+			return new MavenPackageResolver(localRepo, extras);
+		} catch (NoClassDefFoundError e) {
+			throw new UnsupportedOperationException(
+					"Maven resolver not available on the module path. " +
+					"Maven package install/load requires maven-resolver-supplier-mvn4.", e);
 		}
-		return new MavenPackageResolver(localRepo, extras);
 	}
 
 	/**
@@ -1394,7 +1400,13 @@ public class PackageManager {
 		List<MavenCoordinate> coords = loadMavenPackageConfig();
 		if (coords.isEmpty()) return;
 
-		MavenPackageResolver resolver = createMavenResolver();
+		MavenPackageResolver resolver;
+		try {
+			resolver = createMavenResolver();
+		} catch (UnsupportedOperationException e) {
+			System.err.println("Warning: " + e.getMessage());
+			return;
+		}
 
 		for (MavenCoordinate coord : coords) {
 			try {
