@@ -12,14 +12,18 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.module.ModuleReader;
+import java.lang.module.ResolvedModule;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +31,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
@@ -553,8 +559,20 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 mainTemplate = new File(dirName + fileSep + BeautiConfig.TEMPLATE_DIR + fileSep + fileName);
             }
         }
-        Log.warning.println("Loading template " + mainTemplate.getAbsolutePath());
-        String templateXML = load(mainTemplate.getAbsolutePath());
+        String templateXML;
+        if (mainTemplate.exists()) {
+            Log.warning.println("Loading template " + mainTemplate.getAbsolutePath());
+            templateXML = load(mainTemplate.getAbsolutePath());
+        } else {
+            // try loading from module resources (JAR)
+            String baseName = new File(fileName).getName();
+            String resourcePath = BeautiConfig.TEMPLATE_DIR + "/" + baseName;
+            templateXML = loadResourceFromModules(resourcePath);
+            if (templateXML == null) {
+                throw new IOException("Cannot find template: " + fileName);
+            }
+            Log.warning.println("Loading template from module resource: " + resourcePath);
+        }
 
         // find merge points
         int i = 0;
@@ -585,69 +603,59 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         // This prevents loading templates twice, once from the development area
         // and once from .beast2-package area
         Set<String> loadedTemplates = new HashSet<>();
+        loadedTemplates.add(new File(fileName).getName());
+
+        // 1. Scan filesystem directories for sub-templates
         for (String dirName : dirs) {
             Log.info.println("Investigating " + dirName);
             File templates = new File(dirName + fileSep + BeautiConfig.TEMPLATE_DIR);
             File[] files = templates.listFiles();
             if (files != null) {
                 for (File template : files) {
-                    if (!template.getAbsolutePath().equals(mainTemplate.getAbsolutePath())
-                            && template.getName().toLowerCase().endsWith(".xml")) {
+                    if (template.getName().toLowerCase().endsWith(".xml")) {
                         if (!loadedTemplates.contains(template.getName())) {
                             Log.warning.println("Processing " + template.getAbsolutePath());
                             FXUtils.logToSplashScreen("Processing " + template.getName());
                             loadedTemplates.add(template.getName());
                             String xml2 = load(template.getAbsolutePath());
-                            if (!xml2.contains("<mergepoint ")) {
-                                try {
-
-                                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                                    // factory.setValidating(true);
-                                    Document doc = factory.newDocumentBuilder().parse(template);
-                                    doc.normalize();
-
-                                    processBeautiConfig(doc);
-
-                                    // find mergewith elements
-                                    NodeList nodes = doc.getElementsByTagName("mergewith");
-                                    for (int mergeElementIndex = 0; mergeElementIndex < nodes.getLength(); mergeElementIndex++) {
-                                        Node mergeElement = nodes.item(mergeElementIndex);
-                                        String mergePoint = mergeElement.getAttributes().getNamedItem("point")
-                                                .getNodeValue();
-                                        if (!mergePoints.containsKey(mergePoint)) {
-                                            Log.warning.println("Cannot find merge point named " + mergePoint
-                                                    + " from " + template.getName()
-                                                    + " in template. MergeWith ignored.");
-                                        } else {
-                                            String xml = "";
-                                            NodeList children = mergeElement.getChildNodes();
-                                            for (int childIndex = 0; childIndex < children.getLength(); childIndex++) {
-                                                xml += nodeToString(children.item(childIndex));
-                                            }
-                                            String str = mergePoints.get(mergePoint);
-                                            str += xml;
-                                            mergePoints.put(mergePoint, str);
-
-                                            // find namespace of sub template
-                                            processNamespace(xml2, namespaces);
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    if (e.getMessage() != null) {
-                                    	if (!e.getMessage().contains("beastfx.app.beauti.InputConstraint")) {
-                                    }
-                                        Log.warning.println(e.getMessage());
-                                    } else {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
+                            processSubTemplate(template.getName(), xml2, mergePoints, loadedTemplates, namespaces);
                         } else {
                             Log.warning.println("Skipping " + template.getAbsolutePath() + " since "
                                     + template.getName() + " is already processed");
                         }
-
                     }
+                }
+            }
+        }
+
+        // 2. Scan module resources (JARs) for sub-templates
+        for (ModuleLayer layer : getAllModuleLayers()) {
+            for (ResolvedModule rm : layer.configuration().modules()) {
+                try (ModuleReader reader = rm.reference().open()) {
+                    List<String> fxResources = reader.list()
+                            .filter(r -> r.startsWith(BeautiConfig.TEMPLATE_DIR + "/") && r.endsWith(".xml"))
+                            .collect(Collectors.toList());
+                    for (String resource : fxResources) {
+                        String name = resource.substring(BeautiConfig.TEMPLATE_DIR.length() + 1);
+                        if (!loadedTemplates.contains(name)) {
+                            loadedTemplates.add(name);
+                            try {
+                                Optional<InputStream> ois = reader.open(resource);
+                                if (ois.isPresent()) {
+                                    try (InputStream is = ois.get()) {
+                                        String xml2 = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                                        Log.warning.println("Processing module resource: " + resource + " from " + rm.name());
+                                        FXUtils.logToSplashScreen("Processing " + name);
+                                        processSubTemplate(name, xml2, mergePoints, loadedTemplates, namespaces);
+                                    }
+                                }
+                            } catch (IOException e) {
+                                Log.warning.println("Failed to read resource " + resource + " from " + rm.name());
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    // skip unreadable modules
                 }
             }
         }
@@ -769,6 +777,85 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         }
         fin.close();
         return buf.toString();
+    }
+
+    /** All module layers: boot + external packages. */
+    private static List<ModuleLayer> getAllModuleLayers() {
+        List<ModuleLayer> layers = new ArrayList<>();
+        layers.add(ModuleLayer.boot());
+        layers.addAll(BEASTClassLoader.getPluginLayers());
+        return layers;
+    }
+
+    /** Load a resource from the first module that contains it. */
+    private static String loadResourceFromModules(String resourcePath) {
+        for (ModuleLayer layer : getAllModuleLayers()) {
+            for (ResolvedModule rm : layer.configuration().modules()) {
+                try (ModuleReader reader = rm.reference().open()) {
+                    Optional<InputStream> ois = reader.open(resourcePath);
+                    if (ois.isPresent()) {
+                        try (InputStream is = ois.get()) {
+                            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                        }
+                    }
+                } catch (IOException e) {
+                    // skip unreadable modules
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Process a sub-template: parse its XML, handle BeautiConfig elements,
+     * and merge {@code <mergewith>} content into the merge points.
+     */
+    private void processSubTemplate(String name, String xml2,
+            HashMap<String, String> mergePoints, Set<String> loadedTemplates,
+            List<String> namespaces) {
+        if (!xml2.contains("<mergepoint ")) {
+            try {
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                Document doc = factory.newDocumentBuilder()
+                        .parse(new InputSource(new StringReader(xml2)));
+                doc.normalize();
+
+                processBeautiConfig(doc);
+
+                // find mergewith elements
+                NodeList nodes = doc.getElementsByTagName("mergewith");
+                for (int mergeElementIndex = 0; mergeElementIndex < nodes.getLength(); mergeElementIndex++) {
+                    Node mergeElement = nodes.item(mergeElementIndex);
+                    String mergePoint = mergeElement.getAttributes().getNamedItem("point")
+                            .getNodeValue();
+                    if (!mergePoints.containsKey(mergePoint)) {
+                        Log.warning.println("Cannot find merge point named " + mergePoint
+                                + " from " + name
+                                + " in template. MergeWith ignored.");
+                    } else {
+                        String xml = "";
+                        NodeList children = mergeElement.getChildNodes();
+                        for (int childIndex = 0; childIndex < children.getLength(); childIndex++) {
+                            xml += nodeToString(children.item(childIndex));
+                        }
+                        String str = mergePoints.get(mergePoint);
+                        str += xml;
+                        mergePoints.put(mergePoint, str);
+
+                        // find namespace of sub template
+                        processNamespace(xml2, namespaces);
+                    }
+                }
+            } catch (Exception e) {
+                if (e.getMessage() != null) {
+                    if (!e.getMessage().contains("beastfx.app.beauti.InputConstraint")) {
+                    }
+                    Log.warning.println(e.getMessage());
+                } else {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public Alignment getPartition(BEASTInterface beastObject) {
@@ -976,42 +1063,8 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
      */
     public void mergeSequences(String xml) throws XMLParserException, SAXException, IOException, ParserConfigurationException {
         if (xml == null) {
-        	if (new File(STANDARD_TEMPLATE).exists()) {
-        		xml = processTemplate(STANDARD_TEMPLATE);
-        	} else {
-        		// try BEAST.base package in user package dir 
-        		String pacakgeUseDir = PackageManager.getPackageUserDir();
-    			// deal with special characters and spaces in path
-        		pacakgeUseDir = URLDecoder.decode(pacakgeUseDir, "UTF-8");
-        		String template1 = pacakgeUseDir + "/BEAST.base/" + STANDARD_TEMPLATE;
-        		if (new File(template1).exists()) {
-        			xml = processTemplate(template1);
-        		} else {        		
-            		// try fxtemplates where BEAST is installed 
-        			String launcherJar = BEASTClassLoader.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-        			// deal with special characters and spaces in path
-        			launcherJar = URLDecoder.decode(launcherJar, "UTF-8");
-        			File launcherFile = new File(launcherJar);
-        			if (!launcherFile.isDirectory()) {
-        				launcherFile = launcherFile.getParentFile();
-        				launcherJar = launcherFile.getPath();
-            			launcherJar = URLDecoder.decode(launcherJar, "UTF-8");
-        			} else {
-                		// looks like a development environment, but BeastFX is not the working dir 
-        			}
-        			String template = launcherJar + "/../" + STANDARD_TEMPLATE;
-        			if (new File(template).exists()) {
-        				xml = processTemplate(template);
-        			} else {
-        				FXUtils.endSplashScreen();
-        				JOptionPane.showMessageDialog(null, "Could not find template at\n" + 
-        						STANDARD_TEMPLATE + "\n" + template1 + "\n" + template + "\n" +
-        									"Try to pass the template as command line argument to beauti\n" +
-        									"e.g /path/to/beast/bin/beauti -template /path/to/template.xml");
-        				System.exit(1);
-        			}
-        		}
-        	}
+            // processTemplate searches filesystem dirs and then module resources (JARs)
+            xml = processTemplate(STANDARD_TEMPLATE);
         }
         loadTemplate(xml);
         // create XML for alignments

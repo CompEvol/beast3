@@ -2,6 +2,8 @@ package beast.pkgmgmt;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.lang.module.ModuleReader;
+import java.lang.module.ResolvedModule;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
@@ -347,6 +349,19 @@ public class BEASTClassLoader {
             }
         }
         return null;
+    }
+
+    // ------------------------------------------------------------------
+    //  Plugin layer accessors
+    // ------------------------------------------------------------------
+
+    /**
+     * Return an unmodifiable view of the plugin {@link ModuleLayer}s
+     * registered for external BEAST packages.  Used by BeautiDoc to scan
+     * JAR resources (fxtemplates) at runtime.
+     */
+    public static List<ModuleLayer> getPluginLayers() {
+        return Collections.unmodifiableList(pluginLayers);
     }
 
     // ------------------------------------------------------------------

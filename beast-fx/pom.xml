@@ -116,6 +116,9 @@
                         <monocle.platform>Headless</monocle.platform>
                         <prism.order>sw</prism.order>
                         <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
+                        <!-- Isolate tests from user-installed packages (e.g. MM/morph-models)
+                             that may reference classes not on the test module path -->
+                        <beast.user.package.dir>${project.build.directory}/beast-packages</beast.user.package.dir>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
