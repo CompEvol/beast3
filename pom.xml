@@ -35,6 +35,13 @@
         <url>https://github.com/CompEvol/beast3</url>
     </scm>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/CompEvol/beast3</url>
+        </repository>
+    </distributionManagement>
+
     <modules>
         <module>beast-pkgmgmt</module>
         <module>beast-base</module>
