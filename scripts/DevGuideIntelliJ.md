@@ -75,6 +75,67 @@ To test your own BEAST package against BEAST 3 core in a single IDE session:
 4. Set your package module to depend on `beast-base` (IntelliJ will resolve this from the Maven reactor if your package is also a Maven module, or you can add a module dependency manually).
 5. Run `BeastMain` — BEAST discovers your package's services automatically from the module descriptors in the boot layer.  No `version.xml` or manual package installation needed during development.
 
+## Multi-package workspace for lead developers
+
+Lead developers of BEAST 3 who maintain the core and many packages simultaneously can use a workspace aggregator POM to import everything into IntelliJ at once.
+
+### Directory layout
+
+Create a parent directory and clone all the repositories into it:
+
+```
+beast-workspace/
+├── pom.xml              ← aggregator POM (local only, not committed to any repo)
+├── beast3/              ← git clone of core
+├── beast-morph-models/  ← git clone of a package
+├── beast-phylodynamics/ ← git clone of another package
+└── ...
+```
+
+### Aggregator POM
+
+Create a minimal `pom.xml` in the `beast-workspace/` directory that lists all repositories as modules:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>local</groupId>
+    <artifactId>beast-workspace</artifactId>
+    <version>0</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>beast3</module>
+        <module>beast-morph-models</module>
+        <module>beast-phylodynamics</module>
+        <!-- add more packages as needed -->
+    </modules>
+</project>
+```
+
+### Import
+
+1. **File → Open** and select the `beast-workspace/` directory.
+2. IntelliJ will detect the aggregator POM and import all BEAST 3 core modules and package modules.
+3. If prompted, select **Trust Project** and **Open as Project**.
+
+IntelliJ's Maven reactor resolution means that when a package declares a dependency on `beast-base` or `beast-fx`, IntelliJ resolves it from the workspace source rather than from a JAR. Source navigation, refactoring, and debugging all work across project boundaries automatically.
+
+### Building from the command line
+
+From the `beast-workspace/` directory, Maven builds everything in dependency order:
+
+```bash
+mvn compile
+mvn test -DskipTests   # or mvn test to run all tests across all projects
+```
+
+### Adding or removing packages
+
+Edit `beast-workspace/pom.xml` to add or remove `<module>` entries, then right-click the root `pom.xml` → **Maven → Reload project**. Each package must be a Maven project with a `pom.xml` that declares its BEAST 3 dependencies.
+
 ## Running tests
 
 Right-click a test class or the `src/test/java` directory and select **Run Tests**. IntelliJ picks up the JUnit 5 and JUnit 4 dependencies from Maven automatically.

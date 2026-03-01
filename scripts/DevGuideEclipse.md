@@ -83,6 +83,67 @@ To test your own BEAST package against BEAST 3 core in a single IDE session:
 4. If your package declares a Maven dependency on `beast-base` (or `beast-fx`), m2e will resolve it from the workspace reactor automatically. Otherwise, add a project dependency manually: right-click your package project → **Properties → Java Build Path → Projects → Add** and select `beast-base`.
 5. Run `BeastMain` — BEAST discovers your package's services automatically from the module descriptors in the boot layer. No `version.xml` or manual package installation needed during development.
 
+## Multi-package workspace for lead developers
+
+Lead developers of BEAST 3 who maintain the core and many packages simultaneously can use a workspace aggregator POM to import everything into Eclipse at once.
+
+### Directory layout
+
+Create a parent directory and clone all the repositories into it:
+
+```
+beast-workspace/
+├── pom.xml              ← aggregator POM (local only, not committed to any repo)
+├── beast3/              ← git clone of core
+├── beast-morph-models/  ← git clone of a package
+├── beast-phylodynamics/ ← git clone of another package
+└── ...
+```
+
+### Aggregator POM
+
+Create a minimal `pom.xml` in the `beast-workspace/` directory that lists all repositories as modules:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>local</groupId>
+    <artifactId>beast-workspace</artifactId>
+    <version>0</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>beast3</module>
+        <module>beast-morph-models</module>
+        <module>beast-phylodynamics</module>
+        <!-- add more packages as needed -->
+    </modules>
+</project>
+```
+
+### Import
+
+1. **File → Import → Maven → Existing Maven Projects**.
+2. Set **Root Directory** to `beast-workspace/`.
+3. Eclipse will discover the aggregator, all BEAST 3 core modules, and all package modules. Select all and click **Finish**.
+
+m2e's workspace resolution means that when a package declares a dependency on `beast-base` or `beast-fx`, Eclipse resolves it from the workspace source rather than from a JAR. Source navigation, refactoring, and debugging all work across project boundaries automatically.
+
+### Building from the command line
+
+From the `beast-workspace/` directory, Maven builds everything in dependency order:
+
+```bash
+mvn compile
+mvn test -DskipTests   # or mvn test to run all tests across all projects
+```
+
+### Adding or removing packages
+
+Edit `beast-workspace/pom.xml` to add or remove `<module>` entries, then **Maven → Update Project** (Alt+F5) in Eclipse. Each package must be a Maven project with a `pom.xml` that declares its BEAST 3 dependencies.
+
 ## Running tests
 
 Right-click a test class or the `src/test/java` folder and select **Run As → JUnit Test**. Eclipse picks up the JUnit 5 and JUnit 4 dependencies from Maven automatically.
