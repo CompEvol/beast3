@@ -15,11 +15,16 @@ import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
+import org.eclipse.aether.util.graph.selector.AndDependencySelector;
+import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
+import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
+import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -71,8 +76,9 @@ public class MavenPackageResolver {
             throws Exception {
 
         RepositorySystem system = new RepositorySystemSupplier().getRepositorySystem();
+        ProgressListener progress = new ProgressListener();
 
-        try (CloseableSession session = createSession(system)) {
+        try (CloseableSession session = createSession(system, progress)) {
             Artifact artifact = new DefaultArtifact(groupId, artifactId, "jar", version);
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot(new Dependency(artifact, "compile"));
@@ -123,11 +129,19 @@ public class MavenPackageResolver {
         return resolve(parts[0], parts[1], parts[2]);
     }
 
-    private CloseableSession createSession(RepositorySystem system) {
+    private CloseableSession createSession(RepositorySystem system, ProgressListener listener) {
         return system.createSessionBuilder()
                 .withLocalRepositoryBaseDirectories(localRepoDir)
                 .setSystemProperties(System.getProperties())
-                .setTransferListener(new ProgressListener())
+                .setTransferListener(listener)
+                // Prune test, provided, and optional dependencies during
+                // collection so we don't walk their entire POM tree.
+                // Without this, an artifact like gson pulls 1800+ POMs
+                // via test deps (truth → guava → gwt → ...).
+                .setDependencySelector(new AndDependencySelector(
+                        new ScopeDependencySelector("test", "provided"),
+                        new OptionalDependencySelector(),
+                        new ExclusionDependencySelector()))
                 // Only resolve from our explicitly configured repositories,
                 // not from repositories declared in artifact POMs/parent POMs
                 // (e.g. Sonatype snapshots).  This prevents hangs caused by
@@ -140,10 +154,13 @@ public class MavenPackageResolver {
                 .build();
     }
 
-    /** Prints download progress to stderr. */
+    /** Prints download progress to stderr and tracks transfer count. */
     private static class ProgressListener extends AbstractTransferListener {
+        final AtomicInteger transferCount = new AtomicInteger();
+
         @Override
         public void transferStarted(TransferEvent event) {
+            int count = transferCount.incrementAndGet();
             TransferResource r = event.getResource();
             String name = r.getResourceName();
             // shorten "org/foo/bar/baz-1.0.jar" to "baz-1.0.jar"
@@ -151,9 +168,9 @@ public class MavenPackageResolver {
             if (slash >= 0) name = name.substring(slash + 1);
             long size = r.getContentLength();
             if (size > 0) {
-                System.err.printf("  Downloading %s (%d KB)%n", name, size / 1024);
+                System.err.printf("  [%d] Downloading %s (%d KB)%n", count, name, size / 1024);
             } else {
-                System.err.printf("  Downloading %s%n", name);
+                System.err.printf("  [%d] Downloading %s%n", count, name);
             }
         }
 
