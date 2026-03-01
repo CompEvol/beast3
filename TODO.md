@@ -51,7 +51,7 @@ Enable external BEAST packages to be distributed as plain Maven Central JARs ins
   package manager dialog
 - ~~**Step 4: Migrate existing packages**~~ DONE — beast-package-skeleton updated with Maven
   Central metadata, release profile, version.xml JAR embedding, and publishing docs; morph-models
-  updated with io.github.alexeid groupId, release profile, and version.xml JAR embedding
+  updated with io.github.compevol groupId, release profile, and version.xml JAR embedding
 
 ## 10. Custom domain extension limitation
 The current domain system (Real, PositiveReal, etc.) is a closed set of enum-like classes.

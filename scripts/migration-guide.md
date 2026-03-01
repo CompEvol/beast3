@@ -62,7 +62,7 @@ Deployed package JARs are loaded at runtime into a child `ModuleLayer` per packa
 
 BEAST 3 packages can be distributed as plain Maven Central JARs in addition to
 (or instead of) ZIP archives submitted to CBAN. This lets users install your
-package with a single Maven coordinate (e.g. `io.github.alexeid:beast-morph-models:1.3.0`)
+package with a single Maven coordinate (e.g. `io.github.compevol:beast-morph-models:1.3.0`)
 via BEAUti's **Install from Maven** button or the command line.
 
 Requirements for Maven Central distribution:

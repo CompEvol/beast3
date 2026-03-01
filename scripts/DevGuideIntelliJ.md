@@ -20,7 +20,7 @@ https://www.jetbrains.com/idea/download/
 
 ## Open the project
 
-1. **File → Open** and select the `beast3modular` repository root directory.
+1. **File → Open** and select the `beast3` repository root directory.
 2. IntelliJ will detect the Maven `pom.xml` and automatically import the project structure, modules, and dependencies.
 3. If prompted, select **Trust Project** and **Open as Project**.
 
@@ -39,8 +39,8 @@ If IntelliJ does not automatically pick up JDK 25:
 Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. If you haven't already, install them from the terminal:
 
 ```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 Then reload Maven in IntelliJ (right-click the root `pom.xml` → **Maven → Reload project**).
@@ -59,7 +59,7 @@ Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-ru
 
 To test your own BEAST package against BEAST 3 core in a single IDE session:
 
-1. Open the `beast3modular` project as described above.
+1. Open the `beast3` project as described above.
 2. **File → New → Module from Existing Sources** and select your package's root directory (or its `pom.xml`).
 3. Add a `module-info.java` to your package with `provides` declarations for your service implementations:
    ```java

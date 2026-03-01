@@ -32,7 +32,7 @@ jobs:
         run: >
           mvn install:install-file
           -Dfile=lib/beagle.jar
-          -DgroupId=io.github.alexeid
+          -DgroupId=io.github.compevol
           -DartifactId=beagle
           -Dversion=1.0
           -Dpackaging=jar
@@ -41,7 +41,7 @@ jobs:
         run: >
           mvn install:install-file
           -Dfile=lib/colt.jar
-          -DgroupId=io.github.alexeid
+          -DgroupId=io.github.compevol
           -DartifactId=colt
           -Dversion=1.0
           -Dpackaging=jar
@@ -55,7 +55,7 @@ jobs:
         run: >
           mvn deploy:deploy-file
           -Dfile=lib/beagle.jar
-          -DgroupId=io.github.alexeid
+          -DgroupId=io.github.compevol
           -DartifactId=beagle
           -Dversion=1.0
           -Dpackaging=jar
@@ -70,7 +70,7 @@ jobs:
         run: >
           mvn deploy:deploy-file
           -Dfile=lib/colt.jar
-          -DgroupId=io.github.alexeid
+          -DgroupId=io.github.compevol
           -DartifactId=colt
           -Dversion=1.0
           -Dpackaging=jar

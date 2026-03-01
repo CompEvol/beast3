@@ -2165,8 +2165,8 @@ public class PackageManager {
         System.out.println("packagemanager -useAppDir -add SNAPP");
         System.out.println("packagemanager -del SNAPP");
         System.out.println("packagemanager -addRepository URL");
-        System.out.println("packagemanager -maven io.github.alexeid:beast-morph-models:1.3.0");
-        System.out.println("packagemanager -delMaven io.github.alexeid:beast-morph-models");
+        System.out.println("packagemanager -maven io.github.compevol:beast-morph-models:1.3.0");
+        System.out.println("packagemanager -delMaven io.github.compevol:beast-morph-models");
         System.out.println("packagemanager -listMaven");
         System.out.println("packagemanager -addMavenRepository https://beast2.org/maven/");
         System.exit(0);

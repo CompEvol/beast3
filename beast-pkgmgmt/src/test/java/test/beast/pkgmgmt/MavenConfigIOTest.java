@@ -39,7 +39,7 @@ class MavenConfigIOTest {
         setPackageUserDir();
         try {
             List<MavenCoordinate> coords = new ArrayList<>();
-            coords.add(new MavenCoordinate("io.github.alexeid", "beast-morph-models", "1.0.0"));
+            coords.add(new MavenCoordinate("io.github.compevol", "beast-morph-models", "1.0.0"));
             coords.add(new MavenCoordinate("io.github.somedev", "beast-bsp", "2.1.0"));
 
             PackageManager.saveMavenPackageConfig(coords);
@@ -52,7 +52,7 @@ class MavenConfigIOTest {
             List<MavenCoordinate> loaded = PackageManager.loadMavenPackageConfig();
             assertEquals(2, loaded.size());
 
-            assertEquals("io.github.alexeid", loaded.get(0).groupId);
+            assertEquals("io.github.compevol", loaded.get(0).groupId);
             assertEquals("beast-morph-models", loaded.get(0).artifactId);
             assertEquals("1.0.0", loaded.get(0).version);
 
@@ -139,7 +139,7 @@ class MavenConfigIOTest {
 
     @Test
     void mavenCoordinateToString() {
-        MavenCoordinate coord = new MavenCoordinate("io.github.alexeid", "beast-morph-models", "1.0.0");
-        assertEquals("io.github.alexeid:beast-morph-models:1.0.0", coord.toString());
+        MavenCoordinate coord = new MavenCoordinate("io.github.compevol", "beast-morph-models", "1.0.0");
+        assertEquals("io.github.compevol:beast-morph-models:1.0.0", coord.toString());
     }
 }

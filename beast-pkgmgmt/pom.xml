@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>io.github.alexeid</groupId>
-        <artifactId>beast3modular</artifactId>
+        <groupId>io.github.compevol</groupId>
+        <artifactId>beast3</artifactId>
         <version>2.8.0-SNAPSHOT</version>
     </parent>
 

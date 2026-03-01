@@ -27,7 +27,7 @@ Project Structure
 -----------------
 
 ```
-beast3modular/            (parent POM)
+beast3/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module — no JavaFX dependency)
 ├── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
@@ -51,8 +51,8 @@ Building
 Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. Install them to your local repository:
 
 ```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 ### Compile
@@ -109,7 +109,7 @@ Add BEAST dependencies to your project's `pom.xml`. For **headless / library** u
 
 ```xml
 <dependency>
-    <groupId>io.github.alexeid</groupId>
+    <groupId>io.github.compevol</groupId>
     <artifactId>beast-base</artifactId>
     <version>2.8.0</version>
 </dependency>
@@ -119,7 +119,7 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 
 ```xml
 <dependency>
-    <groupId>io.github.alexeid</groupId>
+    <groupId>io.github.compevol</groupId>
     <artifactId>beast-fx</artifactId>
     <version>2.8.0</version>
 </dependency>
@@ -144,9 +144,9 @@ If your project does not use JPMS modules, the BEAST classes are accessible from
 If you prefer to build from source instead of using GitHub Packages, you can install BEAST 3 to your local Maven repository:
 
 ```bash
-cd /path/to/beast3modular
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.alexeid -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.alexeid -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
+cd /path/to/beast3
+mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
+mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 mvn install -DskipTests
 ```
 
@@ -167,12 +167,12 @@ and enter the Maven coordinates:
 groupId:artifactId:version
 ```
 
-For example: `io.github.alexeid:beast-morph-models:1.3.0`
+For example: `io.github.compevol:beast-morph-models:1.3.0`
 
 ### From the command line
 
 ```bash
-packagemanager -maven io.github.alexeid:beast-morph-models:1.3.0
+packagemanager -maven io.github.compevol:beast-morph-models:1.3.0
 ```
 
 Maven packages are resolved via [Apache Maven Resolver](https://maven.apache.org/resolver/),
