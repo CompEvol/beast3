@@ -19,8 +19,10 @@ Write a guide covering:
 ## 4. Publish javadoc site
 Set up GitHub Pages (or similar) to host generated javadoc, and link from README.
 
-## 5. CHANGELOG
-Summarize BEAST 2 → 3 differences beyond what the migration guide covers.
+## 5. ~~CHANGELOG~~ DONE
+Created `CHANGELOG.md` covering build/tooling, spec type system, new distributions &
+operators, API removals, package system, dependency updates, BEAUti/templates, and testing.
+Cross-references `scripts/migration-guide.md` for detailed class mappings.
 
 ## 6. ~~Verify beast-package-skeleton~~ DONE
 Fixed dead README links, removed unnecessary surefire `--add-reads` flags, corrected XML
