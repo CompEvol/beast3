@@ -191,8 +191,6 @@ public class BEASTClassLoader {
                         namespaces.add(providerName.substring(0, providerName.lastIndexOf('.')));
                     }
                 }
-                // Mark scanned so ensureServicesLoaded won't re-scan
-                scannedServiceTypes.add(provides.service());
             }
         }
     }
