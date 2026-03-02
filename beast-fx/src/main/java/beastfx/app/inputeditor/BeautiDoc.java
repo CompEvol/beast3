@@ -629,14 +629,18 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         }
 
         // 2. Scan module resources (JARs) for sub-templates
+        // Match both module-namespaced paths (e.g. beast.fx/fxtemplates/Standard.xml)
+        // and legacy paths (e.g. fxtemplates/Standard.xml)
+        String fxDir = "/" + BeautiConfig.TEMPLATE_DIR + "/";
         for (ModuleLayer layer : getAllModuleLayers()) {
             for (ResolvedModule rm : layer.configuration().modules()) {
                 try (ModuleReader reader = rm.reference().open()) {
                     List<String> fxResources = reader.list()
-                            .filter(r -> r.startsWith(BeautiConfig.TEMPLATE_DIR + "/") && r.endsWith(".xml"))
+                            .filter(r -> r.contains(fxDir) && r.endsWith(".xml"))
                             .collect(Collectors.toList());
                     for (String resource : fxResources) {
-                        String name = resource.substring(BeautiConfig.TEMPLATE_DIR.length() + 1);
+                        int idx = resource.lastIndexOf(fxDir);
+                        String name = resource.substring(idx + fxDir.length());
                         if (!loadedTemplates.contains(name)) {
                             loadedTemplates.add(name);
                             try {
@@ -787,12 +791,20 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         return layers;
     }
 
-    /** Load a resource from the first module that contains it. */
+    /** Load a resource from the first module that contains it.
+     *  For each module, tries the module-namespaced path first (e.g. beast.fx/fxtemplates/Standard.xml),
+     *  then falls back to the legacy path (e.g. fxtemplates/Standard.xml). */
     private static String loadResourceFromModules(String resourcePath) {
         for (ModuleLayer layer : getAllModuleLayers()) {
             for (ResolvedModule rm : layer.configuration().modules()) {
                 try (ModuleReader reader = rm.reference().open()) {
-                    Optional<InputStream> ois = reader.open(resourcePath);
+                    // Try module-namespaced path first
+                    String namespacedPath = rm.name() + "/" + resourcePath;
+                    Optional<InputStream> ois = reader.open(namespacedPath);
+                    if (ois.isEmpty()) {
+                        // Fall back to legacy path
+                        ois = reader.open(resourcePath);
+                    }
                     if (ois.isPresent()) {
                         try (InputStream is = ois.get()) {
                             return new String(is.readAllBytes(), StandardCharsets.UTF_8);

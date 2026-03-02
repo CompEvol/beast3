@@ -83,7 +83,7 @@ echo "==> Step 3: Creating application bundles with jpackage..."
 ICON_DIR="$SCRIPT_DIR/../common/icons"
 JAVA_OPTS="-Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8"
 
-FXTEMPLATES="$REPO_ROOT/beast-fx/src/main/resources/fxtemplates"
+FXTEMPLATES="$REPO_ROOT/beast-fx/src/main/resources/beast.fx/fxtemplates"
 
 build_app() {
     local app_name="$1"

@@ -53,18 +53,12 @@ Enable external BEAST packages to be distributed as plain Maven Central JARs ins
   Central metadata, release profile, version.xml JAR embedding, and publishing docs; morph-models
   updated with io.github.compevol groupId, release profile, and version.xml JAR embedding
 
-## 10. JPMS split package: fxtemplates in multiple modules
-External packages that include BEAUti templates (e.g. morph-models-fx) have a `fxtemplates/`
-resource directory, which clashes with `beast-fx`'s own `fxtemplates/` on the JPMS module path.
-Java rejects the duplicate package at module layer creation.
-
-Fix: move each module's fxtemplates to a module-unique resource path (e.g.
-`beast.fx/fxtemplates/`, `beast.morph.models.fx/fxtemplates/`). Update
-`BeautiDoc.processTemplate()` module resource scanner to look for `*/fxtemplates/*.xml`.
-The ZIP assembly for the package manager would flatten them back to `fxtemplates/` at the
-top level.
-
-This is blocking the `exec:exec` BEAUti launcher in morph-models and beast-package-skeleton.
+## 10. ~~JPMS split package: fxtemplates in multiple modules~~ DONE
+Moved `beast-fx` fxtemplates to module-unique path `beast.fx/fxtemplates/`. Updated
+`BeautiDoc` module resource scanner to match `*/fxtemplates/*.xml` (namespaced) and
+`fxtemplates/*.xml` (legacy). `loadResourceFromModules()` tries namespaced path first
+with legacy fallback. External packages use their own namespace (e.g.
+`beast.morph.models.fx/fxtemplates/`) to avoid JPMS split-package conflicts.
 
 ## 11. Custom domain extension limitation
 The current domain system (Real, PositiveReal, etc.) is a closed set of enum-like classes.

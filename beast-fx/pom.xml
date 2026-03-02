@@ -144,8 +144,7 @@
                             </resources>
                         </configuration>
                     </execution>
-                    <!-- Copy fxtemplates/ and examples/ to target/test-classes so BEAUti tests
-                         find Standard.xml when workingDirectory is test-classes -->
+                    <!-- Copy module-namespaced fxtemplates to target/test-classes -->
                     <execution>
                         <id>copy-fxtemplates-to-test-classes</id>
                         <phase>generate-test-resources</phase>
@@ -156,7 +155,25 @@
                                 <resource>
                                     <directory>${project.build.outputDirectory}</directory>
                                     <includes>
-                                        <include>fxtemplates/**</include>
+                                        <include>beast.fx/fxtemplates/**</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- Also copy to legacy fxtemplates/ location so tests that use
+                         workingDirectory=test-classes find templates via filesystem -->
+                    <execution>
+                        <id>copy-fxtemplates-legacy</id>
+                        <phase>generate-test-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}/fxtemplates</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.outputDirectory}/beast.fx/fxtemplates</directory>
+                                    <includes>
+                                        <include>**</include>
                                     </includes>
                                 </resource>
                             </resources>
