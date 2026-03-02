@@ -126,7 +126,7 @@ All declared as \code{open module} (reflection OK for XML unmarshalling).
 \begin{center}
 \begin{tikzpicture}[
     every node/.style={font=\small\ttfamily, anchor=west},
-    level 1/.style={sibling distance=2cm, level distance=1.8cm},
+    level 1/.style={sibling distance=3.5cm, level distance=1.8cm},
 ]
 \node {\textbf{beast3/} \textrm{\scriptsize(parent POM)}}
   child {node {beast-pkgmgmt/}}
@@ -140,6 +140,22 @@ All declared as \code{open module} (reflection OK for XML unmarshalling).
 \item \code{beast-base} has \textbf{no JavaFX dependency} --- can be used headlessly
 \item \code{beagle} and \code{colt} ship as modular JARs in \code{lib/}
 \end{itemize}
+\end{frame}
+
+\begin{frame}{ModuleLayers replace custom classloader}
+\begin{alertblock}{The custom classloader was an idiosyncratic barrier}
+BEAST 2's plugin classloader predates Java's module system by 15+ years. It was the primary source of ``magic'' that confused new developers and defeated standard tooling.
+\end{alertblock}
+
+\vspace{0.5em}
+\begin{itemize}
+\item Using BEAST as a \textbf{library} in other projects (e.g.\ LPhyBEAST) was nearly impossible because the custom classloader conflicts with the host application's class loading
+\item AI-assisted tools (Copilot, agentic coding agents) don't understand bespoke classloaders, but they do understand Maven projects and JPMS modules
+\item Debugging class-not-found errors requires BEAST-specific knowledge that isn't transferable
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{BEAST 3 fix:} JPMS \code{ModuleLayer} does a better job out of the box, with per-package isolation that eliminates class conflicts the custom classloader can't deal with. Standard Java, standard tooling, no magic.
 \end{frame}
 
 \begin{frame}{What This Means for Your Package}
