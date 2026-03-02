@@ -83,8 +83,8 @@ Build the project, then use the `exec-maven-plugin` to launch BEAST applications
 ```bash
 mvn install -DskipTests
 
-# Run BEAST on an XML file
-mvn -pl beast-fx exec:exec -Dbeast.args="example.xml"
+# Run BEAST on an XML file (paths are relative to the project root)
+mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/examples/testHKY.xml"
 
 # Run BEAUti
 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
@@ -94,7 +94,7 @@ mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
 ```
 
-The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application.
+The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application. The working directory is the project root, so file paths in `-Dbeast.args` are relative to there.
 
 ### From IntelliJ
 
