@@ -16,6 +16,15 @@ target/
 *.state
 state.backup.xml
 
+# LaTeX auxiliary files
+*.aux
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.synctex.gz
+
 # OS files
 .DS_Store
 Thumbs.db
