@@ -1254,19 +1254,62 @@ public class PackageManager {
 		try {
 			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
 			ModuleLayer parent = ModuleLayer.boot();
-			Set<String> bootModuleNames = parent.modules().stream()
+			Set<String> availableModules = parent.modules().stream()
 				.map(Module::getName)
-				.collect(Collectors.toSet());
-			// Also exclude modules from already-loaded plugin layers
+				.collect(Collectors.toCollection(HashSet::new));
+			// Also include modules from already-loaded plugin layers
 			for (ModuleLayer layer : BEASTClassLoader.getPluginLayers()) {
-				layer.modules().stream().map(Module::getName).forEach(bootModuleNames::add);
+				layer.modules().stream().map(Module::getName).forEach(availableModules::add);
 			}
-			Set<String> moduleNames = finder.findAll().stream()
+
+			// Collect candidate modules (not already loaded)
+			Set<String> candidates = finder.findAll().stream()
 				.map(ref -> ref.descriptor().name())
-				.filter(name -> !bootModuleNames.contains(name))
+				.filter(name -> !availableModules.contains(name))
 				.collect(Collectors.toSet());
+
+			// Filter out modules whose requires can't be satisfied
+			Set<String> resolvable = new LinkedHashSet<>();
+			Set<String> skipped = new LinkedHashSet<>();
+			for (String name : candidates) {
+				var ref = finder.find(name).orElse(null);
+				if (ref == null) continue;
+				boolean satisfied = ref.descriptor().requires().stream()
+					.filter(r -> !r.modifiers().contains(
+						java.lang.module.ModuleDescriptor.Requires.Modifier.STATIC))
+					.allMatch(r -> availableModules.contains(r.name())
+						|| candidates.contains(r.name())
+						|| r.name().equals("java.base"));
+				if (satisfied) {
+					resolvable.add(name);
+				} else {
+					skipped.add(name);
+				}
+			}
+
+			if (!skipped.isEmpty()) {
+				System.err.println("Skipping modules with unsatisfied dependencies in " +
+					description + ": " + skipped);
+			}
+
+			if (resolvable.isEmpty()) {
+				if (services != null && packageName != null) {
+					BEASTClassLoader.classLoader.addServices(packageName, services);
+				}
+				return;
+			}
+
+			// Re-create finder from only the resolvable JARs
+			List<Path> resolvableJars = jarPaths.stream()
+				.filter(p -> {
+					var refs = ModuleFinder.of(p).findAll();
+					return refs.stream().anyMatch(r -> resolvable.contains(r.descriptor().name()));
+				})
+				.toList();
+
+			ModuleFinder filteredFinder = ModuleFinder.of(resolvableJars.toArray(Path[]::new));
 			Configuration config = parent.configuration()
-				.resolveAndBind(finder, ModuleFinder.of(), moduleNames);
+				.resolveAndBind(filteredFinder, ModuleFinder.of(), resolvable);
 			ModuleLayer layer = parent.defineModulesWithOneLoader(
 				config, ClassLoader.getSystemClassLoader());
 			BEASTClassLoader.registerPluginLayer(layer, services);
