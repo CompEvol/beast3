@@ -512,21 +512,44 @@ Add \code{module-info.java} when you can --- it's the primary mechanism and give
 \begin{tikzpicture}[
     box/.style={draw=beastblue, rounded corners, minimum width=2.8cm, minimum height=0.8cm, font=\small\ttfamily, align=center},
     pkg/.style={draw=beastorange, rounded corners, minimum width=2.5cm, minimum height=0.8cm, font=\small\ttfamily, align=center},
+    skip/.style={draw=gray!50, rounded corners, minimum width=2.5cm, minimum height=0.8cm, font=\small\ttfamily, align=center, text=gray!60},
     >=Stealth
 ]
 \node[box] (boot) {Boot Layer\\beast.base, beast.fx};
-\node[pkg, below left=1.2cm and 0cm of boot] (p1) {Package A\\ModuleLayer};
+\node[pkg, below left=1.2cm and 0cm of boot] (p1) {Package A\\(core module)};
+\node[skip, right=0.3cm of p1] (p1fx) {Package A\\(fx module)};
 \node[pkg, below right=1.2cm and 0cm of boot] (p2) {Package B\\ModuleLayer};
 \draw[->] (p1) -- (boot);
 \draw[->] (p2) -- (boot);
+\draw[->, dashed, gray!50] (p1fx) -- (boot);
 \end{tikzpicture}
 \end{center}
 
 \begin{itemize}
 \item Each deployed package gets its \textbf{own ModuleLayer}
 \item No classpath conflicts between packages
-\item Packages can have different versions of shared dependencies
+\item Modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are \textbf{automatically skipped} --- core modules still load
 \end{itemize}
+\end{frame}
+
+\begin{frame}{Package Loading at Startup}
+\textbf{\code{PackageManager.loadExternalJars()}} runs when BEAST starts:
+
+\vspace{0.5em}
+\begin{enumerate}
+\item \textbf{Scan package directories} --- find installed ZIP packages in\\
+  \code{\textasciitilde/.beast/2.8/} (or \code{BEAST\_PACKAGE\_PATH})
+\item \textbf{Parse \code{version.xml}} --- read service declarations and dependency info from each package
+\item \textbf{Create ModuleLayer per package:}
+  \begin{itemize}
+  \item Discover JPMS modules from the package's JARs
+  \item Exclude modules already in boot layer (no duplicates)
+  \item Filter out modules whose \code{requires} can't be satisfied
+  \item \code{resolveAndBind()} on the remaining modules
+  \end{itemize}
+\item \textbf{Load Maven packages} --- resolve coordinates from \code{maven-packages.xml}, same ModuleLayer process
+\item \textbf{Register with \code{BEASTClassLoader}} --- services from both \code{module-info.java} and \code{version.xml} merged into registry
+\end{enumerate}
 \end{frame}
 
 \begin{frame}{Maven Central Distribution}
