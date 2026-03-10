@@ -62,7 +62,14 @@ Moved `beast-fx` fxtemplates to module-unique path `beast.fx/fxtemplates/`. Upda
 with legacy fallback. External packages use their own namespace (e.g.
 `beast.morph.models.fx/fxtemplates/`) to avoid JPMS split-package conflicts.
 
-## 11. Custom domain extension limitation
+## 11. Reconcile trace analysis implementations ([#42](https://github.com/CompEvol/beast3/issues/42))
+Trace utilities moved from test tree to `beast.base.trace` (done). Remaining work:
+- Extract `computeACT` as public static method on `TraceStatistics`; have `ESS.ACT()` delegate to it (exact batch algorithm replaces incremental approximation)
+- Move core log reading/stats from `beastfx.app.tools.LogAnalyser` into `beast.base.trace`; make the `beast-fx` class a thin CLI/GUI wrapper
+- Rework `LogCombiner` (currently extends `beastfx.app.tools.LogAnalyser`) to use composition
+- Update `LogComparator` to depend on `beast.base.trace` types
+
+## 12. Custom domain extension limitation
 The current domain system (Real, PositiveReal, etc.) is a closed set of enum-like classes.
 Document the recommended approach for packages that need custom domains (e.g., correlation
 matrices, probability simplices with specific constraints).
