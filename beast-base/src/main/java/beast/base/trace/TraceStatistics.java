@@ -1,5 +1,6 @@
-package test.beast.beast2vs1.trace;
+package beast.base.trace;
 
+import beast.base.util.DiscreteStatistics;
 import beast.base.util.HeapSort;
 
 /**

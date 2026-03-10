@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import test.beast.beast2vs1.trace.Expectation;
+import beast.base.trace.Expectation;
 
 /**
  * Due to different naming, *BEAST 2 speciesCoalescent != *BEAST 1 species.coalescent

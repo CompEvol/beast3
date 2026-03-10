@@ -9,8 +9,8 @@ import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import test.beast.beast2vs1.trace.Expectation;
-import test.beast.beast2vs1.trace.LogAnalyser;
+import beast.base.trace.Expectation;
+import beast.base.trace.LogAnalyser;
 
 public abstract class TestFramework  {
     protected static long SEED = 128;

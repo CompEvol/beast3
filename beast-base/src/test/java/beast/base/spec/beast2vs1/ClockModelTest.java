@@ -4,7 +4,7 @@ package beast.base.spec.beast2vs1;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import test.beast.beast2vs1.trace.Expectation;
+import beast.base.trace.Expectation;
 
 import java.util.ArrayList;
 import java.util.List;

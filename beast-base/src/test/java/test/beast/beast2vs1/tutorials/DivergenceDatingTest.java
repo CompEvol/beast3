@@ -4,7 +4,7 @@ package test.beast.beast2vs1.tutorials;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import test.beast.beast2vs1.TestFramework;
-import test.beast.beast2vs1.trace.Expectation;
+import beast.base.trace.Expectation;
 
 import java.io.File;
 import java.nio.file.Files;

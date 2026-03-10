@@ -1,7 +1,7 @@
 package test.beast.beast2vs1.tutorials;
 
 import test.beast.beast2vs1.TestFramework;
-import test.beast.beast2vs1.trace.Expectation;
+import beast.base.trace.Expectation;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package test.beast.beast2vs1.trace;
+package beast.base.trace;
 
 /**
  * @author Alexei Drummond

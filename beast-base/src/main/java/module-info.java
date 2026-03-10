@@ -68,6 +68,7 @@ open module beast.base {
     exports beast.base.spec.inference.parameter;
     exports beast.base.spec.inference.util;
     exports beast.base.spec.type;
+    exports beast.base.trace;
     exports beast.base.util;
 
     // ServiceLoader service types
