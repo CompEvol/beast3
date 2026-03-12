@@ -64,6 +64,12 @@ cp "$FX_JAR" "$STAGING/"
 # All runtime dependencies (beast-base, beast-pkgmgmt, JavaFX, etc.)
 cp "$REPO_ROOT/beast-fx/target/lib"/*.jar "$STAGING/"
 
+# Remove empty JavaFX/jdk classifier JARs — these are Maven dependency-resolution
+# artifacts with no code (automatic modules). Only the platform-specific JARs
+# (e.g. javafx-graphics-25.0.2-mac-aarch64.jar) contain real module descriptors.
+find "$STAGING" \( -name "javafx-*.jar" -o -name "jdk-*.jar" \) \
+    ! -name "*-mac-*" ! -name "*-linux-*" ! -name "*-win-*" -delete
+
 # version.xml (read at runtime for version info)
 cp "$REPO_ROOT/version.xml" "$STAGING/"
 
@@ -94,8 +100,23 @@ jpackage --type app-image \
     --main-jar "$MAIN_JAR" \
     --main-class "beast.pkgmgmt.launcher.BeastLauncher" \
     --java-options "$JAVA_OPTS" \
+    --arguments "-window" \
     --add-modules ALL-MODULE-PATH \
     --dest "$OUTPUT"
+
+# Switch the native launcher from classpath to module-path mode so that
+# module descriptors (provides/requires) are visible at runtime.
+# jpackage's --main-jar/--main-class puts JARs on -cp, but external BEAST
+# packages loaded as ModuleLayers need core modules to be on the module path.
+BEAST_CFG="$OUTPUT/BEAST.app/Contents/app/BEAST.cfg"
+sed -i '' '/^app\.classpath/d' "$BEAST_CFG"
+sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher|' "$BEAST_CFG"
+# The native launcher resolves $APPDIR to the app/ directory at runtime.
+# Use = syntax because each java-options line is passed as a single JVM argument.
+sed -i '' '/^\[JavaOptions\]/a\
+java-options=--module-path=\$APPDIR\
+java-options=--add-modules=ALL-MODULE-PATH
+' "$BEAST_CFG"
 
 # BEAUti (and others) look for fxtemplates at Contents/app/../fxtemplates/
 if [ -d "$FXTEMPLATES" ]; then
@@ -155,7 +176,7 @@ build_wrapper_app() {
     cat > "$contents/MacOS/$app_name" <<LAUNCHER
 #!/bin/sh
 CONTENTS_DIR="\$(cd "\$(dirname "\$0")/.." && pwd)"
-BEAST_APP="\$(cd "\$CONTENTS_DIR/../BEAST.app/Contents" && pwd)"
+BEAST_APP="\$(cd "\$CONTENTS_DIR/../../BEAST.app/Contents" && pwd)"
 $launch_cmd
 LAUNCHER
     chmod 755 "$contents/MacOS/$app_name"
