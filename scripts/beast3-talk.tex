@@ -473,6 +473,20 @@ See the migration guide for the complete operator mapping table.
 \section{Package System}
 % ============================================================
 
+\begin{frame}{Package System Design Principles}
+\begin{enumerate}
+\item \textbf{One ModuleLayer per package} --- namespace isolation without losing visibility to the core API. Two packages can bundle different versions of the same library without conflict.
+
+\item \textbf{Same code path for dev and deployment} --- \code{module-info.java} \code{provides} declarations are the single source of truth. A developer in IntelliJ and an end user with an installed ZIP see the same service discovery.
+
+\item \textbf{Graceful degradation} --- modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are silently skipped. Core modules still load.
+
+\item \textbf{First-found wins} --- when the same JPMS module appears in multiple locations (boot layer, installed package, archive), the first one loaded wins. No silent duplicates, no ``reads more than one module'' errors.
+
+\item \textbf{Dual distribution} --- ZIP archives (CBAN) and Maven Central JARs converge on the same ModuleLayer creation path.
+\end{enumerate}
+\end{frame}
+
 \begin{frame}[fragile]{Service Discovery: \code{module-info.java}}
 \textbf{Primary mechanism} --- BEAST scans module descriptors at startup:
 
