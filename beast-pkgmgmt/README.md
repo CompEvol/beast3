@@ -112,23 +112,30 @@ packages.
 
 ### Proposed simplification
 
-The current search order is inherited from BEAST 2 and is more complex than
-BEAST 3 needs. In BEAST 3, the IDE module path handles development-time
-discovery via `module-info.java` `provides` declarations — classpath scanning
-(step 5) is no longer necessary. The system directory (step 3) has no known
-users, and the archive directory (step 6) adds complexity for a rarely-used
-rollback feature.
+In the development environment, all modules (BEAST core + external packages)
+are on the IDE module path in the boot layer. The package manager has nothing
+to do — Maven dependencies come from `~/.m2/` via the IDE, and service
+discovery works through `module-info.java` `provides` declarations.
 
-A simplified search order for future versions:
+In the user environment, only `beast.pkgmgmt`, `beast.base`, and `beast.fx`
+are in the boot layer. The package manager must find and load everything else.
+The current six-location search order is inherited from BEAST 2 and is more
+complex than BEAST 3 needs. The classpath scanning (step 5) was needed before
+JPMS but is now redundant. The system directory (step 3) has no known users.
+The archive directory (step 6) adds complexity for a rarely-used rollback
+feature.
 
-1. **`BEAST_PACKAGE_PATH`** (optional override for CI or custom layouts)
-2. **User package directory** (`~/.beast/2.8/`) — where packages are installed
-3. **BEAST installation directory** — for packages bundled with the application
+A simplified search for the user environment would need only two locations:
 
-This reduces the reconciliation logic and makes the system easier to reason
-about. Package rollback could be handled explicitly through the package manager
-(reinstall a specific version) rather than implicitly through archive directory
-scanning.
+1. **`~/.beast/2.8/`** — Maven packages (resolved to `maven-repo/` subfolder)
+   and any future package format
+2. **One configurable directory** — for old-style `version.xml` ZIP packages,
+   defaulting to `~/.beast/2.8/` but overridable via `BEAST_PACKAGE_PATH`
+
+This collapses the six locations to two, eliminates the reconciliation logic,
+and makes the system easier to reason about. Package rollback could be handled
+explicitly (reinstall a specific version) rather than implicitly through
+archive scanning.
 
 ### Reconciling duplicates
 

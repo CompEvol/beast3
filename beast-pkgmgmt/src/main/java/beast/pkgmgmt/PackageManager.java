@@ -1108,12 +1108,9 @@ public class PackageManager {
         checkInstalledDependencies(packages);
 
         // Load external package JARs into JPMS ModuleLayers.
-        System.err.print("Loading package ");
         for (String jarDirName : getBeastDirectories()) {
         	loadPackage(jarDirName);
-        	System.err.print(' ');
         }
-        System.err.println();
 
         // Load Maven-installed packages
         Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
@@ -1205,7 +1202,7 @@ public class PackageManager {
                     Element packageElement = doc.getDocumentElement();
                     packageName = packageElement.getAttribute("name");
                     String packageNameAndVersion = packageName + " v" + packageElement.getAttribute("version");
-                    System.err.print(packageNameAndVersion);
+                    System.err.println("Loading package " + packageNameAndVersion + " from " + jarDirName);
                     Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
                     services = parseServices(doc);
                 } catch (Exception e) {
@@ -1453,12 +1450,11 @@ public class PackageManager {
 
 		for (MavenCoordinate coord : coords) {
 			try {
-				System.err.print("Loading Maven package " + coord + "...");
 				List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
+				System.err.println("Loading Maven package " + coord + " from " + jars.get(0).getParent());
 
 				Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
 				createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.toString());
-				System.err.println(" done");
 			} catch (Exception e) {
 				System.err.println(" FAILED: " + e.getMessage());
 			}
