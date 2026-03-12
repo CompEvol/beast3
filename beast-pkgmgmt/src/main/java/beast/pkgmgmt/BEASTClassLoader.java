@@ -302,7 +302,10 @@ public class BEASTClassLoader {
             Set<String> providers = BEASTClassLoader.services.get(service);
             providers.addAll(services.get(service));
             for (String provider : services.get(service)) {
-                class2loaderMap.put(provider, loader);
+                // Use putIfAbsent so that a module-layer class-loader
+                // registered by registerPluginLayer() is not overwritten
+                // with the fallback system class-loader.
+                class2loaderMap.putIfAbsent(provider, loader);
                 if (provider.contains(".")) {
                     namespaces.add(provider.substring(0, provider.lastIndexOf('.')));
                 }
@@ -423,7 +426,10 @@ public class BEASTClassLoader {
                     for (Module module : layer.modules()) {
                         ClassLoader mcl = module.getClassLoader();
                         if (mcl != null) {
-                            class2loaderMap.putIfAbsent(provider, mcl);
+                            // Use put (not putIfAbsent) so the module-layer
+                            // class-loader always takes precedence over any
+                            // fallback loader registered by addServices().
+                            class2loaderMap.put(provider, mcl);
                         }
                     }
                     if (provider.contains(".")) {

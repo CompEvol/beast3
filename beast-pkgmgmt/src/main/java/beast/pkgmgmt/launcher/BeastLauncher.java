@@ -671,6 +671,11 @@ public class BeastLauncher {
 			// Populate service registry from version.xml files on classpath
 			BEASTClassLoader.initServices(classPath);
 
+			// Also scan java.class.path — the classpath above only covers
+			// installed packages; the app's own JARs (and their version.xml)
+			// are on java.class.path when launched via jpackage or bin/ scripts.
+			BEASTClassLoader.initServices();
+
 			Class<?> mainClass = BEASTClassLoader.forName(main);
 			Method mainMethod = mainClass.getMethod("main", String [].class);
 			mainMethod.invoke(null, (Object) args);

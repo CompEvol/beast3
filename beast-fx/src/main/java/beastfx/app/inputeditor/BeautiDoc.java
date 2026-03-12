@@ -530,7 +530,14 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
 				| IllegalArgumentException | InvocationTargetException e1) {
 			e1.printStackTrace();
-		}//System.getProperty("java.class.path");
+		}
+        // Also include java.class.path — the package classpath above only
+        // covers installed packages; the app's own JARs (containing fxtemplates)
+        // are on java.class.path when launched via jpackage or bin/ scripts.
+        String javaClassPath = System.getProperty("java.class.path");
+        if (javaClassPath != null && !javaClassPath.isEmpty()) {
+            classpath = classpath.isEmpty() ? javaClassPath : classpath + pathSep + javaClassPath;
+        }
         String fileSep = System.getProperty("file.separator");
         if (fileSep.equals("\\")) {
             fileSep = "\\\\";

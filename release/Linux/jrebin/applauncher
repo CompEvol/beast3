@@ -6,32 +6,26 @@ if [ -z "$BEAST" ]; then
 
 	# need this for relative symlinks
 	while [ -h "$PRG" ] ; do
-	    ls=`ls -ld "$PRG"`
-	    link=`expr "$ls" : '.*-> \(.*\)$'`
+	    ls=$(ls -ld "$PRG")
+	    link=$(expr "$ls" : '.*-> \(.*\)$')
 	    if expr "$link" : '/.*' > /dev/null; then
 		PRG="$link"
 	    else
-		PRG="`dirname "$PRG"`/$link"
+		PRG="$(dirname "$PRG")/$link"
 	    fi
 	done
 
 	# make it fully qualified
-	saveddir=`pwd`
-	BEAST0=`dirname "$PRG"`/..
-	BEAST=`cd "$BEAST0" && pwd`
+	saveddir=$(pwd)
+	BEAST0=$(dirname "$PRG")/..
+	BEAST=$(cd "$BEAST0" && pwd)
 	cd "$saveddir"
 fi
 
-BEAST_LIB="$BEAST/lib"
-export JAVA_HOME="$BEAST/jre"
-
-if [ -z "$JAVA_HOME" ]; then
-  JAVA=java
-else
-  JAVA="$JAVA_HOME"/bin/java
-fi
-
-
+# Use the JRE and JARs bundled in BEAST.app by jpackage
+BEAST_APP="$BEAST/BEAST.app/Contents"
+export JAVA_HOME="$BEAST_APP/runtime/Contents/Home"
+JAVA="$JAVA_HOME/bin/java"
 # use BEAGLE_LIB if the BEAGLE library is not in a standard location
 if [ -n "$BEAGLE_LIB" ]; then
 	if [ -n "$BEAST_EXTRA_LIBS" ]; then
@@ -41,19 +35,22 @@ if [ -n "$BEAGLE_LIB" ]; then
 	fi
 fi
 
-# Explicitly add /usr/local/lib to library search path to ensure 
-# beast continues to find beagle when installed here.  (This is
-# necessary due to known problems with certain JREs.)
+# Explicitly add /usr/local/lib to library search path to ensure
+# beast continues to find beagle when installed here.
 if [ -z "$LD_LIBRARY_PATH" ]; then
     export LD_LIBRARY_PATH=/usr/local/lib
 else
     export LD_LIBRARY_PATH="$LD_LIBRARY_PATH":/usr/local/lib
 fi
 
-# use BEAST_EXTRA_LIBS variable to load BEAGLE and other libraries from non-default locations 
-# this assumes that the library path contains all these libraries (or are set through LD_LIBRARY_PATH)
-if [ -n "$BEAST_EXTRA_LIBS" ]; then 
-  "$JAVA" -Dlauncher.wait.for.exit=true -Xss256m -Xmx8g -Djava.library.path="$BEAST_EXTRA_LIBS" -Duser.language=en -cp "$BEAST_LIB/launcher.jar" beast.pkgmgmt.launcher.AppLauncherLauncher $*
-else	
-  "$JAVA" -Dlauncher.wait.for.exit=true -Xss256m -Xmx8g -Duser.language=en -cp "$BEAST_LIB/launcher.jar" beast.pkgmgmt.launcher.AppLauncherLauncher $*
+if [ -n "$BEAST_EXTRA_LIBS" ]; then
+  "$JAVA" -Dlauncher.wait.for.exit=true \
+      --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH \
+      -Xss256m -Xmx8g -Djava.library.path="$BEAST_EXTRA_LIBS" -Duser.language=en -Dfile.encoding=UTF-8 \
+      -m beast.pkgmgmt/beast.pkgmgmt.launcher.AppLauncherLauncher "$@"
+else
+  "$JAVA" -Dlauncher.wait.for.exit=true \
+      --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH \
+      -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \
+      -m beast.pkgmgmt/beast.pkgmgmt.launcher.AppLauncherLauncher "$@"
 fi

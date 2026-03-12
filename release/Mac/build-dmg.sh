@@ -2,11 +2,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # build-dmg.sh — Build a macOS DMG containing BEAST 3 .app bundles
 #
-# Uses jpackage (JDK 16+) to create native application images with a bundled
-# JRE, then packages them into a single DMG installer.
+# Uses jpackage (JDK 16+) to create one full BEAST.app with a bundled JRE,
+# then creates lightweight wrapper .app bundles for BEAUti, TreeAnnotator,
+# LogCombiner, and AppLauncher that share BEAST.app's JRE and JARs.
 #
-# Applications included:
-#   BEAST, BEAUti, TreeAnnotator, LogCombiner, AppLauncher
+# Also includes bin/ (command-line launchers) and examples/ (sample XML files).
 #
 # Usage:
 #   cd release/Mac && ./build-dmg.sh
@@ -76,46 +76,136 @@ fi
 JAR_COUNT=$(find "$STAGING" -name "*.jar" | wc -l | tr -d ' ')
 echo "    Staged ${JAR_COUNT} JARs into staging/"
 
-# ── Step 3: Create app images with jpackage ──────────────────────────────────
+# ── Step 3: Create BEAST.app with jpackage ───────────────────────────────────
 echo ""
-echo "==> Step 3: Creating application bundles with jpackage..."
+echo "==> Step 3: Creating BEAST.app with jpackage..."
 
 ICON_DIR="$SCRIPT_DIR/../common/icons"
 JAVA_OPTS="-Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8"
 
 FXTEMPLATES="$REPO_ROOT/beast-fx/src/main/resources/beast.fx/fxtemplates"
 
-build_app() {
+echo "    Creating BEAST.app..."
+jpackage --type app-image \
+    --name "BEAST" \
+    --app-version "$VERSION" \
+    --icon "$ICON_DIR/beast.icns" \
+    --input "$STAGING" \
+    --main-jar "$MAIN_JAR" \
+    --main-class "beast.pkgmgmt.launcher.BeastLauncher" \
+    --java-options "$JAVA_OPTS" \
+    --add-modules ALL-MODULE-PATH \
+    --dest "$OUTPUT"
+
+# BEAUti (and others) look for fxtemplates at Contents/app/../fxtemplates/
+if [ -d "$FXTEMPLATES" ]; then
+    cp -r "$FXTEMPLATES" "$OUTPUT/BEAST.app/Contents/fxtemplates"
+fi
+
+# version.xml must also be at Contents/version.xml (not just Contents/app/version.xml)
+# because BEASTClassLoader.initServices scans the grandparent of each JAR.
+cp "$REPO_ROOT/version.xml" "$OUTPUT/BEAST.app/Contents/version.xml"
+
+# jpackage strips bin/java from the bundled runtime — restore it so that
+# wrapper .app bundles and bin/ scripts can invoke java from the runtime.
+RUNTIME_HOME="$OUTPUT/BEAST.app/Contents/runtime/Contents/Home"
+BUILD_JAVA_HOME="$(/usr/libexec/java_home)"
+mkdir -p "$RUNTIME_HOME/bin"
+cp "$BUILD_JAVA_HOME/bin/java" "$RUNTIME_HOME/bin/java"
+chmod 755 "$RUNTIME_HOME/bin/java"
+echo "    Copied java binary into runtime."
+
+echo "    BEAST.app created."
+
+# ── Step 3b: Create lightweight wrapper .app bundles ─────────────────────────
+echo ""
+echo "==> Step 3b: Creating wrapper .app bundles..."
+
+build_wrapper_app() {
     local app_name="$1"
     local main_class="$2"
     local icon_file="$3"
+    local extra_args="${4:-}"
 
-    echo "    Creating ${app_name}.app..."
-    jpackage --type app-image \
-        --name "$app_name" \
-        --app-version "$VERSION" \
-        --icon "$ICON_DIR/$icon_file" \
-        --input "$STAGING" \
-        --main-jar "$MAIN_JAR" \
-        --main-class "$main_class" \
-        --java-options "$JAVA_OPTS" \
-        --add-modules ALL-MODULE-PATH \
-        --dest "$OUTPUT"
+    local app_dir="$OUTPUT/$app_name.app"
+    local contents="$app_dir/Contents"
 
-    # BEAUti (and others) look for fxtemplates at Contents/app/../fxtemplates/
-    if [ -d "$FXTEMPLATES" ]; then
-        cp -r "$FXTEMPLATES" "$OUTPUT/$app_name.app/Contents/fxtemplates"
+    echo "    Creating ${app_name}.app (wrapper)..."
+
+    mkdir -p "$contents/MacOS" "$contents/Resources"
+
+    # ── Launcher shell script ──
+    # Derive the module/class from the fully qualified main class
+    # e.g. beast.pkgmgmt.launcher.BeautiLauncher → -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeautiLauncher
+    local module_name
+    module_name=$(echo "$main_class" | sed 's/\.launcher\..*//')
+    local launch_cmd
+    if [ -n "$extra_args" ]; then
+        launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
+    -m $module_name/$main_class $extra_args \"\$@\""
+    else
+        launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
+    -m $module_name/$main_class \"\$@\""
     fi
+
+    cat > "$contents/MacOS/$app_name" <<LAUNCHER
+#!/bin/sh
+CONTENTS_DIR="\$(cd "\$(dirname "\$0")/.." && pwd)"
+BEAST_APP="\$(cd "\$CONTENTS_DIR/../BEAST.app/Contents" && pwd)"
+$launch_cmd
+LAUNCHER
+    chmod 755 "$contents/MacOS/$app_name"
+
+    # ── Info.plist ──
+    local icon_basename
+    icon_basename=$(basename "$icon_file" .icns)
+    cat > "$contents/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>$app_name</string>
+    <key>CFBundleDisplayName</key>
+    <string>$app_name</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.beast3.$app_name</string>
+    <key>CFBundleVersion</key>
+    <string>$VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
+    <key>CFBundleExecutable</key>
+    <string>$app_name</string>
+    <key>CFBundleIconFile</key>
+    <string>$icon_basename</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+    # ── PkgInfo ──
+    printf 'APPL????' > "$contents/PkgInfo"
+
+    # ── Icon ──
+    cp "$ICON_DIR/$icon_file" "$contents/Resources/"
 }
 
-build_app "BEAST"          "beast.pkgmgmt.launcher.BeastLauncher"          "beast.icns"
-build_app "BEAUti"         "beast.pkgmgmt.launcher.BeautiLauncher"         "beauti.icns"
-build_app "TreeAnnotator"  "beast.pkgmgmt.launcher.TreeAnnotatorLauncher"  "utility.icns"
-build_app "LogCombiner"    "beast.pkgmgmt.launcher.LogCombinerLauncher"    "utility.icns"
-build_app "AppLauncher"    "beast.pkgmgmt.launcher.AppLauncherLauncher"    "utility.icns"
+build_wrapper_app "BEAUti"         "beast.pkgmgmt.launcher.BeautiLauncher"         "beauti.icns"   "-capture"
+build_wrapper_app "TreeAnnotator"  "beast.pkgmgmt.launcher.TreeAnnotatorLauncher"  "utility.icns"
+build_wrapper_app "LogCombiner"    "beast.pkgmgmt.launcher.LogCombinerLauncher"    "utility.icns"
+build_wrapper_app "AppLauncher"    "beast.pkgmgmt.launcher.AppLauncherLauncher"    "utility.icns"
 
 APP_COUNT=$(find "$OUTPUT" -maxdepth 1 -name "*.app" -type d | wc -l | tr -d ' ')
-echo "    Created ${APP_COUNT} application bundles."
+echo "    Created ${APP_COUNT} application bundles (1 full + $(( APP_COUNT - 1 )) wrappers)."
 
 # ── Step 4: Create DMG ──────────────────────────────────────────────────────
 echo ""
@@ -131,6 +221,31 @@ mkdir -p "$DMG_STAGING/.background" "$DMG_STAGING/$APP_FOLDER"
 
 # Copy all .app bundles into the versioned folder
 cp -r "$OUTPUT"/*.app "$DMG_STAGING/$APP_FOLDER/"
+
+# ── bin/ — command-line launcher scripts (from release/Linux/jrebin) ──────────
+JREBIN_DIR="$REPO_ROOT/release/Linux/jrebin"
+if [ -d "$JREBIN_DIR" ]; then
+    echo "    Copying bin/ scripts..."
+    cp -r "$JREBIN_DIR" "$DMG_STAGING/$APP_FOLDER/bin"
+    chmod 755 "$DMG_STAGING/$APP_FOLDER/bin"/*
+else
+    echo "    WARNING: $JREBIN_DIR not found — skipping bin/"
+fi
+
+# ── examples/ — example BEAST XML files ──────────────────────────────────────
+EXAMPLES_DIR="$REPO_ROOT/beast-base/src/test/resources/examples"
+if [ -d "$EXAMPLES_DIR" ]; then
+    echo "    Copying examples/..."
+    mkdir -p "$DMG_STAGING/$APP_FOLDER/examples"
+    # Copy top-level XML files
+    find "$EXAMPLES_DIR" -maxdepth 1 -name "*.xml" -exec cp {} "$DMG_STAGING/$APP_FOLDER/examples/" \;
+    # Copy nexus subdirectory
+    if [ -d "$EXAMPLES_DIR/nexus" ]; then
+        cp -r "$EXAMPLES_DIR/nexus" "$DMG_STAGING/$APP_FOLDER/examples/nexus"
+    fi
+else
+    echo "    WARNING: $EXAMPLES_DIR not found — skipping examples/"
+fi
 
 # Applications symlink for drag-to-install (drag the folder here)
 ln -s /Applications "$DMG_STAGING/Applications"
