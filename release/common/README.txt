@@ -1,7 +1,7 @@
                     BEAST v2.8.0 2026
-                 Beast 2 development team 2011-2026
+                 BEAST development team 2011-2026
 
-Last updated: February 2026
+Last updated: March 2026
 
 Contents:
 1) INTRODUCTION
@@ -10,14 +10,14 @@ Contents:
 4) RUNNING BEAST
 5) ANALYZING RESULTS
 6) NATIVE LIBRARIES
-7) UNINSTALLING OLDER BEAST 2.x.x VERSIONS
+7) PACKAGES
 8) SUPPORT & LINKS
-9) ACKNOWLEDGMENTS 
+9) ACKNOWLEDGMENTS
 
 ___________________________________________________________________________
 1) INTRODUCTION
 
-BEAST (Bayesian evolutionary analysis sampling trees) is package for
+BEAST (Bayesian evolutionary analysis sampling trees) is a package for
 evolutionary inference from molecular sequences.
 
 BEAST uses a complex and powerful input format (specified in XML) to
@@ -27,13 +27,13 @@ every analysis that researchers may wish to perform and explicitly provide
 an option for doing it. However, this flexibility means it is possible to
 construct models that don't perform well under the Markov chain Monte Carlo
 (MCMC) inference framework used. We cannot test every possible model that
-can be used in BEAST. There are two solutions to this: Firstly, we  supply
+can be used in BEAST. There are two solutions to this: Firstly, we supply
 a range of recipes for commonly performed analyses that we know should work
 in BEAST and provide example input files for these (although, the actual
-data can also produce unexpected behavour). Secondly, we provide advice and
+data can also produce unexpected behaviour). Secondly, we provide advice and
 tools for the diagnosis of problems and suggestions on how to fix them:
 
-<http://beast2.cs.auckland.ac.nz/>
+<http://beast2.org/>
 
 BEAST is not a black-box into which you can put your data and expect an
 easily interpretable answer. It requires careful inspection of the output
@@ -42,20 +42,23 @@ adjustment and a number of runs to get a valid answer. Sorry.
 ___________________________________________________________________________
 2) INSTALLING BEAST
 
-BEAST requires a Java Virtual Machine version 17 and JavaFX to run. The
-BEAST installation packages come with a suitable Java + JavaFX and it is
-recommended to use these versions of Java + JavaFX. It is possible to use
-different versions, but it will require considerable time configuring them,
-so that is not recommended.
+The BEAST installation package comes with a bundled Java runtime (JRE), so
+no separate Java installation is required.
 
-Within the BEAST package will be the following directories:
-Directory       Contents
-doc/            Documentation of BEAST
-examples/       Some NEXUS and XML files
-lib/            Java & native libraries used by BEAST 
-bin/            Scripts of the corresponding OS
-fxtemplates/    Templates to initiate BEAUti
-jre/            Suitable java runtime
+The package contains the following:
+
+Application             Description
+BEAST.app               Main BEAST application (with bundled JRE)
+BEAUti.app              Model setup GUI
+TreeAnnotator.app       Summarise tree posteriors
+LogCombiner.app         Combine log/tree files from multiple runs
+AppLauncher.app         Launch BEAST tools and package apps
+bin/                    Command-line launcher scripts
+examples/               Sample NEXUS and XML files
+
+On macOS, drag the folder to your Applications directory. The wrapper
+applications (BEAUti, TreeAnnotator, etc.) share the JRE and JARs
+bundled inside BEAST.app, so they must remain in the same folder.
 ___________________________________________________________________________
 3) CONVERTING SEQUENCES
 
@@ -63,27 +66,24 @@ A program called "BEAUti" will import data in NEXUS format, allow you to
 select various models and options and generate an XML file ready for use in
 BEAST.
 
-To run BEAUti simply double-click the "BEAUti.exe" file in the BEAST
-folder. If this doesn't work then you may not have Java installed correctly. 
-Try opening an MS-DOS window and typing:
+To run BEAUti simply double-click BEAUti.app (macOS) or run from the
+command line:
 
-	\path\to\BEAST\bat\beauti.bat
+    bin/beauti
 
-Where "\path\to" the path to where BEAST is installed.
-	
-__________________________________________________________________________
+___________________________________________________________________________
 4) RUNNING BEAST
 
-To run BEAST simply double-click the "BEAST.exe" file in the BEAST
-folder. You will be asked to select a BEAST XML input file.
+To run BEAST simply double-click BEAST.app. You will be asked to select a
+BEAST XML input file.
 
-Alternatively open a Command window and type:
-	
-	\path\to\BEAST\bat\beast.bat input.xml
+Alternatively, open a terminal and type:
 
-Where "\path\to" the path to where BEAST is installed and "input.xml" is the 
-name of a BEAST XML format file. This file can either be created from scratch 
-using a text editor or be created by the BEAUti program from a NEXUS format file. 
+    bin/beast input.xml
+
+Where "input.xml" is the name of a BEAST XML format file. This file can
+either be created from scratch using a text editor or be created by the
+BEAUti program from a NEXUS format file.
 
 For documentation on creating and tuning the input files look at the
 documentation and tutorials on-line at:
@@ -123,22 +123,15 @@ BEAST arguments:
     -D attribute-value pairs to be replaced in the XML, e.g., -D "arg1=10,arg2=20"
     -DF as -D, but attribute-value pairs defined in file in JSON format
     -DFout BEAST XML file written when -DF option is used
-    -sampleFromPrior samples from prior for MCMC analysis (by adding sampleFromPrior="true" in the first run element)
-    -version_file Provide a version file containing a list of services to explicitly allow. (Useful for package development.)
+    -sampleFromPrior samples from prior for MCMC analysis
+    -version_file Provide a version file containing a list of services to explicitly allow
     -packagedir Set user package directory instead of using the default
-    
+
 For example:
 
-     \path\to\BEAST\bin\beast.bat -seed 123456 -overwrite input.xml
+     bin/beast -seed 123456 -overwrite input.xml
 
-On Linux, there is a bin directory inside the beast directory that has 
-a number of scripts for starting programs, including beast, and beauti, 
-so to start beast (or beauti) from a terminal, you can use
-
-/path/to/beast/bin/beast
-
-with one of the arguments above.
-_________________________________________________________________
+___________________________________________________________________________
 5) ANALYZING RESULTS
 
 We have produced a powerful graphical program for analysing MCMC log files
@@ -147,41 +140,41 @@ We have produced a powerful graphical program for analysing MCMC log files
 
 <http://tree.bio.ed.ac.uk/software/tracer>
 
-Additionally, two new programs are distributed as part of the BEAST
-package: LogCombiner & TreeAnnotator. LogCombiner can combine log or tree
-files from multiple runs of BEAST into a single combined results file
-(after removing appropriate burn-ins). TreeAnnotator can summarize a sample
-of trees from BEAST using a single target tree, annotating it with
-posterior probabilities, HPD node heights and rates. This tree can then be
-viewed in a new program called 'FigTree' which is available from:
+Additionally, two programs are distributed as part of the BEAST package:
+LogCombiner & TreeAnnotator. LogCombiner can combine log or tree files from
+multiple runs of BEAST into a single combined results file (after removing
+appropriate burn-ins). TreeAnnotator can summarize a sample of trees from
+BEAST using a single target tree, annotating it with posterior
+probabilities, HPD node heights and rates. This tree can then be viewed in
+FigTree:
 
 <http://tree.bio.ed.ac.uk/software/figtree>
-
-or 'DensiTree' available from BEAST package.
 
 ___________________________________________________________________________
 6) NATIVE LIBRARIES
 
-We recommend that you install the BEAGLE library. BEAST attempts to use 
-BEAGLE by default and this can speed up running BEAST considerably. The 
-BEAGLE library needs to be installed separately from BEAST, and can be 
+We recommend that you install the BEAGLE library. BEAST attempts to use
+BEAGLE by default and this can speed up running BEAST considerably. The
+BEAGLE library needs to be installed separately from BEAST, and can be
 obtained from:
 
-https://github.com/beagle-dev/beagle-lib/blob/master/README.md
-
+<https://github.com/beagle-dev/beagle-lib>
 
 ___________________________________________________________________________
-7) UNINSTALLING OLDER BEAST 2.x.x VERSIONS
+7) PACKAGES
 
-If you installed BEAST version 2.x.x, you do no longer need to remove the 
-packages (add-ons) installed with that version of BEAST. But if you want to
-uninstall these packages, the easiest way to do this is in BEAUti
-version 2.x.x, using the add-on manager under the menu File/Mangage add-ons.
+BEAST supports external packages that add models and functionality.
+Packages can be managed through BEAUti (File > Manage Packages) or from
+the command line:
 
-Alternatively, delete the package directory:
-C:\Users\<yourusername>\BEAST                            on Windows
-/Users/<yourusername>/Library/Application Support/BEAST  on Mac
-/home/<yourusername>/.beast                              on Linux
+    bin/packagemanager -list
+    bin/packagemanager -add <package-name>
+    bin/packagemanager -maven <groupId>:<artifactId>:<version>
+
+Packages are installed to:
+~/Library/Application Support/BEAST/2.8  on macOS
+~/.beast/2.8                             on Linux
+%USERPROFILE%\BEAST\2.8                  on Windows
 
 ___________________________________________________________________________
 8) SUPPORT & LINKS
@@ -194,10 +187,10 @@ bugs. Please email us to discuss any problems:
 <a.rambaut@ed.ac.uk>
 <msuchard@ucla.edu>
 
-The BEAST users' mailing-list 
+The BEAST users' mailing-list
 <https://groups.google.com/forum/#!forum/beast-users>
 
-The website for beast is here:
+The website for BEAST is here:
 
 <http://beast2.org/>
 
@@ -208,8 +201,5 @@ Source code distributed under the GNU Lesser General Public License:
 ___________________________________________________________________________
 9) ACKNOWLEDGMENTS
 
-Thanks for supplying code or assisting with the creation
-or testing of Beast 2 development team.
-
-
-
+Thanks to all who have contributed code, reported bugs, or assisted with
+the creation and testing of BEAST.

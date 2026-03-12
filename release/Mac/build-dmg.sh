@@ -268,6 +268,13 @@ else
     echo "    WARNING: $EXAMPLES_DIR not found — skipping examples/"
 fi
 
+# ── README and LICENSE ─────────────────────────────────────────────────────
+COMMON_DIR="$REPO_ROOT/release/common"
+cp "$COMMON_DIR/README.txt" "$DMG_STAGING/$APP_FOLDER/"
+if [ -f "$COMMON_DIR/LICENSE.txt" ]; then
+    cp "$COMMON_DIR/LICENSE.txt" "$DMG_STAGING/$APP_FOLDER/"
+fi
+
 # Applications symlink for drag-to-install (drag the folder here)
 ln -s /Applications "$DMG_STAGING/Applications"
 
