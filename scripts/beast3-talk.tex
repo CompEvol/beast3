@@ -551,17 +551,16 @@ Add \code{module-info.java} when you can --- it's the primary mechanism and give
 
 \vspace{0.5em}
 \begin{enumerate}
+\item \textbf{Load Maven packages} --- resolve coordinates from \code{maven-packages.xml}, create a ModuleLayer per package. Maven is the recommended format, so these take precedence.
 \item \textbf{Scan package directories} --- find installed ZIP packages in\\
   \code{\textasciitilde/.beast/2.8/} (or \code{BEAST\_PACKAGE\_PATH})
-\item \textbf{Parse \code{version.xml}} --- read service declarations and dependency info from each package
-\item \textbf{Create ModuleLayer per package:}
+\item \textbf{Create ModuleLayer per ZIP package:}
   \begin{itemize}
   \item Discover JPMS modules from the package's JARs
-  \item Exclude modules already in boot layer (no duplicates)
+  \item Exclude modules already in boot layer or Maven layers (no duplicates)
   \item Filter out modules whose \code{requires} can't be satisfied
   \item \code{resolveAndBind()} on the remaining modules
   \end{itemize}
-\item \textbf{Load Maven packages} --- resolve coordinates from \code{maven-packages.xml}, same ModuleLayer process
 \item \textbf{Register with \code{BEASTClassLoader}} --- services from both \code{module-info.java} and \code{version.xml} merged into registry
 \end{enumerate}
 \end{frame}

@@ -148,18 +148,21 @@ order is:
    are already loaded before any package scanning begins. Any installed
    package that bundles the same module is silently skipped.
 
-2. **ZIP packages** — Scanned from the directory search order listed above
+2. **Maven packages** — Loaded first among external packages.
+   `maven-packages.xml` is read and each coordinate is resolved via
+   `MavenPackageResolver`. Maven is the recommended distribution format
+   going forward, so Maven packages take precedence over legacy ZIP
+   packages.
+
+3. **ZIP packages** — Scanned from the directory search order listed above
    (`BEAST_PACKAGE_PATH` → user dir → system dir → install dir → classpath →
-   archive). Each package's `ModuleLayer` is created and its module names are
-   added to the "already loaded" set before the next package is processed.
+   archive). Any module already loaded by a Maven package (or the boot
+   layer) is skipped. Within ZIP packages, earlier directories in the
+   search order take precedence over later ones.
 
-3. **Maven packages** — Loaded after all ZIP packages. `maven-packages.xml`
-   is read and each coordinate is resolved via `MavenPackageResolver`. Any
-   module already loaded by a ZIP package (or the boot layer) is skipped.
-
-This ordering means that if the same package is installed both as a ZIP and
-as a Maven coordinate, the ZIP version takes precedence. Within ZIP packages,
-earlier directories in the search order take precedence over later ones.
+This ordering means that if the same package is installed both as a Maven
+coordinate and a ZIP, the Maven version takes precedence — which is the
+desired behaviour during the transition from ZIP to Maven distribution.
 
 In the development environment, all modules are in the boot layer (tier 1),
 so installed ZIP and Maven copies are automatically skipped — a developer
@@ -170,14 +173,13 @@ will never have their IDE version conflict with an old installed version.
 When BEAST starts, `PackageManager.loadExternalJars()` runs:
 
 1. **Process pending installs/deletes** from previous BEAUti sessions
-2. **Scan package directories** — for each installed ZIP package, find its
-   JARs, parse `version.xml` for service declarations, and call
-   `createAndRegisterModuleLayer()`. Module names are recorded in the
-   "already loaded" set as each layer is created.
-3. **Load Maven packages** — read `maven-packages.xml`, resolve each
+2. **Load Maven packages** — read `maven-packages.xml`, resolve each
    coordinate via `MavenPackageResolver`, and create a `ModuleLayer` per
-   package. Modules already loaded in step 2 are skipped, so ZIP packages
-   take precedence over Maven packages.
+   package. Module names are recorded in the "already loaded" set.
+3. **Scan package directories** — for each installed ZIP package, find its
+   JARs, parse `version.xml` for service declarations, and call
+   `createAndRegisterModuleLayer()`. Modules already loaded in step 2 are
+   skipped, so Maven packages take precedence over legacy ZIP packages.
 
 ## ModuleLayer creation
 

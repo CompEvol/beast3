@@ -1108,20 +1108,22 @@ public class PackageManager {
         checkInstalledDependencies(packages);
 
         // Load external package JARs into JPMS ModuleLayers.
-        // ZIP packages are loaded first, then Maven packages.  Because
-        // createAndRegisterModuleLayer() skips modules already present in
-        // the boot layer or a previously registered plugin layer, ZIP
-        // packages take precedence over Maven packages when both provide
-        // the same JPMS module.
+        // Maven packages are loaded first, then legacy ZIP packages.
+        // Because createAndRegisterModuleLayer() skips modules already
+        // present in the boot layer or a previously registered plugin
+        // layer, Maven packages take precedence over ZIP packages when
+        // both provide the same JPMS module.  This is the desired
+        // behaviour: Maven is the recommended distribution format going
+        // forward, so a newer Maven version should shadow a legacy ZIP.
+        Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
+        loadMavenPackages();
+
+        // Load legacy ZIP packages (from ~/.beast/2.8/ and other dirs).
+        // These are loaded after Maven packages, so a Maven package with
+        // the same module name will take precedence.
         for (String jarDirName : getBeastDirectories()) {
         	loadPackage(jarDirName);
         }
-
-        // Load Maven-installed packages (from ~/.beast/2.8/maven-packages.xml).
-        // These are loaded after ZIP packages, so a ZIP package with the
-        // same module name will shadow the Maven version.
-        Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
-        loadMavenPackages();
 
         externalJarsLoaded = true;
     	Utils6.logToSplashScreen("PackageManager::Done");
