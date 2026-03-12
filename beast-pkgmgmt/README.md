@@ -3,6 +3,35 @@
 Package management module for BEAST 3. Handles discovery, installation, and
 runtime loading of external BEAST packages.
 
+## Design principles
+
+1. **One module layer per package.** Each external package is loaded into its
+   own JPMS `ModuleLayer`, a child of the boot layer. This gives namespace
+   isolation — two packages can bundle different versions of the same library
+   without conflict — while still letting every package see the core BEAST API.
+
+2. **Same code path for development and deployment.** A developer running BEAST
+   and their package together in an IDE (both on the module path) sees exactly
+   the same service discovery as an end user who installed the package from a
+   ZIP or Maven coordinate. The `module-info.java` `provides` declarations are
+   the single source of truth in both cases.
+
+3. **Graceful degradation.** When a dependency is unavailable (e.g. JavaFX on a
+   headless cluster), the unsatisfied modules are silently skipped rather than
+   failing the whole application. A package with both a core module and an FX
+   module will load the core module and skip the FX module automatically.
+
+4. **First-found wins, no silent duplicates.** When the same JPMS module name
+   appears in more than one location (boot layer, installed package, archive),
+   the first one encountered is loaded and all subsequent copies are skipped.
+   This prevents "reads more than one module" errors and ensures deterministic
+   behaviour.
+
+5. **Dual distribution.** Packages can be distributed as traditional ZIP
+   archives (submitted to CBAN) or as standard Maven Central JARs. Both
+   formats converge on the same `ModuleLayer` creation path, so there is no
+   runtime difference between them.
+
 ## Design overview
 
 BEAST 3 uses the Java Platform Module System (JPMS). The core application ships
@@ -33,6 +62,92 @@ Packages can be distributed and installed in two ways:
    `~/.beast/2.8/maven-repo/` and tracked in `maven-packages.xml`.
 
 Both formats end up going through the same `ModuleLayer` creation path.
+
+## Development vs user environment
+
+The package manager is designed so that development and deployment use the same
+discovery mechanism. The difference is only in *where* modules come from.
+
+### Development (IDE)
+
+When you open both BEAST 3 and your external package as modules in IntelliJ (or
+any JPMS-aware IDE), the IDE places all modules on a single module path. BEAST
+discovers your package's services via the `provides` declarations in your
+`module-info.java` — no ZIP, no `version.xml` parsing, and no runtime
+`ModuleLayer` creation needed. Your classes are in the boot layer alongside
+BEAST's own modules.
+
+This means you can set breakpoints, hot-reload, and debug your package as if it
+were part of BEAST itself.
+
+### User installation (runtime)
+
+End users install packages via BEAUti or the command line. Installed packages
+live outside the boot layer and are loaded at startup into child
+`ModuleLayer`s. The package manager scans a series of directories to find them.
+
+### Directory search order
+
+`PackageManager.getBeastDirectories()` currently builds the list of candidate
+directories in this order:
+
+1. **`BEAST_PACKAGE_PATH`** — environment variable or `-D` system property.
+   Colon-separated list of directories. Useful for CI or custom layouts.
+2. **User package directory** — `~/.beast/2.8/` (platform-specific).
+3. **System package directory** — e.g. `/opt/beast/` on Linux.
+4. **BEAST installation directory** — located by finding the JAR that contains
+   `PackageManager` and navigating up two levels.
+5. **Classpath-derived directories** — non-JAR entries on `java.class.path`,
+   excluding IDE build paths like `out/production/`. This is how IDE-launched
+   runs pick up development packages that aren't in the standard install
+   locations.
+
+Within each directory, subdirectories containing a `version.xml` are treated as
+packages.
+
+6. **Archive directory** — `~/.beast/2.8/archive/`. Old package versions are
+   stored here. Only the latest archived version of each package is considered,
+   and only if that package has not already been found in one of the earlier
+   directories.
+
+### Proposed simplification
+
+The current search order is inherited from BEAST 2 and is more complex than
+BEAST 3 needs. In BEAST 3, the IDE module path handles development-time
+discovery via `module-info.java` `provides` declarations — classpath scanning
+(step 5) is no longer necessary. The system directory (step 3) has no known
+users, and the archive directory (step 6) adds complexity for a rarely-used
+rollback feature.
+
+A simplified search order for future versions:
+
+1. **`BEAST_PACKAGE_PATH`** (optional override for CI or custom layouts)
+2. **User package directory** (`~/.beast/2.8/`) — where packages are installed
+3. **BEAST installation directory** — for packages bundled with the application
+
+This reduces the reconciliation logic and makes the system easier to reason
+about. Package rollback could be handled explicitly through the package manager
+(reinstall a specific version) rather than implicitly through archive directory
+scanning.
+
+### Reconciling duplicates
+
+When the same package (identified by JPMS module name) appears in multiple
+locations, the first one found wins:
+
+- **Boot layer first.** Core BEAST modules (`beast.pkgmgmt`, `beast.base`,
+  `beast.fx`) and their transitive dependencies (commons-math, colt, etc.) are
+  already loaded before any package scanning begins. Any installed package that
+  bundles the same module is silently skipped.
+- **Plugin layers second.** As each package's `ModuleLayer` is created, its
+  module names are added to the "already loaded" set. If a later package
+  contains a module with the same name, it is skipped.
+- **Archive last.** Archived versions are only loaded for packages not already
+  present in the main directories.
+
+This means that a developer running their package from the IDE (boot layer)
+will never have it conflict with an old installed version in `~/.beast/2.8/` —
+the boot layer copy takes precedence and the installed copy is skipped.
 
 ## Startup sequence
 
