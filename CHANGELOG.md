@@ -59,6 +59,7 @@ Genuinely new components not present in BEAST 2:
 - **`version.xml` service discovery** (fallback) — still supported for non-modular JARs. Deployed JARs without `module-info` are treated as automatic modules.
 - **Plugin `ModuleLayer` isolation** — each deployed package is loaded into its own JPMS `ModuleLayer`, preventing classpath conflicts between packages.
 - **Maven Central distribution** — packages can be published as plain Maven Central JARs. Users install via BEAUti's "Install from Maven" button or `packagemanager -maven groupId:artifactId:version`. Resolution uses Apache Maven Resolver; JARs are cached in `~/.beast/2.8/maven-repo/`.
+- **Loading precedence: boot layer → Maven → ZIP** — Maven packages are loaded before legacy ZIP packages. When the same JPMS module exists in both formats, the Maven version takes precedence. This is the desired behaviour as Maven is the recommended distribution format going forward.
 - **Custom Maven repositories** — `packagemanager -addMavenRepository <url>` for organization-hosted repositories.
 - **`maven-packages.xml`** — new config file (alongside `beauti.cfg`) tracks installed Maven packages.
 
