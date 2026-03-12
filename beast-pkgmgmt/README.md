@@ -137,24 +137,33 @@ and makes the system easier to reason about. Package rollback could be handled
 explicitly (reinstall a specific version) rather than implicitly through
 archive scanning.
 
-### Reconciling duplicates
+### Package loading precedence
 
-When the same package (identified by JPMS module name) appears in multiple
-locations, the first one found wins:
+When the same JPMS module name appears in more than one location, the first
+one loaded wins and all subsequent copies are skipped. The full precedence
+order is:
 
-- **Boot layer first.** Core BEAST modules (`beast.pkgmgmt`, `beast.base`,
-  `beast.fx`) and their transitive dependencies (commons-math, colt, etc.) are
-  already loaded before any package scanning begins. Any installed package that
-  bundles the same module is silently skipped.
-- **Plugin layers second.** As each package's `ModuleLayer` is created, its
-  module names are added to the "already loaded" set. If a later package
-  contains a module with the same name, it is skipped.
-- **Archive last.** Archived versions are only loaded for packages not already
-  present in the main directories.
+1. **Boot layer** — Core BEAST modules (`beast.pkgmgmt`, `beast.base`,
+   `beast.fx`) and their transitive dependencies (commons-math, colt, etc.)
+   are already loaded before any package scanning begins. Any installed
+   package that bundles the same module is silently skipped.
 
-This means that a developer running their package from the IDE (boot layer)
-will never have it conflict with an old installed version in `~/.beast/2.8/` —
-the boot layer copy takes precedence and the installed copy is skipped.
+2. **ZIP packages** — Scanned from the directory search order listed above
+   (`BEAST_PACKAGE_PATH` → user dir → system dir → install dir → classpath →
+   archive). Each package's `ModuleLayer` is created and its module names are
+   added to the "already loaded" set before the next package is processed.
+
+3. **Maven packages** — Loaded after all ZIP packages. `maven-packages.xml`
+   is read and each coordinate is resolved via `MavenPackageResolver`. Any
+   module already loaded by a ZIP package (or the boot layer) is skipped.
+
+This ordering means that if the same package is installed both as a ZIP and
+as a Maven coordinate, the ZIP version takes precedence. Within ZIP packages,
+earlier directories in the search order take precedence over later ones.
+
+In the development environment, all modules are in the boot layer (tier 1),
+so installed ZIP and Maven copies are automatically skipped — a developer
+will never have their IDE version conflict with an old installed version.
 
 ## Startup sequence
 
@@ -163,10 +172,12 @@ When BEAST starts, `PackageManager.loadExternalJars()` runs:
 1. **Process pending installs/deletes** from previous BEAUti sessions
 2. **Scan package directories** — for each installed ZIP package, find its
    JARs, parse `version.xml` for service declarations, and call
-   `createAndRegisterModuleLayer()`
+   `createAndRegisterModuleLayer()`. Module names are recorded in the
+   "already loaded" set as each layer is created.
 3. **Load Maven packages** — read `maven-packages.xml`, resolve each
    coordinate via `MavenPackageResolver`, and create a `ModuleLayer` per
-   package
+   package. Modules already loaded in step 2 are skipped, so ZIP packages
+   take precedence over Maven packages.
 
 ## ModuleLayer creation
 
