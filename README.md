@@ -104,6 +104,22 @@ See `scripts/DevGuideIntelliJ.md`. IntelliJ resolves the full module path from M
 
 See `scripts/DevGuideEclipse.md`. Eclipse with m2e resolves the full module path from Maven automatically.
 
+Release Packaging
+-----------------
+
+### macOS DMG
+
+```bash
+cd release/Mac && ./build-dmg.sh
+```
+
+Requires JDK 25+ with `jpackage`. Produces a DMG containing:
+
+- **BEAST.app** — full application with bundled JRE (built by jpackage, post-processed to use module-path)
+- **Lightweight wrapper .apps** — BEAUti, TreeAnnotator, LogCombiner, AppLauncher (shell scripts that share BEAST.app's JRE and JARs)
+- **bin/** — command-line launcher scripts
+- **examples/** — sample XML files
+
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
