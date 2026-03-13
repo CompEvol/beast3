@@ -105,6 +105,15 @@ Both formats live under \code{\textasciitilde/.beast/2.8/}:
 \vspace{0.5em}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
+\textbf{Maven packages} (recommended)
+\begin{itemize}
+\item \code{maven-packages.xml} --- which coordinates the user installed
+\item \code{maven-repo/} --- local JAR cache (package + transitive deps)
+\item Remote repos: Maven Central + extras in \code{beauti.properties}
+\item Index needed because the cache is opaque --- can't tell ``what is a package'' from directory structure alone
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
 \textbf{ZIP packages} (legacy)
 \begin{itemize}
 \item One \textbf{subdirectory per package}:\\
@@ -112,15 +121,6 @@ Both formats live under \code{\textasciitilde/.beast/2.8/}:
   \code{MyPackage/version.xml}
 \item Directory structure \emph{is} the index --- any subdirectory with \code{version.xml} is a package
 \item No external index needed
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Maven packages} (recommended)
-\begin{itemize}
-\item \code{maven-packages.xml} --- which coordinates the user installed
-\item \code{maven-repo/} --- local JAR cache (package + transitive deps)
-\item Remote repos: Maven Central + extras in \code{beauti.properties}
-\item Index needed because the cache is opaque --- can't tell ``what is a package'' from directory structure alone
 \end{itemize}
 \end{column}
 \end{columns}
