@@ -1,0 +1,61 @@
+% !TEX program = pdflatex
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  rulecolor=\color{gray!40},
+  xleftmargin=2pt,
+  xrightmargin=2pt,
+}
+
+\definecolor{beastblue}{RGB}{40,80,140}
+\definecolor{beastorange}{RGB}{200,100,20}
+\setbeamercolor{frametitle}{fg=beastblue}
+\setbeamercolor{title}{fg=beastblue}
+\setbeamercolor{structure}{fg=beastblue}
+
+\newcommand{\pkg}[1]{\texttt{\color{beastorange}#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{BEAST 3 Package Manager}
+\subtitle{Design, Storage Models, and Loading Precedence}
+\author{BEAST Core Developer Team}
+\date{2026}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+\tableofcontents
+\end{frame}
+
+% ============================================================
+\section{Design \& Architecture}
+% ============================================================
+
+\input{pkgmgmt-slides}
+
+\end{document}

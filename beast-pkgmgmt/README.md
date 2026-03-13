@@ -50,18 +50,25 @@ classes are visible to the BEAST runtime without modifying the boot layer.
 
 ### Package distribution formats
 
-Packages can be distributed and installed in two ways:
+Packages can be distributed and installed in two ways. Both live under
+`~/.beast/2.8/` and both go through the same `ModuleLayer` creation path,
+but they use different storage models:
 
-1. **ZIP packages** — the traditional format. A ZIP contains `version.xml`,
-   JARs in `lib/`, optional `fxtemplates/`, and `examples/`. Installed to
-   `~/.beast/2.8/<PackageName>/` (or the directory specified by
-   `BEAST_PACKAGE_PATH`).
+1. **ZIP packages** (legacy) — the traditional format. A ZIP contains
+   `version.xml`, JARs in `lib/`, optional `fxtemplates/`, and `examples/`.
+   Installed to `~/.beast/2.8/<PackageName>/`. The directory structure *is*
+   the index: any subdirectory containing a `version.xml` is treated as a
+   package. No external index file is needed.
 
-2. **Maven packages** — resolved from Maven Central (or custom repositories)
-   by coordinate (`groupId:artifactId:version`). JARs are cached in
-   `~/.beast/2.8/maven-repo/` and tracked in `maven-packages.xml`.
-
-Both formats end up going through the same `ModuleLayer` creation path.
+2. **Maven packages** (recommended) — resolved from Maven Central (or custom
+   repositories) by coordinate (`groupId:artifactId:version`). JARs are
+   cached in `~/.beast/2.8/maven-repo/`, which is a flat Maven cache
+   containing both package JARs and their transitive dependencies. Because
+   the cache structure is opaque (you cannot tell which JARs constitute "a
+   package" by looking at the directory), an explicit index file
+   `maven-packages.xml` records which coordinates the user installed.
+   Uninstalling a Maven package removes it from the index; the cached JARs
+   are left in place as a cache.
 
 ## Development vs user environment
 
