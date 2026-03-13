@@ -117,8 +117,9 @@ Both formats live under \code{\textasciitilde/.beast/2.8/}:
 \begin{column}{0.48\textwidth}
 \textbf{Maven packages} (recommended)
 \begin{itemize}
-\item JARs cached in \code{maven-repo/} --- flat Maven cache with transitive deps mixed together
-\item \code{maven-packages.xml} records which coordinates the user installed
+\item \code{maven-packages.xml} --- which coordinates the user installed
+\item \code{maven-repo/} --- local JAR cache (package + transitive deps)
+\item Remote repos: Maven Central + extras in \code{beauti.properties}
 \item Index needed because the cache is opaque --- can't tell ``what is a package'' from directory structure alone
 \end{itemize}
 \end{column}
@@ -160,13 +161,19 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
 \item Users install via BEAUti: \textbf{Install from Maven} button
 \item Or CLI: \code{packagemanager -maven groupId:artifactId:version}
 \item Resolution via Apache Maven Resolver
-\item JARs cached in \code{\textasciitilde/.beast/2.8/maven-repo/}
-\item Tracked in \code{maven-packages.xml}
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Three components:}
+\begin{itemize}
+\item \code{maven-packages.xml} --- records installed coordinates
+\item \code{\textasciitilde/.beast/2.8/maven-repo/} --- local JAR cache
+\item Remote repos: Maven Central (always) + custom repos stored in \code{beauti.properties}
 \end{itemize}
 
 \vspace{0.5em}
 \begin{itemize}
-\item Custom repos: \code{packagemanager -addMavenRepository <url>}
+\item \code{packagemanager -addMavenRepository <url>} --- add a custom repo
 \item ZIP packages still work alongside Maven packages
 \end{itemize}
 \end{frame}

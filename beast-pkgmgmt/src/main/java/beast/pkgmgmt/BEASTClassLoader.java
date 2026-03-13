@@ -426,10 +426,12 @@ public class BEASTClassLoader {
                     for (Module module : layer.modules()) {
                         ClassLoader mcl = module.getClassLoader();
                         if (mcl != null) {
-                            // Use put (not putIfAbsent) so the module-layer
-                            // class-loader always takes precedence over any
-                            // fallback loader registered by addServices().
-                            class2loaderMap.put(provider, mcl);
+                            // Use putIfAbsent so the first-registered
+                            // class-loader wins.  Since Maven packages are
+                            // loaded before ZIP packages, this ensures Maven
+                            // takes precedence when both provide the same
+                            // service class.
+                            class2loaderMap.putIfAbsent(provider, mcl);
                         }
                     }
                     if (provider.contains(".")) {

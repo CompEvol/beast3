@@ -60,15 +60,27 @@ but they use different storage models:
    the index: any subdirectory containing a `version.xml` is treated as a
    package. No external index file is needed.
 
-2. **Maven packages** (recommended) — resolved from Maven Central (or custom
-   repositories) by coordinate (`groupId:artifactId:version`). JARs are
-   cached in `~/.beast/2.8/maven-repo/`, which is a flat Maven cache
-   containing both package JARs and their transitive dependencies. Because
-   the cache structure is opaque (you cannot tell which JARs constitute "a
-   package" by looking at the directory), an explicit index file
-   `maven-packages.xml` records which coordinates the user installed.
-   Uninstalling a Maven package removes it from the index; the cached JARs
-   are left in place as a cache.
+2. **Maven packages** (recommended) — resolved by coordinate
+   (`groupId:artifactId:version`). Three things are involved:
+
+   | What | Where | Purpose |
+   |------|-------|---------|
+   | **Install list** | `~/.beast/2.8/maven-packages.xml` | Which coordinates the user installed |
+   | **Local cache** | `~/.beast/2.8/maven-repo/` | Downloaded JARs (package + transitive deps) |
+   | **Remote repos** | Maven Central + `beauti.properties` | Where to fetch JARs from |
+
+   At startup, each coordinate in `maven-packages.xml` is resolved via
+   `MavenPackageResolver`: the resolver checks the local cache first, and
+   downloads from the remote repositories if needed. The local cache is a
+   flat Maven layout containing both package JARs and their transitive
+   dependencies — you cannot tell which JARs constitute "a package" by
+   looking at the directory, which is why the explicit `maven-packages.xml`
+   index is needed.
+
+   Uninstalling a Maven package removes it from `maven-packages.xml`; the
+   cached JARs are left in place. Custom repositories are stored as a
+   comma-separated list in `beauti.properties` (key `maven.repositories`)
+   and are searched alongside Maven Central.
 
 ## Development vs user environment
 
@@ -243,12 +255,26 @@ Both mechanisms feed into the same registry in `BEASTClassLoader`. When code
 calls `BEASTClassLoader.loadService(BEASTInterface.class)`, all providers
 from both sources are returned.
 
+### How services are merged
+
+When a package has both `module-info.java` `provides` declarations and
+`version.xml` `<service>` entries, both are registered. The service sets are
+unioned — duplicates are harmlessly deduplicated via `Set.add()`.
+
+For the class-loader map (used by `BEASTClassLoader.forName()`), the
+first-registered loader wins (`putIfAbsent`). Since Maven packages are
+loaded before ZIP packages, Maven takes precedence when both formats provide
+the same service class. Within a single package, `version.xml` services are
+registered before `module-info.java` services, but because they share the
+same `ModuleLayer` class-loader this has no practical effect.
+
 ## Class loading
 
 `BEASTClassLoader.forName(className)` searches in order:
 
 1. **Explicit class→loader map** — populated from `version.xml` services and
-   `module-info.java` `provides` declarations
+   `module-info.java` `provides` declarations. First-registered wins, so
+   Maven packages take precedence over ZIP packages for the same class.
 2. **Plugin `ModuleLayer`s** — iterates each registered layer's modules
 3. **Context / system class-loader** — covers the boot layer
 
