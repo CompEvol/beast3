@@ -63,6 +63,31 @@ Create a [Run Configuration](https://help.eclipse.org/latest/topic/org.eclipse.j
 4. On the **Arguments** tab, set **Program arguments** to your XML file path (for BeastMain)
 5. Eclipse resolves the module path from Maven via m2e — no manual `--module-path` or `--add-modules` flags are needed.
 
+## BEAGLE native library
+
+If you have [BEAGLE](https://github.com/beagle-dev/beagle-lib) installed and
+want to use it from Eclipse, add the following **VM arguments** to your run
+configuration (**Run → Run Configurations → Arguments tab → VM arguments**):
+
+```
+--enable-native-access=beagle -Djava.library.path=/usr/local/lib
+```
+
+- `--enable-native-access=beagle`: Java 25 restricts JNI calls by default.
+  This flag allows the `beagle` module to load its native library without
+  warnings. Without it you will see
+  `WARNING: Use --enable-native-access=beagle` at startup, and in a future
+  Java release the call will be blocked entirely.
+- `-Djava.library.path=...`: points to the directory containing
+  `libhmsbeagle-jni.dylib` (or `.so` on Linux). Common locations:
+  - macOS (Homebrew on Apple Silicon): `/opt/homebrew/lib`
+  - macOS (system): `/usr/local/lib`
+  - Linux: `/usr/local/lib` or `/usr/lib`
+
+The deployed BEAST.app sets both of these automatically in its launcher
+scripts, which is why BEAGLE works out of the box in the user environment
+but requires manual configuration in the IDE.
+
 ## Developing an external package alongside BEAST 3
 
 To test your own BEAST package against BEAST 3 core in a single IDE session:
