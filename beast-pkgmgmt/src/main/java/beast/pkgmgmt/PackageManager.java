@@ -150,6 +150,12 @@ public class PackageManager {
      */
     static boolean externalJarsLoaded = false;
 
+    /**
+     * Directories from deprecated search paths (system dir, install dir,
+     * classpath, archive).  If a package is loaded from one of these,
+     * a warning is logged advising the user to migrate.
+     */
+    private static final Set<String> deprecatedDirs = new HashSet<>();
 
     /**
      * list of all classes found in the class path *
@@ -921,9 +927,10 @@ public class PackageManager {
      * return list of directories that may contain packages *
      */
     public static List<String> getBeastDirectories() {
-    	
+
         List<String> dirs = new ArrayList<String>();
-        // check if there is the BEAST environment variable is set
+
+        // 1. BEAST_PACKAGE_PATH: configurable override for CI or custom layouts
         if (PackageManager.getBeastPackagePathProperty() != null) {
             String BEAST = PackageManager.getBeastPackagePathProperty();
             for (String dirName : BEAST.split(":")) {
@@ -931,17 +938,33 @@ public class PackageManager {
             }
         }
 
-        // add user package directory
+        // 2. User package directory: ~/.beast/2.8/
         dirs.add(getPackageUserDir());
 
-        // add application package directory
-        dirs.add(getPackageSystemDir());
+        // --- Deprecated paths (BEAST 2 legacy, slated for removal) ---
+        // These paths are no longer needed in BEAST 3:
+        //   - System dir: no known users
+        //   - Install dir: redundant with JPMS boot layer
+        //   - Classpath scanning: redundant with JPMS module path
+        //   - Archive dir: implicit rollback adds complexity for a rarely-used feature
+        // They are retained temporarily for backward compatibility and will be
+        // removed in a future release.  A warning is logged when they contribute
+        // packages so that users can migrate.
 
-        // add BEAST installation directory
-        if (getBEASTInstallDir() != null)
+        // 3. System package directory (deprecated)
+        String systemDir = getPackageSystemDir();
+        dirs.add(systemDir);
+        deprecatedDirs.add(systemDir);
+
+        // 4. BEAST installation directory (deprecated)
+        if (getBEASTInstallDir() != null) {
             dirs.add(getBEASTInstallDir());
+            deprecatedDirs.add(getBEASTInstallDir());
+        }
 
-        // pick up directories in class path, useful when running in an IDE
+        // 5. Classpath-derived directories (deprecated)
+        // Was useful pre-JPMS for IDE runs; now redundant because IDE-launched
+        // runs place all modules in the boot layer via the module path.
         String strClassPath = System.getProperty("java.class.path");
         String [] paths = strClassPath.split(":");
         for (String path : paths) {
@@ -954,15 +977,15 @@ public class PackageManager {
                     // exclude Intellij build path out/production
                     if (!dirs.contains(path) && !path.contains("production")) {
                         dirs.add(path);
+                        deprecatedDirs.add(path);
                     }
                 }
             }
         }
 
 
-        // subdirectories that look like they may contain an package
-        // this is detected by checking the subdirectory contains a lib or
-        // templates directory
+        // subdirectories that look like they may contain a package
+        // (detected by checking the subdirectory contains version.xml)
         List<String> subDirs = new ArrayList<String>();
         for (String dirName : dirs) {
             File dir = new File(dirName);
@@ -974,8 +997,14 @@ public class PackageManager {
                 for (File file : files) {
                     if (file.isDirectory()) {
                         File versionFile = new File(file, "version.xml");
-                        if (versionFile.exists())
-                            subDirs.add(file.getAbsolutePath());
+                        if (versionFile.exists()) {
+                            String subPath = file.getAbsolutePath();
+                            subDirs.add(subPath);
+                            // Inherit deprecated status from parent directory
+                            if (deprecatedDirs.contains(dirName)) {
+                                deprecatedDirs.add(subPath);
+                            }
+                        }
                     }
                 }
             }
@@ -983,7 +1012,14 @@ public class PackageManager {
 
         subDirs.addAll(dirs);
         dirs = subDirs;
-        dirs.addAll(getLatestBeastArchiveDirectories(dirs));
+
+        // 6. Archive directory (deprecated)
+        // Old package versions stored in ~/.beast/2.8/archive/.
+        // Adds complexity for implicit rollback; explicit reinstall is preferred.
+        List<String> archiveDirs = getLatestBeastArchiveDirectories(dirs);
+        deprecatedDirs.addAll(archiveDirs);
+        dirs.addAll(archiveDirs);
+
         return dirs;
     }
     
@@ -1212,6 +1248,11 @@ public class PackageManager {
                     packageName = packageElement.getAttribute("name");
                     String packageNameAndVersion = packageName + " v" + packageElement.getAttribute("version");
                     System.err.println("Loading package " + packageNameAndVersion + " from " + jarDirName);
+                    if (deprecatedDirs.contains(jarDirName)) {
+                        System.err.println("WARNING: package " + packageName + " was loaded from a deprecated " +
+                            "search path (" + jarDirName + "). This path will be removed in a future release. " +
+                            "Please reinstall the package to ~/.beast/2.8/ or as a Maven package.");
+                    }
                     Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
                     services = parseServices(doc);
                 } catch (Exception e) {

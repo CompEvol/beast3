@@ -105,56 +105,35 @@ End users install packages via BEAUti or the command line. Installed packages
 live outside the boot layer and are loaded at startup into child
 `ModuleLayer`s. The package manager scans a series of directories to find them.
 
-### Directory search order
+### Directory search order (ZIP packages)
 
-`PackageManager.getBeastDirectories()` currently builds the list of candidate
-directories in this order:
+`PackageManager.getBeastDirectories()` builds the list of candidate
+directories for ZIP package discovery. Only the first two are needed for
+BEAST 3; the rest are deprecated legacy paths retained temporarily for
+backward compatibility:
 
 1. **`BEAST_PACKAGE_PATH`** — environment variable or `-D` system property.
    Colon-separated list of directories. Useful for CI or custom layouts.
 2. **User package directory** — `~/.beast/2.8/` (platform-specific).
-3. **System package directory** — e.g. `/opt/beast/` on Linux.
-4. **BEAST installation directory** — located by finding the JAR that contains
-   `PackageManager` and navigating up two levels.
-5. **Classpath-derived directories** — non-JAR entries on `java.class.path`,
-   excluding IDE build paths like `out/production/`. This is how IDE-launched
-   runs pick up development packages that aren't in the standard install
-   locations.
+3. ~~**System package directory**~~ *(deprecated)* — e.g. `/opt/beast/` on
+   Linux. No known users.
+4. ~~**BEAST installation directory**~~ *(deprecated)* — located by finding
+   the JAR that contains `PackageManager` and navigating up two levels.
+   Redundant with JPMS boot layer.
+5. ~~**Classpath-derived directories**~~ *(deprecated)* — non-JAR entries on
+   `java.class.path`. Was needed pre-JPMS for IDE runs; now redundant
+   because IDE-launched runs place all modules in the boot layer via the
+   module path.
+6. ~~**Archive directory**~~ *(deprecated)* — `~/.beast/2.8/archive/`.
+   Implicit rollback adds complexity; explicit reinstall of a specific
+   version is preferred.
 
-Within each directory, subdirectories containing a `version.xml` are treated as
-packages.
+Within each directory, subdirectories containing a `version.xml` are treated
+as packages.
 
-6. **Archive directory** — `~/.beast/2.8/archive/`. Old package versions are
-   stored here. Only the latest archived version of each package is considered,
-   and only if that package has not already been found in one of the earlier
-   directories.
-
-### Proposed simplification
-
-In the development environment, all modules (BEAST core + external packages)
-are on the IDE module path in the boot layer. The package manager has nothing
-to do — Maven dependencies come from `~/.m2/` via the IDE, and service
-discovery works through `module-info.java` `provides` declarations.
-
-In the user environment, only `beast.pkgmgmt`, `beast.base`, and `beast.fx`
-are in the boot layer. The package manager must find and load everything else.
-The current six-location search order is inherited from BEAST 2 and is more
-complex than BEAST 3 needs. The classpath scanning (step 5) was needed before
-JPMS but is now redundant. The system directory (step 3) has no known users.
-The archive directory (step 6) adds complexity for a rarely-used rollback
-feature.
-
-A simplified search for the user environment would need only two locations:
-
-1. **`~/.beast/2.8/`** — Maven packages (resolved to `maven-repo/` subfolder)
-   and any future package format
-2. **One configurable directory** — for old-style `version.xml` ZIP packages,
-   defaulting to `~/.beast/2.8/` but overridable via `BEAST_PACKAGE_PATH`
-
-This collapses the six locations to two, eliminates the reconciliation logic,
-and makes the system easier to reason about. Package rollback could be handled
-explicitly (reinstall a specific version) rather than implicitly through
-archive scanning.
+A warning is logged at startup when a package is loaded from a deprecated
+path (steps 3–6), advising the user to reinstall to `~/.beast/2.8/` or as a
+Maven package. These paths will be removed in a future release.
 
 ### Package loading precedence
 
