@@ -76,6 +76,9 @@ configuration (**Run → Edit Configurations → Modify options → Add VM optio
   - macOS (system): `/usr/local/lib`
   - Linux: `/usr/local/lib` or `/usr/lib`
 
+<a href="./IntelliJBEAGLE.png"><img src="IntelliJBEAGLE.png" width="600" ></a>
+
+
 The deployed BEAST.app sets both of these automatically in its launcher
 scripts, which is why BEAGLE works out of the box in the user environment
 but requires manual configuration in the IDE.
