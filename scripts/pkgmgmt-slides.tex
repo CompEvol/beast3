@@ -1,18 +1,18 @@
-% Package manager slides — shared between beast-pkgmgmt-talk.tex and beast3-talk.tex.
+% Package manager slides: shared between beast-pkgmgmt-talk.tex and beast3-talk.tex.
 % Assumes the preamble defines: \code, \pkg, beastblue, beastorange colours,
 % listings, tikz with arrows.meta and positioning.
 
 \begin{frame}{Package System Design Principles}
 \begin{enumerate}
-\item \textbf{One ModuleLayer per package} --- namespace isolation without losing visibility to the core API. Two packages can bundle different versions of the same library without conflict.
+\item \textbf{One ModuleLayer per package:} namespace isolation without losing visibility to the core API. Two packages can bundle different versions of the same library without conflict.
 
-\item \textbf{Same code path for dev and deployment} --- \code{module-info.java} \code{provides} declarations are the single source of truth. A developer in IntelliJ and an end user with an installed ZIP see the same service discovery.
+\item \textbf{Same code path for dev and deployment:} \code{module-info.java} \code{provides} declarations are the single source of truth. A developer in IntelliJ and an end user with an installed ZIP see the same service discovery.
 
-\item \textbf{Graceful degradation} --- modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are silently skipped. Core modules still load.
+\item \textbf{Graceful degradation:} modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are silently skipped. Core modules still load.
 
-\item \textbf{First-found wins} --- when the same JPMS module appears in multiple locations (boot layer, installed package, archive), the first one loaded wins. No silent duplicates, no ``reads more than one module'' errors.
+\item \textbf{First-found wins:} when the same JPMS module appears in multiple locations (boot layer, installed package, archive), the first one loaded wins. No silent duplicates, no ``reads more than one module'' errors.
 
-\item \textbf{Dual distribution} --- ZIP archives (CBAN) and Maven Central JARs converge on the same ModuleLayer creation path.
+\item \textbf{Dual distribution:} ZIP archives (CBAN) and Maven Central JARs converge on the same ModuleLayer creation path.
 \end{enumerate}
 \end{frame}
 
@@ -41,7 +41,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Service Discovery: \code{module-info.java}}
-\textbf{Primary mechanism} --- BEAST scans module descriptors at startup:
+\textbf{Primary mechanism:} BEAST scans module descriptors at startup.
 
 \begin{lstlisting}[language=Java]
 open module my.beast.package {
@@ -70,7 +70,7 @@ open module my.beast.package {
 
 \vspace{1em}
 \begin{block}{Recommendation}
-Add \code{module-info.java} when you can --- it's the primary mechanism and gives you compile-time module dependency checking.
+Add \code{module-info.java} when you can: it is the primary mechanism and gives you compile-time module dependency checking.
 \end{block}
 \end{frame}
 
@@ -95,7 +95,7 @@ Add \code{module-info.java} when you can --- it's the primary mechanism and give
 \begin{itemize}
 \item Each deployed package gets its \textbf{own ModuleLayer}
 \item No classpath conflicts between packages
-\item Modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are \textbf{automatically skipped} --- core modules still load
+\item Modules with unsatisfied dependencies (e.g.\ FX on a headless cluster) are \textbf{automatically skipped}; core modules still load
 \end{itemize}
 \end{frame}
 
@@ -107,10 +107,10 @@ Both formats live under \code{\textasciitilde/.beast/2.8/}:
 \begin{column}{0.48\textwidth}
 \textbf{Maven packages} (recommended)
 \begin{itemize}
-\item \code{maven-packages.xml} --- which coordinates the user installed
-\item \code{maven-repo/} --- local JAR cache (package + transitive deps)
+\item \code{maven-packages.xml}: installed coordinates
+\item \code{maven-repo/}: local JAR cache (package + transitive deps)
 \item Remote repos: Maven Central + extras in \code{beauti.properties}
-\item Index needed because the cache is opaque --- can't tell ``what is a package'' from directory structure alone
+\item Index needed because the cache is opaque
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -119,7 +119,7 @@ Both formats live under \code{\textasciitilde/.beast/2.8/}:
 \item One \textbf{subdirectory per package}:\\
   \code{MyPackage/lib/*.jar}\\
   \code{MyPackage/version.xml}
-\item Directory structure \emph{is} the index --- any subdirectory with \code{version.xml} is a package
+\item Directory structure \emph{is} the index: any subdirectory with \code{version.xml} is a package
 \item No external index needed
 \end{itemize}
 \end{column}
@@ -136,8 +136,8 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
 
 \vspace{0.5em}
 \begin{enumerate}
-\item \textbf{Load Maven packages} --- resolve coordinates from \code{maven-packages.xml}, create a ModuleLayer per package. Maven is the recommended format, so these take precedence.
-\item \textbf{Scan package directories} --- find installed ZIP packages in\\
+\item \textbf{Load Maven packages:} resolve coordinates from \code{maven-packages.xml}, create a ModuleLayer per package. Maven is the recommended format, so these take precedence.
+\item \textbf{Scan package directories:} find installed ZIP packages in\\
   \code{\textasciitilde/.beast/2.8/} (or \code{BEAST\_PACKAGE\_PATH})
 \item \textbf{Create ModuleLayer per ZIP package:}
   \begin{itemize}
@@ -146,7 +146,7 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
   \item Filter out modules whose \code{requires} can't be satisfied
   \item \code{resolveAndBind()} on the remaining modules
   \end{itemize}
-\item \textbf{Register with \code{BEASTClassLoader}} --- services from both \code{module-info.java} and \code{version.xml} merged into registry
+\item \textbf{Register with \code{BEASTClassLoader}:} services from both \code{module-info.java} and \code{version.xml} merged into registry
 \end{enumerate}
 
 \vspace{0.3em}
@@ -154,7 +154,7 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
 \end{frame}
 
 \begin{frame}{Maven Central Distribution}
-\textbf{New:} packages can be published as plain Maven Central JARs.
+Packages can be published as plain Maven Central JARs.
 
 \vspace{0.5em}
 \begin{itemize}
@@ -166,14 +166,14 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
 \vspace{0.5em}
 \textbf{Three components:}
 \begin{itemize}
-\item \code{maven-packages.xml} --- records installed coordinates
-\item \code{\textasciitilde/.beast/2.8/maven-repo/} --- local JAR cache
-\item Remote repos: Maven Central (always) + custom repos stored in \code{beauti.properties}
+\item \code{maven-packages.xml}: records installed coordinates
+\item \code{\textasciitilde/.beast/2.8/maven-repo/}: local JAR cache
+\item Remote repos: Maven Central (always) + custom repos in \code{beauti.properties}
 \end{itemize}
 
 \vspace{0.5em}
 \begin{itemize}
-\item \code{packagemanager -addMavenRepository <url>} --- add a custom repo
+\item \code{packagemanager -addMavenRepository <url>}: add a custom repo
 \item ZIP packages still work alongside Maven packages
 \end{itemize}
 \end{frame}
