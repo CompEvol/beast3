@@ -62,15 +62,21 @@
 Three pillars of change in BEAST 3:
 \vspace{1em}
 \begin{enumerate}
-\item \textbf{Maven + JPMS} --- modern build system and module isolation
-\item \textbf{Strongly-typed spec system} --- compile-time checked inputs and domain types
-\item \textbf{New package distribution} --- Maven Central JARs, module-based service discovery
+\item \textbf{Maven + JPMS}: modern build system and module isolation
+\item \textbf{Strongly-typed spec system}: compile-time checked inputs and domain types
+\item \textbf{New package distribution}: Maven Central JARs, module-based service discovery
 \end{enumerate}
 \vspace{1em}
 \begin{block}{Goal}
 Catch more errors at compile time, simplify dependency management, and make packages first-class citizens in the Java module system.
 \end{block}
 \end{frame}
+
+% ============================================================
+\section{Why Maven + JPMS?}
+% ============================================================
+
+\input{motivation-slides}
 
 % ============================================================
 \section{Build \& Tooling}
@@ -102,7 +108,7 @@ Catch more errors at compile time, simplify dependency management, and make pack
 \begin{frame}{Java 25 + JPMS Modules}
 \begin{itemize}
 \item Requires \textbf{JDK 25} (was Java 8/11)
-\item JavaFX is a \textbf{Maven dependency} --- no bundled JDK needed
+\item JavaFX is a \textbf{Maven dependency}: no bundled JDK needed
 \item Three JPMS modules, each with \code{module-info.java}:
 \end{itemize}
 \vspace{0.5em}
@@ -137,7 +143,7 @@ All declared as \code{open module} (reflection OK for XML unmarshalling).
 \end{center}
 \vspace{1em}
 \begin{itemize}
-\item \code{beast-base} has \textbf{no JavaFX dependency} --- can be used headlessly
+\item \code{beast-base} has \textbf{no JavaFX dependency}: can be used headlessly
 \item \code{beagle} and \code{colt} ship as modular JARs in \code{lib/}
 \end{itemize}
 \end{frame}
@@ -274,7 +280,7 @@ Distribution \textbf{is} the prior:
 \end{column}
 \end{columns}
 \vspace{1em}
-No separate \code{Prior} wrapper needed --- each distribution has a \code{param} input directly (from \code{TensorDistribution}).
+No separate \code{Prior} wrapper needed: each distribution has a \code{param} input directly (from \code{TensorDistribution}).
 \end{frame}
 
 \begin{frame}[fragile]{Spec Classes Coexist with Legacy}
@@ -292,7 +298,7 @@ public class RealParameter extends ...
 
 \begin{itemize}
 \item Your IDE shows deprecated usage (strikethrough)
-\item \textbf{Migrate incrementally} --- old and new classes can coexist
+\item \textbf{Migrate incrementally}: old and new classes can coexist
 \item Consider a \code{yourpackage.spec} sub-package for backward compatibility
 \end{itemize}
 \end{frame}
@@ -321,7 +327,7 @@ public Input<RealScalar<PositiveReal>>
 
 \vspace{1em}
 \begin{itemize}
-\item Domain (\code{PositiveReal}) is part of the type --- no runtime \code{lower="0"} needed
+\item Domain (\code{PositiveReal}) is part of the type: no runtime \code{lower="0"} needed
 \item Compiler catches if someone passes a \code{UnitInterval} parameter where \code{PositiveReal} is expected
 \end{itemize}
 \end{frame}
@@ -350,28 +356,25 @@ If it's fixed configuration, use a plain \code{Input<>}.
 % ============================================================
 
 \begin{frame}{New Distributions}
-Genuinely new --- not present in BEAST 2:
+Genuinely new: not present in BEAST 2:
 
 \vspace{0.5em}
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
 \textbf{Continuous}
 \begin{itemize}
-\item \code{Cauchy} --- location / scale
-\item \code{Laplace} --- $\mu$ / scale
-\item \code{InverseGamma} --- $\alpha$ / $\beta$
-\item \code{ChiSquare} --- degrees of freedom
-\item \code{GammaMean} --- mean parameterization
+\item \code{Cauchy}: location / scale
+\item \code{GammaMean}: mean parameterization
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \textbf{Discrete \& Wrappers}
 \begin{itemize}
-\item \code{Bernoulli} --- boolean with prob $p$
-\item \code{IntUniform} --- discrete uniform
-\item \code{IID} --- scalar dist $\to$ vector
-\item \code{OffsetReal} --- additive offset
-\item \code{TruncatedReal} --- truncation bounds
+\item \code{Bernoulli}: boolean with prob $p$
+\item \code{IntUniform}: discrete uniform
+\item \code{IID}: scalar dist $\to$ vector
+\item \code{OffsetReal}: additive offset
+\item \code{TruncatedReal}: truncation bounds
 \end{itemize}
 \end{column}
 \end{columns}
@@ -379,9 +382,9 @@ Genuinely new --- not present in BEAST 2:
 
 \begin{frame}{New / Refactored Operators}
 \begin{itemize}
-\item \textbf{\code{IntervalScaleOperator}} (new) --- scales intervals between consecutive node heights; preserves topology, changes relative branch lengths
-\item \textbf{\code{ScaleTreeOperator}} (split) --- dedicated tree-scaling operator, separated from the parameter \code{ScaleOperator}
-\item \textbf{Spec \code{UpDownOperator}} --- \code{up}/\code{down} take \code{List<Scalable>}; uses Bactrian kernel by default
+\item \textbf{\code{IntervalScaleOperator}} (new): scales intervals between consecutive node heights; preserves topology, changes relative branch lengths
+\item \textbf{\code{ScaleTreeOperator}} (split): dedicated tree-scaling operator, separated from the parameter \code{ScaleOperator}
+\item \textbf{Spec \code{UpDownOperator}}: \code{up}/\code{down} take \code{List<Scalable>}; uses Bactrian kernel by default
 \end{itemize}
 \end{frame}
 
@@ -443,7 +446,7 @@ Genuinely new --- not present in BEAST 2:
 \toprule
 \textbf{Removed} & \textbf{Replacement} \\
 \midrule
-\code{beast.base.inference.Evaluator} & (removed --- impacted MCMC subclasses) \\
+\code{beast.base.inference.Evaluator} & (removed; impacted MCMC subclasses) \\
 \code{AscertainedAlignment} & Use standard \code{Alignment} \\
 \bottomrule
 \end{tabular}
@@ -463,7 +466,7 @@ Spec operators accept \textbf{typed} parameters:
 \item \code{ScaleOperator.parameter} $\to$ \code{Scalable} interface
 \item \code{RealRandomWalkOperator} $\to$ \code{RealVectorParam} xor \code{RealScalarParam}
 \item \code{BitFlipOperator} $\to$ \code{BoolVectorParam}
-\item \code{DeltaExchangeOperator} --- adds typed inputs (\code{rvparameter}, \code{ivparameter}, etc.)
+\item \code{DeltaExchangeOperator}: adds typed inputs (\code{rvparameter}, \code{ivparameter}, etc.)
 \end{itemize}
 \vspace{1em}
 See the migration guide for the complete operator mapping table.
@@ -487,8 +490,8 @@ See the migration guide for the complete operator mapping table.
 \item Primary framework (Jupiter 5.8.2)
 \item JUnit 4 still compiles via vintage engine
 \item \code{@Tag("slow")} for long MCMC tests
-\item \code{mvn test} --- fast tests only
-\item \code{mvn test -Pslow-tests} --- all
+\item \code{mvn test}: fast tests only
+\item \code{mvn test -Pslow-tests}: all
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
@@ -516,7 +519,7 @@ Math & commons-math3 & commons-math4-legacy 4.0 \\
 ANTLR & 4.x (bundled) & 4.13.2 (Maven) \\
 JavaFX & bundled with JDK & 25.0.2 (Maven) \\
 JUnit & 4 & 5 (Jupiter 5.8.2) \\
-GUI tests & --- & TestFX 4.0.18 \\
+GUI tests & -- & TestFX 4.0.18 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -524,8 +527,8 @@ GUI tests & --- & TestFX 4.0.18 \\
 
 \begin{frame}{BEAUti \& Templates}
 \begin{itemize}
-\item \textbf{fxtemplates namespacing} --- templates moved to module-unique paths (\code{beast.fx/fxtemplates/}) to avoid JPMS split-package conflicts
-\item \textbf{Module resource scanning} --- \code{BeautiDoc} scans JPMS module resources, so templates are discovered from JARs on the module path
+\item \textbf{fxtemplates namespacing}: templates moved to module-unique paths (\code{beast.fx/fxtemplates/}) to avoid JPMS split-package conflicts
+\item \textbf{Module resource scanning}: \code{BeautiDoc} scans JPMS module resources, so templates are discovered from JARs on the module path
 \item External packages use their own namespace:\\
   e.g.\ \code{beast.morph.models.fx/fxtemplates/}
 \item Legacy path (\code{fxtemplates/*.xml}) still supported as fallback
@@ -538,18 +541,41 @@ GUI tests & --- & TestFX 4.0.18 \\
 
 \begin{frame}{Migration Checklist}
 \begin{enumerate}
-\item \textbf{Update build} --- create \code{pom.xml} (or update Ant classpath JARs), target Java 25
-\item \textbf{Fix compile errors} --- \code{StateNode} not \code{Function}, \code{scale()} removed, \code{Evaluator} gone
-\item \textbf{Add \code{module-info.java}} --- declare \code{provides} for your \code{BEASTInterface} implementations
-\item \textbf{Migrate to spec types} --- replace \code{RealParameter} inputs with \code{RealScalarParam} / \code{RealVectorParam} and domain types
-\item \textbf{Update XML \& templates} --- use spec class names, new operator set, namespaced fxtemplates
+\item \textbf{Update build}: create \code{pom.xml} (or update Ant classpath JARs), target Java 25
+\item \textbf{Fix compile errors}: \code{StateNode} not \code{Function}, \code{scale()} removed, \code{Evaluator} gone
+\item \textbf{Add \code{module-info.java}}: declare \code{provides} for your \code{BEASTInterface} implementations
+\item \textbf{Migrate to spec types}: replace \code{RealParameter} inputs with \code{RealScalarParam} / \code{RealVectorParam} and domain types
+\item \textbf{Update XML \& templates}: use spec class names, new operator set, namespaced fxtemplates
 \end{enumerate}
 \end{frame}
 
+\begin{frame}{Key Breaking Changes}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Area} & \textbf{BEAST 2} & \textbf{BEAST 3} \\
+\midrule
+Build & Ant, Java 8/11 & Maven, Java 25 \\
+Modules & Custom classloader & JPMS \code{ModuleLayer} \\
+Parameters & \code{RealParameter} & Typed spec params + domains \\
+Priors & \code{Prior} wrapper & Distribution is the prior \\
+\code{StateNode} & implements \code{Function} & No longer a \code{Function} \\
+\code{StateNode.scale()} & built-in & Removed; use \code{Scalable} \\
+JavaFX & Bundled with JDK & Maven dependency \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+Legacy classes are \textbf{deprecated, not removed}: migrate incrementally.
+\end{frame}
+
+\input{timeline-slides}
+
 \begin{frame}{Resources}
 \begin{description}
-\item[Migration guide] \code{scripts/migration-guide.md} --- class mapping tables, step-by-step instructions
-\item[CHANGELOG] \code{CHANGELOG.md} --- full list of what changed and why
+\item[Migration guide] \code{scripts/migration-guide.md}: class mapping tables, step-by-step instructions
+\item[CHANGELOG] \code{CHANGELOG.md}: full list of what changed and why
 \item[Package skeleton] \url{https://github.com/CompEvol/beast-package-skeleton}
 \item[BEAST 3 repo] \url{https://github.com/CompEvol/beast3}
 \end{description}

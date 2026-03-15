@@ -1,0 +1,31 @@
+% Timeline slide: shared between beast3-overview-talk.tex and beast3-talk.tex.
+% Assumes the preamble defines: beastblue, beastorange colours,
+% tikz with arrows.meta and positioning.
+
+\begin{frame}{Timeline}
+\begin{center}
+\begin{tikzpicture}[
+    x=0.85cm,
+    milestone/.style={circle, fill=beastblue, inner sep=2pt},
+    label/.style={font=\small, align=center},
+    >=Stealth
+]
+\draw[->, thick, gray!60] (0,0) -- (14,0);
+
+\node[milestone] (now) at (0,0) {};
+\node[label, above=0.3cm of now] {Now\\[-0.2em]\scriptsize Mar 2026};
+\node[label, below=0.3cm of now] {\scriptsize Stakeholders\\[-0.2em]\scriptsize meeting (19 Mar)};
+
+\node[milestone] (migrate) at (5,0) {};
+\node[label, above=0.3cm of migrate] {Package\\[-0.2em]migration\\[-0.2em]\scriptsize Apr--May};
+\node[label, below=0.3cm of migrate] {\scriptsize 20+ packages\\[-0.2em]\scriptsize across multiple groups};
+
+\node[milestone, fill=beastorange] (release) at (10,0) {};
+\node[label, above=0.3cm of release] {\textbf{Release +}\\[-0.2em]\textbf{paper}\\[-0.2em]\scriptsize 26 Jun 2026};
+\node[label, below=0.3cm of release] {\scriptsize Before SMBE\\[-0.2em]\scriptsize Copenhagen};
+
+\node[milestone] (isba) at (13,0) {};
+\node[label, above=0.3cm of isba] {ISBA\\[-0.2em]\scriptsize 26 Jun--5 Jul};
+\end{tikzpicture}
+\end{center}
+\end{frame}

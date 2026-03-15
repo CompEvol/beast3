@@ -1,0 +1,87 @@
+% Motivation slides: shared between beast3-overview-talk.tex and beast3-talk.tex.
+% Assumes the preamble defines: \code, \pkg, beastblue, beastorange colours,
+% listings, tikz with arrows.meta and positioning.
+
+\begin{frame}{Problems We Wanted to Solve}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Build \& dependencies}
+\begin{itemize}
+\item Ant \code{build.xml}: manual JAR management, no transitive dependency resolution
+\item Adding a library means hand-copying JARs and editing classpaths
+\item No standard way to publish or consume packages
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Classloading \& isolation}
+\begin{itemize}
+\item Custom classloader predates Java modules by 15+ years
+\item Source of ``magic'' that confuses new developers and breaks standard tooling
+\item Two packages bundling different versions of the same library can conflict
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Why Maven? Dependency Management}
+\begin{center}
+\begin{tikzpicture}[
+    box/.style={draw=beastblue, rounded corners, minimum width=3.2cm, minimum height=1.2cm, align=center, font=\small},
+    >=Stealth
+]
+\node[box, fill=gray!10] (ant) {\textbf{Ant}\\manual JARs\\no versions\\no transitives};
+\node[box, fill=beastblue!10, right=2cm of ant] (mvn) {\textbf{Maven}\\declared dependencies\\automatic resolution\\transitive deps};
+\draw[->, very thick, beastorange] (ant) -- (mvn);
+\end{tikzpicture}
+\end{center}
+\vspace{0.5em}
+\begin{itemize}
+\item Declare what you need in \code{pom.xml}; Maven fetches, caches, and versions it
+\item Transitive dependencies resolved automatically: no more ``which JARs do I need?''
+\item Reproducible builds: everyone gets the same dependency tree
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Why Maven? Ecosystem \& Tooling}
+\begin{itemize}
+\item \textbf{IDE integration:} IntelliJ and Eclipse understand Maven projects natively: import, build, run, debug with zero configuration
+\item \textbf{CI/CD:} GitHub Actions, Jenkins, etc.\ all have first-class Maven support
+\item \textbf{Publishing:} packages can be published to Maven Central: the standard Java package registry, used by millions of projects
+\item \textbf{AI-assisted development:} Copilot, agentic coding tools understand Maven projects and JPMS modules; they don't understand bespoke build systems
+\item \textbf{Documentation \& community:} vast ecosystem of tutorials, StackOverflow answers, and plugins
+\end{itemize}
+
+\vspace{0.5em}
+\begin{block}{}
+Moving to Maven means BEAST developers benefit from the entire Java ecosystem's tooling instead of maintaining our own.
+\end{block}
+\end{frame}
+
+\begin{frame}{Why JPMS Modules?}
+The \textbf{Java Platform Module System} (introduced in Java 9) gives us:
+
+\vspace{0.5em}
+\begin{enumerate}
+\item \textbf{Strong encapsulation}: each module declares what it exports; internal classes are truly hidden
+\item \textbf{Reliable configuration}: missing dependencies are caught at startup, not at runtime via \code{ClassNotFoundException}
+\item \textbf{Per-package isolation}: each BEAST package gets its own \code{ModuleLayer}; two packages can bundle different versions of the same library without conflict
+\item \textbf{No split packages}: JPMS enforces that each Java package belongs to exactly one module, so good development practices are guaranteed rather than hoped for
+\item \textbf{Service discovery}: \code{module-info.java} replaces classpath scanning and \code{version.xml} as the primary way to register BEASTObjects
+\end{enumerate}
+
+\vspace{0.5em}
+\begin{alertblock}{}
+JPMS replaces our custom classloader with a standard Java mechanism that works with, not against, the platform.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{What Was Wrong with the Custom Classloader?}
+\begin{itemize}
+\item Using BEAST as a \textbf{library} in other projects (e.g.\ LPhyBEAST) was nearly impossible: the custom classloader conflicts with the host application's class loading
+\item Debugging class-not-found errors required \textbf{BEAST-specific knowledge} that isn't transferable to other Java projects
+\item New developers and contributors faced a steep \textbf{onboarding barrier}
+\end{itemize}
+
+\vspace{1em}
+\textbf{BEAST 3 fix:} JPMS \code{ModuleLayer} provides per-package isolation out of the box. Standard Java, standard tooling, no magic.
+\end{frame}
