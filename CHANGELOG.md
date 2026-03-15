@@ -27,9 +27,6 @@ Genuinely new components not present in BEAST 2:
 
 **Distributions:**
 - `Cauchy` — location/scale parameterization
-- `Laplace` — mu/scale parameterization
-- `InverseGamma` — alpha/beta parameterization
-- `ChiSquare` — degrees-of-freedom parameterization
 - `Bernoulli` — discrete boolean distribution with probability `p`
 - `IntUniform` — discrete uniform over integer range
 - `GammaMean` — mean parameterization of Gamma (alpha + mean, alternative to alpha + scale/rate)
@@ -62,6 +59,15 @@ Genuinely new components not present in BEAST 2:
 - **Loading precedence: boot layer → Maven → ZIP** — Maven packages are loaded before legacy ZIP packages. When the same JPMS module exists in both formats, the Maven version takes precedence. This is the desired behaviour as Maven is the recommended distribution format going forward.
 - **Custom Maven repositories** — `packagemanager -addMavenRepository <url>` for organization-hosted repositories.
 - **`maven-packages.xml`** — new config file (alongside `beauti.cfg`) tracks installed Maven packages.
+- **Legacy search paths deprecated** — the system, install, classpath, and archive package search directories are deprecated with warnings. Only `BEAST_PACKAGE_PATH` and `~/.beast/2.8/` are needed; legacy paths will be removed in a future release.
+
+## Release Packaging
+
+- **macOS DMG with shared JRE** — `jpackage` builds a single `BEAST.app` with a bundled JRE; BEAUti, TreeAnnotator, LogCombiner, and AppLauncher are lightweight shell-script wrapper `.app` bundles that share the runtime. DMG size reduced from ~1.1 GB to ~113 MB.
+
+## Other Changes
+
+- **Trace utilities moved** — `beast.base.trace` package extracted from the test tree into main source; these are general-purpose classes that downstream packages depend on.
 
 ## Dependency Updates
 

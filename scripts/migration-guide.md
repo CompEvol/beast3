@@ -137,9 +137,9 @@ For your package
 | `Prior` + `Dirichlet` | `beast.base.spec.inference.distribution.Dirichlet` | `param` (must be `Simplex`); `alpha` → `RealVector<PositiveReal>` |
 | `Prior` + `Poisson` | `beast.base.spec.inference.distribution.Poisson` | `param` → `IntScalar<NonNegativeInt>`; `lambda` → `RealScalar<NonNegativeReal>` |
 | — | `beast.base.spec.inference.distribution.Cauchy` | New; `location` (`RealScalar<Real>`); `scale` (`RealScalar<PositiveReal>`) |
-| — | `beast.base.spec.inference.distribution.ChiSquare` | New; `df` (`RealScalar<PositiveReal>`) |
-| — | `beast.base.spec.inference.distribution.InverseGamma` | New; `alpha`, `beta` (`RealScalar<PositiveReal>`) |
-| — | `beast.base.spec.inference.distribution.Laplace` | New; `mu` (`RealScalar<Real>`); `scale` (`RealScalar<PositiveReal>`) |
+| `Prior` + `ChiSquare` | `beast.base.spec.inference.distribution.ChiSquare` | `df` (`RealScalar<PositiveReal>`) |
+| `Prior` + `InverseGamma` | `beast.base.spec.inference.distribution.InverseGamma` | `alpha`, `beta` (`RealScalar<PositiveReal>`) |
+| `Prior` + `LaplaceDistribution` | `beast.base.spec.inference.distribution.Laplace` | `mu` (`RealScalar<Real>`); `scale` (`RealScalar<PositiveReal>`) |
 | — | `beast.base.spec.inference.distribution.Bernoulli` | New; `param` (`BoolScalar`); `p` (`RealScalar<UnitInterval>`) |
 | — | `beast.base.spec.inference.distribution.IntUniform` | New discrete uniform; `lower`, `upper` (`IntScalar<Int>`) |
 | `Prior` applying dist to vector elements | `beast.base.spec.inference.distribution.IID` | Applies a `ScalarDistribution` to each element of a `Vector` independently |
