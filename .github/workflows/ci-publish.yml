@@ -3,6 +3,7 @@ name: CI & Publish
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ master ]
 
@@ -18,7 +19,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25 (Azul Zulu)
+      - name: Set up JDK 25 (Azul Zulu) for GitHub Packages
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         uses: actions/setup-java@v4
         with:
           distribution: zulu
@@ -28,21 +30,25 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Set up JDK 25 (Azul Zulu) for Maven Central
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+          cache: maven
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
       - name: Install beagle.jar to local Maven repo
         run: >
           mvn install:install-file
           -Dfile=lib/beagle.jar
           -DgroupId=io.github.compevol
           -DartifactId=beagle
-          -Dversion=1.0
-          -Dpackaging=jar
-
-      - name: Install colt.jar to local Maven repo
-        run: >
-          mvn install:install-file
-          -Dfile=lib/colt.jar
-          -DgroupId=io.github.compevol
-          -DartifactId=colt
           -Dversion=1.0
           -Dpackaging=jar
 
@@ -64,23 +70,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy colt.jar to GitHub Packages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        continue-on-error: true  # 409 Conflict if already published
-        run: >
-          mvn deploy:deploy-file
-          -Dfile=lib/colt.jar
-          -DgroupId=io.github.compevol
-          -DartifactId=colt
-          -Dversion=1.0
-          -Dpackaging=jar
-          -DrepositoryId=github
-          -Durl=https://maven.pkg.github.com/CompEvol/beast3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Deploy all modules to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: mvn deploy -DskipTests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Maven Central
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: mvn deploy -P release -DskipTests
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

@@ -2,11 +2,6 @@ package beast.base.math.matrixalgebra;
 
 
 import beast.base.math.MathUtils;
-import cern.colt.matrix.DoubleFactory1D;
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.linalg.Property;
 
 /**
  * Copyright ? 1999 CERN - European Organization for Nuclear Research.
@@ -63,31 +58,35 @@ public class RobustEigenDecomposition implements java.io.Serializable {
 Constructs and returns a new eigenvalue decomposition object;
 The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
 Checks for symmetry, then constructs the eigenvalue decomposition.
-@param A    A square matrix. Returns a decomposition object to access {@code D} and {@code V}.
+@param A    A square matrix as a 2D array. Returns a decomposition object to access {@code D} and {@code V}.
 @throws IllegalArgumentException if {@code A} is not square.
 */
-public RobustEigenDecomposition(DoubleMatrix2D A) throws ArithmeticException {
+public RobustEigenDecomposition(double[][] A) throws ArithmeticException {
     this(A,maxIterationsDefault);
 }
 
 
-public RobustEigenDecomposition(DoubleMatrix2D A, int maxIterations) throws ArithmeticException {
+public RobustEigenDecomposition(double[][] A, int maxIterations) throws ArithmeticException {
 
-	Property.DEFAULT.checkSquare(A);
+	int rows = A.length;
+	int cols = A[0].length;
+	if (rows != cols) {
+		throw new IllegalArgumentException("Matrix must be square: " + rows + " x " + cols);
+	}
 
     this.maxIterations = maxIterations;
 
-	n = A.columns();
+	n = cols;
 	V = new double[n][n];
 	d = new double[n];
 	e = new double[n];
 
-	issymmetric = Property.DEFAULT.isSymmetric(A);
+	issymmetric = isSymmetric(A);
 
 	if (issymmetric) {
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < n; j++) {
-				V[i][j] = A.getQuick(i,j);
+				V[i][j] = A[i][j];
 			}
 		}
 
@@ -104,7 +103,7 @@ public RobustEigenDecomposition(DoubleMatrix2D A, int maxIterations) throws Arit
 
 		for (int j = 0; j < n; j++) {
 			for (int i = 0; i < n; i++) {
-				H[i][j] = A.getQuick(i,j);
+				H[i][j] = A[i][j];
 			}
 		}
 
@@ -115,6 +114,23 @@ public RobustEigenDecomposition(DoubleMatrix2D A, int maxIterations) throws Arit
 		hqr2();
 	}
 }
+
+/**
+ * Check if a matrix is symmetric within default tolerance.
+ */
+private static boolean isSymmetric(double[][] A) {
+	double tolerance = 1.0E-12;
+	int n = A.length;
+	for (int i = 0; i < n; i++) {
+		for (int j = i + 1; j < n; j++) {
+			if (Math.abs(A[i][j] - A[j][i]) > tolerance) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 private void cdiv(double xr, double xi, double yr, double yi) {
 	double r,d;
 	if (Math.abs(yr) > Math.abs(yi)) {
@@ -134,7 +150,7 @@ private void cdiv(double xr, double xi, double yr, double yi) {
 Returns the block diagonal eigenvalue matrix, {@code D}.
 @return     {@code D}
 */
-public DoubleMatrix2D getD() {
+public double[][] getD() {
 	double[][] D = new double[n][n];
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
@@ -148,28 +164,32 @@ public DoubleMatrix2D getD() {
 			D[i][i-1] = e[i];
 		}
 	}
-	return DoubleFactory2D.dense.make(D);
+	return D;
 }
 /**
 Returns the imaginary parts of the eigenvalues.
 @return     imag(diag(D))
 */
-public DoubleMatrix1D getImagEigenvalues () {
-	return DoubleFactory1D.dense.make(e);
+public double[] getImagEigenvalues () {
+	return e.clone();
 }
 /**
 Returns the real parts of the eigenvalues.
 @return     real(diag(D))
 */
-public DoubleMatrix1D getRealEigenvalues () {
-	return DoubleFactory1D.dense.make(d);
+public double[] getRealEigenvalues () {
+	return d.clone();
 }
 /**
 Returns the eigenvector matrix, {@code V}
 @return     {@code V}
 */
-public DoubleMatrix2D getV () {
-	return DoubleFactory2D.dense.make(V);
+public double[][] getV () {
+	double[][] result = new double[n][n];
+	for (int i = 0; i < n; i++) {
+		System.arraycopy(V[i], 0, result[i], 0, n);
+	}
+	return result;
 }
 /**
 Nonsymmetric reduction from Hessenberg to real Schur form.
@@ -724,19 +744,19 @@ public String toString() {
 	buf.append("---------------------------------------------------------------------\n");
 
 	buf.append("realEigenvalues = ");
-	try { buf.append(String.valueOf(this.getRealEigenvalues()));}
+	try { buf.append(java.util.Arrays.toString(this.getRealEigenvalues()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
 	buf.append("\nimagEigenvalues = ");
-	try { buf.append(String.valueOf(this.getImagEigenvalues()));}
+	try { buf.append(java.util.Arrays.toString(this.getImagEigenvalues()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
 	buf.append("\n\nD = ");
-	try { buf.append(String.valueOf(this.getD()));}
+	try { buf.append(java.util.Arrays.deepToString(this.getD()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
 	buf.append("\n\nV = ");
-	try { buf.append(String.valueOf(this.getV()));}
+	try { buf.append(java.util.Arrays.deepToString(this.getV()));}
 	catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
 	return buf.toString();

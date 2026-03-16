@@ -18,7 +18,6 @@ open module beast.fx {
 
     // Automatic modules
     requires beagle;
-    requires colt;
 
     // Export all beastfx packages
     exports beastfx.app.beast;
