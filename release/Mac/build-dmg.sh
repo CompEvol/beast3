@@ -225,6 +225,62 @@ build_wrapper_app "TreeAnnotator"  "beast.pkgmgmt.launcher.TreeAnnotatorLauncher
 build_wrapper_app "LogCombiner"    "beast.pkgmgmt.launcher.LogCombinerLauncher"    "utility.icns"
 build_wrapper_app "AppLauncher"    "beast.pkgmgmt.launcher.AppLauncherLauncher"    "utility.icns"
 
+# ── DensiTree — standalone JAR app (not a BEAST module) ──────────────────────
+DENSITREE_JAR="$REPO_ROOT/release/common/tools/DensiTree.jar"
+DENSITREE_ICNS="$REPO_ROOT/release/common/tools/DensiTree.icns"
+if [ -f "$DENSITREE_JAR" ]; then
+    echo "    Creating DensiTree.app (standalone JAR wrapper)..."
+    DT_APP="$OUTPUT/DensiTree.app"
+    DT_CONTENTS="$DT_APP/Contents"
+    mkdir -p "$DT_CONTENTS/MacOS" "$DT_CONTENTS/Resources" "$DT_CONTENTS/Java"
+
+    cp "$DENSITREE_JAR" "$DT_CONTENTS/Java/"
+
+    cat > "$DT_CONTENTS/MacOS/DensiTree" <<'LAUNCHER'
+#!/bin/sh
+CONTENTS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+BEAST_APP="$(cd "$CONTENTS_DIR/../../BEAST.app/Contents" && pwd)"
+exec "$BEAST_APP/runtime/Contents/Home/bin/java" \
+    -Xmx4g -Duser.language=en -Dfile.encoding=UTF-8 \
+    -jar "$CONTENTS_DIR/Java/DensiTree.jar" "$@"
+LAUNCHER
+    chmod 755 "$DT_CONTENTS/MacOS/DensiTree"
+
+    cat > "$DT_CONTENTS/Info.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>DensiTree</string>
+    <key>CFBundleDisplayName</key>
+    <string>DensiTree</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.beast3.DensiTree</string>
+    <key>CFBundleVersion</key>
+    <string>$VERSION</string>
+    <key>CFBundleShortVersionString</key>
+    <string>$VERSION</string>
+    <key>CFBundleExecutable</key>
+    <string>DensiTree</string>
+    <key>CFBundleIconFile</key>
+    <string>DensiTree</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>
+PLIST
+
+    printf 'APPL????' > "$DT_CONTENTS/PkgInfo"
+    cp "$DENSITREE_ICNS" "$DT_CONTENTS/Resources/"
+else
+    echo "    WARNING: DensiTree.jar not found at $DENSITREE_JAR — skipping DensiTree.app"
+fi
+
 APP_COUNT=$(find "$OUTPUT" -maxdepth 1 -name "*.app" -type d | wc -l | tr -d ' ')
 echo "    Created ${APP_COUNT} application bundles (1 full + $(( APP_COUNT - 1 )) wrappers)."
 
