@@ -1,8 +1,5 @@
 package beast.base.math.matrixalgebra;
 
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -19,20 +16,18 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class RobustEigenDecompositionTest {
 
-    private static final Algebra ALG = new Algebra();
-
     // ---- Symmetric matrices with known eigenvalues ----
 
     @Test
     public void testSymmetric2x2() {
         // [[3, 1], [1, 3]] has eigenvalues 2, 4
         double[][] A = {{3, 1}, {1, 3}};
-        RobustEigenDecomposition eig = decompose(A);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(A);
 
-        double[] lambda = sorted(eig.getRealEigenvalues().toArray());
+        double[] lambda = sorted(eig.getRealEigenvalues());
         assertEquals(2.0, lambda[0], 1e-12);
         assertEquals(4.0, lambda[1], 1e-12);
-        assertAllZero(eig.getImagEigenvalues().toArray(), 1e-12);
+        assertAllZero(eig.getImagEigenvalues(), 1e-12);
         assertEigenProperty(A, eig, 1e-12);
     }
 
@@ -40,13 +35,13 @@ public class RobustEigenDecompositionTest {
     public void testSymmetric3x3Tridiagonal() {
         // Eigenvalues: 2 - sqrt(2), 2, 2 + sqrt(2)
         double[][] A = {{2, -1, 0}, {-1, 2, -1}, {0, -1, 2}};
-        RobustEigenDecomposition eig = decompose(A);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(A);
 
-        double[] lambda = sorted(eig.getRealEigenvalues().toArray());
+        double[] lambda = sorted(eig.getRealEigenvalues());
         assertEquals(2 - Math.sqrt(2), lambda[0], 1e-12);
         assertEquals(2.0, lambda[1], 1e-12);
         assertEquals(2 + Math.sqrt(2), lambda[2], 1e-12);
-        assertAllZero(eig.getImagEigenvalues().toArray(), 1e-12);
+        assertAllZero(eig.getImagEigenvalues(), 1e-12);
         assertEigenProperty(A, eig, 1e-12);
     }
 
@@ -54,10 +49,10 @@ public class RobustEigenDecompositionTest {
     public void testSymmetricOrthogonalEigenvectors() {
         // For symmetric matrices, V should be orthogonal: V^T * V = I
         double[][] A = {{4, 1, 2}, {1, 3, 0}, {2, 0, 5}};
-        RobustEigenDecomposition eig = decompose(A);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(A);
 
-        DoubleMatrix2D V = eig.getV();
-        DoubleMatrix2D VtV = ALG.mult(ALG.transpose(V), V);
+        double[][] V = eig.getV();
+        double[][] VtV = multiply(transpose(V), V);
         assertIdentity(VtV, 1e-12);
         assertEigenProperty(A, eig, 1e-12);
     }
@@ -75,7 +70,7 @@ public class RobustEigenDecompositionTest {
                 2.0, 0.25, 0.25
         };
         double[][] Q = buildNormalizedRateMatrix(f, r);
-        RobustEigenDecomposition eig = decompose(Q);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(Q);
         assertEigenProperty(Q, eig, 1e-10);
     }
 
@@ -90,7 +85,7 @@ public class RobustEigenDecompositionTest {
                 1E6, 0.0, 0.0
         };
         double[][] Q = buildNormalizedRateMatrix(f, r);
-        RobustEigenDecomposition eig = decompose(Q);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(Q);
         assertEigenProperty(Q, eig, 1e-6);
     }
 
@@ -162,15 +157,11 @@ public class RobustEigenDecompositionTest {
                 0.009942, 0.023276, 0.003999, 0.010515, 0.013447, 0.022690, 0.012800, 0.019909, 0.038235
         };
         double[][] Q = buildNormalizedRateMatrix(f, r);
-        RobustEigenDecomposition eig = decompose(Q);
+        RobustEigenDecomposition eig = new RobustEigenDecomposition(Q);
         assertEigenProperty(Q, eig, 1e-8);
     }
 
     // ---- Helpers ----
-
-    private static RobustEigenDecomposition decompose(double[][] data) {
-        return new RobustEigenDecomposition(DoubleFactory2D.dense.make(data));
-    }
 
     private static double[] sorted(double[] values) {
         double[] copy = values.clone();
@@ -181,17 +172,16 @@ public class RobustEigenDecompositionTest {
     /**
      * Verify A * V = V * D (the fundamental eigendecomposition property).
      */
-    private static void assertEigenProperty(double[][] data, RobustEigenDecomposition eig, double tol) {
-        DoubleMatrix2D A = DoubleFactory2D.dense.make(data);
-        DoubleMatrix2D V = eig.getV();
-        DoubleMatrix2D D = eig.getD();
-        DoubleMatrix2D AV = ALG.mult(A, V);
-        DoubleMatrix2D VD = ALG.mult(V, D);
+    private static void assertEigenProperty(double[][] A, RobustEigenDecomposition eig, double tol) {
+        double[][] V = eig.getV();
+        double[][] D = eig.getD();
+        double[][] AV = multiply(A, V);
+        double[][] VD = multiply(V, D);
 
-        int n = A.rows();
+        int n = A.length;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                assertEquals(AV.get(i, j), VD.get(i, j), tol,
+                assertEquals(AV[i][j], VD[i][j], tol,
                         "A*V != V*D at [" + i + "][" + j + "]");
     }
 
@@ -200,12 +190,31 @@ public class RobustEigenDecompositionTest {
             assertEquals(0.0, values[i], tol, "Expected zero imaginary part at index " + i);
     }
 
-    private static void assertIdentity(DoubleMatrix2D M, double tol) {
-        int n = M.rows();
+    private static void assertIdentity(double[][] M, double tol) {
+        int n = M.length;
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
-                assertEquals(i == j ? 1.0 : 0.0, M.get(i, j), tol,
+                assertEquals(i == j ? 1.0 : 0.0, M[i][j], tol,
                         "Not identity at [" + i + "][" + j + "]");
+    }
+
+    static double[][] multiply(double[][] A, double[][] B) {
+        int m = A.length, n = B[0].length, p = B.length;
+        double[][] C = new double[m][n];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                for (int k = 0; k < p; k++)
+                    C[i][j] += A[i][k] * B[k][j];
+        return C;
+    }
+
+    static double[][] transpose(double[][] A) {
+        int m = A.length, n = A[0].length;
+        double[][] T = new double[n][m];
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                T[j][i] = A[i][j];
+        return T;
     }
 
     /**
