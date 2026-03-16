@@ -26,10 +26,9 @@ package beast.base.evolution.substitutionmodel;
  */
 
 
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.colt.matrix.linalg.Algebra;
-import cern.colt.matrix.linalg.Property;
+import org.apache.commons.math4.legacy.linear.Array2DRowRealMatrix;
+import org.apache.commons.math4.legacy.linear.LUDecomposition;
+import org.apache.commons.math4.legacy.linear.RealMatrix;
 
 import java.util.Arrays;
 
@@ -56,11 +55,10 @@ public class ColtEigenSystem implements EigenSystem {
 
         final int stateCount = matrix.length;
 
-        RobustEigenDecomposition eigenDecomp = new RobustEigenDecomposition(
-                new DenseDoubleMatrix2D(matrix), maxIterations);
+        RobustEigenDecomposition eigenDecomp = new RobustEigenDecomposition(matrix, maxIterations);
 
-        DoubleMatrix2D eigenV = eigenDecomp.getV();
-        DoubleMatrix2D eigenVInv;
+        double[][] eigenV = eigenDecomp.getV();
+        double[][] eigenVInv;
 
         if (checkConditioning) {
             RobustSingularValueDecomposition svd;
@@ -76,13 +74,12 @@ public class ColtEigenSystem implements EigenSystem {
         }
 
         try {
-            eigenVInv = alegbra.inverse(eigenV);
-        } catch (IllegalArgumentException e) {
+            RealMatrix eigenVMatrix = new Array2DRowRealMatrix(eigenV);
+            eigenVInv = new LUDecomposition(eigenVMatrix).getSolver().getInverse().getData();
+        } catch (Exception e) {
             return getEmptyDecomposition(stateCount);
         }
 
-        double[][] Evec = eigenV.toArray();
-        double[][] Ievc = eigenVInv.toArray();
         double[] Eval = getAllEigenValues(eigenDecomp);
 
         if (checkConditioning) {
@@ -99,9 +96,9 @@ public class ColtEigenSystem implements EigenSystem {
         double[] flatEvec = new double[stateCount * stateCount];
         double[] flatIevc = new double[stateCount * stateCount];
 
-        for (int i = 0; i < Evec.length; i++) {
-            System.arraycopy(Evec[i], 0, flatEvec, i * stateCount, stateCount);
-            System.arraycopy(Ievc[i], 0, flatIevc, i * stateCount, stateCount);
+        for (int i = 0; i < stateCount; i++) {
+            System.arraycopy(eigenV[i], 0, flatEvec, i * stateCount, stateCount);
+            System.arraycopy(eigenVInv[i], 0, flatIevc, i * stateCount, stateCount);
         }
 
         return new EigenDecomposition(flatEvec, flatIevc, Eval);
@@ -193,7 +190,7 @@ public class ColtEigenSystem implements EigenSystem {
     }
 
     protected double[] getAllEigenValues(RobustEigenDecomposition decomposition) {
-        return decomposition.getRealEigenvalues().toArray();
+        return decomposition.getRealEigenvalues();
     }
 
     protected double[] getEmptyAllEigenValues(int dim) {
@@ -214,8 +211,7 @@ public class ColtEigenSystem implements EigenSystem {
 
     protected final int stateCount;
 
-    private static final double minProb = Property.DEFAULT.tolerance();
-    private static final Algebra alegbra = new Algebra(minProb);
+    private static final double minProb = 1.0E-12;
 
     public static final boolean defaultCheckConditioning = true;
     public static final int defaultMaxConditionNumber = 1000000;

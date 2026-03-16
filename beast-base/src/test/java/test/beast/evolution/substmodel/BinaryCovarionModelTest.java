@@ -12,7 +12,7 @@ import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Simplex;
 import beast.base.util.Randomizer;
-import cern.colt.Arrays;
+import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BinaryCovarionModelTest  {

@@ -3,8 +3,6 @@ package beastfx.app.treeannotator;
 import java.util.Arrays;
 
 import beast.base.util.DiscreteStatistics;
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 
 /**
@@ -238,16 +236,27 @@ public class KernelDensityEstimator2D implements ContourMaker {
     //   }
     public double bandwidthNRD(double[] in) {
 
-        DoubleArrayList inList = new DoubleArrayList(in.length);
-        for (double d : in)
-            inList.add(d);
-        inList.sort();
+        double[] sorted = in.clone();
+        Arrays.sort(sorted);
 
-        final double h = (Descriptive.quantile(inList, 0.75) - Descriptive.quantile(inList, 0.25)) / 1.34;
+        final double h = (quantile(sorted, 0.75) - quantile(sorted, 0.25)) / 1.34;
 
         return 4 * 1.06 *
                 Math.min(Math.sqrt(DiscreteStatistics.variance(in)), h) *
                 Math.pow(in.length, -0.2);
+    }
+
+    /**
+     * Returns the quantile of a sorted array using linear interpolation.
+     */
+    private static double quantile(double[] sorted, double phi) {
+        int n = sorted.length;
+        double index = phi * (n - 1);
+        int lo = (int) index;
+        int hi = lo + 1;
+        double frac = index - lo;
+        if (hi >= n) return sorted[n - 1];
+        return sorted[lo] + frac * (sorted[hi] - sorted[lo]);
     }
 
     public static void main(String[] arg) {

@@ -20,7 +20,6 @@ open module beast.base {
     // Automatic modules
     requires org.antlr.antlr4.runtime;
     requires beagle;
-    requires colt;
 
     // Export all packages
     exports beast.base;

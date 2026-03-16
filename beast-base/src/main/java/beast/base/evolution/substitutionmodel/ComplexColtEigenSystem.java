@@ -26,8 +26,6 @@ package beast.base.evolution.substitutionmodel;
  */
 
 
-import cern.colt.matrix.DoubleMatrix2D;
-
 import java.util.Arrays;
 
 import beast.base.math.matrixalgebra.RobustEigenDecomposition;
@@ -46,8 +44,8 @@ public class ComplexColtEigenSystem extends ColtEigenSystem {
     }
 
     protected double[] getAllEigenValues(RobustEigenDecomposition decomposition) {
-        double[] realEval = decomposition.getRealEigenvalues().toArray();
-        double[] imagEval = decomposition.getImagEigenvalues().toArray();
+        double[] realEval = decomposition.getRealEigenvalues();
+        double[] imagEval = decomposition.getImagEigenvalues();
 
         final int dim = realEval.length;
         double[] merge = new double[2 * dim];
@@ -58,10 +56,6 @@ public class ComplexColtEigenSystem extends ColtEigenSystem {
 
     protected double[] getEmptyAllEigenValues(int dim) {
         return new double[2 * dim];
-    }
-
-    protected boolean validDecomposition(DoubleMatrix2D eigenV) {
-        return true;
     }
 
     public double computeExponential(EigenDecomposition eigen, double distance, int i, int j) {

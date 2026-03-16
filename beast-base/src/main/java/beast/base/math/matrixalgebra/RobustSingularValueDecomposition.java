@@ -1,9 +1,6 @@
 package beast.base.math.matrixalgebra;
 
 import beast.base.math.MathUtils;
-import cern.colt.matrix.DoubleFactory2D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.linalg.Property;
 
 
 public class RobustSingularValueDecomposition implements java.io.Serializable {
@@ -26,8 +23,6 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
             */
             private int m, n;
 
-//    private int maxIterations;
-
     static private int maxIterationsDefault = 100000;
 
     private static final String ERROR_STRING = "SVD is not converged.";
@@ -35,23 +30,23 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
     /**
     Constructs and returns a new singular value decomposition object;
     The decomposed matrices can be retrieved via instance methods of the returned decomposition object.
-    @param Arg  A rectangular matrix. Returns a decomposition object to access {@code U}, {@code S} and {@code V}.
-    @throws IllegalArgumentException if {@code A.rows() < A.columns()}.
+    @param Arg  A rectangular matrix as a 2D array.
+    @throws IllegalArgumentException if {@code Arg} is empty.
     */
-    public RobustSingularValueDecomposition(DoubleMatrix2D Arg) throws ArithmeticException {
+    public RobustSingularValueDecomposition(double[][] Arg) throws ArithmeticException {
         this(Arg,maxIterationsDefault);
     }
 
-    public RobustSingularValueDecomposition(DoubleMatrix2D Arg, int maxIterations) throws ArithmeticException {
-            Property.DEFAULT.checkRectangular(Arg);
-
-//            this.maxIterations = maxIterations;
+    public RobustSingularValueDecomposition(double[][] Arg, int maxIterations) throws ArithmeticException {
 
               // Derived from LINPACK code.
               // Initialize.
-              double[][] A = Arg.toArray();
-              m = Arg.rows();
-              n = Arg.columns();
+              double[][] A = new double[Arg.length][];
+              for (int i = 0; i < Arg.length; i++) {
+                  A[i] = Arg[i].clone();
+              }
+              m = Arg.length;
+              n = Arg[0].length;
               int nu = Math.min(m,n);
               s = new double [Math.min(m+1,n)];
               U = new double [m][nu];
@@ -470,7 +465,7 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
     Returns the diagonal matrix of singular values.
     @return     S
     */
-    public DoubleMatrix2D getS() {
+    public double[][] getS() {
             double[][] S = new double[n][n];
             for (int i = 0; i < n; i++) {
                         for (int j = 0; j < n; j++) {
@@ -478,7 +473,7 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
                         }
                         S[i][i] = this.s[i];
             }
-            return DoubleFactory2D.dense.make(S);
+            return S;
     }
     /**
     Returns the diagonal of {@code S}, which is a one-dimensional array of singular values
@@ -491,16 +486,23 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
     Returns the left singular vectors {@code U}.
     @return     {@code U}
     */
-    public DoubleMatrix2D getU() {
-            //return new DoubleMatrix2D(U,m,Math.min(m+1,n));
-            return DoubleFactory2D.dense.make(U).viewPart(0,0,m,Math.min(m+1,n));
+    public double[][] getU() {
+            double[][] result = new double[m][Math.min(m+1,n)];
+            for (int i = 0; i < m; i++) {
+                System.arraycopy(U[i], 0, result[i], 0, Math.min(m+1,n));
+            }
+            return result;
     }
     /**
     Returns the right singular vectors {@code V}.
     @return     {@code V}
     */
-    public DoubleMatrix2D getV() {
-            return DoubleFactory2D.dense.make(V);
+    public double[][] getV() {
+            double[][] result = new double[n][n];
+            for (int i = 0; i < n; i++) {
+                System.arraycopy(V[i], 0, result[i], 0, n);
+            }
+            return result;
     }
     /**
     Returns the two norm, which is {@code max(S)}.
@@ -552,20 +554,17 @@ public class RobustSingularValueDecomposition implements java.io.Serializable {
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
             buf.append("\n\nU = ");
-            try { buf.append(String.valueOf(this.getU()));}
+            try { buf.append(java.util.Arrays.deepToString(this.getU()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
             buf.append("\n\nS = ");
-            try { buf.append(String.valueOf(this.getS()));}
+            try { buf.append(java.util.Arrays.deepToString(this.getS()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
             buf.append("\n\nV = ");
-            try { buf.append(String.valueOf(this.getV()));}
+            try { buf.append(java.util.Arrays.deepToString(this.getV()));}
             catch (IllegalArgumentException exc) { buf.append(unknown+exc.getMessage()); }
 
             return buf.toString();
     }
     }
-
-
-
