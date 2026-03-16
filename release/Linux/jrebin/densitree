@@ -1,0 +1,31 @@
+#!/bin/sh
+
+if [ -z "$BEAST" ]; then
+	## resolve links - $0 may be a link to application
+	PRG="$0"
+
+	# need this for relative symlinks
+	while [ -h "$PRG" ] ; do
+	    ls=$(ls -ld "$PRG")
+	    link=$(expr "$ls" : '.*-> \(.*\)$')
+	    if expr "$link" : '/.*' > /dev/null; then
+		PRG="$link"
+	    else
+		PRG="$(dirname "$PRG")/$link"
+	    fi
+	done
+
+	# make it fully qualified
+	saveddir=$(pwd)
+	BEAST0=$(dirname "$PRG")/..
+	BEAST=$(cd "$BEAST0" && pwd)
+	cd "$saveddir"
+fi
+
+# Use the JRE bundled in BEAST.app by jpackage
+BEAST_APP="$BEAST/BEAST.app/Contents"
+export JAVA_HOME="$BEAST_APP/runtime/Contents/Home"
+JAVA="$JAVA_HOME/bin/java"
+
+"$JAVA" -Xmx4g -Duser.language=en -Dfile.encoding=UTF-8 \
+    -jar "$BEAST/DensiTree.app/Contents/Java/DensiTree.jar" "$@"
