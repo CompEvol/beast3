@@ -4,12 +4,14 @@ import beagle.BeagleFlag;
 import beast.base.core.BEASTInterface;
 import beast.base.inference.Logger;
 import beast.base.parser.XMLParser;
-import beast.base.util.Randomizer;
-import beast.pkgmgmt.BEASTClassLoader;
 import beast.base.trace.Expectation;
 import beast.base.trace.LogAnalyser;
+import beast.base.util.Randomizer;
+import beast.pkgmgmt.BEASTClassLoader;
 
 import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,15 +22,20 @@ public abstract class TestFramework {
 
     protected abstract List<Expectation> giveExpectations(int index_XML) throws Exception;
 
-    public String dirName;
+//    public String dirName;
     public String logDir;
     public String testFile = "/test.";
     public boolean useSeed = true;
     public boolean checkESS = true;
     
     public TestFramework() {
-    	dirName = System.getProperty("user.dir") + "/examples/spec/beast2vs1/";
+//    	dirName = System.getProperty("user.dir") + "/examples/spec/beast2vs1/";
     	logDir = System.getProperty("user.dir");
+    }
+
+    public static File readTestXML(String xmlName) throws URISyntaxException {
+        String fullPath = "/examples/spec/beast2vs1/" + xmlName;
+        return Path.of(TestFramework.class.getResource(fullPath).toURI()).toFile();
     }
     
     protected void setUp(String[] xmls) { // throws Exception {
@@ -57,11 +64,11 @@ public abstract class TestFramework {
 //        long beagleFlags = BeagleFlag.PROCESSOR_CPU.getMask() | BeagleFlag.VECTOR_SSE.getMask();
 //        System.setProperty("beagle.preferred.flags", Long.toString(beagleFlags));
 
-        String fileName = dirName + xmls[index_XML];
+        File file = readTestXML(xmls[index_XML]);
 
-        System.out.println("Processing " + fileName);
+        System.out.println("Processing " + file);
         XMLParser parser = new XMLParser();
-        beast.base.inference.Runnable runable = parser.parseFile(new File(fileName));
+        beast.base.inference.Runnable runable = parser.parseFile(file);
         runable.setStateFile("tmp.state", false);
 //		   runable.setInputValue("preBurnin", 0);
 //		   runable.setInputValue("chainLength", 1000);
@@ -90,7 +97,7 @@ public abstract class TestFramework {
                     + expectation.getTraceStatistics().getESS());
         }
 
-        System.out.println("\nSucceed " + fileName);
+        System.out.println("\nSucceed " + file.getAbsolutePath());
         System.out.println("\n***************************************\n");
 //            }
 //        }
