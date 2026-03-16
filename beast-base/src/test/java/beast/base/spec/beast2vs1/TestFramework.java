@@ -22,20 +22,21 @@ public abstract class TestFramework {
 
     protected abstract List<Expectation> giveExpectations(int index_XML) throws Exception;
 
-//    public String dirName;
     public String logDir;
     public String testFile = "/test.";
     public boolean useSeed = true;
     public boolean checkESS = true;
     
     public TestFramework() {
-//    	dirName = System.getProperty("user.dir") + "/examples/spec/beast2vs1/";
     	logDir = System.getProperty("user.dir");
     }
 
     public static File readTestXML(String xmlName) throws URISyntaxException {
         String fullPath = "/examples/spec/beast2vs1/" + xmlName;
-        return Path.of(TestFramework.class.getResource(fullPath).toURI()).toFile();
+        var url = TestFramework.class.getResource(fullPath);
+        if (url == null)
+            throw new IllegalArgumentException("Test XML not found on classpath: " + fullPath);
+        return Path.of(url.toURI()).toFile();
     }
     
     protected void setUp(String[] xmls) { // throws Exception {
