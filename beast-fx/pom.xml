@@ -93,7 +93,6 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -185,7 +184,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>copy-dependencies</id>
@@ -220,6 +218,5 @@
                 </configuration>
             </plugin>
         </plugins>
-        </pluginManagement>
     </build>
 </project>
