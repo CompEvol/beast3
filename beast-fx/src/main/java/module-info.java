@@ -18,6 +18,7 @@ open module beast.fx {
 
     // Automatic modules
     requires beagle;
+	requires org.apache.commons.math4.legacy;
 
     // Export all beastfx packages
     exports beastfx.app.beast;
