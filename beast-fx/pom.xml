@@ -111,35 +111,17 @@
                         <glass.platform>Monocle</glass.platform>
                         <monocle.platform>Headless</monocle.platform>
                         <prism.order>sw</prism.order>
-                        <BEAST_PACKAGE_PATH>${project.build.outputDirectory}</BEAST_PACKAGE_PATH>
+                        <BEAST_PACKAGE_PATH>${project.basedir}/..</BEAST_PACKAGE_PATH>
                         <!-- Isolate tests from user-installed packages (e.g. MM/morph-models)
                              that may reference classes not on the test module path -->
                         <beast.user.package.dir>${project.build.directory}/beast-packages</beast.user.package.dir>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- Copy version.xml to target/ so BEASTClassLoader.initServices()
-                 finds it when scanning classpath entry target/classes -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
-                    <execution>
-                        <id>copy-version-xml</id>
-                        <phase>generate-test-resources</phase>
-                        <goals><goal>copy-resources</goal></goals>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/..</directory>
-                                    <includes>
-                                        <include>version.xml</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
                     <!-- Copy module-namespaced fxtemplates to target/test-classes -->
                     <execution>
                         <id>copy-fxtemplates-to-test-classes</id>

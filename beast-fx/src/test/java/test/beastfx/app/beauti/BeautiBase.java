@@ -133,19 +133,20 @@ public class BeautiBase extends ApplicationExtension {
 		String dir = PackageManager.getPackageUserDir();
 		dir += "/BEAST.base";
 		new File(dir).mkdirs();
-		Files.copy(Paths.get("../beast2/version.xml"),
-				Paths.get(dir+"/version.xml"),
-				StandardCopyOption.REPLACE_EXISTING);
-		dir += "/lib";
-		new File(dir).mkdirs();
-		if (!new File("../beast2/build/dist/BEAST.base.jar").exists()) {
-			new File("../beast2/build/dist/").mkdirs();
-			createJar("../beast2/build/", dir + "/BEAST.base.jar", "../beast2/build/".length());
-		} else {
-			Files.copy(Paths.get("../beast2/build/dist/BEAST.base.jar"),
-				Paths.get(dir+"/BEAST.base.jar"),
-				StandardCopyOption.REPLACE_EXISTING);
+		// beast3 layout: version.xml is at the project root (two levels up from working dir)
+		java.nio.file.Path versionSrc = Paths.get("../../version.xml");
+		if (!versionSrc.toFile().exists()) {
+			// fallback: try one level up (maven reactor root relative to beast-fx)
+			versionSrc = Paths.get("../version.xml");
 		}
+		if (versionSrc.toFile().exists()) {
+			Files.copy(versionSrc,
+					Paths.get(dir + "/version.xml"),
+					StandardCopyOption.REPLACE_EXISTING);
+		} else {
+			System.err.println("WARNING: could not find version.xml to install BEAST.base package");
+		}
+		// On module path, beast-base classes are already available; no JAR copy needed
 	}
 
 	public void createJar(String inputDirectory, String outputFile, int root) throws IOException {
@@ -190,9 +191,7 @@ public class BeautiBase extends ApplicationExtension {
 	        }
 	    }
 	}
-	
-	
-	
+
 	String priorsAsString() {
 		CompoundDistribution prior = (CompoundDistribution) doc.pluginmap.get("prior");
 		List<Distribution> priors = prior.pDistributions.get();
