@@ -54,6 +54,14 @@ Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-ru
 3. Set **Main class** to `beastfx.app.beast.BeastMain` (or `beastfx.app.beauti.Beauti` for BEAUti)
 4. Set **Program arguments** to your XML file path (for BeastMain)
 5. IntelliJ automatically configures the module path from Maven — no manual `--module-path` or `--add-modules` flags are needed.
+6. Add **VM options** (**Run → Edit Configurations → Modify options → Add VM options**):
+   ```
+   --enable-native-access=javafx.graphics
+   ```
+   JavaFX uses restricted native methods to load its graphics libraries.
+   Without this flag you will see `WARNING: Use
+   --enable-native-access=javafx.graphics` at startup, and in a future Java
+   release the call will be blocked entirely.
 
 ## BEAGLE native library
 
@@ -62,14 +70,14 @@ want to use it from IntelliJ, add the following **VM options** to your run
 configuration (**Run → Edit Configurations → Modify options → Add VM options**):
 
 ```
---enable-native-access=beagle -Djava.library.path=/usr/local/lib
+--enable-native-access=javafx.graphics,beagle -Djava.library.path=/usr/local/lib
 ```
 
-- `--enable-native-access=beagle`: Java 25 restricts JNI calls by default.
-  This flag allows the `beagle` module to load its native library without
-  warnings. Without it you will see
-  `WARNING: Use --enable-native-access=beagle` at startup, and in a future
-  Java release the call will be blocked entirely.
+- `--enable-native-access=javafx.graphics,beagle`: Java 25 restricts JNI
+  calls by default. This flag allows the `javafx.graphics` and `beagle`
+  modules to load their native libraries without warnings. Without it you
+  will see `WARNING: Use --enable-native-access=...` at startup, and in a
+  future Java release the calls will be blocked entirely.
 - `-Djava.library.path=...`: points to the directory containing
   `libhmsbeagle-jni.dylib` (or `.so` on Linux). Common locations:
   - macOS (Homebrew on Apple Silicon): `/opt/homebrew/lib`

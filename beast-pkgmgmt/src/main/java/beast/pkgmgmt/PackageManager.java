@@ -1095,6 +1095,18 @@ public class PackageManager {
     	Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
         checkInstalledDependencies(packages);
 
+        // Log BEAST-related modules already in the boot layer.
+        // In an IDE all modules are typically in the boot layer, so
+        // nothing will be loaded from disk — this message explains why.
+        List<String> bootBeastModules = ModuleLayer.boot().modules().stream()
+            .map(Module::getName)
+            .filter(n -> n.startsWith("beast."))
+            .sorted()
+            .toList();
+        if (!bootBeastModules.isEmpty()) {
+            System.err.println("BEAST modules in boot layer: " + bootBeastModules);
+        }
+
         // Load external package JARs into JPMS ModuleLayers.
         // Maven packages are loaded first, then legacy ZIP packages.
         // Because createAndRegisterModuleLayer() skips modules already
@@ -1191,6 +1203,7 @@ public class PackageManager {
         try {
             File versionFile = new File(jarDirName + "/version.xml");
             String packageName = null;
+            String packageVersion = null;
             Map<String,Set<String>> services = null;
             if (versionFile.exists()) {
                 try {
@@ -1198,9 +1211,7 @@ public class PackageManager {
                     Document doc = factory.newDocumentBuilder().parse(versionFile);
                     Element packageElement = doc.getDocumentElement();
                     packageName = packageElement.getAttribute("name");
-                    String packageNameAndVersion = packageName + " v" + packageElement.getAttribute("version");
-                    System.err.println("Loading package " + packageNameAndVersion + " from " + jarDirName);
-                    Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
+                    packageVersion = packageElement.getAttribute("version");
                     services = parseServices(doc);
                 } catch (Exception e) {
                     // File is called version.xml, but is not a Beast2 version file
@@ -1222,7 +1233,7 @@ public class PackageManager {
             }
 
             if (!jarPaths.isEmpty()) {
-                createAndRegisterModuleLayer(jarPaths, services, packageName, jarDirName);
+                createAndRegisterModuleLayer(jarPaths, services, packageName, packageVersion, jarDirName);
             } else if (services != null && packageName != null) {
                 // No JARs but services found (e.g. running from IDE)
                 BEASTClassLoader.classLoader.addServices(packageName, services);
@@ -1238,13 +1249,15 @@ public class PackageManager {
 	 * or previously loaded plugin layers are excluded to avoid
 	 * "reads more than one module" errors.
 	 *
-	 * @param jarPaths    JARs to include in the new layer
-	 * @param services    service map from version.xml (may be null)
-	 * @param packageName the BEAST package name (for fallback service registration)
-	 * @param description human-readable label used in warning messages
+	 * @param jarPaths       JARs to include in the new layer
+	 * @param services       service map from version.xml (may be null)
+	 * @param packageName    the BEAST package name (for fallback service registration)
+	 * @param packageVersion the package version string (may be null)
+	 * @param description    human-readable label used in warning messages
 	 */
 	public static void createAndRegisterModuleLayer(List<Path> jarPaths,
-			Map<String, Set<String>> services, String packageName, String description) {
+			Map<String, Set<String>> services, String packageName,
+			String packageVersion, String description) {
 		try {
 			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
 			ModuleLayer parent = ModuleLayer.boot();
@@ -1292,6 +1305,12 @@ public class PackageManager {
 				}
 				return;
 			}
+
+			String packageNameAndVersion = packageName != null
+				? packageName + (packageVersion != null ? " v" + packageVersion : "")
+				: description;
+			System.err.println("Loading package " + packageNameAndVersion + " from " + description);
+			Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
 
 			// Re-create finder from only the resolvable JARs
 			List<Path> resolvableJars = jarPaths.stream()
@@ -1448,10 +1467,8 @@ public class PackageManager {
 		for (MavenCoordinate coord : coords) {
 			try {
 				List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
-				System.err.println("Loading Maven package " + coord + " from " + jars.get(0).getParent());
-
 				Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
-				createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.toString());
+				createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString());
 			} catch (Exception e) {
 				System.err.println(" FAILED: " + e.getMessage());
 			}
@@ -1478,7 +1495,7 @@ public class PackageManager {
 		// 3. Load into current runtime
 		Map<String, Set<String>> services = parseServicesFromJar(jars,
 				new MavenCoordinate(groupId, artifactId, version));
-		createAndRegisterModuleLayer(jars, services, artifactId, groupId + ":" + artifactId + ":" + version);
+		createAndRegisterModuleLayer(jars, services, artifactId, version, groupId + ":" + artifactId + ":" + version);
 	}
 
 	/**
