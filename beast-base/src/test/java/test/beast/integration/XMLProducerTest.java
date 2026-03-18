@@ -34,7 +34,7 @@ public class XMLProducerTest  {
     @Test
     public void test_ThatNexusExamplesProduces() {
         try {
-            String dirName = System.getProperty("user.dir") + "/examples/nexus";
+            String dirName = System.getProperty("user.dir") + "/beast.base/examples/nexus";
             System.out.println("Test Nexus Examples in " + dirName);
             File exampleDir = new File(dirName);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {

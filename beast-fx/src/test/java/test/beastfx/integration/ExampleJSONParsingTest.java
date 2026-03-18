@@ -24,7 +24,7 @@ public class ExampleJSONParsingTest  {
 	
     @Test
     public void test_ThatXmlExamplesParse() {
-        String dir = System.getProperty("user.dir") + "examples";
+        String dir = System.getProperty("user.dir") + "/beast.base/examples";
         if (!new File(dir).exists()) {
         	dir = System.getProperty("user.dir") + "/../beast2/examples";
         }
@@ -73,7 +73,7 @@ public class ExampleJSONParsingTest  {
 
     @Test
     public void test_ThatJSONExamplesRun() {
-        String dir = System.getProperty("user.dir") + "/examples";
+        String dir = System.getProperty("user.dir") + "/beast.base/examples";
         test_ThatJSONExamplesRun(dir);
     }
     

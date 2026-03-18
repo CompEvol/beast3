@@ -563,7 +563,7 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 mainTemplate = new File(dirName + fileSep + fileName);
             }
             if (!mainTemplate.exists()) {
-                mainTemplate = new File(dirName + fileSep + BeautiConfig.TEMPLATE_DIR + fileSep + fileName);
+                mainTemplate = new File(dirName + fileSep + "beast.fx" + fileSep + fileName);
             }
         }
         String templateXML;
@@ -615,7 +615,12 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         // 1. Scan filesystem directories for sub-templates
         for (String dirName : dirs) {
             Log.info.println("Investigating " + dirName);
+            // Check both bare fxtemplates/ (deployed packages) and
+            // beast.fx/fxtemplates/ (module-namespaced, IDE development)
             File templates = new File(dirName + fileSep + BeautiConfig.TEMPLATE_DIR);
+            if (!templates.exists()) {
+                templates = new File(dirName + fileSep + "beast.fx" + fileSep + BeautiConfig.TEMPLATE_DIR);
+            }
             File[] files = templates.listFiles();
             if (files != null) {
                 for (File template : files) {

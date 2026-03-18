@@ -273,6 +273,38 @@ External packages follow the conventions in
 - `module-info.java` with `provides beast.base.core.BEASTInterface with ...`
 - JARs in `lib/` within the ZIP, fxtemplates in `fxtemplates/`
 
+### Resource directory namespacing
+
+Resources that live under `src/main/resources/` or `src/test/resources/` must
+be placed under a directory named after the JPMS module (using dots, not
+slashes). For example:
+
+```
+src/main/resources/my.beast.example/fxtemplates/MyTemplate.xml
+src/test/resources/my.beast.example/examples/mypackage.xml
+```
+
+This prevents JPMS **split package** errors when multiple modules are loaded
+in the same boot layer (as happens in Eclipse when developing a package
+alongside beast3). Eclipse patches `target/test-classes/` into each module
+via `--patch-module`, so any top-level directory that appears in two modules
+(e.g. `examples/` or `fxtemplates/`) is treated as a split package and
+rejected.
+
+The `<module.name>/` prefix ensures each module owns its resource
+directories. The pattern is consistent across the project: beast-base uses
+`beast.base/examples/`, beast-fx uses `beast.fx/fxtemplates/`.
+
+In assembly descriptors (for ZIP distribution), map the namespaced source
+path back to a flat output path, since installed ZIPs are not JPMS modules:
+
+```xml
+<fileSet>
+    <directory>${project.basedir}/src/test/resources/my.beast.example/examples</directory>
+    <outputDirectory>/examples</outputDirectory>
+</fileSet>
+```
+
 ## Maven package resolution
 
 `MavenPackageResolver` uses Apache Maven Resolver (declared as `requires

@@ -143,24 +143,6 @@
                             </resources>
                         </configuration>
                     </execution>
-                    <!-- Also copy to legacy fxtemplates/ location so tests that use
-                         workingDirectory=test-classes find templates via filesystem -->
-                    <execution>
-                        <id>copy-fxtemplates-legacy</id>
-                        <phase>generate-test-resources</phase>
-                        <goals><goal>copy-resources</goal></goals>
-                        <configuration>
-                            <outputDirectory>${project.build.testOutputDirectory}/fxtemplates</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.build.outputDirectory}/beast.fx/fxtemplates</directory>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
                     <!-- Copy test examples from beast-base so integration tests can find them -->
                     <execution>
                         <id>copy-examples-to-test-classes</id>
@@ -172,7 +154,7 @@
                                 <resource>
                                     <directory>${project.basedir}/../beast-base/src/test/resources</directory>
                                     <includes>
-                                        <include>examples/**</include>
+                                        <include>beast.base/examples/**</include>
                                     </includes>
                                 </resource>
                             </resources>

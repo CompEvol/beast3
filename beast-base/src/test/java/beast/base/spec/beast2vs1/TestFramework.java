@@ -32,7 +32,7 @@ public abstract class TestFramework {
     }
 
     public static File readTestXML(String xmlName) throws URISyntaxException {
-        String fullPath = "/examples/spec/beast2vs1/" + xmlName;
+        String fullPath = "/beast.base/examples/spec/beast2vs1/" + xmlName;
         var url = TestFramework.class.getResource(fullPath);
         if (url == null)
             throw new IllegalArgumentException("Test XML not found on classpath: " + fullPath);

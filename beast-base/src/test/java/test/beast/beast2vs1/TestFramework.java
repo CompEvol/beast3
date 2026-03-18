@@ -25,7 +25,7 @@ public abstract class TestFramework  {
     public boolean checkESS = true;
     
     public TestFramework() {
-    	dirName = System.getProperty("user.dir") + "/examples/beast2vs1/";
+    	dirName = System.getProperty("user.dir") + "/beast.base/examples/beast2vs1/";
     	logDir = System.getProperty("user.dir");
     }
     

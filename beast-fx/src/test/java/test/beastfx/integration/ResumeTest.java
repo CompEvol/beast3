@@ -24,7 +24,7 @@ public class ResumeTest  {
     public void test_ThatXmlExampleResumes() throws Exception {
         Randomizer.setSeed(127);
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
-        String dir = System.getProperty("user.dir") + "/examples";
+        String dir = System.getProperty("user.dir") + "/beast.base/examples";
         if (!new File(dir).exists()) {
         	dir = System.getProperty("user.dir") + "/../beast2/examples";
         }

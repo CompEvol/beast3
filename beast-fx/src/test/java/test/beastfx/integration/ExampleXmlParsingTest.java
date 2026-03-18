@@ -39,8 +39,8 @@ public class ExampleXmlParsingTest  {
 
     @Test
     public void test_ThatXmlExamplesParse() {
-        // Examples are copied from beast-base test resources to target/test-classes/examples/
-        String dir = System.getProperty("user.dir") + "/examples";
+        // Examples are copied from beast-base test resources to target/test-classes/beast.base/examples/
+        String dir = System.getProperty("user.dir") + "/beast.base/examples";
     	test_ThatXmlExamplesParse(dir);
     }
     
@@ -87,7 +87,7 @@ public class ExampleXmlParsingTest  {
 
     @Test
     public void test_ThatXmlExamplesRun() {
-        String dir = System.getProperty("user.dir") + "/examples";
+        String dir = System.getProperty("user.dir") + "/beast.base/examples";
         test_ThatXmlExamplesRun(dir);
     }
     
@@ -157,7 +157,7 @@ public class ExampleXmlParsingTest  {
     @DisabledForJreRange(min = JRE.JAVA_18, disabledReason = "SecurityManager removed in Java 18+")
 	@Test
     public void test_ThatParameterisedXmlExamplesRuns() throws IOException {
-        String dir = System.getProperty("user.dir") + "/examples/parameterised";
+        String dir = System.getProperty("user.dir") + "/beast.base/examples/parameterised";
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
         System.out.println("Test that parameterised XML example runs in " + dir + "/RSV2.xml");
         Randomizer.setSeed(127);

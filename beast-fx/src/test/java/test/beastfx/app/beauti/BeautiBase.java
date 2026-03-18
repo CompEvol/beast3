@@ -63,7 +63,7 @@ public class BeautiBase extends ApplicationExtension {
 
 	private static String resolveNexusDir() {
 		// Resolve from classpath (works in Maven with test resources)
-		URL url = BeautiBase.class.getClassLoader().getResource("examples/nexus");
+		URL url = BeautiBase.class.getClassLoader().getResource("beast.base/examples/nexus");
 		if (url != null) {
 			try {
 				return new File(url.toURI()).getAbsolutePath() + "/";
