@@ -44,11 +44,10 @@ To set the JDK per-project (if you have other projects on older JDKs):
 
 ## One-time setup: install local JARs
 
-Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. If you haven't already, install them from the terminal:
+One dependency (`beagle.jar`) is not in Maven Central. It ships as a modular JAR (containing `module-info.class`); the corresponding `module-info.java` source lives in `lib/beagle/`. If you haven't already, install it from the terminal:
 
 ```bash
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 Then update the Maven projects in Eclipse: select all beast3 modules, right-click → **Maven → Update Project** (or press **Alt+F5**).

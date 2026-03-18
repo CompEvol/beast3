@@ -13,7 +13,7 @@ cd beast3
 mvn install -DskipTests
 ```
 
-This installs all BEAST 3 modules (including beagle and colt) into `~/.m2/repository/` so your package can depend on them.
+This installs all BEAST 3 modules (including beagle) into `~/.m2/repository/` so your package can depend on them.
 
 A complete working example is available in the [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) repository — a ready-to-copy Maven project with a custom `ScalarDistribution`, operator, tests, and BEAST XML using the strongly-typed spec API.
 
@@ -21,9 +21,8 @@ A complete working example is available in the [beast-package-skeleton](https://
 
 If your external package uses Ant, include the following JARs on the classpath:
   * beagle.jar
-  * colt.jar
   * antlr-runtime-4.13.2.jar
-  * commons-math3-3.6.1.jar + other commons JARs (commons-numbers, commons-rng, commons-statistics)
+  * commons-math4-legacy + other commons JARs (commons-numbers, commons-rng, commons-statistics)
 
 If your package uses Maven, add BEAST 3 modules as dependencies in your `pom.xml`.
 

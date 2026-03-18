@@ -33,9 +33,7 @@ beast3/            (parent POM)
 ├── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
 └── lib/                  (local JARs + module-info sources)
     ├── beagle.jar        (modular JAR — module beagle)
-    ├── beagle/           (module-info.java source)
-    ├── colt.jar          (modular JAR — module colt)
-    └── colt/             (module-info.java source)
+    └── beagle/           (module-info.java source)
 ```
 
 Building
@@ -48,11 +46,10 @@ Building
 
 ### One-time setup: install local JARs
 
-Two dependencies (`beagle.jar` and `colt.jar`) are not in Maven Central. They ship as modular JARs (containing `module-info.class`); the corresponding `module-info.java` sources live in `lib/beagle/` and `lib/colt/`. Install them to your local repository:
+One dependency (`beagle.jar`) is not in Maven Central. It ships as a modular JAR (containing `module-info.class`); the corresponding `module-info.java` source lives in `lib/beagle/`. Install it to your local repository:
 
 ```bash
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 ```
 
 ### Compile
@@ -197,7 +194,6 @@ If you prefer to build from source instead of using GitHub Packages, you can ins
 ```bash
 cd /path/to/beast3
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar
 mvn install -DskipTests
 ```
 

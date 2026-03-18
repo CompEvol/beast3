@@ -142,7 +142,7 @@ one loaded wins and all subsequent copies are skipped. The full precedence
 order is:
 
 1. **Boot layer** — Core BEAST modules (`beast.pkgmgmt`, `beast.base`,
-   `beast.fx`) and their transitive dependencies (commons-math, colt, etc.)
+   `beast.fx`) and their transitive dependencies (commons-math, etc.)
    are already loaded before any package scanning begins. Any installed
    package that bundles the same module is silently skipped.
 
