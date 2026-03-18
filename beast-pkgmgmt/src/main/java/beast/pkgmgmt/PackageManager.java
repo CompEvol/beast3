@@ -1095,12 +1095,21 @@ public class PackageManager {
     	Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
         checkInstalledDependencies(packages);
 
-        // Log BEAST-related modules already in the boot layer.
+        // Log BEAST-related modules already in the boot layer:
+        // core beast.* modules plus any module that requires one of them
+        // (i.e. BEAST packages loaded via the IDE workspace).
         // In an IDE all modules are typically in the boot layer, so
         // nothing will be loaded from disk — this message explains why.
-        List<String> bootBeastModules = ModuleLayer.boot().modules().stream()
+        ModuleLayer bootLayer = ModuleLayer.boot();
+        Set<String> beastCoreNames = bootLayer.modules().stream()
             .map(Module::getName)
             .filter(n -> n.startsWith("beast."))
+            .collect(Collectors.toSet());
+        List<String> bootBeastModules = bootLayer.modules().stream()
+            .filter(m -> beastCoreNames.contains(m.getName())
+                || m.getDescriptor().requires().stream()
+                    .anyMatch(r -> beastCoreNames.contains(r.name())))
+            .map(Module::getName)
             .sorted()
             .toList();
         if (!bootBeastModules.isEmpty()) {
