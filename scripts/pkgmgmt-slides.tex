@@ -10,7 +10,7 @@
 
 \item \textbf{Graceful degradation:} modules with unsatisfied dependencies (e.g.\ FX modules on a headless cluster) are silently skipped. Core modules still load.
 
-\item \textbf{First-found wins:} when the same JPMS module appears in multiple locations (boot layer, installed package, archive), the first one loaded wins. No silent duplicates, no ``reads more than one module'' errors.
+\item \textbf{First-found wins:} when the same JPMS module appears in multiple locations (boot layer, Maven package, ZIP package), the first one loaded wins. No silent duplicates, no ``reads more than one module'' errors.
 
 \item \textbf{Dual distribution:} ZIP archives (CBAN) and Maven Central JARs converge on the same ModuleLayer creation path.
 \end{enumerate}
@@ -137,8 +137,13 @@ ZIP packages are self-describing (directory = package). Maven packages need an e
 \vspace{0.5em}
 \begin{enumerate}
 \item \textbf{Load Maven packages:} resolve coordinates from \code{maven-packages.xml}, create a ModuleLayer per package. Maven is the recommended format, so these take precedence.
-\item \textbf{Scan package directories:} find installed ZIP packages in\\
-  \code{\textasciitilde/.beast/2.8/} (or \code{BEAST\_PACKAGE\_PATH})
+\item \textbf{Scan package directories:} find installed ZIP packages in four locations (first match wins):
+  \begin{itemize}
+  \item \code{BEAST\_PACKAGE\_PATH} (env var or \code{-D} property)
+  \item \code{\textasciitilde/.beast/2.8/} (user packages)
+  \item System package dir (e.g.\ \code{/opt/beast/}, for cluster-wide installs)
+  \item BEAST installation directory
+  \end{itemize}
 \item \textbf{Create ModuleLayer per ZIP package:}
   \begin{itemize}
   \item Discover JPMS modules from the package's JARs
