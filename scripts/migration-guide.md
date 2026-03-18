@@ -58,6 +58,52 @@ open module my.beast.package {
 
 Deployed package JARs are loaded at runtime into a child `ModuleLayer` per package.  Both `module-info.java` `provides` declarations and `version.xml` service entries are discovered.  If your package JAR has no `module-info.java`, it is treated as an automatic module and services are registered from `version.xml` as before.
 
+## Package layout: single module vs core + fx
+
+If your package includes BEAUti input editors or other GUI components, you
+need to decide how to organise the GUI code relative to the core logic.
+
+### Option A: single module with optional GUI (recommended for most packages)
+
+Keep everything in one Maven artifact and one JPMS module. Declare the GUI
+dependencies as `static` so the module loads without JavaFX (headless/cluster
+runs):
+
+```java
+open module my.beast.package {
+    requires beast.pkgmgmt;
+    requires beast.base;
+    requires static beast.fx;         // optional at runtime
+    requires static javafx.controls;  // optional at runtime
+
+    exports my.beast.package;
+    exports my.beast.package.app.beauti;
+
+    provides beast.base.core.BEASTInterface with
+        my.beast.package.MyModel,
+        my.beast.package.MyOperator,
+        my.beast.package.app.beauti.MyInputEditor;
+}
+```
+
+**Convention:** place GUI classes in a `*.app.beauti` subpackage.
+
+When running headless, the module loads normally. BEAUti provider classes are
+registered by name but never instantiated, so the missing GUI dependencies
+cause no errors. When running with BEAUti, everything works as expected.
+
+### Option B: two modules (core + fx)
+
+Split into a parent POM with two submodules. The core module has no JavaFX
+dependency; the fx module declares `requires beast.fx;` and
+`requires javafx.controls;` as regular dependencies. This is the pattern
+used by beast3 itself (`beast-base` + `beast-fx`) and by
+[morph-models](https://github.com/CompEvol/morph-models).
+
+Use this when your package has substantial GUI code (multiple custom input
+editors, complex BEAUti panels) that warrants its own module. The trade-off
+is doubling the number of IDE projects per package.
+
 ## Publishing to Maven Central
 
 BEAST 3 packages can be distributed as plain Maven Central JARs in addition to

@@ -72,7 +72,18 @@ public class BEASTClassLoader {
         // 1. Explicit class→loader mapping
         if (class2loaderMap.containsKey(className)) {
             ClassLoader loader = class2loaderMap.get(className);
-            return Class.forName(className, false, loader);
+            try {
+                return Class.forName(className, false, loader);
+            } catch (NoClassDefFoundError e) {
+                String missing = e.getMessage();
+                if (missing != null && (missing.startsWith("beastfx/") || missing.startsWith("beastfx.")
+                        || missing.startsWith("javafx/") || missing.startsWith("javafx."))) {
+                    // Expected: optional GUI dependency not present (requires static beast.fx)
+                    // — fall through to try other loaders
+                } else {
+                    throw e;
+                }
+            }
         }
 
         // 2. Plugin layers (external BEAST packages)
