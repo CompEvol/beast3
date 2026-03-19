@@ -70,24 +70,70 @@
 Three pillars of change in BEAST 3:
 \vspace{1em}
 \begin{enumerate}
-\item \textbf{Maven + JPMS}: modern build system and module isolation
+\item \textbf{JPMS modules}: replace the custom classloader with the standard Java module system --- gets us to Java 25
 \item \textbf{Strongly-typed spec system}: compile-time checked inputs and domain types
-\item \textbf{New package distribution}: Maven Central JARs, module-based service discovery
+\item \textbf{New package distribution}: JPMS service discovery, with Maven Central as the recommended (not required) distribution channel
 \end{enumerate}
 \vspace{1em}
-\begin{block}{Goal}
-Catch more errors at compile time, simplify dependency management, and make packages first-class citizens in the Java module system.
+\begin{block}{Key insight}
+JPMS is the \textbf{architecture}. Maven is convenient \textbf{tooling} --- you can build a BEAST 3 package with Gradle, Ant, or anything that produces a modular JAR.
 \end{block}
 \end{frame}
 
 % ============================================================
-\section{Why Maven + JPMS?}
+\section{Why JPMS (+ Maven)?}
 % ============================================================
 
-\input{motivation-slides}
+% ---- Inlined from motivation-slides (condensed for overview) ----
+
+\begin{frame}{Problems We Wanted to Solve}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Classloading \& isolation}
+\begin{itemize}
+\item Custom classloader predates Java modules by 15+ years
+\item Source of ``magic'' that confuses new developers and breaks standard tooling
+\item Kept us stuck on old Java versions
+\item Using BEAST as a \textbf{library} (e.g.\ LPhyBEAST) was nearly impossible
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Build \& dependencies}
+\begin{itemize}
+\item Ant \code{build.xml}: manual JAR management, no transitive dependency resolution
+\item Adding a library means hand-copying JARs and editing classpaths
+\item No standard way to publish or consume packages
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{JPMS is the Architecture, Maven is the Tooling}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{JPMS} (the architecture)
+\begin{itemize}
+\item Replaces the custom classloader with a standard Java mechanism
+\item Strong encapsulation: modules declare exports
+\item Per-package \code{ModuleLayer} isolation
+\item \code{module-info.java} \code{provides} declarations are the single source of truth for service discovery
+\item Gets us to \textbf{Java 25}
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Maven} (recommended tooling)
+\begin{itemize}
+\item Declared dependencies in \code{pom.xml}; automatic transitive resolution
+\item IDE, CI, and Maven Central integration out of the box
+\item Reproducible builds
+\item \textbf{Not required:} Gradle, Ant, or any tool that produces a modular JAR will work
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
 
 % ============================================================
-% 9. THREE MODULES
+% THREE MODULES
 % ============================================================
 
 \begin{frame}{BEAST 3 Module Architecture}
@@ -116,36 +162,11 @@ Three JPMS modules, each with its own \code{module-info.java}:
 \end{frame}
 
 % ============================================================
-% 10. PROJECT STRUCTURE
-% ============================================================
-
-\begin{frame}{Project Structure}
-\begin{center}
-\begin{tikzpicture}[
-    every node/.style={font=\small\ttfamily, anchor=west},
-    level 1/.style={sibling distance=3.5cm, level distance=1.8cm},
-]
-\node {\textbf{beast3/} \textrm{\scriptsize(parent POM)}}
-  child {node {beast-pkgmgmt/}}
-  child {node {beast-base/}}
-  child {node {beast-fx/}}
-  child {node {lib/ \textrm{\scriptsize(beagle.jar, colt.jar)}}};
-\end{tikzpicture}
-\end{center}
-\vspace{1em}
-\begin{itemize}
-\item Multi-module Maven project with a parent POM
-\item \code{mvn package} builds all three modules
-\item \code{beagle} and \code{colt} ship as modular JARs in \code{lib/}
-\end{itemize}
-\end{frame}
-
-% ============================================================
 \section{Strongly Typed Spec System}
 % ============================================================
 
 % ============================================================
-% 11. TYPE SAFETY MOTIVATION
+% TYPE SAFETY MOTIVATION
 % ============================================================
 
 \begin{frame}{The Type Safety Problem}
@@ -166,7 +187,7 @@ Make invalid models \textbf{unrepresentable} at compile time.
 \end{frame}
 
 % ============================================================
-% 12. SPEC SYSTEM OVERVIEW
+% SPEC SYSTEM OVERVIEW
 % ============================================================
 
 \begin{frame}{Strongly Typed Parameters \& Domains}
@@ -201,7 +222,7 @@ Make invalid models \textbf{unrepresentable} at compile time.
 \end{frame}
 
 % ============================================================
-% 13. BEFORE / AFTER
+% BEFORE / AFTER
 % ============================================================
 
 \begin{frame}[fragile]{Before / After: Input Declaration}
@@ -234,7 +255,7 @@ public Input<RealScalar<PositiveReal>>
 \end{frame}
 
 % ============================================================
-% 14. DISTRIBUTION IS THE PRIOR
+% DISTRIBUTION IS THE PRIOR
 % ============================================================
 
 \begin{frame}{``Distribution IS the Prior''}
@@ -281,43 +302,11 @@ Simpler model graph: no separate \code{Prior} wrapper needed.
 \end{frame}
 
 % ============================================================
-\section{New Distributions \& Operators}
-% ============================================================
-
-% ============================================================
-% 15. NEW DISTRIBUTIONS
-% ============================================================
-
-\begin{frame}{New Distributions \& Operators}
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{New distributions}
-\begin{itemize}
-\item Cauchy, GammaMean
-\item Bernoulli, IntUniform
-\item IID (scalar $\to$ vector), 
-\item OffsetReal
-\item TruncatedReal
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Operator changes}
-\begin{itemize}
-\item New \code{IntervalScaleOperator}
-\item Dedicated \code{ScaleTreeOperator} (separated from \code{ScaleOperator})
-\item Spec \code{UpDownOperator} replaces 3 BICEPS operators
-\item Simplified default tree operator set
-\end{itemize}
-\end{column}
-\end{columns}
-\end{frame}
-
-% ============================================================
 \section{Package System}
 % ============================================================
 
 % ============================================================
-% 16. PACKAGE SYSTEM OVERVIEW
+% PACKAGE SYSTEM OVERVIEW
 % ============================================================
 
 \begin{frame}{Package System Overview}
@@ -344,7 +333,7 @@ Simpler model graph: no separate \code{Prior} wrapper needed.
 \end{frame}
 
 % ============================================================
-% 17. TWO DISTRIBUTION MODELS
+% TWO DISTRIBUTION MODELS
 % ============================================================
 
 \begin{frame}{Package Distribution: Maven Central \& ZIP}
@@ -371,12 +360,12 @@ Simpler model graph: no separate \code{Prior} wrapper needed.
 
 \vspace{1em}
 \begin{block}{}
-Both formats coexist. Loading precedence: boot layer $\to$ Maven $\to$ ZIP.
+Both formats coexist and both use the \textbf{same JPMS \code{ModuleLayer} loader} at runtime. Loading precedence: boot layer $\to$ Maven $\to$ ZIP.
 \end{block}
 \end{frame}
 
 % ============================================================
-% 18. BEAST-PACKAGE-SKELETON
+% BEAST-PACKAGE-SKELETON
 % ============================================================
 
 \begin{frame}{\code{beast-package-skeleton}}
@@ -399,11 +388,138 @@ Start here: \url{https://github.com/CompEvol/beast-package-skeleton}
 \end{frame}
 
 % ============================================================
-\section{Migration \& Summary}
+\section{Migrating Your Package}
 % ============================================================
 
 % ============================================================
-% 19. KEY CHANGES & MIGRATION
+% STEP 1: BUILD
+% ============================================================
+
+\begin{frame}[fragile]{Step 1: Set Up Your Build (Maven Recommended)}
+Replace \code{build.xml} with a \code{pom.xml} (or use Gradle --- any tool that produces a modular JAR):
+
+\begin{lstlisting}[language=XML]
+<project>
+  <groupId>io.github.yourorg</groupId>
+  <artifactId>beast-mypackage</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.compevol</groupId>
+      <artifactId>beast-base</artifactId>
+      <version>2.8.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+</project>
+\end{lstlisting}
+
+\begin{itemize}
+\item Requires JDK 25+ and Maven 3.9+
+\item Build BEAST 3 locally first: \code{mvn install -DskipTests}
+\item See \code{beast-package-skeleton} for a complete template POM
+\end{itemize}
+\end{frame}
+
+% ============================================================
+% STEP 2: MODULE-INFO
+% ============================================================
+
+\begin{frame}[fragile]{Step 2: Add \code{module-info.java}}
+Create \code{src/main/java/module-info.java}:
+
+\begin{lstlisting}[language=Java]
+open module my.beast.package {
+    requires beast.pkgmgmt;
+    requires beast.base;
+    requires static beast.fx;        // optional at runtime
+    requires static javafx.controls; // optional at runtime
+
+    exports my.beast.package;
+
+    provides beast.base.core.BEASTInterface with
+        my.beast.package.MyModel,
+        my.beast.package.MyOperator,
+        my.beast.package.app.beauti.MyInputEditor;
+}
+\end{lstlisting}
+
+\begin{itemize}
+\item Every \code{BEASTInterface} subclass \textbf{must} be listed in \code{provides}
+\item \code{requires static}: dependency is optional at runtime (headless OK)
+\item GUI classes go in \code{*.app.beauti} subpackage by convention
+\end{itemize}
+\end{frame}
+
+% ============================================================
+% STEP 3: API CHANGES
+% ============================================================
+
+\begin{frame}{Step 3: Fix Compile Errors}
+Common changes needed when migrating package code:
+
+\vspace{0.5em}
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{BEAST 2 pattern} & \textbf{BEAST 3 replacement} \\
+\midrule
+\code{StateNode} implements \code{Function} & No longer a \code{Function}; \\
+& use spec types (\code{RealScalar}, etc.) \\
+\code{stateNode.scale(s)} & Implement \code{Scalable} interface \\
+\code{Prior} + distribution wrapper & Distribution is the prior directly \\
+\code{Input<RealParameter>} & \code{Input<RealScalar<PositiveReal>{}>} \\
+\code{Evaluator} & Removed; refactor MCMC usage \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+\begin{block}{}
+Legacy classes (\code{RealParameter}, \code{Prior}, \code{Function}) are \textbf{deprecated, not removed}. Your package will still compile --- migrate to spec types incrementally.
+\end{block}
+\end{frame}
+
+% ============================================================
+% STEP 4: TEST & PUBLISH
+% ============================================================
+
+\begin{frame}{Step 4: Test \& Publish}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Testing}
+\begin{itemize}
+\item \code{mvn test} runs JUnit tests
+\item IntelliJ auto-discovers JPMS modules --- run/debug XML from IDE
+\item Namespace test resources under your module to avoid split-package errors
+\end{itemize}
+
+\vspace{0.5em}
+\textbf{Publishing to Maven Central}
+\begin{itemize}
+\item Add release profile to POM (see skeleton)
+\item Tag release $\to$ GitHub Actions auto-publishes JAR
+\item Users install via BEAUti with automatic dependency resolution
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Quick-start checklist}
+\begin{enumerate}
+\item Clone \code{beast-package-skeleton}
+\item Rename module, packages, POM coords
+\item Copy your source into \code{src/main/java/}
+\item \code{mvn compile} --- fix errors
+\item Add classes to \code{module-info.java} \code{provides}
+\item \code{mvn test}
+\item Update BEAST XML specs if needed
+\end{enumerate}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ============================================================
+% KEY BREAKING CHANGES
 % ============================================================
 
 \begin{frame}{Key Breaking Changes}
@@ -412,8 +528,8 @@ Start here: \url{https://github.com/CompEvol/beast-package-skeleton}
 \toprule
 \textbf{Area} & \textbf{BEAST 2} & \textbf{BEAST 3} \\
 \midrule
-Build & Ant, Java 8/11 & Maven, Java 25 \\
 Modules & Custom classloader & JPMS \code{ModuleLayer} \\
+Build & Ant, Java 8/11 & Maven (recommended), Java 25 \\
 Parameters & \code{RealParameter} & Typed spec params + domains \\
 Priors & \code{Prior} wrapper & Distribution is the prior \\
 \code{StateNode} & implements \code{Function} & No longer a \code{Function} \\
@@ -430,25 +546,21 @@ Legacy classes are \textbf{deprecated, not removed}: migrate incrementally.
 \input{timeline-slides}
 
 % ============================================================
-% 21. RESOURCES
+% RESOURCES
 % ============================================================
 
 \begin{frame}{Resources}
 \begin{description}
-\item[Migration guide] \code{scripts/migration-guide.md}: class mapping tables, step-by-step instructions
-\item[CHANGELOG] \code{CHANGELOG.md}: full list of what changed and why
 \item[Package skeleton] \url{https://github.com/CompEvol/beast-package-skeleton}
+\item[Migration guide] \code{scripts/migration-guide.md}: class mapping tables, detailed instructions
+\item[CHANGELOG] \code{CHANGELOG.md}: full list of what changed and why
 \item[BEAST 3 repo] \url{https://github.com/CompEvol/beast3}
 \end{description}
 
 \vspace{1em}
-\begin{block}{Migration steps}
-\begin{enumerate}
-\item Create \code{pom.xml} (see skeleton), target Java 25
-\item Fix compile errors (\code{StateNode}/\code{Function}, \code{scale()}, \code{Evaluator})
-\item Add \code{module-info.java} with \code{provides} declarations
-\item Migrate to spec types incrementally
-\end{enumerate}
+\begin{block}{Getting help}
+Clone the skeleton, copy your source in, and start fixing compile errors.
+Most packages should compile with only minor changes to deprecated APIs.
 \end{block}
 \end{frame}
 
