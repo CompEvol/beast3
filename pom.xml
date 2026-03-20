@@ -45,6 +45,7 @@
     <modules>
         <module>beast-pkgmgmt</module>
         <module>beast-base</module>
+        <module>beast-test-utils</module>
         <module>beast-fx</module>
     </modules>
 
