@@ -129,12 +129,38 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- Copy version.xml to target/ so BEASTClassLoader.initServices()
-                 finds it when scanning classpath entry target/classes -->
+            <!-- Publish test JAR so downstream packages can use BEASTTestCase etc. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals><goal>test-jar</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Embed version.xml in JAR so downstream packages can discover
+                 beast.base services via BEASTClassLoader.initServices() -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
+                    <execution>
+                        <id>embed-version-xml-in-jar</id>
+                        <phase>generate-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>version.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>copy-version-xml</id>
                         <phase>generate-test-resources</phase>

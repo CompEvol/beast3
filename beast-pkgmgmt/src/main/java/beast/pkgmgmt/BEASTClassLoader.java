@@ -224,7 +224,7 @@ public class BEASTClassLoader {
         }
     }
 
-    /** Initialise services by scanning the classpath for version.xml files. */
+    /** Initialise services by scanning the classpath and BEAST_PACKAGE_PATH for version.xml files. */
     public static void initServices() {
         versionXmlScanned = true;
         String classPath = System.getProperty("java.class.path");
@@ -234,6 +234,43 @@ public class BEASTClassLoader {
             // ignore
         }
         initServices("/" + classPath + "/");
+
+        // Also scan BEAST_PACKAGE_PATH for version.xml files.
+        // This is needed for downstream package tests where beast-base
+        // is a Maven dependency (JAR in ~/.m2/) rather than a sibling
+        // module with target/classes on the classpath.
+        String packagePath = System.getProperty("BEAST_PACKAGE_PATH");
+        if (packagePath == null) {
+            packagePath = System.getenv("BEAST_PACKAGE_PATH");
+        }
+        if (packagePath != null) {
+            for (String dir : packagePath.split(File.pathSeparator)) {
+                File d = new File(dir);
+                if (d.isDirectory()) {
+                    File vf = new File(d, "version.xml");
+                    if (vf.exists()) {
+                        addServices(vf.getAbsolutePath());
+                    }
+                } else if (d.isFile() && dir.endsWith(".jar")) {
+                    // Look for version.xml inside the JAR
+                    try (java.util.jar.JarFile jar = new java.util.jar.JarFile(d)) {
+                        java.util.jar.JarEntry entry = jar.getJarEntry("version.xml");
+                        if (entry != null) {
+                            // Extract to a temp file so addServices() can parse it
+                            java.io.File tmp = java.io.File.createTempFile("beast-version-", ".xml");
+                            tmp.deleteOnExit();
+                            try (java.io.InputStream is = jar.getInputStream(entry);
+                                 java.io.OutputStream os = new java.io.FileOutputStream(tmp)) {
+                                is.transferTo(os);
+                            }
+                            addServices(tmp.getAbsolutePath());
+                        }
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+            }
+        }
     }
 
     /** Initialise services from a given classpath string. */

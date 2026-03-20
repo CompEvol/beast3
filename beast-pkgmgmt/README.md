@@ -214,38 +214,19 @@ Skipping modules with unsatisfied dependencies in .../MM: [beast.morph.models.fx
 
 No special configuration or flags are needed.
 
-## Service discovery
+## Class loading vs service discovery
 
-BEAST uses a dual service discovery mechanism:
+These are two separate concerns that `BEASTClassLoader` handles:
 
-1. **Primary: `module-info.java` `provides` declarations** — the recommended
-   approach for BEAST 3 packages. When a `ModuleLayer` is created, all
-   `provides` declarations from its modules are merged into the
-   `BEASTClassLoader` service registry. IDEs like IntelliJ resolve these
-   automatically from the module path.
+- **Class loading** answers: "Given the fully qualified name
+  `beast.base.evolution.datatype.Nucleotide`, find and load that class."
+- **Service discovery** answers: "What classes implement the
+  `DataType` interface?" (i.e. which classes should be registered as
+  available data types?)
 
-2. **Supplementary: `version.xml`** — each package includes a `version.xml`
-   listing `<service>` entries with `<provider>` elements. This is parsed at
-   startup and used alongside module descriptors. It is required for backward
-   compatibility mappings (`<map>` elements) and for declaring dependencies
-   (`<depends>`).
-
-Both mechanisms feed into the same registry in `BEASTClassLoader`. When code
-calls `BEASTClassLoader.loadService(BEASTInterface.class)`, all providers
-from both sources are returned.
-
-### How services are merged
-
-When a package has both `module-info.java` `provides` declarations and
-`version.xml` `<service>` entries, both are registered. The service sets are
-unioned — duplicates are harmlessly deduplicated via `Set.add()`.
-
-For the class-loader map (used by `BEASTClassLoader.forName()`), the
-first-registered loader wins (`putIfAbsent`). Since Maven packages are
-loaded before ZIP packages, Maven takes precedence when both formats provide
-the same service class. Within a single package, `version.xml` services are
-registered before `module-info.java` services, but because they share the
-same `ModuleLayer` class-loader this has no practical effect.
+A class can be loadable without being discovered as a service provider,
+and vice versa. Both must work for BEAST to function: the service registry
+tells BEAST *which* classes to use, and the class loader actually loads them.
 
 ## Class loading
 
@@ -260,6 +241,67 @@ same `ModuleLayer` class-loader this has no practical effect.
 This means classes from external packages are found without any classpath
 manipulation — the plugin `ModuleLayer` mechanism handles isolation and
 visibility.
+
+## Service discovery
+
+BEAST uses a dual service discovery mechanism. When code calls
+`BEASTClassLoader.loadService(DataType.class)`, both mechanisms are
+consulted and their results merged.
+
+### Primary: module descriptors
+
+`BEASTClassLoader` scans `provides` declarations from `module-info.java`
+in `ModuleLayer.boot()` and all plugin layers. This is the recommended
+approach for BEAST 3 packages, and is the mechanism used when modules are
+on the JPMS module path (e.g. in an IDE).
+
+**Important limitation**: Maven Surefire runs tests on the *classpath*, not
+the module path, even for projects with `module-info.java`. This means
+`ModuleLayer.boot()` contains no BEAST modules during test execution, and
+module descriptor scanning finds nothing. This is a Maven tooling limitation,
+not a BEAST bug.
+
+### Supplementary: version.xml scanning
+
+`BEASTClassLoader.initServices()` scans for `version.xml` files and parses
+their `<service>` entries. It searches two places:
+
+1. **`java.class.path`** — for each classpath entry, navigate up two parent
+   directories and look for `version.xml`. This works for beast3's own tests
+   because `beast-base/target/classes` is on the classpath, and going up two
+   levels reaches `beast3/version.xml`.
+
+2. **`BEAST_PACKAGE_PATH`** — environment variable or `-D` system property.
+   Scans each colon-separated entry:
+   - If a directory: looks for `version.xml` in that directory
+   - If a JAR file: looks for `version.xml` inside the JAR
+
+   This mechanism is essential for downstream package tests, where beast-base
+   is a Maven dependency (JAR in `~/.m2/`) rather than a sibling module with
+   `target/classes` on the classpath.
+
+`version.xml` is also required for backward compatibility mappings (`<map>`
+elements) and for declaring package dependencies (`<depends>`).
+
+### How services are merged
+
+When a package has both `module-info.java` `provides` declarations and
+`version.xml` `<service>` entries, both are registered. The service sets are
+unioned — duplicates are harmlessly deduplicated via `Set.add()`.
+
+For the class-loader map (used by `BEASTClassLoader.forName()`), the
+first-registered loader wins (`putIfAbsent`). Since Maven packages are
+loaded before ZIP packages, Maven takes precedence when both formats provide
+the same service class.
+
+### Service discovery in different contexts
+
+| Context | Module descriptors | version.xml scan |
+|---------|-------------------|-----------------|
+| **IDE** (module path) | Works: modules in boot layer | Not needed (but harmless) |
+| **End user** (runtime) | Works: plugin `ModuleLayer`s | Also works: ZIP package dirs |
+| **beast3 own tests** (surefire) | Does NOT work: classpath, not module path | Works: `target/classes` parent walk |
+| **Downstream package tests** (surefire) | Does NOT work | Works via `BEAST_PACKAGE_PATH` pointing at beast-base JAR |
 
 ## Package structure conventions
 
@@ -321,3 +363,89 @@ Custom Maven repositories can be added via:
 ```
 packagemanager -addMavenRepository https://example.com/maven/
 ```
+
+## Testing downstream packages
+
+External packages that depend on beast3 via Maven need specific configuration
+for their tests to work. The core issue is that Maven Surefire runs tests on
+the classpath, not the JPMS module path, so the primary service discovery
+mechanism (module descriptors) does not work during tests. Instead, service
+discovery falls back to `version.xml` scanning.
+
+### Required POM configuration
+
+```xml
+<dependencies>
+    <!-- beast3 core (compile scope) -->
+    <dependency>
+        <groupId>io.github.compevol</groupId>
+        <artifactId>beast-base</artifactId>
+        <version>${beast.version}</version>
+    </dependency>
+
+    <!-- Test utilities: BEASTTestCase, TestOperator, etc.
+         Uses 'optional' scope so it lands on the module path
+         at compile time (required for JPMS visibility). -->
+    <dependency>
+        <groupId>io.github.compevol</groupId>
+        <artifactId>beast-test-utils</artifactId>
+        <version>${beast.version}</version>
+        <optional>true</optional>
+    </dependency>
+
+    <!-- Add 'requires static beast.test.utils' to your module-info.java -->
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <argLine>
+                    --add-reads YOUR.MODULE=ALL-UNNAMED
+                    --add-reads YOUR.MODULE=beast.test.utils
+                    --add-reads beast.base=ALL-UNNAMED
+                    --add-reads beast.pkgmgmt=ALL-UNNAMED
+                </argLine>
+                <systemPropertyVariables>
+                    <!-- Point at your own version.xml AND the beast-base JAR
+                         so that beast.base services (DataType, etc.) are
+                         discovered via version.xml scanning. -->
+                    <BEAST_PACKAGE_PATH>
+                        ${project.build.outputDirectory}:${settings.localRepository}/io/github/compevol/beast-base/${beast.version}/beast-base-${beast.version}.jar
+                    </BEAST_PACKAGE_PATH>
+                </systemPropertyVariables>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Why this is needed
+
+1. **`BEAST_PACKAGE_PATH`** — Surefire runs on the classpath, so the
+   two-parent-directory walk in `initServices()` does not find beast-base's
+   `version.xml` (it's inside a JAR in `~/.m2/`, not in a sibling
+   `target/classes`). Pointing `BEAST_PACKAGE_PATH` at the JAR triggers the
+   JAR-internal `version.xml` scan.
+
+2. **`--add-reads`** — Even though surefire uses the classpath, JPMS module
+   declarations are still partially enforced. The `--add-reads` flags allow
+   your module's test code to access the unnamed module (where JUnit and
+   beast-test-utils live at runtime).
+
+3. **`beast-test-utils`** — Provides `BEASTTestCase` and `TestOperator` in
+   a proper JPMS module (`beast.test.utils`). This avoids split-package
+   errors: if your tests were in package `test.beast`, they would clash with
+   the `test.beast` package exported by `beast.test.utils`. Use subpackages
+   like `test.beast.evolution.likelihood` (fine) or `test.yourpackage`
+   (safest).
+
+### Split package pitfall
+
+Do NOT put test classes directly in the `test.beast` package. The
+`beast.test.utils` module exports `test.beast`, so any other module with
+classes in `test.beast` triggers a JPMS split-package error. Subpackages
+like `test.beast.core` or `test.beast.evolution.tree` are fine because JPMS
+treats each dotted package name as independent.
