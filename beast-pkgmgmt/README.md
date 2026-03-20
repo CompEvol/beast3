@@ -321,3 +321,174 @@ Custom Maven repositories can be added via:
 ```
 packagemanager -addMavenRepository https://example.com/maven/
 ```
+
+## Testing downstream packages
+
+External packages that depend on beast3 via Maven need specific configuration
+for their tests to work. The core issue is that Maven Surefire runs tests on
+the classpath, not the JPMS module path, so the primary service discovery
+mechanism (module descriptors) does not work during tests. Instead, service
+discovery falls back to `version.xml` scanning.
+
+### Required POM configuration
+
+```xml
+<dependencies>
+    <!-- beast3 core (compile scope) -->
+    <dependency>
+        <groupId>io.github.compevol</groupId>
+        <artifactId>beast-base</artifactId>
+        <version>${beast.version}</version>
+    </dependency>
+
+    <!-- Test utilities: BEASTTestCase, TestOperator, etc.
+         Uses 'optional' scope so it lands on the module path
+         at compile time (required for JPMS visibility). -->
+    <dependency>
+        <groupId>io.github.compevol</groupId>
+        <artifactId>beast-test-utils</artifactId>
+        <version>${beast.version}</version>
+        <optional>true</optional>
+    </dependency>
+
+    <!-- Add 'requires static beast.test.utils' to your module-info.java -->
+</dependencies>
+
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <argLine>
+                    --add-reads YOUR.MODULE=ALL-UNNAMED
+                    --add-reads YOUR.MODULE=beast.test.utils
+                    --add-reads beast.base=ALL-UNNAMED
+                    --add-reads beast.pkgmgmt=ALL-UNNAMED
+                </argLine>
+                <systemPropertyVariables>
+                    <!-- Point at your own version.xml AND the beast-base JAR
+                         so that beast.base services (DataType, etc.) are
+                         discovered via version.xml scanning. -->
+                    <BEAST_PACKAGE_PATH>
+                        ${project.build.outputDirectory}:${settings.localRepository}/io/github/compevol/beast-base/${beast.version}/beast-base-${beast.version}.jar
+                    </BEAST_PACKAGE_PATH>
+                </systemPropertyVariables>
+            </configuration>
+        </plugin>
+    </plugins>
+</build>
+```
+
+### Why this is needed
+
+1. **`BEAST_PACKAGE_PATH`** — Surefire runs on the classpath, so the
+   two-parent-directory walk in `initServices()` does not find beast-base's
+   `version.xml` (it's inside a JAR in `~/.m2/`, not in a sibling
+   `target/classes`). Pointing `BEAST_PACKAGE_PATH` at the JAR triggers the
+   JAR-internal `version.xml` scan.
+
+2. **`--add-reads`** — Even though surefire uses the classpath, JPMS module
+   declarations are still partially enforced. The `--add-reads` flags allow
+   your module's test code to access the unnamed module (where JUnit and
+   beast-test-utils live at runtime).
+
+3. **`beast-test-utils`** — Provides `BEASTTestCase` and `TestOperator` in
+   a proper JPMS module (`beast.test.utils`). This avoids split-package
+   errors: if your tests were in package `test.beast`, they would clash with
+   the `test.beast` package exported by `beast.test.utils`. Use subpackages
+   like `test.beast.evolution.likelihood` (fine) or `test.yourpackage`
+   (safest).
+
+### Split package pitfall
+
+Do NOT put test classes directly in the `test.beast` package. The
+`beast.test.utils` module exports `test.beast`, so any other module with
+classes in `test.beast` triggers a JPMS split-package error. Subpackages
+like `test.beast.core` or `test.beast.evolution.tree` are fine because JPMS
+treats each dotted package name as independent.
+
+## Using the package manager from a standalone application
+
+BEAST 3's package manager can be embedded in standalone applications that
+maintain their own isolated package cache, independent of the default
+`~/.beast/` directory. This section documents the API surface for applications
+like LPhyBEAST that need to install, load, and manage packages programmatically.
+
+### Application-specific package directories
+
+`Utils6.getPackageUserDir(String application)` returns a platform-specific
+package directory for the given application name:
+
+| Platform | `getPackageUserDir("LPhyBEAST")` |
+|----------|----------------------------------|
+| macOS    | `~/Library/Application Support/LPhyBEAST/<majorVersion>/` |
+| Linux    | `~/.lphybeast/<majorVersion>/` |
+| Windows  | `%USERPROFILE%\LPhyBEAST\<majorVersion>\` |
+
+The directory can be overridden by setting the system property
+`<prefix>.user.package.dir`, where `<prefix>` is the lowercase application
+name. For example:
+
+```java
+// Override before any PackageManager call
+System.setProperty("lphybeast.user.package.dir", "/custom/path");
+```
+
+**Important:** `PackageManager` convenience methods (e.g. `loadExternalJars()`)
+call `Utils6.getPackageUserDir()` with no arguments, which defaults to
+`"BEAST"`. To redirect all package manager operations to a custom directory,
+set the `beast.user.package.dir` system property *before* any PackageManager
+call:
+
+```java
+String myDir = Utils6.getPackageUserDir("LPhyBEAST");
+System.setProperty("beast.user.package.dir", myDir);
+```
+
+### Bootstrap sequence
+
+A standalone application that uses the package manager follows this sequence:
+
+```java
+// 1. Redirect the package directory
+String pkgDir = Utils6.getPackageUserDir("LPhyBEAST");
+System.setProperty("beast.user.package.dir", pkgDir);
+
+// 2. Load installed packages (Maven + ZIP) into ModuleLayers
+PackageManager.loadExternalJars();
+
+// 3. Discover services from version.xml files on classpath / BEAST_PACKAGE_PATH
+BEASTClassLoader.initServices();
+```
+
+After this, `BEASTClassLoader.forName()` and `BEASTClassLoader.loadService()`
+will find classes from both the boot layer and any installed packages.
+
+### Key API methods
+
+| Method | Description |
+|--------|-------------|
+| `PackageManager.loadExternalJars()` | Load all installed packages (Maven and ZIP) into child `ModuleLayer`s. Call once at startup. |
+| `PackageManager.installMavenPackage(groupId, artifactId, version)` | Install a Maven package by coordinate. Downloads JARs to the local cache and adds the coordinate to `maven-packages.xml`. |
+| `PackageManager.uninstallMavenPackage(groupId, artifactId)` | Remove a Maven package from `maven-packages.xml`. Cached JARs are left in place. |
+| `PackageManager.addInstalledPackages(Map<String, Package>)` | Populate a map with all currently installed packages (both Maven and ZIP). |
+| `PackageManager.addAvailablePackages(Map<String, Package>)` | Populate a map with packages available from remote repositories (CBAN + Maven Central). |
+| `PackageManager.initialise()` | Initialise internal state (package lists, etc.). Called automatically by most other methods. |
+| `BEASTClassLoader.initServices()` | Scan classpath and `BEAST_PACKAGE_PATH` for `version.xml` files and register their `<service>` entries. |
+
+### Running BEAST headlessly
+
+`beast.base.minimal.BeastMCMC` provides a headless MCMC runner with no
+JavaFX dependency. It can be used by a standalone application to execute
+a BEAST XML file:
+
+```java
+BeastMCMC beast = new BeastMCMC();
+beast.parseArgs(new String[]{"-seed", "777", "-threads", "2", "output.xml"});
+beast.run();
+```
+
+`parseArgs` accepts: `-seed <long|random>`, `-threads <int>`, `-resume`,
+`-overwrite`, `-prefix <name>`, `-D <key=value,...>`, and a positional
+XML/JSON file path.
