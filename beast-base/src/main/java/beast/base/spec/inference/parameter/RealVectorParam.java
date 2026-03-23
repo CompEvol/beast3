@@ -1,6 +1,7 @@
 package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
@@ -25,7 +26,7 @@ import java.util.stream.DoubleStream;
  * @param <D> the real domain type
  */
 @Description("A real-valued vector with domain constraints")
-public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, Scalable { //VectorParam<D, Double> {
+public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> implements RealVector<D>, Scalable, Function {
 
     final public Input<List<Double>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -529,6 +530,19 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         for (int i = 0; i < values.length; i++) {
             values[i] = Double.parseDouble(valuesStr[i]);
         }
+    }
+
+    // Function implementation -- bridges spec types to legacy Function interface
+    // used by loggers, metadata, and other infrastructure
+
+    @Override
+    public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get(i);
     }
 
 }

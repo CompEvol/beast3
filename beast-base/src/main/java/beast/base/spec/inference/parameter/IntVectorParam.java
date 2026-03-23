@@ -1,6 +1,7 @@
 package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Domain;
@@ -25,7 +26,7 @@ import java.util.stream.IntStream;
  * @param <D> the integer domain type
  */
 @Description("A int-valued vector with domain constraints")
-public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D> { //VectorParam<D, Integer> {
+public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> implements IntVector<D>, Function {
 
     final public Input<List<Integer>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -500,4 +501,17 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
             values[i] = Integer.parseInt(valuesStr[i]);
         }
     }
+
+    // Function implementation
+
+    @Override
+    public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get(i);
+    }
+
 }

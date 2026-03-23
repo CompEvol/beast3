@@ -1,6 +1,7 @@
 package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
@@ -20,7 +21,7 @@ import java.util.List;
  * Supports named dimensions via {@link KeyVectorParam}.
  */
 @Description("A boolean-valued vector parameter for MCMC inference.")
-public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector{ //VectorParam<Bool, Boolean> {
+public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVector, Function {
 
     final public Input<List<Boolean>> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -388,6 +389,18 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         for (int i = 0; i < valuesStr.length; i++) {
             values[i] = Boolean.parseBoolean(valuesStr[i]);
         }
+    }
+
+    // Function implementation
+
+    @Override
+    public int getDimension() {
+        return size();
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get(i) ? 1.0 : 0.0;
     }
 
 }

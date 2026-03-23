@@ -1,6 +1,7 @@
 package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
@@ -19,7 +20,7 @@ import java.io.PrintStream;
  * @param <D> the real domain type
  */
 @Description("A scalar real-valued parameter with domain constraints")
-public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, Scalable {
+public class RealScalarParam<D extends Real> extends StateNode implements RealScalar<D>, Scalable, Function {
 
     final public Input<Double> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -223,6 +224,18 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
     @Override
     public String toString() {
         return ParameterUtils.paramToString(this);
+    }
+
+    // Function implementation
+
+    @Override
+    public int getDimension() {
+        return 1;
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get();
     }
 
 }

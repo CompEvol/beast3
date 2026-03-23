@@ -1,6 +1,7 @@
 package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Int;
@@ -17,7 +18,7 @@ import java.io.PrintStream;
  * @param <D> the integer domain type
  */
 @Description("A scalar int-valued parameter with domain constraints")
-public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D> {
+public class IntScalarParam<D extends Int> extends StateNode implements IntScalar<D>, Function {
 
     final public Input<Integer> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -195,6 +196,18 @@ public class IntScalarParam<D extends Int> extends StateNode implements IntScala
     @Override
     public String toString() {
         return ParameterUtils.paramToString(this);
+    }
+
+    // Function implementation
+
+    @Override
+    public int getDimension() {
+        return 1;
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get();
     }
 
 }

@@ -26,6 +26,7 @@ package beast.base.spec.inference.parameter;
 
 
 import beast.base.core.Description;
+import beast.base.core.Function;
 import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.Bool;
@@ -42,7 +43,7 @@ import java.io.PrintStream;
  */
 @Description("A Boolean-valued parameter represents a value (or array of values if the dimension is larger than one) " +
         "in the state space that can be changed by operators.")
-public class BoolScalarParam extends StateNode implements BoolScalar {
+public class BoolScalarParam extends StateNode implements BoolScalar, Function {
 
     final public Input<Boolean> valuesInput = new Input<>("value",
             "starting value for this real scalar parameter.",
@@ -196,6 +197,18 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
     @Override
     public String toString() {
         return ParameterUtils.paramToString(this);
+    }
+
+    // Function implementation
+
+    @Override
+    public int getDimension() {
+        return 1;
+    }
+
+    @Override
+    public double getArrayValue(int i) {
+        return get() ? 1.0 : 0.0;
     }
 
 }
