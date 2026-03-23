@@ -129,15 +129,34 @@
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
-            <!-- Copy version.xml to target/ so BEASTClassLoader.initServices()
-                 finds it when scanning classpath entry target/classes -->
+            <!-- Copy version.xml so BEASTClassLoader.initServices() can find it:
+                 1) to target/classes/ so it is embedded in the JAR and
+                    discoverable via ClassLoader.getResources("version.xml")
+                 2) to target/ so the parent-directory walk from target/classes
+                    also finds it (legacy classpath scanning) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>embed-version-xml-in-jar</id>
+                        <phase>generate-resources</phase>
+                        <goals><goal>copy-resources</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/..</directory>
+                                    <includes>
+                                        <include>version.xml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-version-xml</id>
-                        <phase>generate-test-resources</phase>
+                        <phase>generate-resources</phase>
                         <goals><goal>copy-resources</goal></goals>
                         <configuration>
                             <outputDirectory>${project.build.directory}</outputDirectory>

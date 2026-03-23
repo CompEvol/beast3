@@ -1,6 +1,8 @@
 package beast.pkgmgmt;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.module.ModuleReader;
 import java.lang.module.ResolvedModule;
@@ -234,6 +236,42 @@ public class BEASTClassLoader {
             // ignore
         }
         initServices("/" + classPath + "/");
+
+        // Also discover version.xml files embedded inside JARs on the
+        // classpath or module path.  ClassLoader.getResources() finds
+        // resources regardless of whether the JAR is on the classpath
+        // or module path, covering Maven-managed dependencies that the
+        // parent-directory walk above cannot reach.
+        initServicesFromClassLoaderResources();
+    }
+
+    /**
+     * Scan for {@code version.xml} resources via the class loader.
+     * This finds version.xml files embedded inside JARs (e.g. by BEAST
+     * packages built with Maven) regardless of whether the JAR is on
+     * the classpath or module path.
+     */
+    private static void initServicesFromClassLoaderResources() {
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            if (cl == null) cl = ClassLoader.getSystemClassLoader();
+            Enumeration<URL> resources = cl.getResources("version.xml");
+            while (resources.hasMoreElements()) {
+                URL url = resources.nextElement();
+                try (InputStream is = url.openStream()) {
+                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                    Document doc = factory.newDocumentBuilder().parse(is);
+                    Map<String, Set<String>> parsedServices = PackageManager.parseServices(doc);
+                    Element packageElement = doc.getDocumentElement();
+                    String packageName = packageElement.getAttribute("name");
+                    BEASTClassLoader.classLoader.addServices(packageName, parsedServices);
+                } catch (Throwable e) {
+                    // skip malformed version.xml
+                }
+            }
+        } catch (IOException e) {
+            // ignore
+        }
     }
 
     /** Initialise services from a given classpath string. */
