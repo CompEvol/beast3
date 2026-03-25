@@ -148,36 +148,7 @@ Requires JDK 25+ with `jpackage`. Produces a DMG containing:
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
-BEAST 3 artifacts are published to [Maven Central](https://central.sonatype.com/namespace/io.github.compevol) and [GitHub Packages](https://github.com/CompEvol/beast3/packages). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
-
-### Repository and authentication
-
-Add the GitHub Packages repository to your project's `pom.xml`:
-
-```xml
-<repositories>
-    <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/CompEvol/beast3</url>
-    </repository>
-</repositories>
-```
-
-GitHub Packages requires authentication even for public repositories. Create a [personal access token](https://github.com/settings/tokens) (classic) with `read:packages` scope and add it to `~/.m2/settings.xml`:
-
-```xml
-<settings>
-  <servers>
-    <server>
-      <id>github</id>
-      <username>YOUR_GITHUB_USERNAME</username>
-      <password>YOUR_GITHUB_PAT</password>
-    </server>
-  </servers>
-</settings>
-```
-
-Since BEAST 3 artifacts are published to Maven Central, the `<repositories>` block and `settings.xml` authentication are not needed — Maven Central is the default repository.
+BEAST 3 artifacts are published to [Maven Central](https://central.sonatype.com/namespace/io.github.compevol). No extra repository configuration is needed — Maven resolves them automatically.
 
 ### Add BEAST dependencies
 
@@ -215,15 +186,17 @@ open module my.project {
 
 If your project does not use JPMS modules, the BEAST classes are accessible from the unnamed module without any extra configuration.
 
-### Alternative: local install
+### Alternative: local install or SNAPSHOT builds
 
-If you prefer to build from source instead of using GitHub Packages, you can install BEAST 3 to your local Maven repository:
+To develop against an unreleased SNAPSHOT version, install BEAST 3 to your local Maven repository from source:
 
 ```bash
 cd /path/to/beast3
 mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
 mvn install -DskipTests
 ```
+
+SNAPSHOT builds are also published to [GitHub Packages](https://github.com/CompEvol/beast3/packages) on each push to master. Using them requires a [personal access token](https://github.com/settings/tokens) with `read:packages` scope in `~/.m2/settings.xml` and a `<repository>` entry pointing to `https://maven.pkg.github.com/CompEvol/beast3`.
 
 In this case, no `<repositories>` block or `settings.xml` configuration is needed.
 
