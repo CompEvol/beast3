@@ -3,10 +3,17 @@ package beast.base.core;
 import beast.pkgmgmt.BEASTVersion;
 
 /**
- * This is a duplicate of BEASTVersion, however the BEASTVersion class should be used by BEASTLauncher 
- * and derivatives, but this class should be used in any other place
- * */
+ * Version information for the beast-base module.
+ * <p>
+ * Overrides {@link BEASTVersion} because beast-base and beast-pkgmgmt
+ * can be versioned independently.
+ * <p>
+ * To cut a final release, set {@code PRERELEASE} to {@code null}.
+ */
 public class BEASTVersion2 extends BEASTVersion {
+
+    /** Shadows {@link BEASTVersion#INSTANCE} so callers get the beast-base version. */
+    public static final BEASTVersion2 INSTANCE = new BEASTVersion2();
 
     /**
      * Version string: assumed to be in format x.x.x
@@ -15,20 +22,30 @@ public class BEASTVersion2 extends BEASTVersion {
 
     private static final String DATE_STRING = "2002-2026";
 
-    private static final boolean IS_PRERELEASE = true;
-//
-//    private static final String BEAST2_WEBPAGE = "http://beast2.org/";
-//    
-//    private static final String BEAST2_SOURCE = "http://github.com/CompEvol/beast2";
-//
+    /**
+     * Pre-release label appended to the version string (e.g. "beta1", "rc1").
+     * Set to {@code null} for a final release.
+     */
+    private static final String PRERELEASE = "beta1";
+
     @Override
 	public String getVersion() {
         return VERSION;
     }
 
     @Override
+    public boolean isPrerelease() {
+        return PRERELEASE != null && !PRERELEASE.isEmpty();
+    }
+
+    @Override
+    public String getPrereleaseDescription() {
+        return PRERELEASE;
+    }
+
+    @Override
 	public String getVersionString() {
-        return "v" + VERSION + (IS_PRERELEASE ? " Prerelease" : "");
+        return "v" + VERSION + (isPrerelease() ? " " + PRERELEASE : "");
     }
 
     @Override

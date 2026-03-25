@@ -148,7 +148,7 @@ Requires JDK 25+ with `jpackage`. Produces a DMG containing:
 Using BEAST 3 as a Maven dependency
 -------------------------------------
 
-BEAST 3 artifacts are published to [GitHub Packages](https://github.com/CompEvol/beast3/packages) (and may also be published to [Maven Central](https://central.sonatype.com/) in the future). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
+BEAST 3 artifacts are published to [Maven Central](https://central.sonatype.com/namespace/io.github.compevol) and [GitHub Packages](https://github.com/CompEvol/beast3/packages). Projects like LPhyBEAST can depend on BEAST 3 without cloning and building locally.
 
 ### Repository and authentication
 
@@ -177,7 +177,7 @@ GitHub Packages requires authentication even for public repositories. Create a [
 </settings>
 ```
 
-If BEAST 3 artifacts are available on Maven Central, the `<repositories>` block and `settings.xml` authentication are not needed — Maven Central is the default repository.
+Since BEAST 3 artifacts are published to Maven Central, the `<repositories>` block and `settings.xml` authentication are not needed — Maven Central is the default repository.
 
 ### Add BEAST dependencies
 
@@ -187,7 +187,7 @@ For **headless / library** usage (no JavaFX dependency):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-base</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.0-beta1</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -198,7 +198,7 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-fx</artifactId>
-    <version>2.8.0-SNAPSHOT</version>
+    <version>2.8.0-beta1</version>
     <scope>provided</scope>
 </dependency>
 ```

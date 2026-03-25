@@ -14,6 +14,14 @@ public abstract class Version {
 
     public abstract String getDateString();
 
+    public boolean isPrerelease() {
+        return false;
+    }
+
+    public String getPrereleaseDescription() {
+        return null;
+    }
+
     public abstract String[] getCredits();
 
     public String getHTMLCredits() {

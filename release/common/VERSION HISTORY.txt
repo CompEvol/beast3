@@ -1,12 +1,18 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: February 2026
+Last updated: March 2026
 
-All issues can be viewed at https://github.com/CompEvol/beast2/issues
+All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
-Version 2.8.0 February 2026
+Version 2.8.0-beta1 March 2026
 	o introduce type system and beast.base.spec hierarchy
+	o Maven build system replaces Ant
+	o JPMS modules: beast.pkgmgmt, beast.base, beast.fx
+	o Java 25 required
+	o Colt dependency replaced with commons-math4-legacy
+	o Package manager supports Maven Central packages
+	o macOS DMG release packaging
 
 Version 2.7.8 June 2025
 	## BEAST

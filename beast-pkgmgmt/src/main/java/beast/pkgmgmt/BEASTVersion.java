@@ -1,7 +1,9 @@
 package beast.pkgmgmt;
 
 /**
- * Version information for BEAST.
+ * Version information for the beast-pkgmgmt module (package manager).
+ * <p>
+ * To cut a final release, set {@code PRERELEASE} to {@code null}.
  *
  * @author Alexei Drummond
  * @author Andrew Rambaut
@@ -15,7 +17,11 @@ public class BEASTVersion extends Version {
 
     private static final String DATE_STRING = "2002-2026";
 
-    private static final boolean IS_PRERELEASE = true;
+    /**
+     * Pre-release label appended to the version string (e.g. "beta1", "rc1").
+     * Set to {@code null} for a final release.
+     */
+    private static final String PRERELEASE = "beta1";
 
     private static final String PROGRAM_NAME = "BEAST";
 
@@ -28,9 +34,19 @@ public class BEASTVersion extends Version {
         return VERSION;
     }
 
+    @Override
+    public boolean isPrerelease() {
+        return PRERELEASE != null && !PRERELEASE.isEmpty();
+    }
+
+    @Override
+    public String getPrereleaseDescription() {
+        return PRERELEASE;
+    }
+
 	@Override
 	public String getVersionString() {
-        return "v" + VERSION + (IS_PRERELEASE ? " Prerelease" : "");
+        return "v" + VERSION + (isPrerelease() ? " " + PRERELEASE : "");
     }
 
     @Override
