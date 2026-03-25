@@ -83,6 +83,11 @@ mvn package -Dmaven.test.skip=true     # build once
 bin/beast examples/testHKY.xml          # headless BEAST (no JavaFX)
 bin/beast-fx examples/testHKY.xml       # BEAST with GUI
 bin/beauti                              # BEAUti
+bin/treeannotator input.trees output.tree
+bin/logcombiner -log run1.log -log run2.log -o combined.log
+bin/loganalyser output.log
+bin/packagemanager -list
+bin/applauncher
 ```
 
 Add `bin/` to your PATH to run from anywhere:
@@ -92,6 +97,8 @@ export PATH="$HOME/Git/beast3/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
 
 beast myanalysis.xml          # works from any directory
 beauti
+treeannotator input.trees output.tree
+packagemanager -list
 ```
 
 ### Using Maven exec:exec
