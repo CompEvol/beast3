@@ -73,9 +73,30 @@ BEAUti GUI tests use [TestFX](https://github.com/TestFX/TestFX) and run headless
 Running
 -------
 
-### From the command line
+### From any directory (recommended)
 
-Build the project, then use the `exec-maven-plugin` to launch BEAST applications with the correct module path:
+Build the project once, then use the launcher scripts in `bin/`:
+
+```bash
+mvn package -Dmaven.test.skip=true     # build once
+
+bin/beast examples/testHKY.xml          # headless BEAST (no JavaFX)
+bin/beast-fx examples/testHKY.xml       # BEAST with GUI
+bin/beauti                              # BEAUti
+```
+
+Add `bin/` to your PATH to run from anywhere:
+
+```bash
+export PATH="$HOME/Git/beast3/bin:$PATH"   # add to ~/.bashrc or ~/.zshrc
+
+beast myanalysis.xml          # works from any directory
+beauti
+```
+
+### Using Maven exec:exec
+
+From within the beast3 directory, you can also use the `exec-maven-plugin`:
 
 ```bash
 mvn install -DskipTests
@@ -91,7 +112,7 @@ mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
 ```
 
-The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application. The working directory is the project root, so file paths in `-Dbeast.args` are relative to there.
+The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application. The working directory is the project root, so file paths in `-Dbeast.args` are relative to there. Note: this approach only works from the beast3 project directory.
 
 ### From IntelliJ
 
