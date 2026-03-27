@@ -125,7 +125,7 @@ fi
 
 # version.xml must also be at Contents/version.xml (not just Contents/app/version.xml)
 # because BEASTClassLoader.initServices scans the grandparent of each JAR.
-cp "$REPO_ROOT/version.xml" "$OUTPUT/BEAST.app/Contents/version.xml"
+#cp "$REPO_ROOT/version.xml" "$OUTPUT/BEAST.app/Contents/version.xml"
 
 # jpackage strips bin/java from the bundled runtime — restore it so that
 # wrapper .app bundles and bin/ scripts can invoke java from the runtime.
