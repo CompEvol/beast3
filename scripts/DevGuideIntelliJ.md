@@ -34,16 +34,6 @@ If IntelliJ does not automatically pick up JDK 25:
 2. Set **SDK** to your JDK 25 installation.
 3. Set **Language level** to **25**.
 
-## One-time setup: install local JARs
-
-One dependency (`beagle.jar`) is not in Maven Central. It ships as a modular JAR (containing `module-info.class`); the corresponding `module-info.java` source lives in `lib/beagle/`. If you haven't already, install it from the terminal:
-
-```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-```
-
-Then reload Maven in IntelliJ (right-click the root `pom.xml` → **Maven → Reload project**).
-
 ## Run application in IntelliJ
 
 Create a [Run Configuration](https://www.jetbrains.com/help/idea/creating-and-running-your-first-java-application.html#create_jar_run_config):

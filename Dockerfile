@@ -47,8 +47,7 @@ RUN ldconfig
 
 ADD . ./
 
-# Install local-only modular JARs (beagle.jar, colt.jar)
-RUN mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar -q
+# Install local-only modular JARs (colt.jar); beagle is resolved from Maven Central
 RUN mvn install:install-file -Dfile=lib/colt.jar -DgroupId=io.github.compevol -DartifactId=colt -Dversion=1.0 -Dpackaging=jar -q
 
 RUN echo "#!/bin/bash\n" \

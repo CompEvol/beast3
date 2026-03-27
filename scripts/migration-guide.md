@@ -13,7 +13,7 @@ cd beast3
 mvn install -DskipTests
 ```
 
-This installs all BEAST 3 modules (including beagle) into `~/.m2/repository/` so your package can depend on them.
+This installs all BEAST 3 modules into `~/.m2/repository/` so your package can depend on them. BEAGLE is resolved automatically from Maven Central.
 
 A complete working example is available in the [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) repository — a ready-to-copy Maven project with a custom `ScalarDistribution`, operator, tests, and BEAST XML using the strongly-typed spec API.
 

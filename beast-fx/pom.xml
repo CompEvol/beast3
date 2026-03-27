@@ -47,12 +47,10 @@
             <artifactId>javafx-web</artifactId>
         </dependency>
 
-        <!-- Local-repo JARs (installed from lib/) -->
+        <!-- BEAGLE (GPU/CPU phylogenetic likelihood library) -->
         <dependency>
-            <groupId>io.github.compevol</groupId>
+            <groupId>io.github.beagle-dev</groupId>
             <artifactId>beagle</artifactId>
-            <version>1.0</version>
-            <optional>true</optional>
         </dependency>
 
         <!-- Testing -->

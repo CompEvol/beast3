@@ -5,6 +5,11 @@ Last updated: March 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta2 March 2026
+	o BEAGLE Java bindings resolved from Maven Central (io.github.beagle-dev:beagle:1.0.0)
+	o UCRelaxedClockModel: rateDistInput accepts NonNegativeReal distributions #50
+	o macOS DMG: shared JRE signed with entitlements #46
+
 Version 2.8.0-beta1 March 2026
 	o introduce type system and beast.base.spec hierarchy
 	o Maven build system replaces Ant

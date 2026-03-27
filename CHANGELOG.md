@@ -11,7 +11,7 @@ For class-by-class migration mappings and step-by-step porting instructions, see
 - **Ant replaced by Maven** — multi-module POM (`beast-pkgmgmt`, `beast-base`, `beast-fx`). Dependencies are declared in `pom.xml` and resolved automatically; no manual JAR management.
 - **Java 25 required** — target release is Java 25 (was Java 8 / 11 in BEAST 2). A bundled JavaFX JDK is no longer needed.
 - **JPMS modules** — each subproject has a `module-info.java`. The core inference engine (`beast.base`) has no JavaFX dependency and can run headlessly; the GUI (`beast.fx`) is a separate module. All three modules are declared as `open module` for reflection-based XML unmarshalling.
-- **Project structure** — `beast3/` root contains `beast-pkgmgmt/`, `beast-base/`, `beast-fx/`, and `lib/` (local modular JAR for `beagle`).
+- **Project structure** — `beast3/` root contains `beast-pkgmgmt/`, `beast-base/`, and `beast-fx/`. BEAGLE is resolved from [Maven Central](https://repo1.maven.org/maven2/io/github/beagle-dev/beagle/).
 
 ## Strongly Typed Spec System
 

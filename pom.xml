@@ -65,6 +65,7 @@
         <assertj.version>3.20.2</assertj.version>
         <maven-resolver.version>2.0.16</maven-resolver.version>
         <slf4j.version>2.0.16</slf4j.version>
+        <beagle.version>1.0.0</beagle.version>
         <surefire.excludedGroups>slow</surefire.excludedGroups>
     </properties>
 
@@ -80,6 +81,13 @@
                 <groupId>io.github.compevol</groupId>
                 <artifactId>beast-base</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <!-- BEAGLE -->
+            <dependency>
+                <groupId>io.github.beagle-dev</groupId>
+                <artifactId>beagle</artifactId>
+                <version>${beagle.version}</version>
             </dependency>
 
             <!-- Commons Math 4 -->

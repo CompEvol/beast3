@@ -50,32 +50,8 @@ jobs:
           echo "Publishing version: $VERSION"
           mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
 
-      - name: Install beagle.jar to local Maven repo
-        run: >
-          mvn install:install-file
-          -Dfile=lib/beagle.jar
-          -DgroupId=io.github.compevol
-          -DartifactId=beagle
-          -Dversion=1.0
-          -Dpackaging=jar
-
       - name: Build and test
         run: mvn verify
-
-      - name: Deploy beagle.jar to GitHub Packages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        continue-on-error: true  # 409 Conflict if already published
-        run: >
-          mvn deploy:deploy-file
-          -Dfile=lib/beagle.jar
-          -DgroupId=io.github.compevol
-          -DartifactId=beagle
-          -Dversion=1.0
-          -Dpackaging=jar
-          -DrepositoryId=github
-          -Durl=https://maven.pkg.github.com/CompEvol/beast3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy all modules to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'

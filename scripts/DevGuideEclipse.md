@@ -42,16 +42,6 @@ To set the JDK per-project (if you have other projects on older JDKs):
 2. Select the **JRE System Library** entry and click **Edit**.
 3. Choose **Alternate JRE** or **Execution environment** and select JDK 25.
 
-## One-time setup: install local JARs
-
-One dependency (`beagle.jar`) is not in Maven Central. It ships as a modular JAR (containing `module-info.class`); the corresponding `module-info.java` source lives in `lib/beagle/`. If you haven't already, install it from the terminal:
-
-```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-```
-
-Then update the Maven projects in Eclipse: select all beast3 modules, right-click → **Maven → Update Project** (or press **Alt+F5**).
-
 ## Run application in Eclipse
 
 Create a [Run Configuration](https://help.eclipse.org/latest/topic/org.eclipse.jdt.doc.user/tasks/tasks-java-local-configuration.htm):

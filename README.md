@@ -30,10 +30,7 @@ Project Structure
 beast3/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module — no JavaFX dependency)
-├── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
-└── lib/                  (local JARs + module-info sources)
-    ├── beagle.jar        (modular JAR — module beagle)
-    └── beagle/           (module-info.java source)
+└── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
 ```
 
 Building
@@ -43,14 +40,6 @@ Building
 
 - **Java 25** — install from [Azul Zulu](https://www.azul.com/downloads/?package=jdk#zulu) or any JDK 25+ distribution.
 - **Maven 3.9+** — install from [maven.apache.org](https://maven.apache.org/) or via your package manager.
-
-### One-time setup: install local JARs
-
-One dependency (`beagle.jar`) is not in Maven Central. It ships as a modular JAR (containing `module-info.class`); the corresponding `module-info.java` source lives in `lib/beagle/`. Install it to your local repository:
-
-```bash
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
-```
 
 ### Compile
 
@@ -158,7 +147,7 @@ For **headless / library** usage (no JavaFX dependency):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-base</artifactId>
-    <version>2.8.0-beta1</version>
+    <version>2.8.0-beta2</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -169,7 +158,7 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-fx</artifactId>
-    <version>2.8.0-beta1</version>
+    <version>2.8.0-beta2</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -192,7 +181,6 @@ To develop against an unreleased SNAPSHOT version, install BEAST 3 to your local
 
 ```bash
 cd /path/to/beast3
-mvn install:install-file -Dfile=lib/beagle.jar -DgroupId=io.github.compevol -DartifactId=beagle -Dversion=1.0 -Dpackaging=jar
 mvn install -DskipTests
 ```
 
