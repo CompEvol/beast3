@@ -149,14 +149,21 @@ immediately invalidates the outer seal.
 **BEAST.app (4 steps):**
 
 1. **Sign JRE binaries** — `find Contents/runtime -type f` matching `.dylib`,
-   `.so`, or executable (`+111`). Signs the entire bundled JRE in one pass.
+   `.so`, or executable (`+111`). Signs the entire bundled JRE in one pass,
+   including the shared `bin/java` binary used by all wrapper apps and `bin/`
+   scripts. **`--entitlements` must be passed here.** `bin/java` is copied from
+   the build JDK and carries a stale signature tied to the source JDK bundle;
+   without re-signing it with `entitlements.plist` under Hardened Runtime,
+   running it produces `Trace/BPT trap: 5` (SIGTRAP — the kernel kills the
+   process because the signature is invalid in its new bundle context).
 2. **Sign native launcher** — `Contents/MacOS/BEAST` only. Signing all of
    `MacOS/` was tried but caused duplicate-signing warnings.
 3. **Seal outer bundle** — `codesign --force` with `--entitlements` on
    `BEAST.app`. Computes the resource seal over all `Contents/` files and
    embeds the Developer ID signature.
-4. **Verify** — `--verify --deep` plus two strict spot-checks on `BEAST` and
-   `libjli.dylib` (the two known trouble-makers for JVM bundle signing).
+4. **Verify** — `--verify --deep` plus three strict spot-checks on `BEAST`,
+   `libjli.dylib`, and `bin/java` (invalid signature on `bin/java` causes
+   `Trace/BPT trap: 5`).
 
 **Wrapper apps** (`sign_wrapper_app()`, called for each of the 5 wrappers):
 

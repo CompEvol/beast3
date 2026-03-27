@@ -382,20 +382,29 @@ echo "==> Step 3b: Code-signing all .app bundles..."
 
 app="$OUTPUT/BEAST.app"
 # Step 1 — Sign all JRE binaries (deepest first).
-# Targets every .dylib, .so, and executable (+x) inside the bundled runtime.
+# Targets every .dylib, .so, and executable (+x) inside the bundled runtime,
+# including the shared bin/java binary that wrapper apps and bin/ scripts invoke.
 # Must be done before sealing the runtime bundle or the outer BEAST.app bundle.
+#
+# IMPORTANT: --entitlements must be passed here. bin/java is copied from the
+# build JDK and retains a stale code signature tied to the source JDK bundle.
+# Without re-signing it with entitlements.plist under Hardened Runtime, running
+# bin/java directly produces "Trace/BPT trap: 5" (SIGTRAP — kernel kills the
+# process because the signature is invalid in its new bundle context).
 echo "Signing JRE binaries ..."
 find "$app/Contents/runtime" -type f \( -name "*.dylib" -or -name "*.so" -or -perm +111 \) \
-    -exec codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" {} +
-
+    -exec codesign --force --options runtime --timestamp \
+           --entitlements "$ENTITLEMENTS" \
+           --sign "$CODESIGN_IDENTITY" {} +
+         
 # Step 2 — Sign the BEAST native launcher binary.
 # Only the BEAST binary in MacOS/ is signed explicitly; other files in MacOS/
 # (if any) are sealed by the outer bundle signature in step 3. Signing the
 # whole MacOS/ directory was tried but caused duplicate-signing warnings.
 echo "Signing MacOS binaries ..."
-#find "$app/Contents/MacOS" -type f \
-#    -exec codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" {} +
-codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$app/Contents/MacOS/BEAST"
+codesign --force --options runtime --timestamp \
+           --entitlements "$ENTITLEMENTS" \
+           --sign "$CODESIGN_IDENTITY" "$app/Contents/MacOS/BEAST"
 
 # Step 3 — Seal the outer BEAST.app bundle.
 # This computes the resource seal over all Contents/ files and embeds our
@@ -407,14 +416,16 @@ codesign --force --sign "$CODESIGN_IDENTITY" \
          --entitlements "$ENTITLEMENTS" "$app"
 
 # Step 4 — Verify the complete bundle seal.
-# --deep checks all nested bundles (runtime, helpers). The two spot-checks below
-# target the known trouble-makers: the native launcher (most likely to have a
-# stale or malformed Mach-O signature) and libjli.dylib (the JVM launch library,
-# which lives inside the nested runtime bundle and must carry a valid seal).
+# --deep checks all nested bundles (runtime, helpers). The three spot-checks
+# below target the known trouble-makers: the native launcher (most likely to
+# have a stale or malformed Mach-O signature), libjli.dylib (the JVM launch
+# library inside the nested runtime bundle), and bin/java (the shared binary
+# used by all wrapper apps — invalid signature here causes "Trace/BPT trap: 5").
 echo "Verifying ..."
 codesign --verify --deep --verbose=2 "$app"
 codesign -vvv --strict "$app/Contents/MacOS/BEAST"
 codesign -vvv --strict "$app/Contents/runtime/Contents/MacOS/libjli.dylib"
+codesign -vvv --strict "$app/Contents/runtime/Contents/Home/bin/java"
 
 echo "    BEAST.app signed."
 
@@ -441,7 +452,7 @@ sign_wrapper_app() {
            codesign --force --sign "$CODESIGN_IDENTITY" \
                     --options runtime --timestamp "$file" 2>/dev/null || true
        done
-
+    
     # 2. Seal the outer bundle — covers the MacOS/ shell-script launcher and
     #    all Contents/ files in a single code signature.
     #    Note: wrapper apps are pure shell-script bundles with no JVM or JIT;
@@ -456,6 +467,8 @@ sign_wrapper_app() {
 
     # 3. Verify the wrapper bundle seal.
     codesign --verify --deep --verbose=2 "$app"
+    app_base_name="${app_name%.app}"
+    codesign -vvv --strict "$app/Contents/MacOS/${app_base_name}"
     echo "    ${app_name} signed."
 }
 
