@@ -35,7 +35,8 @@
 
         <!-- OneOnX -->
         <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
-            <![CDATA[        <distr spec="beast.base.inference.distribution.OneOnX"/>
+            <![CDATA[        
+            <distr spec="beast.base.inference.distribution.OneOnX"/>
 ]]>
         </subtemplate>
 
