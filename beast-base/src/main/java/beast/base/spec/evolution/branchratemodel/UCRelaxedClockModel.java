@@ -11,6 +11,7 @@ import beast.base.inference.CalculationNode;
 import beast.base.inference.StateNode;
 import beast.base.inference.util.InputUtil;
 import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
@@ -42,7 +43,7 @@ import java.util.Arrays;
 public class UCRelaxedClockModel extends Base {
     // Note: use RealScalar<Real> not RealScalar<PositiveReal>,
     // otherwise TruncatedReal distribution would not be allowed
-    final public Input<ScalarDistribution<RealScalar<Real>, Double>> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
+    final public Input<ScalarDistribution<RealScalar<? extends NonNegativeReal>, Double>> rateDistInput = new Input<>("distr", "the distribution governing the rates among branches. Must have mean of 1. The clock.rate parameter can be used to change the mean rate.", Input.Validate.REQUIRED);
     final public Input<IntVector<NonNegativeInt>> categoryInput = new Input<>("rateCategories", "the rate categories associated with nodes in the tree for sampling of individual rates among branches."); // , Input.Validate.REQUIRED);
     final public Input<Integer> numberOfDiscreteRates = new Input<>("numberOfDiscreteRates", "the number of discrete rates to approximate the rate distribution by. "
     		+ "With category parameterisation, a value <= 0 will cause the number of categories to be set equal to the number of branches in the tree. "
@@ -68,8 +69,8 @@ public class UCRelaxedClockModel extends Base {
     // if using categories, then it is set to be true; otherwise, it is set to be false.
     //boolean usingcategories;
 
-    ScalarDistribution<RealScalar<Real>, Double> distribution; //the distribution of the rates
-    public ScalarDistribution<RealScalar<Real>, Double> getDistribution() {return distribution;}
+    ScalarDistribution<RealScalar<? extends NonNegativeReal>, Double> distribution; //the distribution of the rates
+    public ScalarDistribution<RealScalar<? extends NonNegativeReal>, Double> getDistribution() {return distribution;}
 
     private RealScalar<PositiveReal> meanRate;
     public RealScalar<PositiveReal> getMeanRate() {return meanRate;}
