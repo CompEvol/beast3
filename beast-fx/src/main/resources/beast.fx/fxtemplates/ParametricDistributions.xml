@@ -35,8 +35,7 @@
 
         <!-- OneOnX -->
         <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
-            <![CDATA[
-        <distr spec="beast.base.inference.distribution.OneOnX"/>
+            <![CDATA[        <distr spec="beast.base.inference.distribution.OneOnX"/>
 ]]>
         </subtemplate>
 
@@ -220,7 +219,7 @@
             IID/offset/=ParametricDistributions/IID/offset/'>
             <![CDATA[
 			<distr spec="beast.base.spec.inference.distribution.IID">
-	            <param spec="beast.base.spec.inference.parameter.RealVectorParam" dimension="2" domain="Real" lower="1.0E-9" upper="Infinity">1.0</param>
+	            <param spec="beast.base.spec.inference.parameter.RealVectorParam" dimension="2" domain="Real">1.0</param>
         		<distr spec="beast.base.spec.inference.distribution.Uniform">
 		        	<lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="-1e307" estimate="false"/>
 		        	<upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1e307" estimate="false"/>
