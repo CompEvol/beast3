@@ -500,3 +500,41 @@ beast.run();
 `parseArgs` accepts: `-seed <long|random>`, `-threads <int>`, `-resume`,
 `-overwrite`, `-prefix <name>`, `-D <key=value,...>`, and a positional
 XML/JSON file path.
+
+## Future work
+
+Remaining improvements identified during the 2026 refactoring, roughly in
+priority order:
+
+1. **Move `find()` to `BEASTClassLoader`.** The `find(Class, String)`,
+   `find(String, String)`, and `find(Class, String[])` methods on
+   `PackageManager` are class-discovery operations, not package management.
+   External packages (beast-classic, feast) already import `BEASTClassLoader`
+   alongside `PackageManager` for these calls. Moving them would leave
+   `PackageManager` with no class-loading responsibility. The related helpers
+   `loadAllClasses()`, `isSubclass()`, and `hasInterface()` would move too.
+
+2. **Deprecate unused `PackageManager` delegates.** No external package calls
+   `prepareForInstall`, `installPackages`, `uninstallPackage`,
+   `getRepositoryURLs`, or `saveRepositoryURLs` — those are only used by
+   `JPackageDialog` and `PackageManagerCLI` within the beast3 repo.
+   Update those callers to use `PackageInstaller` / `PackageRepository`
+   directly and deprecate the `PackageManager` wrappers.
+
+3. **Update beast-base and beast-fx to call extracted classes directly.**
+   Since they're in the same repo, there's no compatibility concern. This
+   would thin the delegate layer on `PackageManager` and make the call
+   graph easier to follow.
+
+4. **Thread safety of `useArchive`.** The flag is now on `PackageInstaller`
+   but is still static mutable state toggled externally. Pass it as a
+   parameter to `getPackageDir` / `installPackages` / `uninstallPackage`
+   instead.
+
+5. **Cross-system conflict detection.** Warn when the same package is
+   installed via both Maven and CBAN ZIP. Currently the two systems are
+   independent and only collide at the JPMS module layer level.
+
+6. **Package integrity verification.** Add SHA-256 checksums to the CBAN
+   `packages2.xml` format and verify on download. This is an ecosystem-level
+   change requiring coordination with CBAN maintainers.
