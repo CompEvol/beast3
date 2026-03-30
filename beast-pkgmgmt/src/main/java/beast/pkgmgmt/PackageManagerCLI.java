@@ -25,11 +25,7 @@
 
 package beast.pkgmgmt;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
 import java.net.*;
 import java.util.*;
 
@@ -39,6 +35,7 @@ import java.util.*;
  */
 public class PackageManagerCLI {
 
+    /** Package names shown as "Recommended" in the CLI listing. */
     private final static Set<String> RECOMMENDED_PACKAGES = new HashSet<>(Arrays.asList("ORC", "starbeast3", "CCD"));
 
     /**
@@ -180,12 +177,12 @@ public class PackageManagerCLI {
             }
 
             if (arguments.hasOption("update")) {
-            	updatePackages(PackageManager.UpdateStatus.AUTO_CHECK_AND_ASK, false);
+            	PackageManager.updatePackages(PackageManager.UpdateStatus.AUTO_CHECK_AND_ASK, false);
             	return;
             }
 
             if (arguments.hasOption("updatenow")) {
-            	updatePackages(PackageManager.UpdateStatus.AUTO_UPDATE, false);
+            	PackageManager.updatePackages(PackageManager.UpdateStatus.AUTO_UPDATE, false);
             	return;
             }
 
@@ -460,173 +457,4 @@ public class PackageManagerCLI {
 		buf.deleteCharAt(buf.length() - 1);
 		return buf.toString();
 	}
-
-    /** check whether there are new packages to install, and if so install them
-     * either after asking the user, or without asking (depending on updateStatus).
-     * @param updateStatus
-     */
-    public static void updatePackages(PackageManager.UpdateStatus updateStatus, boolean useGUI) {
-    	if (updateStatus == PackageManager.UpdateStatus.DO_NOT_CHECK) {
-    		return;
-    	}
-
-    	// find available and installed packages
-        TreeMap<String, Package> packageMap = new TreeMap<String, Package>(
-        		new Comparator<String>() {
-			@Override
-			public int compare(String s1, String s2) {
-	        	return PackageManager.comparePackageNames(s1, s2);
-			}
-        });
-        try {
-			PackageManager.addAvailablePackages(packageMap);
-		} catch (PackageRepository.PackageListRetrievalException e) {
-			// cannot access list right now, so try again next time
-			return;
-		}
-        PackageManager.addInstalledPackages(packageMap);
-
-        // check whether any installed package has an update
-        Map<Package, PackageVersion> packagesToInstall = new LinkedHashMap<Package, PackageVersion>();
-        for (String packageName : packageMap.keySet()) {
-        	Package _package = packageMap.get(packageName);
-        	if (_package.isInstalled()) {
-        		if (_package.getLatestVersion() != null && _package.getLatestVersion().compareTo(_package.getInstalledVersion()) > 0) {
-        			packagesToInstall.put(_package, _package.getLatestVersion());
-        		}
-        	}
-        }
-
-        // check whether recommended packages are already installed
-        for (String packageName : RECOMMENDED_PACKAGES) {
-        	Package _package = packageMap.get(packageName);
-        	if (_package != null && !_package.isInstalled()) {
-        		packagesToInstall.put(_package, _package.getLatestVersion());
-        	}
-        }
-
-
-        if (packagesToInstall.size() == 0) {
-        	// nothing to install
-        	return;
-        }
-
-        // do we need to ask before proceeding?
-    	if (updateStatus != PackageManager.UpdateStatus.AUTO_UPDATE) {
-    		if (useGUI) {
-	    		StringBuilder buf = new StringBuilder();
-	    		buf.append("<table><tr><td>Package name</td><td>New version</td><td>Installed</td></tr>");
-	    		for (Package _package : packagesToInstall.keySet()) {
-
-	    			buf.append("<tr><td>" + _package.packageName + "</td>"
-	    					+ "<td>" + _package.getLatestVersion()+ "</td>"
-	    					+ "<td>"
-	    					+ (RECOMMENDED_PACKAGES.contains(_package.packageName) ? " Not installed yet, but recommended!" : _package.getInstalledVersion())
-	    					+ "</td></tr>");
-	    		}
-	    		buf.append("</table>");
-	    		String [] options = new String[]{"No, never check again", "Not now", "Yes", "Always install without asking"};
-	    		try {
-	    			final boolean [] update = new boolean[] {false};
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							int response = JOptionPane.showOptionDialog(null, "<html><h2>New packages are available to install:</h2>" +
-									buf.toString() +
-									"Do you want to install?</html>", "Package Manager", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-							        null, options, options[2]);
-							switch (response) {
-							case 0: // No, never check again
-					            Utils6.saveBeautiProperty("package.update.status", PackageManager.UpdateStatus.DO_NOT_CHECK.toString());
-								return;
-							case 1: // No, check later
-					            Utils6.saveBeautiProperty("package.update.status", PackageManager.UpdateStatus.AUTO_CHECK_AND_ASK.toString());
-								return;
-							case 2: // Yes, ask next time
-					            Utils6.saveBeautiProperty("package.update.status", PackageManager.UpdateStatus.AUTO_CHECK_AND_ASK.toString());
-					            update[0] = true;
-								break;
-							case 3: // Always install automatically
-					            Utils6.saveBeautiProperty("package.update.status", PackageManager.UpdateStatus.AUTO_UPDATE.toString());
-					            update[0] = true;
-								break;
-							default: // e.g. escape-key gets us here
-								return;
-							}
-						}
-					});
-					if (!update[0]) {
-						return;
-					}
-				} catch (InvocationTargetException | InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-    		} else {
-    			System.out.println("New packages are available to install:");
-	    		System.out.println("Package name    New version      Installed");
-	    		for (Package _package : packagesToInstall.keySet()) {
-	    			String padding = _package.packageName.length() < 16 ?
-	    					"                ".substring(_package.packageName.length()) : "";
-	    			String latestVersion = _package.getLatestVersion() + "";
-	    			String padding2 = latestVersion.length() < 16 ?
-	    					"                ".substring(latestVersion.length()) : "";
-	    			System.out.println(_package.packageName + padding +
-	    					_package.getLatestVersion() + padding2 +
-	    					(RECOMMENDED_PACKAGES.contains(_package.packageName) ? " Not installed yet, but recommended!" : _package.getInstalledVersion()));
-	    		}
-    			System.out.println("Do you want to install (y/n)?");
-                System.out.flush();
-                final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-                String msg = "n";
-				try {
-					msg = stdin.readLine();
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-                if (!msg.toLowerCase().equals("y")) {
-                	System.out.println("Exiting now");
-                	return;
-                }
-    		}
-    	}
-
-        // install packages that can be updated
-        try {
-            PackageManager.populatePackagesToInstall(packageMap, packagesToInstall);
-
-            PackageManager.prepareForInstall(packagesToInstall, false, null);
-
-	        if (PackageManager.getToDeleteListFile().exists()) {
-	        	if (useGUI) {
-	        		PackageManager.warning(
-	                    "<html><body><p style='width: 200px'>Upgrading packages on your machine requires BEAUti " +
-	                            "to restart. Shutting down now.</p></body></html>");
-	        	} else {
-                    System.out.println("Upgrading packages on your machine requires BEAUti to restart.");
-	        	}
-	            System.exit(0);
-	        }
-
-	        Map<String,String> dirList = PackageManager.installPackages(packagesToInstall, false, null);
-	        for (String packageName : dirList.keySet()) {
-	        	System.out.println("Installed " + packageName + " in " + dirList.get(packageName));
-	        }
-		} catch (DependencyResolver.DependencyResolutionException e) {
-	        if (useGUI) {
-	        	PackageManager.warning("Install failed because: " + e.getMessage());
-			} else {
-				System.err.println("Install failed because " + e.getMessage());
-			}
-			e.printStackTrace();
-		} catch (IOException e) {
-	        if (useGUI) {
-	        	PackageManager.warning("Install failed because: " + e.getMessage());
-			} else {
-				System.err.println("Install failed because " + e.getMessage());
-			}
-			e.printStackTrace();
-		}
-    }
-
 }
