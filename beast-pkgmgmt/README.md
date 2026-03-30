@@ -535,6 +535,18 @@ priority order:
    installed via both Maven and CBAN ZIP. Currently the two systems are
    independent and only collide at the JPMS module layer level.
 
-6. **Package integrity verification.** Add SHA-256 checksums to the CBAN
+6. **Break circular callbacks in `PackageInstaller`.** `processInstallList()`
+   calls back into `PackageManager.addAvailablePackages()` to fetch the
+   package list before resuming a failed install. The caller
+   (`PackageManager.loadExternalJars`) should populate the map first and
+   pass it in. Similarly, `hasNamespaceClash()` calls
+   `PackageManager.parseServices()` — move `parseServices` to a shared
+   location (it's pure XML parsing, not package management).
+
+7. **De-duplicate `RECOMMENDED_PACKAGES`.** The set exists on both
+   `PackageManager` (update policy) and `PackageManagerCLI` (display).
+   Expose it once as a package-visible constant on `PackageManager`.
+
+8. **Package integrity verification.** Add SHA-256 checksums to the CBAN
    `packages2.xml` format and verify on download. This is an ecosystem-level
    change requiring coordination with CBAN maintainers.
