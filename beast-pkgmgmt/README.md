@@ -44,9 +44,13 @@ classes are visible to the BEAST runtime without modifying the boot layer.
 
 | Class | Role |
 |-------|------|
-| `PackageManager` | Package installation, dependency checking, and `ModuleLayer` creation |
+| `PackageManager` | Orchestrator: package discovery, JPMS `ModuleLayer` creation, Maven integration, and delegate façade for backwards compatibility |
 | `BEASTClassLoader` | Facade for class loading and service registry across all layers |
 | `MavenPackageResolver` | Resolves Maven coordinates to local JAR paths via Apache Maven Resolver |
+| `DependencyResolver` | Resolves transitive package dependencies and checks installed dependency health |
+| `PackageRepository` | Fetches available-package lists from CBAN repository URLs, manages custom repository URLs |
+| `PackageInstaller` | Installs and uninstalls ZIP packages (download, unzip, namespace-clash check, file cleanup) |
+| `PackageManagerCLI` | CLI entry point (`main()`), pretty-printing, and interactive update logic |
 
 ### Package distribution formats
 
@@ -170,13 +174,17 @@ will never have their IDE version conflict with an old installed version.
 
 When BEAST starts, `PackageManager.loadExternalJars()` runs:
 
-1. **Process pending installs/deletes** from previous BEAUti sessions
-2. **Load Maven packages** — read `maven-packages.xml`, resolve each
+1. **Process pending installs/deletes** — `PackageInstaller.processDeleteList()`
+   and `PackageInstaller.processInstallList()` complete any interrupted
+   operations from previous BEAUti sessions (Windows jar-locking workaround).
+2. **Check installed dependencies** — `DependencyResolver.checkInstalled()`
+   warns about any broken dependency constraints.
+3. **Load Maven packages** — read `maven-packages.xml`, resolve each
    coordinate via `MavenPackageResolver`, and create a `ModuleLayer` per
    package. Module names are recorded in the "already loaded" set.
-3. **Scan package directories** — for each installed ZIP package, find its
+4. **Scan package directories** — for each installed ZIP package, find its
    JARs, parse `version.xml` for service declarations, and call
-   `createAndRegisterModuleLayer()`. Modules already loaded in step 2 are
+   `createAndRegisterModuleLayer()`. Modules already loaded in step 3 are
    skipped, so Maven packages take precedence over legacy ZIP packages.
 
 ## ModuleLayer creation
@@ -473,7 +481,7 @@ will find classes from both the boot layer and any installed packages.
 | `PackageManager.installMavenPackage(groupId, artifactId, version)` | Install a Maven package by coordinate. Downloads JARs to the local cache and adds the coordinate to `maven-packages.xml`. |
 | `PackageManager.uninstallMavenPackage(groupId, artifactId)` | Remove a Maven package from `maven-packages.xml`. Cached JARs are left in place. |
 | `PackageManager.addInstalledPackages(Map<String, Package>)` | Populate a map with all currently installed packages (both Maven and ZIP). |
-| `PackageManager.addAvailablePackages(Map<String, Package>)` | Populate a map with packages available from remote repositories (CBAN + Maven Central). |
+| `PackageManager.addAvailablePackages(Map<String, Package>)` | Populate a map with packages available from remote repositories (CBAN). Delegates to `PackageRepository`. |
 | `PackageManager.initialise()` | Initialise internal state (package lists, etc.). Called automatically by most other methods. |
 | `BEASTClassLoader.initServices()` | Scan classpath and `BEAST_PACKAGE_PATH` for `version.xml` files and register their `<service>` entries. |
 

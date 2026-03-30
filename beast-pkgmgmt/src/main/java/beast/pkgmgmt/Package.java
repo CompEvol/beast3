@@ -26,9 +26,8 @@ public class Package {
         this.packageName = name;
         this.description = "";
 
-        // this class needs to be java6 compatible, so no <> notation
-        availableVersionURLs = new TreeMap<PackageVersion, URL>();
-        availableVersionDeps = new TreeMap<PackageVersion, Set<PackageDependency>>();
+        availableVersionURLs = new TreeMap<>();
+        availableVersionDeps = new TreeMap<>();
     }
 
     public String getName() {
@@ -169,8 +168,7 @@ public class Package {
      * @return list of available package versions, sorted in order of decreasing version.
      */
     public List<PackageVersion> getAvailableVersions() {
-        // this class needs to be java6 compatible, so no <> notation
-        List<PackageVersion> versionList = new ArrayList<PackageVersion>(availableVersionURLs.keySet());
+        List<PackageVersion> versionList = new ArrayList<>(availableVersionURLs.keySet());
         Collections.sort(versionList);
         Collections.reverse(versionList);
         return versionList;

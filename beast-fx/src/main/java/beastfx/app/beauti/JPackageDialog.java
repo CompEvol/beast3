@@ -294,7 +294,7 @@ public class JPackageDialog extends DialogPane {
             	dataTable.setItems(packages);
             	dataTable.refresh();
             }
-        } catch (PackageManager.PackageListRetrievalException e) {
+        } catch (beast.pkgmgmt.PackageRepository.PackageListRetrievalException e) {
         	StringBuilder msgBuilder = new StringBuilder(e.getMessage() + "\n");
             if (e.getCause() instanceof IOException)
                 msgBuilder.append(NO_CONNECTION_MESSAGE.replaceAll("\\.", ".\n"));
@@ -406,7 +406,7 @@ public class JPackageDialog extends DialogPane {
 
                 setCursor(Cursor.DEFAULT);
 
-            } catch (DependencyResolutionException | IOException ex) {
+            } catch (beast.pkgmgmt.DependencyResolver.DependencyResolutionException | IOException ex) {
                 Alert.showMessageDialog(null, "Install failed because: " + ex.getMessage());
                 setCursor(Cursor.DEFAULT);
             }

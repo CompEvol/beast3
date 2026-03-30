@@ -1,10 +1,11 @@
 package beast.pkgmgmt;
 
+import java.util.Arrays;
+
 /**
- * Note: this class has a natural ordering that is not necessarily
- * consistent with equals(). The definition of equals() tests for
- * equality of version strings, while (for example) compareTo() returns
- * 0 for versions with version strings "2.0" and "2".
+ * A version identifier for BEAST packages.
+ * Natural ordering is consistent with equals: versions like "2.0" and "2"
+ * are considered equal by both compareTo and equals.
  *
  * @author Tim Vaughan <tgvaughan@gmail.com>
  */
@@ -103,24 +104,34 @@ public class PackageVersion extends Version implements Comparable<PackageVersion
     }
 
     /**
-     * Compare with object o.
-     *
-     * @param o object with which to test for equality.
-     * @return true iff the version strings are exactly equal.
+     * Two PackageVersions are equal when {@code compareTo} returns 0,
+     * so that "2.0" and "2" are treated as the same version everywhere.
      */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
-        PackageVersion that = (PackageVersion) o;
-
-        return versionString.equals(that.versionString);
-
+        return compareTo((PackageVersion) o) == 0;
     }
 
+    /**
+     * Hash code consistent with {@link #equals}: normalizes by splitting
+     * on dots, stripping trailing zero components, and hashing the result.
+     */
     @Override
     public int hashCode() {
-        return versionString.hashCode();
+        String[] parts = versionString.split("\\.");
+        int last = parts.length;
+        while (last > 1) {
+            String part = parts[last - 1];
+            int numeric = Integer.parseInt("0" + part.replaceAll("(^[0-9]*).*$", "$1"));
+            String suffix = part.replaceAll("^[0-9]*(.*)$", "$1");
+            if (numeric == 0 && suffix.isEmpty()) {
+                last--;
+            } else {
+                break;
+            }
+        }
+        return Arrays.hashCode(Arrays.copyOf(parts, last));
     }
 }

@@ -81,26 +81,19 @@ public class PackageManager {
     public enum UpdateStatus {AUTO_CHECK_AND_ASK, AUTO_UPDATE, DO_NOT_CHECK};
 
     // public final static String[] IMPLEMENTATION_DIR = {"beast", "snap"};
-    public final static String TO_DELETE_LIST_FILE = "toDeleteList";
-    public final static String TO_INSTALL_LIST_FILE = "toInstallList";
+    public final static String TO_DELETE_LIST_FILE = PackageInstaller.TO_DELETE_LIST_FILE;
+    public final static String TO_INSTALL_LIST_FILE = PackageInstaller.TO_INSTALL_LIST_FILE;
     
     public final static String BEAST_PACKAGE_NAME = "BEAST";
     public final static String BEAST_BASE_PACKAGE_NAME = "BEAST.base";
 
-    public final static String PACKAGES_XML = "https://raw.githubusercontent.com/CompEvol/CBAN/master/packages" + 
-    		BEASTVersion.INSTANCE.getMajorVersion() + ".xml";
-    public final static String PACKAGES_XML_BACKUP = "https://bitbucket.org/rrb/cbanclone/raw/master/packages" +
-    		BEASTVersion.INSTANCE.getMajorVersion() + ".xml";
+    public final static String PACKAGES_XML = PackageRepository.PACKAGES_XML;
+    public final static String PACKAGES_XML_BACKUP = PackageRepository.PACKAGES_XML_BACKUP;
 
-    private final static Set<String> RECOMMENDED_PACKAGES = new HashSet<>(Arrays.asList("ORC", "starbeast3", "CCD"));
-
-    public final static String ARCHIVE_DIR = "archive";
-    
-    // flag to indicate archive directory and version numbers in directories are required
-    private static boolean useArchive = false;
+    public final static String ARCHIVE_DIR = PackageInstaller.ARCHIVE_DIR;
     
     public static void useArchive(boolean _useArchive) {
-    	useArchive = _useArchive;
+    	PackageInstaller.useArchive(_useArchive);
     }
     
     public static final String INSTALLED = "installed";
@@ -114,16 +107,11 @@ public class PackageManager {
 
     /**
      * Exception thrown when reading a package repository fails.
+     * @see PackageRepository.PackageListRetrievalException
      */
-    public static class PackageListRetrievalException extends Exception {
+    public static class PackageListRetrievalException extends PackageRepository.PackageListRetrievalException {
 		private static final long serialVersionUID = 1L;
 
-		/**
-         * Constructor for new exception.
-         *
-         * @param message Message explaining what went wrong
-         * @param cause First exception thrown when processing package repositories
-         */
         public PackageListRetrievalException(String message, Throwable cause) {
             super(message, cause);
         }
@@ -131,15 +119,11 @@ public class PackageManager {
 
     /**
      * Exception thrown when an operation fails due to package dependency issues.
+     * @see DependencyResolver.DependencyResolutionException
      */
-    public static class DependencyResolutionException extends Exception {
+    public static class DependencyResolutionException extends DependencyResolver.DependencyResolutionException {
 		private static final long serialVersionUID = 1L;
 
-        /**
-         * Constructor for new exception
-         *
-         * @param message message explaining what the dependency problem was.
-         */
         public DependencyResolutionException(String message) {
             super(message);
         }
@@ -166,45 +150,17 @@ public class PackageManager {
      * @throws java.net.MalformedURLException
      */
     public static List<URL> getRepositoryURLs() throws MalformedURLException {
-
-        List<URL> URLs = new ArrayList<>();
-        URLs.add(new URL(PACKAGES_XML));
-
-	    //# url
-	    //packages.url=http://...
-    	String urls = Utils6.getBeautiProperty("packages.url");
-    	if (urls != null) {
-	        for (String userURLString : urls.split(",")) {
-	            URLs.add(new URL(userURLString));
-	    	}
-    	}
-        return URLs;
+        return new PackageRepository().getURLs();
     }
-    
+
     /**
      * Write any third-party package repository URLs to the options file.
-     * 
+     *
      * @param urls List of URLs.  The first is assumed to be the central
      * package repository and is thus ignored.
      */
     public static void saveRepositoryURLs(List<URL> urls) {
-    	// RRB: if all urls removed, the old urls still pop up when restarting?
-        if (urls.size()<1)
-            return;
-        
-        // Modify property
-        if (urls.size()>1) {
-            StringBuilder sb = new StringBuilder("");
-            for (int i=1; i<urls.size(); i++) {
-                if (i>1)
-                    sb.append(",");
-                sb.append(urls.get(i));
-            }
-            
-            Utils6.saveBeautiProperty("packages.url", sb.toString());
-        } else {
-            Utils6.saveBeautiProperty("packages.url", null);
-        }
+        new PackageRepository().saveURLs(urls);
     }
 
     /**
@@ -305,130 +261,8 @@ public class PackageManager {
      * @param packageMap package database
      * @throws PackageListRetrievalException when one or more XMLs cannot be retrieved
      */
-    public static void addAvailablePackages(Map<String, Package> packageMap) throws PackageListRetrievalException {
-
-        List<URL> urls;
-        try {
-            urls = getRepositoryURLs();
-        } catch (MalformedURLException e) {
-            throw new PackageListRetrievalException("Error parsing one or more repository URLs.", e);
-        }
-
-        List<URL> brokenPackageRepositories = new ArrayList<URL>();
-        Exception firstException = null;
-
-        for (URL url : urls) {
-        	InputStream is = null;
-        	try {            		
-            	is = url.openStream();
-        		loadURL(url, is, packageMap);
-            } catch (IOException e) {
-    			if (url.toString().equals(PACKAGES_XML)) {
-    				URL urlBackup = null;
-    				try {
-        				urlBackup = new URL(PACKAGES_XML_BACKUP);
-    					is = urlBackup.openStream();
-    					loadURL(urlBackup, is, packageMap);
-    				} catch (IOException|ParserConfigurationException|SAXException e2) {
-    	                if (brokenPackageRepositories.isEmpty())
-    	                    firstException = e;
-
-    	                brokenPackageRepositories.add(urlBackup);
-    				}
-    			} else {
-	                if (brokenPackageRepositories.isEmpty())
-	                    firstException = e;
-	
-	                brokenPackageRepositories.add(url);
-    			}
-            } catch (ParserConfigurationException | SAXException e) {
-                if (brokenPackageRepositories.isEmpty())
-                    firstException = e;
-
-                brokenPackageRepositories.add(url);
-            } finally {
-            	try {
-            		if (is != null) is.close();
-            	} catch (IOException e) {
-            		e.printStackTrace();
-            	}
-            }
-        }
-
-        if (!brokenPackageRepositories.isEmpty()) {
-            String message = "Error reading the following package repository URLs:";
-            for (URL url : brokenPackageRepositories)
-                message += " " + url;
-
-            throw new PackageListRetrievalException(message, firstException);
-        }
-    }
-
-	private static void loadURL(URL url, InputStream is, Map<String, Package> packageMap) throws IOException, ParserConfigurationException, SAXException {
-		
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(new InputSource(is));
-
-        Element rootElement = document.getDocumentElement(); // <packages>
-        NodeList nodes = rootElement.getChildNodes();
-
-        for(int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-
-            if(node instanceof Element){
-                Element element = (Element) node;
-                String packageName = element.getAttribute("name");
-                Package pkg;
-                if (packageMap.containsKey(packageName)) {
-                    pkg = packageMap.get(packageName);
-                } else {
-                    pkg = new Package(packageName);
-//                        packageMap.put(packageName, pkg); // issue 754
-                    }
-                pkg.setDescription(element.getAttribute("description"));
-
-                PackageVersion packageVersion = new PackageVersion(element.getAttribute("version"));
-
-                if (element.hasAttribute("projectURL") &&
-                        !(pkg.getLatestVersion() != null && packageVersion.compareTo(pkg.getLatestVersion()) < 0)) {
-                    try {
-                        pkg.setProjectURL(new URL(element.getAttribute("projectURL")));
-                    } catch (MalformedURLException ex) {
-                        System.err.println("Error parsing projectURL: " + ex.getMessage());
-                    }
-                }
-
-                Set<PackageDependency> packageDependencies = new HashSet<PackageDependency>();
-                NodeList depNodes = element.getElementsByTagName("depends");
-                for (int j = 0; j < depNodes.getLength(); j++) {
-                    Element dependson = (Element) depNodes.item(j);
-                    String dependencyName = dependson.getAttribute("on");
-                    String atLeastString = dependson.getAttribute("atleast");
-                    String atMostString = dependson.getAttribute("atmost");
-                    PackageDependency dependency =  new PackageDependency(
-                            dependencyName,
-                            atLeastString.isEmpty() ? null : new PackageVersion(atLeastString),
-                            atMostString.isEmpty() ? null : new PackageVersion(atMostString));
-
-                    packageDependencies.add(dependency);
-                }
-
-                URL packageURL = new URL(element.getAttribute("url"));
-
-                pkg.addAvailableVersion(packageVersion, packageURL, packageDependencies);
-
-                // issue 754 Package manager should make project links compulsory
-                if (pkg.isValidFormat()) {
-                    packageMap.put(packageName, pkg);
-                } else{
-                    String urlStr = pkg.getProjectURL()==null ? "null" : pkg.getProjectURL().toString();
-                    System.err.println("Warning: filter " + packageName + " from package manager " +
-                            " because of invalid project URL " + urlStr + " !");
-                }
-            }
-        }
-        is.close();
+    public static void addAvailablePackages(Map<String, Package> packageMap) throws PackageRepository.PackageListRetrievalException {
+        new PackageRepository().addAvailablePackages(packageMap);
     }
 
 
@@ -443,41 +277,7 @@ public class PackageManager {
      * @throws IOException thrown if packages cannot be deleted and delete list file cannot be written
      */
     public static void prepareForInstall(Map<Package, PackageVersion> packagesToInstall, boolean useAppDir, String customDir) throws IOException {
-    	if (useArchive) {
-    		return;
-    	}
-    	
-        Map<Package, PackageVersion> ptiCopy = new HashMap<Package, PackageVersion>(packagesToInstall);
-        for (Map.Entry<Package, PackageVersion> entry : ptiCopy.entrySet()) {
-            Package thisPkg = entry.getKey();
-            PackageVersion thisPkgVersion = entry.getValue();
-
-            if (thisPkg.isInstalled()) {
-                if (thisPkg.getInstalledVersion().equals(thisPkgVersion))
-                    packagesToInstall.remove(thisPkg);
-                else
-                    uninstallPackage(thisPkg, useAppDir, customDir);
-            }
-        }
-
-        if (getToDeleteListFile().exists()) {
-            // Write to-install file
-
-        	// RRB: what are the following two lines for?
-            //File toDeleteList = getToDeleteListFile();
-            //FileWriter outfile = new FileWriter(toDeleteList, true);
-        	PrintStream ps = null;
-            try { 
-            	ps  = new PrintStream(getToInstallListFile());
-                for (Map.Entry<Package, PackageVersion> entry : packagesToInstall.entrySet()) {
-                    ps.println(entry.getKey() + ":" + entry.getValue());
-                }
-                ps.close();
-            } catch (IOException ex) {
-                message("Error writing to-install file: " + ex.getMessage() +
-                        " Installation may not resume successfully after restart.");
-            }
-        }
+        PackageInstaller.prepareForInstall(packagesToInstall, useAppDir, customDir);
     }
 
     /**
@@ -496,111 +296,11 @@ public class PackageManager {
      * @throws IOException if URL cannot be accessed for some reason
      */
     public static Map<String, String> installPackages(Map<Package, PackageVersion> packagesToInstall, boolean useAppDir, String customDir) throws IOException {
-    	closeClassLoader();
-    	
-        Map<String, String> dirList = new HashMap<String, String>();
-
-        for (Map.Entry<Package, PackageVersion> entry : packagesToInstall.entrySet()) {
-            Package thisPkg = entry.getKey();
-            PackageVersion thisPkgVersion = entry.getValue();
-
-            URL templateURL = thisPkg.getVersionURL(thisPkgVersion);
-
-            // check the URL exists
-            HttpURLConnection huc = (HttpURLConnection) templateURL.openConnection();
-            huc.setRequestMethod("HEAD");
-            int responseCode = huc.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_NOT_FOUND) { 
-            	// RRB: should be "if (responseCode != HttpURLConnection.HTTP_OK)"
-            	// but package file hosted on github (which are most of them)
-            	// produce a HttpURLConnection.HTTP_FORBIDDEN for some reason
-            	throw new IOException("Could not find package at URL\n" + templateURL + "\n"
-            			+ "The server may be busy, or network may be down.\n"
-            			+ "If you suspect there is a problem with the URL \n"
-            			+ "(the URL may have a typo, or the file was removed)\n"
-            			+ "please contact the package maintainer.\n");
-            }
-            
-            // create directory
-            ReadableByteChannel rbc = Channels.newChannel(templateURL.openStream());
-            String dirName = getPackageDir(thisPkg, thisPkgVersion, useAppDir, customDir);
-            File dir = new File(dirName);
-            if (!dir.exists()) {
-                if (!dir.mkdirs()) {
-                    throw new IOException("Could not create directory " + dirName);
-                }
-            }
-            // grab file from URL
-            String zipFile = dirName + "/" + thisPkg.getName() + ".zip";
-            FileOutputStream fos = new FileOutputStream(zipFile);
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-
-            // unzip archive
-            doUnzip(zipFile, dirName);
-            fos.close();
-
-            // sanity check: does this package contains services that clash
-            // TODO: what if this is an update, not a fresh package installation
-            String nameSpaceCheck = null;
-			try {
-				nameSpaceCheck = hasNamespaceClash(thisPkg.getName(), dirName);
-			} catch (SAXException | IOException | ParserConfigurationException e) {
-				e.printStackTrace();
-			}
-            if (nameSpaceCheck != null) {
-            	// remove all files from the package and abort installation
-            	deleteRecursively(dir, new ArrayList<>());
-            	throw new RuntimeException(nameSpaceCheck);
-            }
-            
-
-            dirList.put(thisPkg.getName(), dirName);
-        }
-
-        // make sure the class path is updated next time BEAST is started
-        Utils6.saveBeautiProperty("package.path", null);
-        return dirList;
+        return PackageInstaller.installPackages(packagesToInstall, useAppDir, customDir);
     }
 
-    private static String hasNamespaceClash(String packageName, String dirName) throws SAXException, IOException, ParserConfigurationException {
-    	// load services from version.xml 
-        File versionFile = new File(dirName + "/version.xml");
-        Map<String,Set<String>> services = null;
-        if (versionFile.exists()) {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            Document doc = factory.newDocumentBuilder().parse(versionFile);
-            services = parseServices(doc);
-        }
-
-        if (services == null) {
-            return null;
-        }
-
-    	// check none of the services clashes with already loaded services
-        for (String service : services.keySet()) {
-        	Set<String> s = services.get(service);
-        	String existingNamespace = BEASTClassLoader.usesExistingNamespaces(s);
-        	if (existingNamespace != null) {
-    			return "Programmer error: One of the services (" + service + ") in package "
-				+ packageName + " uses a namespace that is already in use: " + existingNamespace
-				+ ". Package " + packageName + " is NOT loaded and will be removed";
-        	}
-        }
-		return null;
-	}
-
 	public static String getPackageDir(Package thisPkg, PackageVersion thisPkgVersion, boolean useAppDir, String customDir) {
-        String dirName = (useAppDir ? getPackageSystemDir() : getPackageUserDir()) + 
-        		(useArchive ? "/" + ARCHIVE_DIR : "") + 
-        		"/" + thisPkg.getName() +
-        		(useArchive ? "/" + thisPkgVersion.versionString : ""); 
-        if (customDir != null) {
-            dirName = customDir + 
-            		(useArchive ? "/" + ARCHIVE_DIR : "") + 
-            		"/" + thisPkg.getName() +
-            		(useArchive ? "/" + thisPkgVersion.versionString : ""); 
-        }
-        return dirName;
+        return PackageInstaller.getPackageDir(thisPkg, thisPkgVersion, useAppDir, customDir);
 	}
 
 	/**
@@ -610,14 +310,19 @@ public class PackageManager {
      * @param packageMap package database
      * @return list of names of installed packages dependent on pkg.
      */
+    /**
+     * Get list of installed packages that depend on pkg.
+     *
+     * @param pkg package for which to retrieve installed dependencies
+     * @param packageMap package database
+     * @return list of names of installed packages dependent on pkg.
+     */
     public static List<String> getInstalledDependencyNames(Package pkg, Map<String, Package> packageMap) {
-
-        List<String> dependencies = new ArrayList<String>();
+        List<String> dependencies = new ArrayList<>();
 
         for (Package thisPkg : packageMap.values()) {
             if (thisPkg.equals(pkg))
                 continue;
-
             if (!thisPkg.isInstalled())
                 continue;
 
@@ -626,7 +331,6 @@ public class PackageManager {
                     dependencies.add(thisPkg.getName());
             }
         }
-
         return dependencies;
     }
 
@@ -644,143 +348,18 @@ public class PackageManager {
      * @throws IOException thrown if packages cannot be deleted and delete list file cannot be written
      */
     public static String uninstallPackage(Package pkg, boolean useAppDir, String customDir) throws IOException {
-    	return uninstallPackage(pkg, null, useAppDir, customDir);
+        return PackageInstaller.uninstallPackage(pkg, useAppDir, customDir);
     }
-    
+
     public static String uninstallPackage(Package pkg, PackageVersion pkgVersion, boolean useAppDir, String customDir) throws IOException {
-    	closeClassLoader();
-
-    	if (pkgVersion == null) {
-    		pkgVersion = pkg.getInstalledVersion();
-    	}
-    	String dirName = getPackageDir(pkg, pkgVersion, useAppDir, customDir);    	
-        File dir = new File(dirName);
-        if (!dir.exists()) {
-        	useArchive = !useArchive;
-        	dirName = getPackageDir(pkg, pkgVersion, useAppDir, customDir);
-        	dir = new File(dirName);
-        	useArchive = !useArchive;
-        }
-    	unloadPackage(dir);
-        
-        List<File> deleteFailed = new ArrayList<File>();
-        deleteRecursively(dir, deleteFailed);
-        
-        if (useArchive) {
-        	// delete package directory, if it is empty
-        	File parent = dir.getParentFile();
-        	if (parent.list().length == 0) {
-        		parent.delete();
-        	}
-        }
-
-        // write deleteFailed to file
-        if (deleteFailed.size() > 0) {
-            File toDeleteList = getToDeleteListFile();
-            FileWriter outfile = new FileWriter(toDeleteList, true);
-            for (File file : deleteFailed) {
-                outfile.write(file.getAbsolutePath() + "\n");
-            }
-            outfile.close();
-        }
-        
-        // make sure the class path is updated next time BEAST is started
-        Utils6.saveBeautiProperty("package.path", null);
-        return dirName;
+        return PackageInstaller.uninstallPackage(pkg, pkgVersion, useAppDir, customDir);
     }
-
-
-    /** No-op: system ClassLoader is no longer a URLClassLoader in modern Java. */
-    private static void closeClassLoader() {
-    }
-    
-    private static void unloadPackage(File dir) {
-        File versionFile = new File(dir.getPath() + "/version.xml");
-        if (versionFile.exists()) {
-            try {
-                // print name and version of package
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                Document doc = factory.newDocumentBuilder().parse(versionFile);
-                Element packageElement = doc.getDocumentElement();
-                String packageName = packageElement.getAttribute("name");
-                Map<String,Set<String>> services = parseServices(doc);
-        		BEASTClassLoader.delService(services, packageName);
-            } catch (NullPointerException e) {
-            	// map not initialised -- ignore
-            } catch (Exception e) {
-                // ignore
-            	e.printStackTrace();
-            }
-        }
-    }
-
-	private static void deleteRecursively(File file, List<File> deleteFailed) {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            for (File f : files) {
-                deleteRecursively(f, deleteFailed);
-            }
-        }
-        if (!file.delete()) {
-            deleteFailed.add(file);
-        }
-    }
-
 
     /**
-     * unzip zip archive *
+     * Unzip a zip archive.
      */
     public static void doUnzip(String inputZip, String destinationDirectory) throws IOException {
-        int BUFFER = 2048;
-        File sourceZipFile = new File(inputZip);
-        File unzipDestinationDirectory = new File(destinationDirectory);
-
-        // Open Zip file for reading
-        ZipFile zipFile = new ZipFile(sourceZipFile, ZipFile.OPEN_READ);
-
-        // Create an enumeration of the entries in the zip file
-        Enumeration<?> zipFileEntries = zipFile.entries();
-
-        // Process each entry
-        while (zipFileEntries.hasMoreElements()) {
-            // grab a zip file entry
-            ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
-
-            String currentEntry = entry.getName();
-
-            File destFile = new File(unzipDestinationDirectory + "/" + currentEntry);
-
-            // grab file's parent directory structure
-            File destinationParent = destFile.getParentFile();
-
-            // create the parent directory structure if needed
-            destinationParent.mkdirs();
-
-            try {
-                // extract file if not a directory
-                if (!entry.isDirectory()) {
-                    BufferedInputStream is = new BufferedInputStream(zipFile.getInputStream(entry));
-                    int currentByte;
-                    // establish buffer for writing file
-                    byte data[] = new byte[BUFFER];
-
-                    // write the current file to disk
-                    FileOutputStream fos = new FileOutputStream(destFile);
-                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER);
-
-                    // read and write until last byte is encountered
-                    while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
-                        dest.write(data, 0, currentByte);
-                    }
-                    dest.flush();
-                    dest.close();
-                    is.close();
-                }
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
-        }
-        zipFile.close();
+        PackageInstaller.doUnzip(inputZip, destinationDirectory);
     }
 
     /**
@@ -843,83 +422,19 @@ public class PackageManager {
      * on windows, which locks jar files loaded by java.
      */
     public static File getToDeleteListFile() {
-        return new File(getPackageUserDir() + "/" + TO_DELETE_LIST_FILE);
+        return PackageInstaller.getToDeleteListFile();
     }
 
-    /**
-     * Delete files that could not be deleted earlier due to jar locking.
-     */
     private static void processDeleteList() {
-        File toDeleteListFile = getToDeleteListFile();
-        if (toDeleteListFile.exists()) {
-            try {
-                BufferedReader fin = new BufferedReader(new FileReader(toDeleteListFile));
-                while (fin.ready()) {
-                    String str = fin.readLine();
-                    File file = new File(str);
-                    file.delete();
-                }
-                fin.close();
-                toDeleteListFile.delete();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        PackageInstaller.processDeleteList();
     }
 
-    /**
-     * Obtain file containing list of packages that need to be installed
-     * at startup.  This file only exists when packages have failed to upgrade
-     * due to jar file locking on Windows.
-     *
-     * @return to-install file
-     */
     public static File getToInstallListFile() {
-        return new File(getPackageUserDir() + "/" + TO_INSTALL_LIST_FILE);
+        return PackageInstaller.getToInstallListFile();
     }
 
-    /**
-     * Completes installation procedure if packages could not be upgraded due to
-     * Windows preventing the deletion of jar files.
-     *
-     * @param packageMap package database
-     */
     private static void processInstallList(Map<String, Package> packageMap) {
-        File toInstallListFile = getToInstallListFile();
-        if (toInstallListFile.exists()) {
-            try {
-                addAvailablePackages(packageMap);
-            } catch (PackageListRetrievalException e) {
-                message("Failed to resume package installation due to package list retrieval error: " + e.getMessage());
-                toInstallListFile.delete();
-                return;
-            }
-
-            Map<Package, PackageVersion>  packagesToInstall = new HashMap<Package, PackageVersion>();
-            BufferedReader fin = null;
-            try {
-            	fin = new BufferedReader(new FileReader(toInstallListFile));
-                String line;
-                while ((line = fin.readLine()) != null) {
-                    String[] nameVerPair = line.split(":");
-
-                    Package pkg = packageMap.get(nameVerPair[0]);
-                    PackageVersion ver = new PackageVersion(nameVerPair[1]);
-                    packagesToInstall.put(pkg, ver);
-                }
-                fin.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                installPackages(packagesToInstall, false, null);
-            } catch (IOException e) {
-                message("Failed to install packages due to I/O error: " + e.getMessage());
-            }
-
-            toInstallListFile.delete();
-        }
+        PackageInstaller.processInstallList(packageMap);
     }
 
     /**
@@ -1166,7 +681,7 @@ public class PackageManager {
         			String pkgversion = s.substring(i+1).trim().replaceAll("v", "");
         			Package pkg = new Package(pkgname);
         			PackageVersion version = new PackageVersion(pkgversion);
-        	    	useArchive = true;
+        	    	PackageInstaller.useArchive(true);
         			String dirName = getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
         			if (new File(dirName).exists()) {
         				loadPackage(dirName);
@@ -1176,7 +691,7 @@ public class PackageManager {
         				if (pkg2 == null || !pkg2.isInstalled() || !pkg2.getInstalledVersion().equals(version)) {
             				unavailablePacakges += s +", ";
         				} else {
-	            	    	useArchive = false;
+	            	    	PackageInstaller.useArchive(false);
 	            			dirName = getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
 	            			if (new File(dirName).exists()) {
 	            				loadPackage(dirName);
@@ -1200,13 +715,6 @@ public class PackageManager {
         
         externalJarsLoaded = true;
     } // loadExternalJars
-
-	// classes to launch BEAST, BEAUti etc.
-	// However, because they live in separate BEAST packages, they are loaded using their own
-	// package name, which hinders launchers, so BEAST.app loader is merged with BEAST.base loader
-    private static String standardise(String packageName) {
-		return packageName;
-	}
 
 	private static void loadPackage(String jarDirName) {
         try {
@@ -1641,101 +1149,15 @@ public class PackageManager {
      * @throws DependencyResolutionException thrown when method fails to identify a consistent set of dependent packages
      */
     public static void populatePackagesToInstall(Map<String, Package> packageMap,
-                                                 Map<Package, PackageVersion> packagesToInstall) throws DependencyResolutionException {
-
-        Map<Package, PackageVersion> copy = new HashMap<Package, PackageVersion>(packagesToInstall);
-
-        for (Map.Entry<Package, PackageVersion> entry : copy.entrySet()) {
-            populatePackagesToInstall(packageMap, packagesToInstall, entry.getKey(), entry.getValue());
-        }
-
-    }
-
-    private static void populatePackagesToInstall(Map<String, Package> packageMap,
-                                             Map<Package, PackageVersion> packagesToInstall,
-                                          Package rootPackage, PackageVersion rootPackageVersion) throws DependencyResolutionException {
-
-        if (!rootPackage.getAvailableVersions().contains(rootPackageVersion))
-            throw new IllegalArgumentException("Package version " + rootPackageVersion + " is not available.");
-
-        Set<PackageDependency> dependencies = rootPackage.getDependencies(rootPackageVersion);
-        for (PackageDependency dependency : dependencies) {
-            if (!packageMap.containsKey(dependency.dependencyName))
-                throw new DependencyResolutionException("Package " + rootPackage
-                        + " depends on unknown package " + dependency.dependencyName);
-
-            Package depPkg = packageMap.get(dependency.dependencyName);
-            PackageVersion intendedVersion = packagesToInstall.get(depPkg);
-            if (intendedVersion == null) {
-                if (depPkg.isInstalled() && dependency.isMetBy(depPkg.getInstalledVersion()))
-                    continue;
-            } else {
-                if (dependency.isMetBy(intendedVersion))
-                    continue;
-                else
-                    throw new DependencyResolutionException("Package " + rootPackage + " depends on a different " +
-                            "version of package " + dependency.dependencyName + " to that required by another package.");
-            }
-
-            boolean foundCompatible = false;
-            for (PackageVersion depPkgVersion : depPkg.getAvailableVersions()) {
-                if (dependency.isMetBy(depPkgVersion)) {
-                    if (depPkg.isInstalled() && depPkgVersion.compareTo(depPkg.getInstalledVersion())<0)
-                        continue; // No downgrading of installed versions
-
-                    packagesToInstall.put(depPkg, depPkgVersion);
-
-                    try {
-                        populatePackagesToInstall(packageMap, packagesToInstall, depPkg, depPkgVersion);
-                        foundCompatible = true;
-                        break;
-                    } catch (DependencyResolutionException ignored) { }
-
-                    packagesToInstall.remove(depPkg);
-                }
-            }
-            if (!foundCompatible)
-                throw new DependencyResolutionException("Package " + rootPackage + " requires " + dependency + ", " +
-                        "but no installable version of that package was found.");
-
-        }
+                                                 Map<Package, PackageVersion> packagesToInstall) throws DependencyResolver.DependencyResolutionException {
+        new DependencyResolver().resolve(packageMap, packagesToInstall);
     }
 
     /**
      * Checks that dependencies of all installed packages are met.
-     *
-     * @param packageMap
      */
     private static void checkInstalledDependencies(Map<String, Package> packageMap) {
-        Map<PackageDependency,Package> dependencies = new HashMap<PackageDependency,Package>();
-
-        // Collect installed package dependencies
-        for (Package pkg : packageMap.values()) {
-            if (!pkg.isInstalled())
-                continue;
-
-            for (PackageDependency dep : pkg.getInstalledVersionDependencies())
-                dependencies.put(dep, pkg);
-        }
-
-        // check dependencies
-        for (PackageDependency dep : dependencies.keySet()) {
-            Package depPackage = packageMap.get(dep.dependencyName);
-            Package requiredBy = dependencies.get(dep);
-            if (depPackage == null) {
-                warning("Package " + requiredBy.getName()
-                        + " requires another package (" + dep.dependencyName + ") which is not available.\n" +
-                        "Either uninstall " + requiredBy.getName() + " or ask the package maintainer for " +
-                        "information about this dependency.");
-            } else if (!depPackage.isInstalled()) {
-                warning("Package " + requiredBy.getName() + " requires another package (" + dep.dependencyName + ") which is not installed.\n" +
-                        "Either uninstall " + requiredBy.getName() + " or install the " + dep.dependencyName + " package.");
-            } else if (!dep.isMetBy(depPackage.getInstalledVersion())) {
-                warning("Package " +  requiredBy.getName() + " requires another package " + dep
-                        + " but the installed " + dep.dependencyName + " has version " + depPackage.getInstalledVersion() + ".\n" +
-                        "Either uninstall " + requiredBy.getName() + " or install the correct version of " + dep.dependencyName + ".");
-            }
-        }
+        new DependencyResolver().checkInstalled(packageMap);
     }
 
     public static void checkInstalledDependencies() {
@@ -1748,7 +1170,7 @@ public class PackageManager {
      * 
      * @param string warning to display
      */
-    private static void warning(String string) {
+    static void warning(String string) {
         if (!java.awt.GraphicsEnvironment.isHeadless() && System.getProperty("no.beast.popup") == null) {
         	message(string +
                     "\nUnexpected behavior may follow!");
@@ -1762,7 +1184,7 @@ public class PackageManager {
      * 
      * @param string message to display
      */
-    private static void message(String string) {
+    static void message(String string) {
     	System.out.println(string);
         if (!java.awt.GraphicsEnvironment.isHeadless()) {
         	SwingUtilities.invokeLater(new Runnable() { 
@@ -1779,28 +1201,14 @@ public class PackageManager {
     }
 
     /**
-     * Add URL to CLASSPATH
+     * Register a URL with the BEAST class loader and invalidate the class cache.
      *
      * @param u URL
-     * @throws IOException if something goes wrong when adding a url
+     * @param packageName name of the package
+     * @param services service map from version.xml
      */
     public static void addURL(URL u, String packageName, Map<String, Set<String>> services) throws IOException {
-    	BEASTClassLoader.classLoader.addURL(u, standardise(packageName), services);    	
-        String classpath = System.getProperty("java.class.path");
-        String jar = u + "";
-        classpath += System.getProperty("path.separator") + jar.substring(5);
-        System.setProperty("java.class.path", classpath);
-        all_classes = null;
-    }
-    
-    /** use addURL(u, packageName, services) instead **/
-    @Deprecated
-    public static void addURL(URL u) throws IOException {
-    	BEASTClassLoader.classLoader.addURL(u);
-        String classpath = System.getProperty("java.class.path");
-        String jar = u + "";
-        classpath += System.getProperty("path.separator") + jar.substring(5);
-        System.setProperty("java.class.path", classpath);
+    	BEASTClassLoader.classLoader.addURL(u, packageName, services);
         all_classes = null;
     }
 
@@ -2151,412 +1559,14 @@ public class PackageManager {
      * @param packageMap map from package names to package objects
      */
     public static void prettyPrintPackageInfo(PrintStream ps, Map<String, Package> packageMap) {
-
-        // Define headers here - need to know lengths
-        String nameHeader = "Name";
-        String statusHeader = "Installed Version";
-        String latestHeader = "Latest Version";
-        String depsHeader = "Dependencies";
-        String descriptionHeader = "Description";
-
-        int maxNameWidth = nameHeader.length();
-        int maxStatusWidth = statusHeader.length();
-        int maxLatestWidth = latestHeader.length();
-        int maxDepsWidth = depsHeader.length();
-
-        // Assemble list of packages (excluding beast2), keeping track of maximum field widths
-        List<Package> packageList = new ArrayList<Package>();
-        for (Package pkg : packageMap.values()) {
-//            if (pkg.getName().equals(BEAST_PACKAGE))
-//                continue;
-
-            packageList.add(pkg);
-
-            maxNameWidth = Math.max(pkg.getName().length(), maxNameWidth);
-            maxStatusWidth = Math.max(pkg.isInstalled() ? pkg.getInstalledVersion().toString().length() : 2, maxStatusWidth);
-            maxLatestWidth = Math.max(maxLatestWidth, pkg.isAvailable()
-                            ? pkg.getLatestVersion().toString().length()
-                            :  Math.max(2, maxStatusWidth));
-            maxDepsWidth = Math.max(pkg.getDependenciesString().length(), maxDepsWidth);
-        }
-
-        // Assemble format strings
-        String nameFormat = "%-" + (maxNameWidth) + "s";
-        String statusFormat = "%-" + (maxStatusWidth) + "s";
-        String latestFormat = "%-" + (maxLatestWidth) + "s";
-        String depsFormat = "%-" + (maxDepsWidth) + "s";
-        String sep = " | ";
-
-        // Print headers
-        ps.printf(nameFormat, nameHeader); ps.print(sep);
-        ps.printf(statusFormat, statusHeader); ps.print(sep);
-        ps.printf(latestFormat, latestHeader); ps.print(sep);
-        ps.printf(depsFormat, depsHeader); ps.print(sep);
-        ps.printf("%s\n", descriptionHeader);
-
-        // Add horizontal rule under header
-        int totalWidth = maxNameWidth + maxStatusWidth
-                + maxLatestWidth + maxDepsWidth
-                + descriptionHeader.length() + 4*3;
-        for (int i=0; i<totalWidth; i++)
-            ps.print("-");
-        ps.println();
-
-
-        // Print formatted package information
-        for (Package pkg : packageList) {
-        	if (pkg.getName().equals(BEAST_BASE_PACKAGE_NAME)) {
-        		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
-		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : "NA"); ps.print(sep);
-		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
-		        ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
-		        ps.printf("%s\n", pkg.getDescription());
-        	}
-        }
-        for (int i=0; i<totalWidth; i++)
-            ps.print("-");
-        ps.println();
-        
-        // Print formatted package information
-        for (Package pkg : packageList) {
-        	if (!pkg.getName().equals(BEAST_BASE_PACKAGE_NAME)) {
-	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
-	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : 
-	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);
-	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
-	            ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
-	            ps.printf("%s\n", pkg.getDescription());
-        	}
-        }
-    }
-
-
-    private static void printUsageAndExit(Arguments arguments) {
-        arguments.printUsage("packagemanager", "");
-        System.out.println("\nExamples:");
-        System.out.println("packagemanager -list");
-        System.out.println("packagemanager -add SNAPP");
-        System.out.println("packagemanager -useAppDir -add SNAPP");
-        System.out.println("packagemanager -del SNAPP");
-        System.out.println("packagemanager -addRepository URL");
-        System.out.println("packagemanager -maven io.github.compevol:beast-morph-models:1.3.0");
-        System.out.println("packagemanager -delMaven io.github.compevol:beast-morph-models");
-        System.out.println("packagemanager -listMaven");
-        System.out.println("packagemanager -addMavenRepository https://beast2.org/maven/");
-        System.exit(0);
+        PackageManagerCLI.prettyPrintPackageInfo(ps, packageMap);
     }
 
     public static void main(String[] args) {
-        try {
-            Arguments arguments = new Arguments(
-                    new Arguments.Option[]{
-                            new Arguments.Option("list", "List available packages"),
-                            new Arguments.StringOption("add", "NAME", "Install the <NAME> package"),
-                            new Arguments.StringOption("del", "NAME", "Uninstall the <NAME> package"),
-                            new Arguments.StringOption("version", "NAME", "Specify package version"),
-                            new Arguments.Option("useAppDir", "Use application (system wide) installation directory. Note this requires writing rights to the application directory. If not specified, the user's BEAST directory will be used."),
-                            new Arguments.StringOption("dir", "DIR", "Install/uninstall package in directory <DIR>. This overrides the useAppDir option"),
-                            new Arguments.Option("help", "Show help"),
-                            new Arguments.Option("update", "Check for updates, and ask to install if available"),
-                            new Arguments.Option("updatenow", "Check for updates and install without asking"),
-                            new Arguments.StringOption("addRepository", "URL", "Add an external repository URL"),
-                            new Arguments.StringOption("delRepository", "URL", "Remove an external repository URL"),
-                            new Arguments.Option("listRepositories", "List installed external repositories."),
-                            new Arguments.StringOption("maven", "COORD", "Install a Maven package (groupId:artifactId:version)"),
-                            new Arguments.StringOption("delMaven", "COORD", "Uninstall a Maven package (groupId:artifactId)"),
-                            new Arguments.Option("listMaven", "List installed Maven packages"),
-                            new Arguments.StringOption("addMavenRepository", "URL", "Add an extra Maven repository URL"),
-                            new Arguments.StringOption("delMavenRepository", "URL", "Remove an extra Maven repository URL"),
-                            new Arguments.Option("listMavenRepositories", "List configured Maven repositories"),
-                    });
-            try {
-                arguments.parseArguments(args);
-            } catch (Arguments.ArgumentException ae) {
-                System.out.println();
-                System.out.println(ae.getMessage());
-                System.out.println();
-                printUsageAndExit(arguments);
-            }
-
-            if (args.length == 0 || arguments.hasOption("help")) {
-                printUsageAndExit(arguments);
-            }
-            
-            if (arguments.hasOption("update")) {
-            	updatePackages(UpdateStatus.AUTO_CHECK_AND_ASK, false);
-            	return;
-            }
-
-            if (arguments.hasOption("updatenow")) {
-            	updatePackages(UpdateStatus.AUTO_UPDATE, false);
-            	return;
-            }
-
-            // ---- Maven package commands (independent of CBAN package list) ----
-
-            if (arguments.hasOption("maven")) {
-                String coord = arguments.getStringOption("maven");
-                String[] parts = coord.split(":");
-                if (parts.length != 3) {
-                    System.err.println("Expected format groupId:artifactId:version, got: " + coord);
-                    System.exit(1);
-                }
-                System.err.println("Installing Maven package " + coord + "...");
-                installMavenPackage(parts[0], parts[1], parts[2]);
-                System.out.println("Maven package " + coord + " installed successfully.");
-                return;
-            }
-
-            if (arguments.hasOption("delMaven")) {
-                String coord = arguments.getStringOption("delMaven");
-                String[] parts = coord.split(":");
-                if (parts.length < 2) {
-                    System.err.println("Expected format groupId:artifactId, got: " + coord);
-                    System.exit(1);
-                }
-                uninstallMavenPackage(parts[0], parts[1]);
-                System.out.println("Maven package " + parts[0] + ":" + parts[1] + " uninstalled.");
-                return;
-            }
-
-            if (arguments.hasOption("listMaven")) {
-                List<MavenCoordinate> coords = loadMavenPackageConfig();
-                if (coords.isEmpty()) {
-                    System.out.println("No Maven packages installed.");
-                } else {
-                    System.out.println("Installed Maven packages:");
-                    for (MavenCoordinate c : coords) {
-                        System.out.println("  " + c);
-                    }
-                }
-                return;
-            }
-
-            if (arguments.hasOption("addMavenRepository")) {
-                String url = arguments.getStringOption("addMavenRepository");
-                List<String> repos = getMavenRepositoryURLs();
-                if (repos.contains(url)) {
-                    System.err.println("Maven repository '" + url + "' is already configured.");
-                } else {
-                    repos.add(url);
-                    saveMavenRepositoryURLs(repos);
-                    System.out.println("Added Maven repository: " + url);
-                }
-                return;
-            }
-
-            if (arguments.hasOption("delMavenRepository")) {
-                String url = arguments.getStringOption("delMavenRepository");
-                List<String> repos = getMavenRepositoryURLs();
-                if (repos.remove(url)) {
-                    saveMavenRepositoryURLs(repos);
-                    System.out.println("Removed Maven repository: " + url);
-                } else {
-                    System.err.println("Maven repository '" + url + "' not found.");
-                }
-                return;
-            }
-
-            if (arguments.hasOption("listMavenRepositories")) {
-                List<String> repos = getMavenRepositoryURLs();
-                System.out.println("Maven repositories:");
-                System.out.println("  https://repo.maven.apache.org/maven2/ (Maven Central, always included)");
-                for (String url : repos) {
-                    System.out.println("  " + url);
-                }
-                return;
-            }
-
-            boolean useAppDir = arguments.hasOption("useAppDir");
-            String customDir = arguments.getStringOption("dir");
-            if (customDir != null) {
-                String path = PackageManager.getBeastPackagePathProperty();
-                System.setProperty("BEAST_PACKAGE_PATH", (path != null ? path + ":" : "") +customDir);
-                System.setProperty("beast.user.package.dir", (path != null ? path + ":" : "") +customDir);
-            }
-
-            List<URL> urlList = getRepositoryURLs();
-            System.err.println("Packages user path : " + getPackageUserDir());
-            for (URL url : urlList) {
-                System.err.println("Access URL : " + url);
-            }
-            System.err.print("Getting list of packages ...");
-            Map<String, Package> packageMap = new TreeMap<String, Package>(new Comparator<String>() {
-            	// String::compareToIgnoreCase
-    			@Override
-    			public int compare(String s1, String s2) {
-    				return comparePackageNames(s1, s2);
-    			}
-            });
-            try {
-                PackageManager.addInstalledPackages(packageMap);
-                PackageManager.addAvailablePackages(packageMap);
-            } catch (PackageListRetrievalException e) {
-            	System.err.println(e.getMessage());
-                if (e.getCause() instanceof IOException)
-                    System.err.println(NO_CONNECTION_MESSAGE);
-            	return;
-            }
-            System.err.println("Done!\n");
-
-            if (arguments.hasOption("list")) {
-                prettyPrintPackageInfo(System.out, packageMap);
-            }
-            
-            if (arguments.hasOption("add")) {
-                String name = arguments.getStringOption("add");
-                boolean processed = false;
-                for (Package aPackage : packageMap.values()) {
-                    if (aPackage.packageName.equals(name)) {
-                        processed = true;
-                        if (!aPackage.isInstalled() || arguments.hasOption("version")) {
-                            System.err.println("Determine packages to install");
-                            Map<Package, PackageVersion> packagesToInstall = new HashMap<Package, PackageVersion>();
-                            if (arguments.hasOption("version")) {
-                            	String versionString = arguments.getStringOption("version");
-                            	PackageVersion version = new PackageVersion(versionString);
-                            	packagesToInstall.put(aPackage, version);
-                            	PackageManager.useArchive = true;
-                            } else {
-                            	packagesToInstall.put(aPackage, aPackage.getLatestVersion());
-                            }
-                            try {
-                                populatePackagesToInstall(packageMap, packagesToInstall);
-                            } catch (DependencyResolutionException ex) {
-                                System.err.println("Installation aborted: " + ex.getMessage());
-                            }
-                            System.err.println("Start installation");
-                            prepareForInstall(packagesToInstall, useAppDir, customDir);
-                            Map<String, String> dirs = installPackages(packagesToInstall, useAppDir, customDir);
-                            for (String pkgName : dirs.keySet())
-                                System.out.println("Package " + pkgName + " is installed in " + dirs.get(pkgName) + ".");
-                        } else {
-                            System.out.println("Installation aborted: " + name + " is already installed.");
-                            System.exit(1);
-                        }
-                    }
-                }
-                if (!processed) {
-                    System.out.println("Could not find package '" + name + "' (typo perhaps?)");
-                }
-            }
-
-            if (arguments.hasOption("del")) {
-                String name = arguments.getStringOption("del");
-                boolean processed = false;
-                for (Package aPackage : packageMap.values()) {
-                    if (aPackage.packageName.equals(name)) {
-                        processed = true;
-                        if (arguments.hasOption("version")) {
-                        	PackageManager.useArchive = true;
-                        	String versionString = arguments.getStringOption("version");
-                        	PackageVersion version = new PackageVersion(versionString);
-                            String dir = uninstallPackage(aPackage, version, useAppDir, customDir);
-                            System.out.println("Package " + name + " is uninstalled from " + dir + ".");
-                        } else {
-	                        if (aPackage.isInstalled()) {
-	                            List<String> deps = getInstalledDependencyNames(aPackage, packageMap);
-	                            if (deps.isEmpty()) {
-	                                System.err.println("Start un-installation");
-	                                String dir = uninstallPackage(aPackage, useAppDir, customDir);
-	                                System.out.println("Package " + name + " is uninstalled from " + dir + ".");
-	                            } else {
-	                                System.out.println("Un-installation aborted: " + name + " is used by these other packages: " +
-	                                        join(", ", deps) + ".");
-	                                System.out.println("Remove these packages first.");
-	                                System.exit(1);
-	                            }
-	                        } else {
-	                            System.out.println("Un-installation aborted: " + name + " is not installed yet.");
-	                            System.exit(1);
-	                        }
-                        }
-                    }
-                }
-                if (!processed) {
-                    System.out.println("Could not find package '" + name + "' (typo perhaps?)");
-                }
-            }
-
-            if (arguments.hasOption("addRepository")) {
-                String urlString = arguments.getStringOption("addRepository");
-                if (urlString != null) {
-
-                    URL repoURL;
-                    try {
-                        repoURL = new URI(urlString).toURL();
-
-                        List<URL> urls = getRepositoryURLs();
-
-                        if (!urls.contains(repoURL)) {
-                            urls.add(repoURL);
-                            saveRepositoryURLs(urls);
-                            System.out.println("Successfully added repository URL '"
-                                    + repoURL + "' to "
-                                    + getPackageUserDir() + "/beauti.properties.");
-                        } else {
-                            System.err.println("Repository URL '" + repoURL + "' already in "
-                                    + getPackageUserDir() + "/beauti.properties.");
-                        }
-                    } catch (MalformedURLException ex) {
-                        System.err.println("Error: malformed repository URL.");
-                        System.exit(1);
-                    }
-
-                }
-
-            }
-
-            if (arguments.hasOption("delRepository")) {
-                String urlString = arguments.getStringOption("delRepository");
-                if (urlString != null) {
-
-                    URL repoURL;
-
-                    try {
-                        repoURL = new URI(urlString).toURL();
-
-                        List<URL> urls = getRepositoryURLs();
-
-                        int urlIdx = urls.indexOf(repoURL);
-                        if (urlIdx < 0) {
-                            System.err.println("Repository URL '" + repoURL + "' not found in "
-                                    + getPackageUserDir() + "/beauti.properties.");
-                        } else if (urlIdx == 0) {
-                            System.err.println("Cannot remove main repository, '" + repoURL + "'.");
-                        } else {
-                            urls.remove(repoURL);
-                            saveRepositoryURLs(urls);
-                            System.out.println("Successfully removed repository URL '"
-                                    + repoURL + "' from "
-                                    + getPackageUserDir() + "/beauti.properties.");
-                        }
-                    } catch(MalformedURLException ex){
-                            System.err.println("Error: malformed repository URL.");
-                            System.exit(1);
-                    }
-                }
-            }
-
-            if (arguments.hasOption("listRepositories")) {
-
-                List<URL> urls = getRepositoryURLs();
-
-                System.out.println("Installed repository URLs:");
-                System.out.println(urls.remove(0) + " (main repository, unchangeable)");
-                for (URL url : urls)
-                    System.out.println(url);
-
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        PackageManagerCLI.main(args);
     }
 
-    /** compare package names, putting BEAST.base in front, then BEAST.app,
-     * then every other package in alphabetical order, ignoring case
-     */
+    /** Compare package names, putting BEAST.base in front, then alphabetical ignoring case. */
 	public static int comparePackageNames(String s1, String s2) {
     	if (s1.equals(BEAST_BASE_PACKAGE_NAME)) {
     		if (s2.equals(BEAST_BASE_PACKAGE_NAME)) {
@@ -2568,16 +1578,6 @@ public class PackageManager {
     		return 1;
     	}
     	return s1.toLowerCase().compareTo(s2.toLowerCase());
-	}
-
-    private static String join(String string, List<String> deps) {
-		StringBuilder buf = new StringBuilder();
-		for (int i = 0; i < deps.size(); i++) {
-			buf.append(deps.get(i));
-			buf.append(',');
-		}
-		buf.deleteCharAt(buf.length() - 1);
-		return buf.toString();
 	}
 
 	/**  maps package name to a Package object, which contains info on whether 
@@ -2606,173 +1606,10 @@ public class PackageManager {
 //		}
 	}
     
-    /** check whether there are new packages to install, and if so install them
-     * either after asking the user, or without asking (depending on updateStatus).
-     * @param updateStatus
-     */
     public static void updatePackages(UpdateStatus updateStatus, boolean useGUI) {
-    	if (updateStatus == UpdateStatus.DO_NOT_CHECK) {
-    		return;
-    	}
-    	
-    	// find available and installed packages
-        TreeMap<String, Package> packageMap = new TreeMap<String, Package>(
-        		new Comparator<String>() {
-			@Override
-			public int compare(String s1, String s2) {
-	        	return comparePackageNames(s1, s2);
-			}
-        });
-        try {
-			addAvailablePackages(packageMap);
-		} catch (PackageListRetrievalException e) {
-			// cannot access list right now, so try again next time
-			return;
-		}
-        addInstalledPackages(packageMap);
-
-        // check whether any installed package has an update
-        Map<Package, PackageVersion> packagesToInstall = new LinkedHashMap<Package, PackageVersion>();
-        for (String packageName : packageMap.keySet()) {
-        	Package _package = packageMap.get(packageName);
-        	if (_package.isInstalled()) {
-        		if (_package.getLatestVersion() != null && _package.getLatestVersion().compareTo(_package.getInstalledVersion()) > 0) {
-        			packagesToInstall.put(_package, _package.getLatestVersion());
-        		}
-        	}
-        }
-
-        // check whether recommended packages are already installed
-        for (String packageName : RECOMMENDED_PACKAGES) {
-        	Package _package = packageMap.get(packageName);
-        	if (_package != null && !_package.isInstalled()) {
-        		packagesToInstall.put(_package, _package.getLatestVersion());
-        	}
-        }
-
-        
-        if (packagesToInstall.size() == 0) {
-        	// nothing to install
-        	return;
-        }
-         
-        // do we need to ask before proceeding?
-    	if (updateStatus != UpdateStatus.AUTO_UPDATE) {
-    		if (useGUI) {
-	    		StringBuilder buf = new StringBuilder();
-	    		buf.append("<table><tr><td>Package name</td><td>New version</td><td>Installed</td></tr>");
-	    		for (Package _package : packagesToInstall.keySet()) {
-	    			
-	    			buf.append("<tr><td>" + _package.packageName + "</td>"
-	    					+ "<td>" + _package.getLatestVersion()+ "</td>"
-	    					+ "<td>"
-	    					+ (RECOMMENDED_PACKAGES.contains(_package.packageName) ? " Not installed yet, but recommended!" : _package.getInstalledVersion())
-	    					+ "</td></tr>");
-	    		}
-	    		buf.append("</table>");
-	    		String [] options = new String[]{"No, never check again", "Not now", "Yes", "Always install without asking"};
-	    		try {
-	    			final boolean [] update = new boolean[] {false};
-					SwingUtilities.invokeAndWait(new Runnable() {
-						public void run() {
-							int response = JOptionPane.showOptionDialog(null, "<html><h2>New packages are available to install:</h2>" +
-									buf.toString() + 
-									"Do you want to install?</html>", "Package Manager", JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE,
-							        null, options, options[2]);
-							switch (response) {
-							case 0: // No, never check again
-					            Utils6.saveBeautiProperty("package.update.status", UpdateStatus.DO_NOT_CHECK.toString());
-								return;
-							case 1: // No, check later
-					            Utils6.saveBeautiProperty("package.update.status", UpdateStatus.AUTO_CHECK_AND_ASK.toString());
-								return;
-							case 2: // Yes, ask next time
-					            Utils6.saveBeautiProperty("package.update.status", UpdateStatus.AUTO_CHECK_AND_ASK.toString());
-					            update[0] = true; 
-								break;
-							case 3: // Always install automatically
-					            Utils6.saveBeautiProperty("package.update.status", UpdateStatus.AUTO_UPDATE.toString());
-					            update[0] = true; 
-								break;
-							default: // e.g. escape-key gets us here
-								return;
-							}
-						}
-					});
-					if (!update[0]) {
-						return;
-					}
-				} catch (InvocationTargetException | InterruptedException e) {
-					e.printStackTrace();
-					return;
-				}
-    		} else {
-    			System.out.println("New packages are available to install:");
-	    		System.out.println("Package name    New version      Installed");
-	    		for (Package _package : packagesToInstall.keySet()) {
-	    			String padding = _package.packageName.length() < 16 ? 
-	    					"                ".substring(_package.packageName.length()) : "";
-	    			String latestVersion = _package.getLatestVersion() + "";
-	    			String padding2 = latestVersion.length() < 16 ? 
-	    					"                ".substring(latestVersion.length()) : "";
-	    			System.out.println(_package.packageName + padding +
-	    					_package.getLatestVersion() + padding2 + 
-	    					(RECOMMENDED_PACKAGES.contains(_package.packageName) ? " Not installed yet, but recommended!" : _package.getInstalledVersion()));
-	    		}
-    			System.out.println("Do you want to install (y/n)?");
-                System.out.flush();
-                final BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));	                        
-                String msg = "n";
-				try {
-					msg = stdin.readLine();
-				} catch (IOException e) {
-					e.printStackTrace();
-					return;
-				}
-                if (!msg.toLowerCase().equals("y")) {
-                	System.out.println("Exiting now");
-                	return;
-                }
-    		}
-    	}
-        
-        // install packages that can be updated
-        try {
-            populatePackagesToInstall(packageMap, packagesToInstall);
-
-            prepareForInstall(packagesToInstall, false, null);
-
-	        if (getToDeleteListFile().exists()) {
-	        	if (useGUI) {
-	        		warning(
-	                    "<html><body><p style='width: 200px'>Upgrading packages on your machine requires BEAUti " +
-	                            "to restart. Shutting down now.</p></body></html>");
-	        	} else {
-                    System.out.println("Upgrading packages on your machine requires BEAUti to restart.");
-	        	}
-	            System.exit(0);
-	        }
-	
-	        Map<String,String> dirList = installPackages(packagesToInstall, false, null);
-	        for (String packageName : dirList.keySet()) {
-	        	System.out.println("Installed " + packageName + " in " + dirList.get(packageName));
-	        }
-		} catch (DependencyResolutionException e) {
-	        if (useGUI) {
-	        	warning("Install failed because: " + e.getMessage());
-			} else {
-				System.err.println("Install failed because " + e.getMessage());
-			}
-			e.printStackTrace();			
-		} catch (IOException e) {
-	        if (useGUI) {
-	        	warning("Install failed because: " + e.getMessage());
-			} else {
-				System.err.println("Install failed because " + e.getMessage());
-			}
-			e.printStackTrace();
-		}
+        PackageManagerCLI.updatePackages(updateStatus, useGUI);
     }
+
 
     public static String getBeastPackagePathProperty() {
     	if (System.getProperty("BEAST_PACKAGE_PATH") != null) {
