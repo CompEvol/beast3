@@ -640,13 +640,62 @@ public class PackageManager {
         // behaviour: Maven is the recommended distribution format going
         // forward, so a newer Maven version should shadow a legacy ZIP.
         Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
-        loadMavenPackages();
+        List<MavenCoordinate> skippedMaven = loadMavenPackages();
 
         // Load legacy ZIP packages (from ~/.beast/2.8/ and other dirs).
         // These are loaded after Maven packages, so a Maven package with
         // the same module name will take precedence.
+        List<String> skippedDirs = new ArrayList<>();
         for (String jarDirName : getBeastDirectories()) {
-        	loadPackage(jarDirName);
+        	if (!loadPackage(jarDirName)) {
+        		skippedDirs.add(jarDirName);
+        	}
+        }
+
+        // Retry packages that had unsatisfied module dependencies.
+        // On each pass, newly loaded plugin layers may satisfy requires
+        // that were missing earlier (e.g. gammaspike requires
+        // sampled.ancestors, which wasn't loaded yet on the first pass).
+        // Repeat until a pass makes no progress.
+        boolean progress = !skippedMaven.isEmpty() || !skippedDirs.isEmpty();
+        while (progress) {
+        	progress = false;
+
+        	if (!skippedMaven.isEmpty()) {
+        		MavenPackageResolver resolver;
+        		try {
+        			resolver = createMavenResolver();
+        		} catch (UnsupportedOperationException e) {
+        			resolver = null;
+        		}
+        		if (resolver != null) {
+        			List<MavenCoordinate> stillSkipped = new ArrayList<>();
+        			for (MavenCoordinate coord : skippedMaven) {
+        				try {
+        					List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
+        					Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
+        					if (createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString())) {
+        						progress = true;
+        					} else {
+        						stillSkipped.add(coord);
+        					}
+        				} catch (Exception e) {
+        					// already reported on first pass
+        				}
+        			}
+        			skippedMaven = stillSkipped;
+        		}
+        	}
+
+        	List<String> stillSkippedDirs = new ArrayList<>();
+        	for (String jarDirName : skippedDirs) {
+        		if (loadPackage(jarDirName)) {
+        			progress = true;
+        		} else {
+        			stillSkippedDirs.add(jarDirName);
+        		}
+        	}
+        	skippedDirs = stillSkippedDirs;
         }
 
         externalJarsLoaded = true;
@@ -716,7 +765,11 @@ public class PackageManager {
         externalJarsLoaded = true;
     } // loadExternalJars
 
-	private static void loadPackage(String jarDirName) {
+	/**
+	 * @return true if all modules in the package were resolved, false if
+	 *         any modules were skipped due to unsatisfied dependencies.
+	 */
+	private static boolean loadPackage(String jarDirName) {
         try {
             File versionFile = new File(jarDirName + "/version.xml");
             String packageName = null;
@@ -750,7 +803,7 @@ public class PackageManager {
             }
 
             if (!jarPaths.isEmpty()) {
-                createAndRegisterModuleLayer(jarPaths, services, packageName, packageVersion, jarDirName);
+                return createAndRegisterModuleLayer(jarPaths, services, packageName, packageVersion, jarDirName);
             } else if (services != null && packageName != null) {
                 // No JARs but services found (e.g. running from IDE)
                 BEASTClassLoader.classLoader.addServices(packageName, services);
@@ -758,6 +811,7 @@ public class PackageManager {
         } catch (Exception e) {
             System.err.println("Skip loading of " + jarDirName + " : " + e.getMessage());
         }
+        return true;
 	}
 
 	/**
@@ -772,7 +826,11 @@ public class PackageManager {
 	 * @param packageVersion the package version string (may be null)
 	 * @param description    human-readable label used in warning messages
 	 */
-	public static void createAndRegisterModuleLayer(List<Path> jarPaths,
+	/**
+	 * @return true if all candidate modules were resolved, false if any
+	 *         modules were skipped due to unsatisfied dependencies.
+	 */
+	public static boolean createAndRegisterModuleLayer(List<Path> jarPaths,
 			Map<String, Set<String>> services, String packageName,
 			String packageVersion, String description) {
 		try {
@@ -791,6 +849,11 @@ public class PackageManager {
 				.map(ref -> ref.descriptor().name())
 				.filter(name -> !availableModules.contains(name))
 				.collect(Collectors.toSet());
+
+			if (candidates.isEmpty()) {
+				// All modules already loaded (e.g. retry after earlier pass)
+				return true;
+			}
 
 			// Filter out modules whose requires can't be satisfied
 			Set<String> resolvable = new LinkedHashSet<>();
@@ -820,7 +883,7 @@ public class PackageManager {
 				if (services != null && packageName != null) {
 					BEASTClassLoader.classLoader.addServices(packageName, services);
 				}
-				return;
+				return false;
 			}
 
 			String packageNameAndVersion = packageName != null
@@ -843,12 +906,14 @@ public class PackageManager {
 			ModuleLayer layer = parent.defineModulesWithOneLoader(
 				config, ClassLoader.getSystemClassLoader());
 			BEASTClassLoader.registerPluginLayer(layer, services);
+			return skipped.isEmpty();
 		} catch (Exception e) {
 			System.err.println("Warning: could not create ModuleLayer for " +
 				description + ": " + e.getMessage());
 			if (services != null && packageName != null) {
 				BEASTClassLoader.classLoader.addServices(packageName, services);
 			}
+			return false;
 		}
 	}
 
@@ -969,27 +1034,35 @@ public class PackageManager {
 	 * {@code maven-packages.xml} is resolved, and its JARs are loaded into
 	 * a new JPMS ModuleLayer.
 	 */
-	public static void loadMavenPackages() {
+	/**
+	 * @return list of coordinates that had modules skipped due to
+	 *         unsatisfied dependencies (empty if all resolved).
+	 */
+	public static List<MavenCoordinate> loadMavenPackages() {
+		List<MavenCoordinate> skipped = new ArrayList<>();
 		List<MavenCoordinate> coords = loadMavenPackageConfig();
-		if (coords.isEmpty()) return;
+		if (coords.isEmpty()) return skipped;
 
 		MavenPackageResolver resolver;
 		try {
 			resolver = createMavenResolver();
 		} catch (UnsupportedOperationException e) {
 			System.err.println("Warning: " + e.getMessage());
-			return;
+			return skipped;
 		}
 
 		for (MavenCoordinate coord : coords) {
 			try {
 				List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
 				Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
-				createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString());
+				if (!createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString())) {
+					skipped.add(coord);
+				}
 			} catch (Exception e) {
 				System.err.println(" FAILED: " + e.getMessage());
 			}
 		}
+		return skipped;
 	}
 
 	/**
