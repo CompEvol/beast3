@@ -104,7 +104,7 @@ public class UpDownOperator extends KernelOperator {
      *         should not be accepted
      */
     @Override
-    public final double proposal() {
+    public double proposal() {
 
         double scale = getScaler(0);
         int goingUp = 0, goingDown = 0;
