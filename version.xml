@@ -294,6 +294,7 @@
                 <provider classname="beast.base.spec.evolution.operator.AdaptableOperatorSampler"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.UpDownOperator"/>
+                <provider classname="beast.base.spec.evolution.operator.IntervalScaleOperator"/>
 
                 <provider classname="beast.base.spec.inference.operator.Transform$Array"/>
                 <provider classname="beast.base.spec.inference.operator.Transform$Collection"/>
