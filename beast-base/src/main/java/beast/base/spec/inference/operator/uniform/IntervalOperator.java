@@ -9,6 +9,7 @@ import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.util.Randomizer;
+import beast.base.core.ProgramStatus;
 
 import java.text.DecimalFormat;
 
@@ -48,6 +49,11 @@ public class IntervalOperator extends KernelOperator {
             throw new IllegalArgumentException("The parameter for ScaleOperator must be a RealScalarParam or RealVectorParam ! But " + param.getClass());
 
         scaleFactor = scaleFactorInput.get();
+        
+        // Don't throw an error in beauti just because the initial value is outside the legal range
+        if (ProgramStatus.name.equals("BEAUti") ) {
+        	return;
+        }
 
         lower = getPamaLower();
         upper = getPamaUpper();
