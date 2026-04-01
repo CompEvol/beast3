@@ -28,10 +28,7 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
-import beast.base.spec.domain.Bool;
-import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.BoolVectorParam;
-import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
 
 /**
@@ -49,9 +46,7 @@ public class BitFlipOperator extends Operator {
     final public Input<Boolean> uniformInput = new Input<>("uniform", "when on, total probability of combinations with k" +
             " 'on' bits is equal. Otherwise uniform on all combinations (default true)", true);
 
-    final public Input<Tensor<? extends Bool,Boolean>> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
-    
-   
+    final public Input<BoolVectorParam> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
 
     private boolean usesPriorOnSum = true;
 
@@ -61,11 +56,6 @@ public class BitFlipOperator extends Operator {
         if (b != null) {
             usesPriorOnSum = b;
         }
-        
-        if (!(parameterInput.get() instanceof BoolVectorParam) && !(parameterInput.get() instanceof BoolScalarParam)) {
-        	throw new IllegalArgumentException("The parameter must be a BoolVectorParam or BoolScalarParam");
-        }
-        
     }
 
     /**
@@ -78,26 +68,24 @@ public class BitFlipOperator extends Operator {
     @Override
     public double proposal() {
 
-    	
-    	
-        
-    	Tensor<?,Boolean> param = parameterInput.get();
-        final int dim = param.size(); 
+        final BoolVectorParam p = parameterInput.get();
+
+        final int dim = p.size();
 
         double sum = 0.0;
         if (usesPriorOnSum) {
             for (int i = 0; i < dim; i++) {
-                if (param.get(i)) sum += 1;
+                if (p.get(i)) sum += 1;
             }
         }
 
         final int pos = Randomizer.nextInt(dim);
 
-        final boolean value = param.get(pos);
+        final boolean value = p.get(pos);
 
         double logq = 0.0;
         if (!value) {
-            setValue(pos, true);
+            p.set(pos, true);
 
             if (usesPriorOnSum) {
                 logq = -Math.log((dim - sum) / (sum + 1));
@@ -106,25 +94,12 @@ public class BitFlipOperator extends Operator {
         } else {
             //assert value;
 
-        	setValue(pos, false);
+            p.set(pos, false);
             if (usesPriorOnSum) {
                 logq = -Math.log(sum / (dim - sum + 1));
             }
         }
         return logq;
     }
-    
-    
-    private void setValue(int i, boolean value) {
-   	 if (parameterInput.get() instanceof BoolVectorParam) {
-   		 final BoolVectorParam p = (BoolVectorParam)parameterInput.get();
-   		 p.set(i, value);
-   	 }else {
-   		 final BoolScalarParam p = (BoolScalarParam)parameterInput.get();
-   		 p.set(value);
-   	 }
-   }
-    
-    
 }
 
