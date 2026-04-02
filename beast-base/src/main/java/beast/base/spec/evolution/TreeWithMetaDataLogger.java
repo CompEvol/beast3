@@ -131,6 +131,16 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
 				boolean needsComma = false;
 				for (Tensor<?,?> metadata : metadataList) {
 					if (metadata instanceof Vector) {
+						
+						// Skip node if there is no metadata e.g., the root
+						if (node.getNr() >= metadata.size()) {
+							continue;
+						}
+						
+						if (needsComma) {
+							buf2.append(",");
+						}
+						
 						// TODO: deal with matrices
 //						Vector p = (Vector) metadata;
 //						int dim = p.size();
@@ -158,14 +168,19 @@ public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {
 //								if (metadata instanceof RealVector rp) {
 //									appendDouble(buf2, rp.get(node.getNr()));
 //								} else {
-									buf2.append(metadata.get(node.getNr()));
+//									buf2.append(metadata.get(node.getNr()));
 //								}
 //							}
+								
+							
+							buf2.append(((BEASTObject) metadata).getID());
+							buf2.append('=');
+							buf2.append(metadata.get(node.getNr()));
 							needsComma = true;
-//						} else {
-//						
-//						}
+
 					} else {
+						
+						// It is a scalar, so just add metadata to node 0
 						if (metadata.size() > node.getNr()) {
 							if (needsComma) {
 								buf2.append(",");
