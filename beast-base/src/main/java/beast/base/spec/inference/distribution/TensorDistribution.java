@@ -177,31 +177,36 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
                         boolean valid = false; // start loop
                         while (! valid) {
                             newListX = sample();
-                            if (vector.size() != newListX.size())
-                                throw new IllegalStateException("sample is not implemented yet for vector that is not a Vector");
+                            if (newListX == null || newListX.isEmpty())
+                                throw new IllegalStateException("sample is not implemented yet for vector that is not a Vector for " + this.ID);
 
-                            for (int i = 0; i < vector.size(); i++) {
+                            for (int i = 0; i < newListX.size(); i++) {
                                 valid = vector.isValid(newListX.get(i));
                                 if ( ! valid)
                                     break;
                             }
                         } // end while
-
+                        
+                        // Resize the vector in case it has changed (e.g. reversible jump or when sampling branch rates on an FBD tree with a variable taxon count)
+                        int newDimension = newListX.size();
                         switch (vector) {
                             case RealVectorParam rv -> {
+                            	if (rv.size() != newDimension) rv.setDimension(newDimension);
                                 for (int i = 0; i < rv.size(); i++)
                                     rv.set(i, (Double) newListX.get(i));
                             }
                             case IntVectorParam iv -> {
+                            	if (iv.size() != newDimension) iv.setDimension(newDimension);
                                 for (int i = 0; i < iv.size(); i++)
                                     iv.set(i, (Integer) newListX.get(i));
                             }
                             case BoolVectorParam bv -> {
+                            	if (bv.size() != newDimension) bv.setDimension(newDimension);
                                 for (int i = 0; i < bv.size(); i++)
                                     bv.set(i, (Boolean) newListX.get(i));
                             }
                             default -> {
-                                throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam");
+                                throw new IllegalStateException("sample is not implemented yet for scalar that is not a RealScalarParam or IntScalarParam for " + this.getID());
                             }
                         }
                     }
