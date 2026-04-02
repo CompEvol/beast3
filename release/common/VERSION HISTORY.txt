@@ -5,6 +5,18 @@ Last updated: March 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta3 April 2026
+	o Fix bugs in TreeWithMetaDataLogger #57
+	o TensorDistribution: sample a vector with variable size #56
+	o BitFlipOperator: generalise to scalars and vectors #55
+	o IntervalScaleOperator added to beast.base providers
+	o Remove crash event from BEAUti #53
+	o Retry packages with unsatisfied module dependencies after initial loading pass
+	o Remove final property from UpDownOperator #52
+	o Refactor package manager: extract god-class, fix security and correctness bugs
+	o Remove lower/upper inputs from fxtemplate #51
+	o Sync module-info.java with version.xml providers
+
 Version 2.8.0-beta2 March 2026
 	o BEAGLE Java bindings resolved from Maven Central (io.github.beagle-dev:beagle:1.0.0)
 	o UCRelaxedClockModel: rateDistInput accepts NonNegativeReal distributions #50

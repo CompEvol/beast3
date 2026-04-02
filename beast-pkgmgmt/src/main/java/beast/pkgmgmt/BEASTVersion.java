@@ -21,7 +21,7 @@ public class BEASTVersion extends Version {
      * Pre-release label appended to the version string (e.g. "beta1", "rc1").
      * Set to {@code null} for a final release.
      */
-    private static final String PRERELEASE = "beta1";
+    private static final String PRERELEASE = "beta3";
 
     private static final String PROGRAM_NAME = "BEAST";
 

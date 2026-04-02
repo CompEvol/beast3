@@ -207,8 +207,6 @@
 
 <!--                <provider classname="beast.base.spec.inference.distribution.Prior"/>-->
 
-                <provider classname="beast.base.spec.inference.distribution.IntTensorDistribution"/>
-                <provider classname="beast.base.spec.inference.distribution.RealTensorDistribution"/>
                 <provider classname="beast.base.spec.inference.distribution.TensorDistribution"/>
 
                 <provider classname="beast.base.spec.inference.distribution.Bernoulli"/>

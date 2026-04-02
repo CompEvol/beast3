@@ -14,6 +14,9 @@ auto-publishes to Maven Central.
    | `beast-base/src/main/java/beast/base/core/BEASTVersion2.java` | `VERSION` |
    | `beast-pkgmgmt/src/main/java/beast/pkgmgmt/BEASTVersion.java` | `VERSION` |
 
+   For pre-releases, also update `PRERELEASE` in both Java files
+   (e.g. `"beta3"`). Set to `null` for a final release.
+
    The POM versions (`2.8.0-SNAPSHOT`) are set automatically by the
    workflow — do **not** change them manually.
 
