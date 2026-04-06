@@ -259,12 +259,149 @@ For your package
 
 ## 3a. Update example XMLs
 
-* Replace all `XXXParameters` with appropriate types `XXXParams`
-* Replace all `spec` attributes with the appropriate classes (mostly insert '.spec')
-* Replace operator sets for Trees with new operator sets
+### Remove `<map>` blocks
+
+The `Prior` wrapper class is no longer used. Remove all `<map>` entries:
+
+```xml
+<!-- Remove all of these -->
+<map name="Uniform">beast.base.inference.distribution.Uniform</map>
+<map name="prior">beast.base.inference.distribution.Prior</map>
+<!-- etc. -->
+```
+
+### Update namespace
+
+Add `beast.base.spec.*` packages to the namespace (listed first for priority over deprecated classes):
+
+```xml
+namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:
+beast.base.spec.inference.distribution:beast.base.spec.evolution.tree.coalescent:
+beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.likelihood:
+beast.base.spec.evolution.operator:beast.base.spec.evolution.substitutionmodel:
+beast.base.spec.evolution.branchratemodel:beast.base.spec.domain:
+beast.base.evolution.alignment:beast.base.evolution.tree:
+beast.pkgmgmt:beast.base.core:beast.base.inference:
+beast.base.inference.operator:beast.base.evolution.operator"
+```
+
+Also update `version="2.8"`.
+
+### Replace parameters
+
+Replace `lower`/`upper` attributes with `domain`:
+
+```xml
+<!-- Old -->
+<parameter spec="parameter.RealParameter" value="1.0" lower="0.0" estimate="true"/>
+<!-- New scalar -->
+<parameter spec="RealScalarParam" domain="PositiveReal" value="1.0" estimate="true"/>
+<!-- New vector -->
+<parameter spec="RealVectorParam" domain="NonNegativeReal" value="1.0" estimate="true"/>
+<!-- Boolean -->
+<stateNode spec="BoolVectorParam" dimension="20">true</stateNode>
+```
+
+Replace `Function$Constant` with `RealScalarParam`:
+
+```xml
+<!-- Old -->
+<mean spec="Function$Constant" value="1.0"/>
+<!-- New -->
+<mean spec="RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+```
+
+### Replace priors with direct spec distributions
+
+In the spec framework, the distribution IS the prior. The input name changes from `x` to `param`:
+
+```xml
+<!-- Old: Prior wrapper -->
+<prior id="NePrior" name="distribution" x="@Ne">
+    <Exponential name="distr">
+        <mean spec="Function$Constant" value="1.0"/>
+    </Exponential>
+</prior>
+
+<!-- New: direct spec distribution (scalar param) -->
+<distribution id="clockPrior" spec="beast.base.spec.inference.distribution.Exponential"
+              param="@clockRate">
+    <mean spec="RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+</distribution>
+```
+
+### IID for vector priors
+
+Spec distributions like `Exponential`, `Normal`, `LogNormal` are `ScalarDistribution` objects and only accept scalar params. For vector parameters, wrap with `IID`:
+
+```xml
+<!-- Vector param: wrap with IID -->
+<distribution id="NePrior" spec="beast.base.spec.inference.distribution.IID"
+              param="@Ne">
+    <distr spec="beast.base.spec.inference.distribution.Exponential">
+        <mean spec="RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+    </distr>
+</distribution>
+```
+
+Without the `IID` wrapper, you will get: `ClassCastException: RealVectorParam cannot be cast to RealScalar`.
+
+### Casting utilities for complex patterns
+
+When a boolean indicator sum needs a Poisson prior, use `IntSum` and `AsIntScalar` (see `beast.base.spec.README.md` for details):
+
+```xml
+<distribution spec="beast.base.spec.inference.distribution.Poisson">
+    <lambda spec="RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+    <param spec="beast.base.spec.inference.util.AsIntScalar" domain="NonNegativeInt">
+        <arg spec="beast.base.spec.evolution.IntSum" arg="@indicators"/>
+    </param>
+</distribution>
+```
+
+### Replace `spec` attributes with spec class paths
+
+Most beast-base classes have spec equivalents. Replace short names or old paths with spec paths:
+
+| Old | New |
+|-----|-----|
+| `ConstantPopulation` | `beast.base.spec.evolution.tree.coalescent.ConstantPopulation` |
+| `RandomTree` | `beast.base.spec.evolution.tree.coalescent.RandomTree` |
+| `SiteModel` | `beast.base.spec.evolution.sitemodel.SiteModel` |
+| `ThreadedTreeLikelihood` | `beast.base.spec.evolution.likelihood.ThreadedTreeLikelihood` |
+| `JukesCantor` | `beast.base.spec.evolution.substitutionmodel.JukesCantor` |
+| `HKY` | `beast.base.spec.evolution.substitutionmodel.HKY` |
+| `beast.base.evolution.branchratemodel.StrictClockModel` | `beast.base.spec.evolution.branchratemodel.StrictClockModel` |
+| `ScaleOperator` (parameter) | `beast.base.spec.inference.operator.ScaleOperator` |
+| `operator.BitFlipOperator` | `beast.base.spec.inference.operator.BitFlipOperator` |
+| `AdaptableOperatorSampler` | `beast.base.spec.evolution.operator.AdaptableOperatorSampler` |
+| `kernel.AdaptableVarianceMultivariateNormalOperator` | `beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator` |
+| `operator.kernel.BactrianUpDownOperator` | `beast.base.spec.evolution.operator.UpDownOperator` |
+| `operator.kernel.Transform$LogTransform` | `beast.base.spec.inference.operator.Transform$LogTransform` |
+| `operator.kernel.Transform$NoTransform` | `beast.base.spec.inference.operator.Transform$NoTransform` |
+| `beast.base.evolution.Sum` | `beast.base.spec.evolution.Sum` (or `IntSum` for booleans) |
+
+Classes that do NOT have spec equivalents (keep as-is): `MCMC`, `State`, `CompoundDistribution`, `Logger`, `OperatorSchedule`, `Exchange`, `WilsonBalding`, `EpochFlexOperator`, `TreeStretchOperator`, `kernel.BactrianScaleOperator` (tree mode with `rootOnly`), `kernel.BactrianNodeOperator`, `kernel.BactrianSubtreeSlide`.
+
+### Function vs Tensor incompatibility
+
+Spec types (`RealScalarParam`, `RealVectorParam`, etc.) implement `Tensor`, NOT `Function`. Old beast-base classes that expect `Function` inputs will NOT accept spec types. You must use spec versions of beast-base classes throughout.
+
+In AVMN transforms, `Transform$NoTransform` takes `Tensor` for its `f` input, but `Tree` is not a `Tensor`. Remove tree references from `NoTransform` entries:
+
+```xml
+<!-- Old -->
+<transformations spec="operator.kernel.Transform$NoTransform">
+    <f idref="Tree.t:$(n)"/>
+</transformations>
+<!-- New: self-closing (tree passed via AdaptableOperatorSampler.tree input) -->
+<transformations spec="beast.base.spec.inference.operator.Transform$NoTransform"/>
+```
+
+### Replace tree operator sets
 
 Old set:
-```
+```xml
 <operator id="$(m)BICEPSEpochTop.t:$(n)" spec="beast.base.evolution.operator.EpochFlexOperator" tree="@Tree.t:$(n)" weight="2.0" scaleFactor="0.1"/>
 <operator id="$(m)BICEPSEpochAll.t:$(n)" spec="beast.base.evolution.operator.EpochFlexOperator" tree="@Tree.t:$(n)" weight="2.0" scaleFactor="0.1" fromOldestTipOnly="false"/>
 <operator id="$(m)BICEPSTreeFlex.t:$(n)" spec="beast.base.evolution.operator.TreeStretchOperator" scaleFactor="0.01" tree="@Tree.t:$(n)" weight="2.0"/>
@@ -276,8 +413,8 @@ Old set:
 <operator id='$(m)WilsonBalding.t:$(n)' spec='WilsonBalding' weight="3" tree="@Tree.t:$(n)"/>
 ```
 
-New set
-```
+New set:
+```xml
 <operator id="$(m)TreeScaler.t:$(n)" spec="beast.base.spec.evolution.operator.UpDownOperator" up="@Tree.t:$(n)" weight="4.0" scaleFactor="0.1"/>
 <operator id='$(m)TreeRootScaler.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianScaleOperator' scaleFactor="0.1" weight="3" tree="@Tree.t:$(n)" rootOnly='true'/>
 <operator id='$(m)UniformOperator.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianNodeOperator' weight="30" tree="@Tree.t:$(n)"/>
@@ -289,8 +426,83 @@ New set
 
 ## 3b. Update BEAUti templates & input editors
 
-* Replace all `XXXParameters` with appropriate types `XXXParams`
-* Replace all `spec` attributes with the appropriate classes (mostly insert '.spec')
-* Replace operator sets for Trees with new operator sets (see above)
-* Update `InputEditor` implementations to deal with typed inputs
-* Some BEAUti InputEditors have changed signatures
+### FXTemplate parameter declarations
+
+Replace deprecated parameter types with spec types using `domain`:
+
+```xml
+<!-- Old -->
+<param id="Ne.t:$(n)" spec="beast.base.inference.parameter.RealParameter"
+       value="1.0" lower="0.0" estimate="true"/>
+<!-- New vector -->
+<param id="Ne.t:$(n)" spec="RealVectorParam"
+       domain="NonNegativeReal" value="1.0" estimate="true"/>
+<!-- New scalar (e.g. clock rate) -->
+<param id="clock.t:$(n)" spec="RealScalarParam"
+       domain="PositiveReal" value="1.0" estimate="true"/>
+<!-- Boolean indicators -->
+<param id="indicators.t:$(n)" spec="BoolVectorParam"
+       value="true" estimate="true"/>
+```
+
+### InputEditor no-arg constructors
+
+JPMS `provides` declarations require service implementations to have a public no-arg constructor. `InputEditor.Base` now provides one, but your subclasses must also have one if they define a `(BeautiDoc doc)` constructor (which suppresses the default):
+
+```java
+public class MyInputEditor extends InputEditor.Base {
+    public MyInputEditor() { super(); }           // required for JPMS
+    public MyInputEditor(BeautiDoc doc) { super(doc); }
+    // ...
+}
+```
+
+### Computed quantities as spec types
+
+If your package has utility classes that compute derived quantities (e.g. differences between vector elements, mean of a vector), these previously implemented `Function`. In beast3, spec distributions expect `Tensor` types, not `Function`.
+
+Make these classes implement the appropriate spec type interface:
+
+| Output | Implement | Required methods |
+|--------|-----------|-----------------|
+| Vector (N values) | `RealVector<Real>` | `getDomain()`, `size()`, `get(int i)`, `getElements()` |
+| Scalar (1 value) | `RealScalar<Real>` | `getDomain()`, `get()` |
+
+Example:
+```java
+public class Difference extends CalculationNode implements RealVector<Real> {
+    final public Input<RealVector<? extends Real>> argInput = new Input<>("arg", "...");
+
+    @Override public Real getDomain() { return Real.INSTANCE; }
+    @Override public int size() { return values.length; }
+    @Override public double get(int i) { return values[i]; }
+    @Override public List<Double> getElements() {
+        return Arrays.stream(values).boxed().collect(Collectors.toList());
+    }
+}
+```
+
+Then in XML, vector computed quantities use `IID` wrapping, scalar ones use distributions directly:
+```xml
+<!-- Vector -> IID+Normal -->
+<distribution spec="beast.base.spec.inference.distribution.IID">
+    <param spec="mypackage.Difference" arg="@myVector"/>
+    <distr spec="beast.base.spec.inference.distribution.Normal">...</distr>
+</distribution>
+<!-- Scalar -> Normal directly -->
+<distribution spec="beast.base.spec.inference.distribution.Normal">
+    <param spec="mypackage.First" arg="@myVector"/>
+    ...
+</distribution>
+```
+
+### Other code migration notes
+
+* `RealScalarParam` does not have `isDirty(int)`. Use `somethingIsDirty()` instead.
+* `size()` replaces `getDimension()` on spec vector types.
+* `get(i)` / `set(i, v)` replace `getValue(i)` / `setValue(i, v)`.
+* `get()` replaces `getValue()` / `getArrayValue()` on scalar types.
+* `BoolVectorParam` does not implement `Function`. Use `get(i)` (returns `boolean`) instead of `getArrayValue(i)`.
+* Replace operator sets for Trees with new operator sets (see Section 3a).
+* Update `InputEditor` implementations to deal with typed inputs.
+* When `StateNode` is needed as a generic type (e.g. in BEAUti code that handles both old and new parameters), cast to `StateNode` rather than `RealParameter`. The `isEstimatedInput` field is on `StateNode`.
