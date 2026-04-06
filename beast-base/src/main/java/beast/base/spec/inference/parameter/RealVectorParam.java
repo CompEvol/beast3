@@ -128,10 +128,8 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
     @Override
     public void initAndValidate() {
-        // keys
-        super.initAndValidate();
-
-        // allow value=1.0 dimension=4 to create a vector of four 1.0
+        // Initialise values BEFORE keys validation (super.initAndValidate
+        // calls size() which requires the values array to exist).
         double[] valuesString = valuesInput.get().stream()
                 .mapToDouble(Double::doubleValue)
                 .toArray();
@@ -144,6 +142,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         }
         this.storedValues = values.clone();
         isDirty = new boolean[dimension];
+
+        // keys (validates keys.size() == size(), which needs values)
+        super.initAndValidate();
 
         // Initialize domain based on type or bounds
         domain = (D) domainTypeInput.get();

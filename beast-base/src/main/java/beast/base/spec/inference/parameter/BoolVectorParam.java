@@ -82,10 +82,8 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
     @Override
     public void initAndValidate() {
-        // keys
-        super.initAndValidate();
-
-        // allow value=true dimension=4 to create a vector of four true
+        // Initialise values BEFORE keys validation (super.initAndValidate
+        // calls size() which requires the values array to exist).
         List<Boolean> valuesList = valuesInput.get();
         boolean[] valuesString = new boolean[valuesList.size()];
         for (int i = 0; i < valuesList.size(); i++)
@@ -100,6 +98,9 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         }
         this.storedValues = values.clone();
         isDirty = new boolean[dimension];
+
+        // keys (validates keys.size() == size(), which needs values)
+        super.initAndValidate();
 
 
         // validate value after domain and bounds are set
