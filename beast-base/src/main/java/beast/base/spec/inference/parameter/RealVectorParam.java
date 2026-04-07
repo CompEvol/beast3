@@ -146,6 +146,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         // keys (validates keys.size() == size(), which needs values)
         super.initAndValidate();
 
+        // shape (must come after values are allocated)
+        initShape();
+
         // Initialize domain based on type or bounds
         domain = (D) domainTypeInput.get();
 
@@ -199,6 +202,22 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public double get(int i) {
         return values[i]; // unboxed
     }
+
+    /**
+     * Multi-dimensional access for shaped vectors.
+     * For a flat vector, behaves identically to get(idx[0]).
+     * For a shaped vector (e.g. shape="4 3"), supports get(row, col).
+     */
+    @Override
+    public Double get(int... idx) {
+        return get(toFlatIndex(idx));
+    }
+
+    @Override
+    public int rank() { return getTensorRank(); }
+
+    @Override
+    public int[] shape() { return getTensorShape(); }
 
     public double getStoredValue(final int i) {
         return storedValues[i];
