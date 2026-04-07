@@ -18,8 +18,26 @@ public abstract class KeyVectorParam<T> extends StateNode {
     public final Input<String> keysInput = new Input<>("keys",
             "the keys (unique dimension names) for the dimensions of this parameter", (String) null);
 
+    public final Input<List<Integer>> shapeInput = new Input<>("shape",
+            "Interpret the flat storage as a multi-dimensional array with these " +
+            "axis sizes (e.g. shape='3 4' for a 3-row, 4-column matrix). " +
+            "Product of shape must equal dimension. Default: flat vector.",
+            new ArrayList<>(), Integer.class);
+
     protected List<String> keys = null; // unmodifiableList
     protected Map<String, Integer> keyToIndexMap = null;
+
+    /**
+     * Shape of the parameter. Null means flat vector (rank 1).
+     * For a 4x3 matrix, shape = {4, 3}.
+     */
+    protected int[] tensorShape = null;
+
+    /**
+     * Row-major strides for multi-dimensional indexing.
+     * For shape {4, 3}, strides = {3, 1}.
+     */
+    protected int[] strides = null;
 
     /**
      * Retrieves the value associated with a named key.
@@ -38,15 +56,23 @@ public abstract class KeyVectorParam<T> extends StateNode {
     @Override
     public void initAndValidate() {
 
+        // parse shape early (before keys validation) so nrows() is available.
+        // product-vs-size validation is deferred to initShape() which runs after
+        // values are allocated in the subclass.
+        parseShape();
+
         // keys
         if (keysInput.get() != null) {
             String[] keysArr = keysInput.get().split(" ");
-            // unmodifiable list : UnsupportedOperationException if attempting to modify
             List<String> keys = Collections.unmodifiableList(Arrays.asList(keysArr));
 
-            if (keys.size() != this.size())
-                throw new IllegalArgumentException("For vector, keys must have the same length as dimension ! " +
-                        "Dimension = " + this.size() + ", but keys.size() = " + keys.size());
+            // For a shaped vector, keys can match either total size or nrows (row-level keys).
+            boolean validLength = keys.size() == this.size() ||
+                    (tensorShape != null && tensorShape.length >= 2 && keys.size() == tensorShape[0]);
+            if (!validLength)
+                throw new IllegalArgumentException("Keys length must equal dimension (" + this.size() + ")" +
+                        (tensorShape != null ? " or nrows (" + tensorShape[0] + ")" : "") +
+                        ", but got " + keys.size());
             initKeys(keys);
         }
 
@@ -102,5 +128,85 @@ public abstract class KeyVectorParam<T> extends StateNode {
      * @param i2   index two
      */
     abstract public void swap(final int i1, final int i2);
+
+    // --- Shape support ---
+
+    /**
+     * Parse shape input into tensorShape and strides. Does NOT validate
+     * against size() -- call this before values are allocated if needed
+     * (e.g. for keys validation in initAndValidate).
+     */
+    private void parseShape() {
+        if (shapeInput.get() != null && !shapeInput.get().isEmpty()) {
+            tensorShape = shapeInput.get().stream().mapToInt(Integer::intValue).toArray();
+            // row-major strides
+            strides = new int[tensorShape.length];
+            strides[tensorShape.length - 1] = 1;
+            for (int k = tensorShape.length - 2; k >= 0; k--)
+                strides[k] = strides[k + 1] * tensorShape[k + 1];
+        }
+    }
+
+    /**
+     * Validate that the product of shape equals the total number of elements.
+     * Must be called after values are allocated (so that size() returns the
+     * correct total element count). Subclasses call this from initAndValidate.
+     */
+    protected void initShape() {
+        // parseShape() already ran in super.initAndValidate(); just validate product
+        if (tensorShape != null) {
+            int product = 1;
+            for (int s : tensorShape) product *= s;
+            if (product != size())
+                throw new IllegalArgumentException("Product of shape " + Arrays.toString(tensorShape) +
+                        " (" + product + ") must equal dimension " + size());
+        }
+    }
+
+    /**
+     * Convert multi-dimensional indices to a flat index using row-major order.
+     *
+     * @param idx indices, one per dimension
+     * @return flat index into the values array
+     */
+    protected int toFlatIndex(int... idx) {
+        if (tensorShape == null || idx.length == 1)
+            return idx[0];
+        if (idx.length != tensorShape.length)
+            throw new IndexOutOfBoundsException(
+                    "Expected " + tensorShape.length + " indices, got " + idx.length);
+        int flat = 0;
+        for (int k = 0; k < idx.length; k++)
+            flat += idx[k] * strides[k];
+        return flat;
+    }
+
+    /**
+     * @return the tensor rank: 1 for a flat vector, 2 for a matrix, etc.
+     */
+    public int getTensorRank() {
+        return tensorShape != null ? tensorShape.length : 1;
+    }
+
+    /**
+     * @return the tensor shape: {size} for a flat vector, {rows, cols} for a matrix, etc.
+     */
+    public int[] getTensorShape() {
+        return tensorShape != null ? tensorShape.clone() : new int[]{size()};
+    }
+
+    /**
+     * @return number of rows (first axis) for a shaped parameter, or size() for a flat vector
+     */
+    public int nrows() {
+        return tensorShape != null && tensorShape.length >= 2 ? tensorShape[0] : size();
+    }
+
+    /**
+     * @return number of columns (second axis) for a shaped parameter, or 1 for a flat vector
+     */
+    public int ncols() {
+        return tensorShape != null && tensorShape.length >= 2 ? tensorShape[1] : 1;
+    }
 
 }
