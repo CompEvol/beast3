@@ -244,6 +244,7 @@ open module beast.base {
         beast.base.spec.inference.parameter.RealVectorParam,
         beast.base.spec.inference.parameter.SimplexParam,
         beast.base.spec.inference.parameter.IntSimplexParam,
+        beast.base.spec.inference.parameter.VectorElement,
         beast.base.spec.inference.util.AsRealScalar,
         beast.base.spec.inference.util.AsIntScalar,
         beast.base.spec.inference.util.ESS,
