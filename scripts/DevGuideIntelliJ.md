@@ -26,16 +26,21 @@ https://www.jetbrains.com/idea/download/
 
 That's it — no manual library setup, module configuration, or package prefixes are needed. Maven handles all dependency resolution.
 
-## BEAST 2 project legacy
+## Troubleshooting: Maven Import Issues
 
-You may have a problem to open as a Maven project in the first time,
-if your IntelliJ had a previous non-Maven settings in the same directory, especially BEAST packages. such as BEASTLabs.
-Then you need to completely remove the previous IntelliJ settings in the hidden folder `.idea/`,
-and restart IntelliJ using `File => Invalidate Caches...`. Then repeat the previous steps in "Open the project".
+If you previously opened the same directory as a non-Maven project (especially with BEAST packages like BEASTLabs), 
+IntelliJ may fail to import it correctly. To fix this
+
+- Delete the hidden `.idea/` folder.
+- Select `File => Invalidate Caches...` and restart.
+- Remove the old project from the list of projects in the welcome page.
+- Re-open the project as instructed above.
 
 <a href="./InvalidateCaches.png"><img src="InvalidateCaches.png" width="600" ></a>
 
-Repeat these two steps a couple of times, if the problem persists.
+<a href="./RmProject.png"><img src="RmProject.png" width="600" ></a>
+
+Repeat these steps a couple of times, if the problem persists.
 
 ## Configure JDK
 
