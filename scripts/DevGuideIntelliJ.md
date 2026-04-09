@@ -26,6 +26,17 @@ https://www.jetbrains.com/idea/download/
 
 That's it — no manual library setup, module configuration, or package prefixes are needed. Maven handles all dependency resolution.
 
+## BEAST 2 project legacy
+
+You may have a problem to open as a Maven project in the first time,
+if your IntelliJ had a previous non-Maven settings in the same directory, especially BEAST packages. such as BEASTLabs.
+Then you need to completely remove the previous IntelliJ settings in the hidden folder `.idea/`,
+and restart IntelliJ using `File => Invalidate Caches...`. Then repeat the previous steps in "Open the project".
+
+<a href="./InvalidateCaches.png"><img src="InvalidateCaches.png" width="600" ></a>
+
+Repeat these two steps a couple of times, if the problem persists.
+
 ## Configure JDK
 
 If IntelliJ does not automatically pick up JDK 25:
