@@ -5,6 +5,14 @@ Last updated: March 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta4 April 2026
+	o Add type-safe setTypedValue(T, BEASTInterface) to Input<T> #62
+	o Add VectorElement: scalar view of a RealVector element #60
+	o Add shape support to VectorParam #58
+	o Fix KeyVectorParam init order: initialise values before keys validation
+	o Expand migration guide sections 3a and 3b
+	o Developer guide and documentation updates #63
+
 Version 2.8.0-beta3 April 2026
 	o Fix bugs in TreeWithMetaDataLogger #57
 	o TensorDistribution: sample a vector with variable size #56
