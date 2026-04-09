@@ -243,6 +243,8 @@ See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup or `scripts/DevGuideEc
 
 For guidance on migrating external packages, see `scripts/migration-guide.md` (migrating from BEAST v2.7 to v3).
 
+[Naming & version number convention of Maven](https://maven.apache.org/guides/mini/guide-naming-conventions.html)
+
 Development rules and philosophy are discussed at
 [beast2.org/package-development-guide/core-development-rules](https://www.beast2.org/package-development-guide/core-development-rules/).
 
