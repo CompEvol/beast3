@@ -29,10 +29,10 @@ That's it — no manual library setup, module configuration, or package prefixes
 ## Troubleshooting: Maven Import Issues
 
 If you previously opened the same directory as a non-Maven project (especially with BEAST packages like BEASTLabs), 
-IntelliJ may fail to import it correctly. To fix this
+IntelliJ may fail to import it correctly. To fix this:
 
 - Delete the hidden `.idea/` folder.
-- Select `File => Invalidate Caches...` and restart.
+- Select `File → Invalidate Caches...` and restart.
 - Remove the old project from the list of projects in the welcome page.
 - Re-open the project as instructed above.
 
