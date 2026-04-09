@@ -526,6 +526,17 @@ public class Input<T> {
         }
     }
 
+    /**
+     * Type-safe alternative to {@link #setValue(Object, BEASTInterface)}.
+     * Provides compile-time type checking of the value parameter.
+     *
+     * @param value
+     * @param beastObject
+     */
+    public void setTypedValue(final T value, final BEASTInterface beastObject) {
+        setValue(value, beastObject);
+    }
+
     /** Programmer friendly version of setValue() to set value of this Input
      * This should only be called after the data type of the Input was determined 
      * earlier (so theClass != null), e.g. because seValue(value, beastObject)
