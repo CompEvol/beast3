@@ -345,7 +345,6 @@ public class BEASTClassLoader {
 
     /** Instance method: register services for a package. */
     public void addServices(String packageName, Map<String, Set<String>> services) {
-        ClassLoader loader = fallbackClassLoader();
         for (String service : services.keySet()) {
             BEASTClassLoader.services.computeIfAbsent(service, k -> new HashSet<>());
             Set<String> providers = BEASTClassLoader.services.get(service);
@@ -354,7 +353,7 @@ public class BEASTClassLoader {
                 // Use putIfAbsent so that a module-layer class-loader
                 // registered by registerPluginLayer() is not overwritten
                 // with the fallback system class-loader.
-                class2loaderMap.putIfAbsent(provider, loader);
+                class2loaderMap.putIfAbsent(provider, resolveLoaderFor(provider));
                 if (provider.contains(".")) {
                     namespaces.add(provider.substring(0, provider.lastIndexOf('.')));
                 }
@@ -367,7 +366,7 @@ public class BEASTClassLoader {
      */
     public static void addService(String service, String className, String packageName) {
         ensureServicesLoaded(service).add(className);
-        class2loaderMap.put(className, fallbackClassLoader());
+        class2loaderMap.put(className, resolveLoaderFor(className));
     }
 
     /**
@@ -536,5 +535,30 @@ public class BEASTClassLoader {
     private static ClassLoader fallbackClassLoader() {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
         return cl != null ? cl : ClassLoader.getSystemClassLoader();
+    }
+
+    /**
+     * Resolve the class-loader that should be used to load {@code provider}.
+     * If a named module on the boot layer owns the provider's package, that
+     * module's class-loader is returned. Otherwise we fall back to the
+     * thread context / system class-loader.
+     *
+     * <p>This avoids a class-identity split when the same JAR is reachable
+     * via both the module path and the class path: callers compiled against
+     * the module copy of a class would otherwise hit ClassCastException when
+     * BEASTClassLoader.forName() returned the app-loader copy.
+     */
+    private static ClassLoader resolveLoaderFor(String provider) {
+        int dot = provider.lastIndexOf('.');
+        if (dot < 0) return fallbackClassLoader();
+        String pkg = provider.substring(0, dot);
+        for (Module m : ModuleLayer.boot().modules()) {
+            java.lang.module.ModuleDescriptor desc = m.getDescriptor();
+            if (desc != null && desc.packages().contains(pkg)) {
+                ClassLoader loader = m.getClassLoader();
+                if (loader != null) return loader;
+            }
+        }
+        return fallbackClassLoader();
     }
 }
