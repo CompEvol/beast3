@@ -236,6 +236,11 @@ To publish your package to Maven Central (or another Maven repository), see the
 [beast-package-skeleton](https://github.com/CompEvol/beast-package-skeleton) template
 which includes a `release` profile and full publishing instructions.
 
+For a step-by-step guide to setting up automated Maven Central releases via
+GitHub Actions (Sonatype account, GPG key, repo secrets, namespace
+verification, tag-and-push workflow), see
+[`scripts/package-release-setup.md`](scripts/package-release-setup.md).
+
 Development
 -----------
 
