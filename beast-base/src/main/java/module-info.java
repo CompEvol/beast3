@@ -270,6 +270,7 @@ open module beast.base {
         beast.base.spec.inference.distribution.InverseGamma,
         beast.base.spec.inference.distribution.Laplace,
         beast.base.spec.inference.distribution.LogNormal,
+        beast.base.spec.inference.distribution.LogUniform,
         beast.base.spec.inference.distribution.MarkovChainDistribution,
         beast.base.spec.inference.distribution.Normal,
         beast.base.spec.inference.distribution.Poisson,
