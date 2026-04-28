@@ -1,10 +1,15 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: March 2026
+Last updated: April 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta5 April 2026
+	o Add LogUniform distribution (proper, scale-invariant replacement for OneOnX) #69
+	o Fix BEASTClassLoader dual-loader class identity split #65 #66
+	o Add package release setup guide for third-party developers
+
 Version 2.8.0-beta4 April 2026
 	o Add type-safe setTypedValue(T, BEASTInterface) to Input<T> #62
 	o Add VectorElement: scalar view of a RealVector element #60
