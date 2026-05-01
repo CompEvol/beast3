@@ -145,8 +145,10 @@ public class ScaleOperator extends Operator {
                     return -Math.log(scale);
                 } else {
                     // scale the beast.tree
-                    final int internalNodes = tree.scale(scale);
-                    return Math.log(scale) * (internalNodes - 2);
+                    // tree.scale returns the log Jacobian (dof * log(scale));
+                    // operator adds the -2*log(scale) kernel-symmetry correction.
+                    final double treeLogJacobian = tree.scale(scale);
+                    return treeLogJacobian - 2 * Math.log(scale);
                 }
             }
 
@@ -205,9 +207,13 @@ public class ScaleOperator extends Operator {
                 // for the proof. It is supposed to be somewhere in an Alexei/Nicholes article.
 
                 // all Values assumed independent!
-                final int computedDoF = param.scale(scale);
-                final int usedDoF = (specifiedDoF > 0) ? specifiedDoF : computedDoF ;
-                hastingsRatio = (usedDoF - 2) * Math.log(scale);
+                // param.scale returns the log Jacobian (dof * log(scale));
+                // operator adds the -2*log(scale) kernel-symmetry correction.
+                final double paramLogJacobian = param.scale(scale);
+                final double dofLogScale = (specifiedDoF > 0)
+                        ? specifiedDoF * Math.log(scale)
+                        : paramLogJacobian;
+                hastingsRatio = dofLogScale - 2 * Math.log(scale);
             } else {
                 hastingsRatio = -Math.log(scale);
 

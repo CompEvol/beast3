@@ -77,13 +77,12 @@ public class IntervalScaleOperator extends TreeOperator {
 		
 		double logHR = Math.log(scaler) * (numbers);
 
+		// scale returns log Jacobian = dim * log(factor)
 		for (Scalable down : downInput.get()) {
-			int dim = down.scale(1.0/actualScaler);//setValue(down.getValue() / actualScaler);
-			logHR -= dim * Math.log(actualScaler);
+			logHR += down.scale(1.0/actualScaler);
 		}
 		for (Scalable up : upInput.get()) {
-			int dim = up.scale(actualScaler);//setValue(up.getValue() * actualScaler);
-			logHR += dim * Math.log(actualScaler);
+			logHR += up.scale(actualScaler);
 		}
 		return logHR;
 	}

@@ -96,7 +96,7 @@ public class RealParameter extends Parameter.Base<Double> implements Scalable {
      * StateNode methods *
      */
     @Override
-    public int scale(final double scale) {
+    public double scale(final double scale) {
         int nScaled = 0;
 
         for (int i = 0; i < values.length; i++) {
@@ -111,7 +111,20 @@ public class RealParameter extends Parameter.Base<Double> implements Scalable {
             }
         }
 
-        return nScaled;
+        return nScaled * Math.log(scale);
+    }
+
+    /**
+     * Read this parameter's position on its dilation axis: sum of values.
+     * Exactly {@code s}-equivariant under {@link #scale(double)}.
+     */
+    @Override
+    public double getScalableValue() {
+        double sum = 0.0;
+        for (Double v : values) {
+            sum += v;
+        }
+        return sum;
     }
 
 	@Override

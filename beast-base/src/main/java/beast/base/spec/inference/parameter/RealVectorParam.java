@@ -427,7 +427,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
      * StateNode methods *
      */
     @Override
-    public int scale(final double scale) {
+    public double scale(final double scale) {
     	startEditing(null);
         int nScaled = 0;
 
@@ -443,7 +443,22 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 
         }
 
-        return nScaled;
+        return nScaled * Math.log(scale);
+    }
+
+    /**
+     * Read this vector's position on its dilation axis.
+     * The summary is the sum of values: invariant under sign and exactly
+     * {@code s}-equivariant under {@link #scale(double)}, since each non-zero
+     * element is multiplied by {@code s} and zero elements stay zero.
+     */
+    @Override
+    public double getScalableValue() {
+        double sum = 0.0;
+        for (double v : values) {
+            sum += v;
+        }
+        return sum;
     }
 
     @Override

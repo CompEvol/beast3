@@ -72,17 +72,18 @@ public class BactrianUpDownOperator extends KernelOperator {
     public final double proposal() {
 
         final double scale = getScaler(0);
-        int goingUp = 0, goingDown = 0;
+        double netLogJacobian = 0.0;
 
 
         if (elementWiseInput.get()) {
             int size = 0;
+            int numUp = 0, numDown = 0;
             for (StateNode up : upInput.get()) {
                 if (size == 0) size = ((Function)up).getDimension();
                 if (size > 0 && ((Function)up).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingUp += 1;
+                numUp += 1;
             }
 
             for (StateNode down : downInput.get()) {
@@ -90,7 +91,7 @@ public class BactrianUpDownOperator extends KernelOperator {
                 if (size > 0 && ((Function)down).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingDown += 1;
+                numDown += 1;
             }
 
             int index = Randomizer.nextInt(size);
@@ -114,12 +115,13 @@ public class BactrianUpDownOperator extends KernelOperator {
                     return Double.NEGATIVE_INFINITY;
                 }
             }
+            netLogJacobian = (numUp - numDown) * Math.log(scale);
         } else {
 
             try {
                 for (StateNode up : upInput.get()) {
                     up = up.getCurrentEditable(this);
-                    goingUp += ((Scalable)up).scale(scale);
+                    netLogJacobian += ((Scalable)up).scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
@@ -133,7 +135,7 @@ public class BactrianUpDownOperator extends KernelOperator {
 
                 for (StateNode down : downInput.get()) {
                     down = down.getCurrentEditable(this);
-                    goingDown += ((Scalable)down).scale(1.0 / scale);
+                    netLogJacobian += ((Scalable)down).scale(1.0 / scale);
                 }
                 for (StateNode down : downInput.get()) {
                     if (outsideBounds(down)) {
@@ -145,7 +147,8 @@ public class BactrianUpDownOperator extends KernelOperator {
                 return Double.NEGATIVE_INFINITY;
             }
         }
-        return (goingUp - goingDown) * Math.log(scale);
+        // Bactrian kernel is symmetric so no kernel-ratio correction is needed.
+        return netLogJacobian;
     }
 
     private boolean outsideBounds(final StateNode node) {

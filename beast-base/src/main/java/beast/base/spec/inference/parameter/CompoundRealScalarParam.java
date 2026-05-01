@@ -150,13 +150,21 @@ public class CompoundRealScalarParam<D extends Real> extends RealVectorParam<D> 
     }
 
     @Override
-    public int scale(double scale) {
-        int sum = 0;
+    public double scale(double scale) {
+        double sum = 0;
         for (RealScalarParam p : parameters) {
             sum += p.scale(scale);
         }
         return sum;
-//        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public double getScalableValue() {
+        double sum = 0.0;
+        for (RealScalarParam p : parameters) {
+            sum += p.getScalableValue();
+        }
+        return sum;
     }
 
     @Override
