@@ -124,7 +124,10 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
 		double m = StatUtils.mean(v);
 		double median = StatUtils.percentile(v, 50);
 		double s = StatUtils.variance(v, 50);
-		assertEquals(1.0, m, 5e-3);
+		// 3 SE for sample mean of ~498k LogNormal(M=1, S=1) draws (ESS ~ N
+		// for parameter-only chain): SE = sqrt((exp(1)-1) / 498000) ~= 1.86e-3,
+		// 3 SE ~= 5.6e-3. Expected failure rate at this tolerance: 0.27%.
+		assertEquals(1.0, m, 6e-3);
 		assertEquals(Math.exp(-0.5), median, 5e-3);
 		assertEquals(Math.exp(1)-1, s, 1e-1);
 		assertEquals(0.0854, StatUtils.percentile(v, 2.5), 5e-3);
