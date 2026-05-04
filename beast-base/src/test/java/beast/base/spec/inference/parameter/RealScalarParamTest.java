@@ -106,18 +106,16 @@ public class RealScalarParamTest {
 	}
 
 	/*
-	 * - Purpose: verify scale(...) and scaleOne(...) multiply the stored value and
-	 * return expected counts. 
+	 * - Purpose: verify scale(...) multiplies the stored value and returns the
+	 *   log Jacobian.
 	 * - Assertions: scale returns log Jacobian (= log(s) for a 1-D scalar)
-	 *   and multiplies value; scaleOne multiplies value too.
+	 *   and multiplies value.
 	 */
 	@Test
-	void testScaleAndScaleOne() {
+	void testScale() {
 		RealScalarParam param = new RealScalarParam(3.0, Real.INSTANCE);
 		assertEquals(Math.log(2.0), param.scale(2.0), 1e-12);
 		assertEquals(6.0, param.get(), 1e-12);
-		param.scaleOne(0, 0.5);
-		assertEquals(3.0, param.get(), 1e-12);
 	}
 
 	/*

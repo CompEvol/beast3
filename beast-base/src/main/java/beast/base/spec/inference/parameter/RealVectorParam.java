@@ -461,12 +461,6 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         return sum;
     }
 
-    @Override
-    public void scaleOne(int i, double scale) {
-    	startEditing(null);
-    	values[i] *= scale;
-    }
-
     /**
      * @return a deep copy of this node in the state.
      *         This will generally be called only for stochastic nodes.

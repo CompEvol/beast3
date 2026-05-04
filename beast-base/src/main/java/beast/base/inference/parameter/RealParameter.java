@@ -127,12 +127,6 @@ public class RealParameter extends Parameter.Base<Double> implements Scalable {
         return sum;
     }
 
-	@Override
-	public void scaleOne(int i, double scale) {
-        values[i] *= scale;
-	}
-
-
     @Override
     void fromXML(final int dimension, final String lower, final String upper, final String[] valuesString) {
         setLower(Double.parseDouble(lower));

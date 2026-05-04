@@ -731,23 +731,6 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
         return sum;
     }
 
-    @Override
-    public void scaleOne(int i, final double scale) {
-    	startEditing(null);
-    	double h = m_nodes[i].getHeight();
-    	double newHeight = h * scale;
-    	for (Node child : m_nodes[i].children) {
-    		if (newHeight < child.getHeight()) {
-    			throw new IllegalArgumentException("scale sets nodes below child result in negative branch length");
-    		}
-    	}
-    	if (!m_nodes[i].isRoot() && newHeight > m_nodes[i].getParent().getHeight()) {
-			throw new IllegalArgumentException("scale sets nodes above parent result in negative branch length");
-    	}
-        m_nodes[i].setHeight(newHeight);
-    }
-
-
 //    /**
 //     * The same as scale but with option to scale all sampled nodes
 //     * @param scale

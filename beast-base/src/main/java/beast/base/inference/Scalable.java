@@ -105,10 +105,4 @@ public interface Scalable {
         return scale(V / current);
     }
 
-    /**
-     * Scale only the {@code i}-th element of a multi-dimensional Scalable.
-     * Not part of the dilation-axis contract above.
-     */
-    void scaleOne(int i, double scale);
-
 }

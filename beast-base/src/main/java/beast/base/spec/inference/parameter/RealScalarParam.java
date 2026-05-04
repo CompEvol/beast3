@@ -164,12 +164,6 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         return value;
     }
 
-    @Override
-    public void scaleOne(int i, double scale) {
-    	startEditing(null);
-    	value *= scale;
-    }
-
     /**
      * @return a deep copy of this node in the state.
      *         This will generally be called only for stochastic nodes.
