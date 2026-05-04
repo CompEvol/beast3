@@ -111,7 +111,7 @@ public abstract class AbstractScale extends KernelOperator {
      * @return the target acceptance probability
      */
     @Override
-    public double getTargetAcceptanceProbability() {
+    public double getDefaultTargetAcceptanceProbability() {
         return Target_Acceptance_Probability;
     }
 

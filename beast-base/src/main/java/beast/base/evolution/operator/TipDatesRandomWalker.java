@@ -170,6 +170,11 @@ public class TipDatesRandomWalker extends TreeOperator {
     }
 
     @Override
+    public double getDefaultTargetAcceptanceProbability() {
+        return 0.3;
+    }
+
+    @Override
     public void optimize(double logAlpha) {
         // must be overridden by operator implementation to have an effect
         double delta = calcDelta(logAlpha);

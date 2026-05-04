@@ -186,11 +186,6 @@ public class BactrianUpDownOperator extends KernelOperator {
     }
 
     @Override
-    public double getTargetAcceptanceProbability() {
-    	return 0.3;
-    }
-
-    @Override
     public String getPerformanceSuggestion() {
         double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
         double targetProb = getTargetAcceptanceProbability();
