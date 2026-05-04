@@ -283,6 +283,11 @@ public class BactrianSubtreeSlide extends TreeOperator {
     }
 
     @Override
+    public double getDefaultTargetAcceptanceProbability() {
+        return 0.3;
+    }
+
+    @Override
     public String getPerformanceSuggestion() {
         final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);
         final double targetProb = getTargetAcceptanceProbability();

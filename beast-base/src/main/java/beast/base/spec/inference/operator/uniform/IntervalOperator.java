@@ -190,7 +190,7 @@ public class IntervalOperator extends KernelOperator {
     }
 
     @Override
-    public double getTargetAcceptanceProbability() {
+    public double getDefaultTargetAcceptanceProbability() {
         return Target_Acceptance_Probability;
     }
 

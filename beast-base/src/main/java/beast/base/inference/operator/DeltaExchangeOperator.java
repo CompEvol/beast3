@@ -352,6 +352,11 @@ public class DeltaExchangeOperator extends Operator {
         delta = value;
     }
 
+    @Override
+    public double getDefaultTargetAcceptanceProbability() {
+        return 0.3;
+    }
+
     /**
      * called after every invocation of this operator to see whether
      * a parameter can be optimised for better acceptance hence faster
