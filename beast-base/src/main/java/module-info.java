@@ -334,6 +334,8 @@ open module beast.base {
         beast.base.spec.evolution.operator.UpDownOperator,
         beast.base.spec.evolution.operator.IntervalScaleOperator,
         beast.base.spec.evolution.operator.PerRankIntervalScaleOperator,
+        beast.base.spec.evolution.operator.CladeIntervalScaleOperator,
+        beast.base.spec.evolution.operator.RandomMarginScaleOperator,
         beast.base.spec.evolution.operator.TreeIntervalsView,
         beast.base.spec.inference.operator.Transform.FisherZTransform,
         beast.base.spec.inference.operator.Transform.LogConstrainedSumTransform,

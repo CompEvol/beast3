@@ -150,9 +150,12 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
 
     @Override
     public double getTargetAcceptanceProbability() {
-        // 1D scale acceptance optimum (Bedard 2008 ~ 0.234 for high-dim;
-        // 0.44 for 1D random-walk; conventional choice for scalar scale operators is 0.3)
-        return 0.3;
+        // Each proposal is a 1D scale on a single per-rank margin; the
+        // 1D random-walk Metropolis optimum is 0.44 (Gelman, Roberts,
+        // Gilks 1996; Roberts & Rosenthal 2001). For high-dim joint
+        // moves like AVMN the asymptotic 0.234 (Roberts, Gelman, Gilks
+        // 1997) applies, but that is not this operator.
+        return 0.44;
     }
 
     @Override
@@ -177,6 +180,27 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
 
     public double[] getScaleFactors() {
         return scaleFactor.clone();
+    }
+
+    @Override
+    public void storeToFile(final java.io.PrintWriter out) {
+        // Write per-rank scale factors as a JSON object for offline analysis.
+        // Format: {"id":"...", "p":mean, "scales":[s_0, s_1, ...], "accept":..., "reject":...}
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("\"id\":\"").append(getID() == null ? "unknown" : getID()).append("\",");
+        sb.append("\"p\":").append(getCoercableParameterValue()).append(',');
+        sb.append("\"scales\":[");
+        if (scaleFactor != null) {
+            for (int i = 0; i < scaleFactor.length; i++) {
+                if (i > 0) sb.append(',');
+                sb.append(scaleFactor[i]);
+            }
+        }
+        sb.append("],");
+        sb.append("\"accept\":").append(m_nNrAccepted).append(',');
+        sb.append("\"reject\":").append(m_nNrRejected);
+        sb.append('}');
+        out.print(sb.toString());
     }
 
     @Override
