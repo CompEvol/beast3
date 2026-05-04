@@ -274,6 +274,8 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
 			for (Tensor<?,?> f : t.getF()) {
 				if (f instanceof StateNode) {
 					nodes.add((StateNode) f);
+				} else if (f instanceof TreeIntervalsView v) {
+					nodes.add(v.getTree());
 				}
 			}
 		}
@@ -778,6 +780,10 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             		p.set(getX(param), (int) value);
             	}
             	return 1;
+            } else if (para instanceof TreeIntervalsView v) {
+            	// Vector view: write a single per-interval margin in age-rank order.
+            	v.setMargin(getX(param), value);
+            	return 1;
             } else if (para instanceof Tree tree) {
             	// Use the Scalable contract: setScalableValue lands the tree's
             	// dilation-axis summary (sum of intervals) at exactly `value`.
@@ -798,6 +804,10 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	return p.get();
             } else if (f instanceof IntVectorParam p) {
             	return p.get(getX(param));
+            } else if (f instanceof TreeIntervalsView v) {
+            	// Reading via Tensor.get() keeps the view's age-rank snapshot
+            	// in sync at the start of each read batch.
+            	return v.get(getX(param));
             } else if (f instanceof Tree t) {
             	// Read the tree's position on its dilation axis (sum of intervals)
             	return t.getScalableValue();
