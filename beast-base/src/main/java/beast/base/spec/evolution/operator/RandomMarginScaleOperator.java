@@ -45,9 +45,6 @@ public class RandomMarginScaleOperator extends TreeOperator {
     public final Input<Double> initialScaleFactorInput = new Input<>("scaleFactor",
             "starting scale factor (range 0..1; close to 1 = small jumps)", 0.75);
 
-    public final Input<Double> upperInput = new Input<>("upper",
-            "upper limit of scale factor", 1.0 - 1e-8);
-
     public final Input<Double> lowerInput = new Input<>("lower",
             "lower limit of scale factor", 1e-8);
 
@@ -56,13 +53,12 @@ public class RandomMarginScaleOperator extends TreeOperator {
 
     private KernelDistribution kernel;
     private double scaleFactor;
-    private double upper, lower;
+    private double lower;
 
     @Override
     public void initAndValidate() {
         kernel = kernelDistributionInput.get();
         scaleFactor = initialScaleFactorInput.get();
-        upper = upperInput.get();
         lower = lowerInput.get();
     }
 
@@ -119,7 +115,7 @@ public class RandomMarginScaleOperator extends TreeOperator {
         double delta = calcDelta(logAlpha);
         delta += Math.log(scaleFactor);
         double sf = Math.exp(delta);
-        scaleFactor = Math.max(Math.min(sf, upper), lower);
+        scaleFactor = Math.max(sf, lower);
     }
 
     @Override
@@ -134,7 +130,7 @@ public class RandomMarginScaleOperator extends TreeOperator {
 
     @Override
     public void setCoercableParameterValue(double value) {
-        scaleFactor = Math.max(Math.min(value, upper), lower);
+        scaleFactor = Math.max(value, lower);
     }
 
     @Override

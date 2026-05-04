@@ -43,9 +43,6 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
     public final Input<Double> initialScaleFactorInput = new Input<>("scaleFactor",
             "starting per-rank scale factor (range 0..1; close to 1 = small jumps)", 0.75);
 
-    public final Input<Double> upperInput = new Input<>("upper",
-            "upper limit of per-rank scale factor", 1.0 - 1e-8);
-
     public final Input<Double> lowerInput = new Input<>("lower",
             "lower limit of per-rank scale factor", 1e-8);
 
@@ -53,19 +50,20 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
             "auto-tune the per-rank scale factors toward the 1D acceptance target", true);
 
     private KernelDistribution kernel;
-    private double upper, lower;
+    private double lower;
     private double[] scaleFactor;
+    private int[] perRankCount;
     private Node[] orderedInternal;
     private int lastRank;
 
     @Override
     public void initAndValidate() {
         kernel = kernelDistributionInput.get();
-        upper = upperInput.get();
         lower = lowerInput.get();
         rebuildOrder();
         scaleFactor = new double[orderedInternal.length];
         Arrays.fill(scaleFactor, initialScaleFactorInput.get());
+        perRankCount = new int[orderedInternal.length];
     }
 
     private void rebuildOrder() {
@@ -82,6 +80,7 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
             double init = initialScaleFactorInput.get();
             scaleFactor = new double[orderedInternal.length];
             Arrays.fill(scaleFactor, init);
+            perRankCount = new int[orderedInternal.length];
         }
     }
 
@@ -141,11 +140,23 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
     public void optimize(double logAlpha) {
         if (!optimiseInput.get()) return;
         if (lastRank < 0 || lastRank >= scaleFactor.length) return;
-        double delta = calcDelta(logAlpha);
+
+        // Per-rank Robbins-Monro: each slot has its own iteration count, so
+        // the step size shrinks with how many times *this rank* has been
+        // proposed -- not with the global operator count. Without this,
+        // the operator-wide count grows fast (n× faster than any single
+        // rank's count) and per-slot σ adapts at a vanishing rate, which
+        // is why all slots cluster around the initial value with very
+        // little spread (and acceptance overshoots target).
+        perRankCount[lastRank]++;
+        double count = perRankCount[lastRank];
+        double alpha = Math.exp(Math.min(logAlpha, 0));
+        double target = getTargetAcceptanceProbability();
+        double delta = (alpha - target) / count;
         double sf = scaleFactor[lastRank];
         delta += Math.log(sf);
         sf = Math.exp(delta);
-        scaleFactor[lastRank] = Math.max(Math.min(sf, upper), lower);
+        scaleFactor[lastRank] = Math.max(sf, lower);
     }
 
     @Override
@@ -170,7 +181,7 @@ public class PerRankIntervalScaleOperator extends TreeOperator {
 
     @Override
     public void setCoercableParameterValue(double value) {
-        double clamped = Math.max(Math.min(value, upper), lower);
+        double clamped = Math.max(value, lower);
         if (scaleFactor == null) {
             scaleFactor = new double[]{clamped};
         } else {

@@ -46,9 +46,6 @@ public class CladeIntervalScaleOperator extends TreeOperator {
     public final Input<Double> initialScaleFactorInput = new Input<>("scaleFactor",
             "starting scale factor for each clade (range 0..1; close to 1 = small jumps)", 0.75);
 
-    public final Input<Double> upperInput = new Input<>("upper",
-            "upper limit of per-clade scale factor", 1.0 - 1e-8);
-
     public final Input<Double> lowerInput = new Input<>("lower",
             "lower limit of per-clade scale factor", 1e-8);
 
@@ -61,16 +58,16 @@ public class CladeIntervalScaleOperator extends TreeOperator {
                     + "tracks the mean of the seen clades; 0 = frozen, 1 = pure copy of last update", 0.01);
 
     private KernelDistribution kernel;
-    private double upper, lower;
+    private double lower;
     private double defaultScaleFactor;
     private double defaultLearningRate;
     private final Map<BitSet, Double> cladeScaleFactor = new HashMap<>();
+    private final Map<BitSet, Integer> cladeCount = new HashMap<>();
     private BitSet lastClade;
 
     @Override
     public void initAndValidate() {
         kernel = kernelDistributionInput.get();
-        upper = upperInput.get();
         lower = lowerInput.get();
         defaultScaleFactor = initialScaleFactorInput.get();
         defaultLearningRate = defaultLearningRateInput.get();
@@ -142,10 +139,17 @@ public class CladeIntervalScaleOperator extends TreeOperator {
         if (lastClade == null) return;
         Double sf = cladeScaleFactor.get(lastClade);
         if (sf == null) return;
-        double delta = calcDelta(logAlpha);
+
+        // Per-clade Robbins-Monro: count the times we've adapted *this clade*,
+        // not the whole operator. Otherwise the step shrinks with the
+        // operator-wide count and per-clade σ has effectively no room to move.
+        int n = cladeCount.merge(lastClade, 1, Integer::sum);
+        double alpha = Math.exp(Math.min(logAlpha, 0));
+        double target = getTargetAcceptanceProbability();
+        double delta = (alpha - target) / n;
         delta += Math.log(sf);
         double newSf = Math.exp(delta);
-        newSf = Math.max(Math.min(newSf, upper), lower);
+        newSf = Math.max(newSf, lower);
         cladeScaleFactor.put(lastClade, newSf);
         // Track running average so unseen clades get a sensible starting σ.
         defaultScaleFactor = (1.0 - defaultLearningRate) * defaultScaleFactor
@@ -164,7 +168,7 @@ public class CladeIntervalScaleOperator extends TreeOperator {
 
     @Override
     public void setCoercableParameterValue(double value) {
-        defaultScaleFactor = Math.max(Math.min(value, upper), lower);
+        defaultScaleFactor = Math.max(value, lower);
     }
 
     public Map<BitSet, Double> getCladeScaleFactors() {
