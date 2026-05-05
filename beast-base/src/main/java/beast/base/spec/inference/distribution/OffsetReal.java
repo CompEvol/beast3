@@ -73,7 +73,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
     @Override
     public double calculateLogP() {
-        logP = logDensity(param.get() - offset.get()); // no unboxing needed, faster
+        logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
