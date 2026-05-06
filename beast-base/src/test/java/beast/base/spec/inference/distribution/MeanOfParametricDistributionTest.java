@@ -189,6 +189,38 @@ public class MeanOfParametricDistributionTest  {
         
 	}
 	
+	@Test
+	public void testCalculateLogPOfOffsetReal() {
+		// Exp(mean=1) has logp(x) = -x for x >= 0.
+		// OffsetReal(Exp(mean=1), offset=3) at param=4 -> underlying x=1, logp=-1.
+		Exponential exp1 = new Exponential(null, new RealScalarParam<>(1, PositiveReal.INSTANCE));
+		OffsetReal off = new OffsetReal();
+		off.initByName(
+				"distribution", exp1,
+				"offset", new RealScalarParam<>(3.0, Real.INSTANCE),
+				"param", new RealScalarParam<>(4.0, Real.INSTANCE));
+		assertEquals(-1.0, off.calculateLogP(), 1e-10);
+
+		// param=3.5 -> underlying x=0.5, logp=-0.5.
+		off = new OffsetReal();
+		off.initByName(
+				"distribution", new Exponential(null, new RealScalarParam<>(1, PositiveReal.INSTANCE)),
+				"offset", new RealScalarParam<>(3.0, Real.INSTANCE),
+				"param", new RealScalarParam<>(3.5, Real.INSTANCE));
+		assertEquals(-0.5, off.calculateLogP(), 1e-10);
+
+		// Normal(0,1): logp(0) = -0.5*log(2*pi).
+		Normal n01 = new Normal(null,
+				new RealScalarParam<>(0, Real.INSTANCE),
+				new RealScalarParam<>(1, PositiveReal.INSTANCE));
+		off = new OffsetReal();
+		off.initByName(
+				"distribution", n01,
+				"offset", new RealScalarParam<>(3.0, Real.INSTANCE),
+				"param", new RealScalarParam<>(3.0, Real.INSTANCE));
+		assertEquals(-0.5 * Math.log(2 * Math.PI), off.calculateLogP(), 1e-10);
+	}
+
 	BEASTInterface fromXML(String xml) throws XMLParserException {
 		return (new XMLParser()).parseBareFragment(xml, true);
 	}
