@@ -779,10 +779,10 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	}
             	return 1;
             } else if (para instanceof Tree tree) {
-            	double old = tree.getArrayValue();
-            	double scale = value / old;
-            	((Tree) para).scale(scale);
-            	return ((Tree) para).getInternalNodeCount();
+            	// Use the Scalable contract: setScalableValue lands the tree's
+            	// dilation-axis summary (sum of intervals) at exactly `value`.
+            	tree.setScalableValue(value);
+            	return tree.getInternalNodeCount();
             }
             return 0;
         }
@@ -799,7 +799,8 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             } else if (f instanceof IntVectorParam p) {
             	return p.get(getX(param));
             } else if (f instanceof Tree t) {
-            	t.getRoot().getHeight();
+            	// Read the tree's position on its dilation axis (sum of intervals)
+            	return t.getScalableValue();
             }
         	throw new RuntimeException("programmer error: should not get here");
         }

@@ -46,10 +46,9 @@ public class ScaleTreeOperator extends AbstractScale {
             } else {
 
                 // scale the beast.tree
+                // tree.scale returns the log Jacobian (dof * log(scale))
                 final double scale = getScaler(0, Double.NaN);
-                final int scaledNodes = tree.scale(scale);
-                // hastings ratio
-                return Math.log(scale) * scaledNodes;
+                return tree.scale(scale);
             }
 
         } catch (Exception e) {

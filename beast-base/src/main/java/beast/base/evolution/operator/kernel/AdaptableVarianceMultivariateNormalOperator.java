@@ -752,9 +752,9 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	}
             	return 1;
             } else if (para instanceof Tree) {
-            	double old = para.getArrayValue();
-            	double scale = value / old;
-            	((Tree) para).scale(scale);
+            	// Use the Scalable contract: setScalableValue lands the tree's
+            	// dilation-axis summary (sum of intervals) at exactly `value`.
+            	((Tree) para).setScalableValue(value);
             	return ((Tree) para).getInternalNodeCount();
             }
             return 0;
@@ -765,7 +765,8 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         	if (f instanceof RealParameter) {
         		return f.getArrayValue(getX(param));
         	}
-        	return ((Tree) f).getRoot().getHeight();
+        	// Read the tree's position on its dilation axis (sum of intervals)
+        	return ((Tree) f).getScalableValue();
         }
 
 //        public double getLower(final int param) {

@@ -654,27 +654,82 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
         }
     }
 
+    /**
+     * Scale this tree by factor {@code scale} along its dilation axis.
+     * <p>
+     * The dilation axis for {@code Tree} is the sum of intervals (margins above
+     * taller children) across internal non-fake nodes. Each margin is
+     * multiplied by {@code scale}; tip dates are preserved by construction.
+     * Equivalent to interval scaling: see {@link #getScalableValue()} for the
+     * summary that scales by exactly {@code scale} under this operation.
+     * <p>
+     * Always succeeds for any positive {@code scale} (no leaf can violate a
+     * branch-length constraint, because each margin remains positive).
+     *
+     * @return log Jacobian determinant of the move ({@code dof × log(scale)})
+     */
     @Override
-    public int scale(final double scale) {
-        return root.scale(scale);
+    public double scale(final double scale) {
+        int dof = root.intervalScale(scale);
+        return dof * Math.log(scale);
     }
 
+    /**
+     * Read this tree's position on its dilation axis: the sum of intervals
+     * (margins above taller children) across internal non-fake nodes.
+     * <p>
+     * This summary is exactly {@code s}-equivariant under {@link #scale(double)}.
+     */
     @Override
-    public void scaleOne(int i, final double scale) {
-    	startEditing(null);
-    	double h = m_nodes[i].getHeight();
-    	double newHeight = h * scale;
-    	for (Node child : m_nodes[i].children) {
-    		if (newHeight < child.getHeight()) {
-    			throw new IllegalArgumentException("scale sets nodes below child result in negative branch length");
-    		}
-    	}
-    	if (!m_nodes[i].isRoot() && newHeight > m_nodes[i].getParent().getHeight()) {
-			throw new IllegalArgumentException("scale sets nodes above parent result in negative branch length");
-    	}
-        m_nodes[i].setHeight(newHeight);
+    public double getScalableValue() {
+        return computeSumIntervals(root);
     }
 
+    /**
+     * Affine helper: scale the tree so its root height equals {@code targetRootHeight}.
+     * Multiplies every internal non-fake non-leaf height by
+     * {@code targetRootHeight / oldRootHeight}, keeping leaf heights fixed.
+     * <p>
+     * Not part of the Scalable contract. May throw
+     * {@link IllegalArgumentException} for non-ultrametric trees if the
+     * resulting state has a parent below a leaf child.
+     *
+     * @return number of internal nodes scaled (degrees of freedom)
+     */
+    public int scaleToRootHeight(final double targetRootHeight) {
+        double oldRoot = root.getHeight();
+        if (oldRoot <= 0.0) {
+            throw new IllegalArgumentException(
+                    "Cannot scale to root height: current root height is " + oldRoot);
+        }
+        return root.scale(targetRootHeight / oldRoot);
+    }
+
+    /**
+     * Compute the sum of margins (h_N - max(h_children)) across internal
+     * non-fake nodes. For sampled-ancestor trees, fake nodes are skipped.
+     */
+    private double computeSumIntervals(final Node node) {
+        if (node.isLeaf()) {
+            return 0.0;
+        }
+        if (node.isFake()) {
+            // skip the fake; recurse into the non-direct-ancestor child
+            if (node.getLeft().isDirectAncestor()) {
+                return computeSumIntervals(node.getRight());
+            } else {
+                return computeSumIntervals(node.getLeft());
+            }
+        }
+        double margin = node.getHeight()
+                - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
+        double sum = margin;
+        sum += computeSumIntervals(node.getLeft());
+        if (node.getRight() != null) {
+            sum += computeSumIntervals(node.getRight());
+        }
+        return sum;
+    }
 
 //    /**
 //     * The same as scale but with option to scale all sampled nodes

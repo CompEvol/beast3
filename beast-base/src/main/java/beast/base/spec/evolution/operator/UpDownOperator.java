@@ -107,18 +107,18 @@ public class UpDownOperator extends KernelOperator {
     public double proposal() {
 
         double scale = getScaler(0);
-        int goingUp = 0, goingDown = 0;
 
-        double logHR = 0;        
+        double logHR = 0;
 
         if (elementWiseInput.get()) {
             int size = 0;
+            int numUp = 0, numDown = 0;
             for (Scalable up : upInput.get()) {
                 if (size == 0) size = ((Tensor<?,?>)up).size();
                 if (size > 0 && ((Tensor<?,?>)up).size() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingUp += 1;
+                numUp += 1;
             }
 
             for (Scalable down : downInput.get()) {
@@ -126,7 +126,7 @@ public class UpDownOperator extends KernelOperator {
                 if (size > 0 && ((Tensor<?,?>)down).size() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingDown += 1;
+                numDown += 1;
             }
 
             int index = Randomizer.nextInt(size);
@@ -148,12 +148,12 @@ public class UpDownOperator extends KernelOperator {
                     return Double.NEGATIVE_INFINITY;
                 }
             }
-            logHR = (goingUp - goingDown) * Math.log(scale);
+            logHR = (numUp - numDown) * Math.log(scale);
         } else {
 
             try {
             	if (treesUp.size() > 0) {
-            		
+
             		// scale trees up and adjust scale factor
 	            	double lengthBefore =0, lenghtAfter = 0;
 	                for (TreeInterface up : treesUp) {
@@ -162,9 +162,9 @@ public class UpDownOperator extends KernelOperator {
 	                	lenghtAfter += treeLength(up);
 	                }
 	                scale = lenghtAfter / lengthBefore;
-	                
+
             	} else if (treesDown.size() > 0) {
-            		
+
             		// scale trees down and adjust scale factor
 	            	double lengthBefore =0, lenghtAfter = 0;
 	                for (TreeInterface down : treesDown) {
@@ -173,12 +173,13 @@ public class UpDownOperator extends KernelOperator {
 	                	lenghtAfter += treeLength(down);
 	                }
 	                scale = 1.0/(lenghtAfter / lengthBefore);
-	                
+
             	}
-                
+
                 for (Scalable up : otherUp) {
                 	up = (Scalable) ((StateNode) up).getCurrentEditable(this);
-                	goingUp += up.scale(scale);
+                	// scale returns log Jacobian = dof * log(scale)
+                	logHR += up.scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
@@ -192,7 +193,8 @@ public class UpDownOperator extends KernelOperator {
 
                 for (Scalable down : otherDown) {
             		down = (Scalable) ((StateNode) down).getCurrentEditable(this);
-            		goingDown += down.scale(1.0 / scale);
+            		// scale returns log Jacobian = dof * log(1/scale) = -dof * log(scale)
+            		logHR += down.scale(1.0 / scale);
                 }
                 for (Scalable down : otherDown) {
                     if (outsideBounds(down)) {
@@ -203,7 +205,6 @@ public class UpDownOperator extends KernelOperator {
                 // scale resulted in invalid StateNode, abort proposal
                 return Double.NEGATIVE_INFINITY;
             }
-            logHR += (goingUp - goingDown) * Math.log(scale);
         }
         return logHR;
     }

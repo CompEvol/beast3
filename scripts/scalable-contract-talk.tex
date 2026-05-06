@@ -1,0 +1,356 @@
+% !TEX program = pdflatex
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  commentstyle=\color{green!50!black},
+  stringstyle=\color{red!60!black},
+  breaklines=true,
+  showstringspaces=false,
+  columns=fullflexible,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  rulecolor=\color{gray!40},
+  xleftmargin=2pt,
+  xrightmargin=2pt,
+  language=Java,
+}
+
+\definecolor{beastblue}{RGB}{40,80,140}
+\definecolor{beastorange}{RGB}{200,100,20}
+\setbeamercolor{frametitle}{fg=beastblue}
+\setbeamercolor{title}{fg=beastblue}
+\setbeamercolor{structure}{fg=beastblue}
+
+\newcommand{\pkg}[1]{\texttt{\color{beastorange}#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{The Scalable Contract}
+\subtitle{Resolving beast3 issue \#20: a binding three-method contract on \texttt{Scalable}}
+\author{Alexei Drummond}
+\date{5 May 2026}
+
+\begin{document}
+
+% ============================================================
+\begin{frame}
+\titlepage
+\end{frame}
+
+% ============================================================
+\begin{frame}{The blocker}
+Joelle Barido-Sottani has been blocked porting custom-tree packages to beast3 since 26 March.
+
+\vspace{1em}
+
+Issue \href{https://github.com/CompEvol/beast3/issues/20}{CompEvol/beast3\#20}, opened by Remco in October 2025.
+
+\vspace{1em}
+
+Two distinct problems she ran into:
+
+\begin{enumerate}
+\item The old \code{Scalable} interface returns degrees of freedom (\code{int}), which encodes a specific Hastings-ratio shape (\code{dof $\times$ log(s)}).
+For her custom trees the HR isn't of that shape.
+
+\item The new spec \code{UpDownOperator} bypasses \code{Tree.scale()} entirely and runs its own recursion.
+Even if she fixed her tree's \code{scale()}, UpDown wouldn't call it.
+\end{enumerate}
+\end{frame}
+
+% ============================================================
+\begin{frame}[fragile]{The old contract}
+\begin{lstlisting}
+public interface Scalable {
+    int  scale(double s);            // returns dof
+    void scaleOne(int i, double s);
+    default double scaleAll(double s) {
+        return scale(s) * Math.log(s);
+    }
+}
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\textbf{What's wrong:}
+
+\begin{itemize}
+\item \code{int dof} is a stand-in for one specific HR formula.
+Operators reconstruct \code{dof $\times$ log(s)} as the move's Jacobian contribution.
+\item Anything that scales differently (interval scaling, custom trees, IntervalScaleOperator) has to bypass the interface and compute HR inline.
+\item The interface gives no way to ask ``what does this Scalable use as its dilation axis?''
+\end{itemize}
+\end{frame}
+
+% ============================================================
+\begin{frame}{What does \texttt{scale} actually return?}
+The Metropolis-Hastings acceptance ratio has three parts:
+
+\begin{enumerate}
+\item \textbf{Target ratio}: $\pi(x') / \pi(x)$.
+\item \textbf{Proposal ratio} (the Hastings ratio proper): $q(x \mid x') / q(x' \mid x)$.
+\item \textbf{Jacobian determinant}: $|\det(\partial x' / \partial x)|$ from the change of variables.
+\end{enumerate}
+
+\vspace{1em}
+
+\code{Scalable.scale(s)} can only sensibly return the \textbf{Jacobian} of the deterministic part of the move.
+
+\vspace{0.5em}
+
+The proposal ratio depends on how the operator drew \code{s} (uniform-on-log, Bactrian, Gaussian, ...) and belongs to the operator's kernel.
+
+\vspace{0.5em}
+
+\textbf{Joelle's option (1)} of returning ``the HR'' is right in spirit; the precise refinement is to return the log Jacobian determinant.
+\end{frame}
+
+% ============================================================
+\begin{frame}[fragile]{The new contract}
+\begin{lstlisting}
+public interface Scalable {
+    double scale(double s);            // returns log Jacobian
+    double getScalableValue();         // current pos. on dilation axis
+    default double setScalableValue(double V) {
+        return scale(V / getScalableValue());
+    }
+}
+\end{lstlisting}
+
+\vspace{0.5em}
+
+Three methods, mutually consistent on a single dilation axis.
+\end{frame}
+
+% ============================================================
+\begin{frame}[fragile]{The three invariants}
+For any valid Scalable \code{x} and positive \code{s}:
+
+\begin{enumerate}
+\item \textbf{Scale-equivariance.} After \code{scale(s)}, \code{getScalableValue()} returns $s \times$ its previous value.
+\begin{lstlisting}
+double v0 = x.getScalableValue();
+x.scale(s);
+assert x.getScalableValue() == s * v0;
+\end{lstlisting}
+
+\item \textbf{Set is a fixed point of get.}
+\begin{lstlisting}
+x.setScalableValue(V);
+assert x.getScalableValue() == V;
+\end{lstlisting}
+
+\item \textbf{Set composes with scale.}
+\begin{lstlisting}
+x.setScalableValue(x.getScalableValue() * s) == x.scale(s);
+\end{lstlisting}
+\end{enumerate}
+
+\vspace{0.5em}
+
+The default \code{setScalableValue} expresses (3) directly.
+\end{frame}
+
+% ============================================================
+\begin{frame}{What is the dilation axis?}
+\code{getScalableValue} must return whatever quantity \emph{actually} scales by exactly \code{s} under the implementer's \code{scale}.
+
+\vspace{1em}
+
+\begin{tabular}{ll}
+\toprule
+\textbf{Implementer} & \textbf{Dilation summary} \\
+\midrule
+\code{RealScalarParam} & the value itself \\
+\code{RealVectorParam} & sum of values \\
+\code{Tree} (interval scaling) & sum of margins \\
+\code{Tree} (affine height scaling) & root height \\
+Joelle's custom tree & whatever her scale preserves \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+
+\textbf{The contract is enforced per-implementation.}
+A type that violates the invariants is not a valid Scalable.
+\end{frame}
+
+% ============================================================
+\begin{frame}{Why interval scaling for \texttt{Tree.scale}?}
+The old \code{Tree.scale(s)} multiplied internal heights by \code{s} (affine).
+For a heterochronous tree with leaves at \code{h\_c > 0} and parent at \code{h\_N},
+the move \textbf{throws} when \code{s < h\_c / h\_N}.
+
+\vspace{1em}
+
+This is not an edge case.
+Most BEAST analyses with sampling dates run on heterochronous trees.
+
+\vspace{1em}
+
+\textbf{Interval scaling}: multiply each internal node's margin (height above its taller child) by \code{s}.
+
+\begin{itemize}
+\item Tip dates preserved by construction.
+\item Move is valid for any positive \code{s}; never throws.
+\item Sum of margins is exactly \code{s}-equivariant: matches \code{getScalableValue}.
+\item For binary trees, the dof count equals the number of margins,
+so operator HRs are unchanged.
+\end{itemize}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Affine semantics retained where needed}
+Some callers genuinely want ``set my root to exactly this height'' with affine semantics.
+
+\vspace{1em}
+
+\code{Tree.scaleToRootHeight(double targetHeight)} preserves the old affine behaviour as a separate helper, outside the contract.
+
+\begin{itemize}
+\item Multiplies internal heights by \code{targetHeight / oldRoot}.
+\item May throw \code{IllegalArgumentException} for invalid configurations.
+\item Used by \code{StarBeastStartState} init code.
+\item Not part of the Scalable contract.
+\end{itemize}
+
+\vspace{1em}
+
+Two methods, two purposes: \code{scale} for moves, \code{scaleToRootHeight} for setup.
+\end{frame}
+
+% ============================================================
+\begin{frame}{AMVN now reaches its proposed value}
+Before: AMVN proposed a target root height $V$, called \code{tree.scale(V/oldRoot)}.
+
+\vspace{0.5em}
+
+For non-ultrametric trees under affine scaling, the move sometimes \textbf{threw}.
+For non-ultrametric trees under interval scaling, the root would end up at some height other than $V$.
+Either way, AMVN's empirical covariance bookkeeping was wrong.
+
+\vspace{1em}
+
+After: AMVN parameterises trees by sum-of-margins via \code{getScalableValue} / \code{setScalableValue}.
+\code{setScalableValue(V)} reduces to \code{scale(V / sum\_margins)}.
+
+\begin{itemize}
+\item Sum of margins equals $V$ exactly, by the contract.
+\item AMVN's covariance is now updated against the realised state.
+\item Side benefit: fixes a latent missing \texttt{return} in spec AMVN's \code{getValue} for trees.
+\end{itemize}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Test plan}
+Three layers of testing in \href{https://github.com/CompEvol/beast3/pull/70}{PR \#70}:
+
+\begin{itemize}
+\item \textbf{ScalableContractTest harness}: a reusable helper that asserts the three invariants on any Scalable. Per-class tests for \code{RealScalarParam}, \code{RealVectorParam}, \code{Tree} on ultrametric, heterochronous, and leaf-intruding fixtures.
+
+\item \textbf{408 existing beast-base unit tests} all pass.
+
+\item \textbf{Heterochronous MCMC integration}: 10 \code{TipTimeTest} chains under \texttt{-Pslow-tests}.
+Real chains on tip-dated data converge to BEAST1 reference values within tolerance.
+\textit{Tree height: $15147 \pm 73$, expected $15000 \pm 70$, ESS $\sim$22000.}
+\end{itemize}
+
+\vspace{1em}
+
+Statistical-tolerance fix on two slow tests (\code{UpDownOperatorTest}, \code{RealRandomWalkOperatorTest}): tolerances widened to 3 SE using ESS rather than nominal sample count, so they fail less often.
+\end{frame}
+
+% ============================================================
+\begin{frame}{Downstream impact}
+Binding API change.
+Any package that implements \code{Scalable} or stores the int return needs to update.
+
+\vspace{1em}
+
+\begin{tabular}{lll}
+\toprule
+\textbf{Package} & \textbf{Impact} & \textbf{Status} \\
+\midrule
+Mascot          & none (no \code{Scalable}) & compiles clean \\
+beast-classic   & none                       & compiles clean \\
+LPhyBeast core  & none                       & compiles clean \\
+BEASTLabs       & 2 files                    & migrated, all 83 tests pass \\
+\bottomrule
+\end{tabular}
+
+\vspace{1em}
+
+BEASTLabs migration in parallel \href{https://github.com/BEAST2-Dev/BEASTLabs/pull/29}{PR \#29}:
+
+\begin{itemize}
+\item \code{PrevalenceList.scale} returns log Jacobian; new \code{getScalableValue} returns sum of node times.
+\item \code{TreeScaleOperator} consumes log Jacobian directly; HR factored as \code{treeLogJ $-$ 2 log(s)}.
+\end{itemize}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Out of scope (deferred)}
+Operator-design questions, separable from the interface contract:
+
+\begin{itemize}
+\item Spec \code{UpDownOperator}'s \code{actualScaler = lengthAfter / lengthBefore} logic for tree + up/down combinations.
+\item Whether \code{IntervalScaleOperator} should collapse into \code{UpDownOperator} now that \code{Tree.scale} does interval scaling.
+\item AMVN's covariance behaviour for non-ultrametric trees beyond the proposal-target fix.
+\item Whether tree-aware operators should use the kernel \code{s} or an effective tree-dilation factor for non-tree up/down parameters.
+\end{itemize}
+
+\vspace{1em}
+
+The interface contract enables these to be tackled separately on their own merits.
+\end{frame}
+
+% ============================================================
+\begin{frame}{Timeline}
+\begin{itemize}
+\item \textbf{2 May}: \href{https://github.com/CompEvol/beast3/pull/70}{PR \#70} and \href{https://github.com/BEAST2-Dev/BEASTLabs/pull/29}{BEASTLabs \#29} ready for review.
+\item \textbf{Awaiting}: Remco's review (he owns beast-base).
+\item \textbf{Proposed at next stakeholders meeting}: this is the last substantive API change to the beast core before an official release.
+Aim for release on the BEAST website mid-June.
+\end{itemize}
+\end{frame}
+
+% ============================================================
+\begin{frame}{Summary}
+\begin{block}{The contract}
+\code{scale(s)} returns the log Jacobian determinant of a move along a single dilation axis.
+\code{getScalableValue} reads position on that axis.
+\code{setScalableValue(V) = scale(V / getScalableValue())}.
+\end{block}
+
+\vspace{0.5em}
+
+\begin{block}{The Tree side}
+\code{Tree.scale} does interval scaling and never throws.
+Sum of margins is the dilation summary.
+\code{Tree.scaleToRootHeight} preserves affine semantics where they were genuinely wanted.
+\end{block}
+
+\vspace{0.5em}
+
+\begin{block}{The result}
+Joelle's custom trees can implement the contract directly.
+AMVN works correctly on non-ultrametric trees.
+408 + 9 + 10 tests pass.
+Mid-June beast3 release on track.
+\end{block}
+\end{frame}
+
+\end{document}

@@ -145,10 +145,11 @@ public class ScaleOperator extends AbstractScale {
                     // for the proof. It is supposed to be somewhere in an Alexei/Nicholes article.
 
                     // all Values assumed independent!
+                    // realVectorParam.scale returns the log Jacobian (dof * log(scale));
+                    // spec ScaleOperator does not add a kernel-symmetry correction here.
                     final double scale = getScaler(0, realVectorParam.get(0));
-                    final int computedDoF = realVectorParam.scale(scale);
-                    final int usedDoF = (specifiedDoF > 0) ? specifiedDoF : computedDoF;
-                    logHR = usedDoF * Math.log(scale);
+                    final double paramLogJacobian = realVectorParam.scale(scale);
+                    logHR = (specifiedDoF > 0) ? specifiedDoF * Math.log(scale) : paramLogJacobian;
                 } else {
 
                     // which position to scale
@@ -211,15 +212,14 @@ public class ScaleOperator extends AbstractScale {
             } else if (param instanceof RealScalarParam<?> realScalarParam) {
 
                 final double scale = getScaler(0);
-                // this set new value
-                int dim = realScalarParam.scale(scale);
+                // realScalarParam.scale returns the log Jacobian (= log(scale) for a 1-D scalar)
+                // and applies the value update as a side effect.
+                logHR = realScalarParam.scale(scale);
 
                 if (! realScalarParam.withinBounds(realScalarParam.get()) ) {
                     // reject out of bounds scales
                     return Double.NEGATIVE_INFINITY;
                 }
-                // hastings ratio
-                logHR = Math.log(scale);
             }
             return logHR;
 

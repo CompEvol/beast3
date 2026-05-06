@@ -153,16 +153,15 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
     /** {@inheritDoc} */
     @Override
-    public int scale(double scale) {
-    	startEditing(null);
-    	value *= scale;
-        return 1;
+    public double scale(double scale) {
+        startEditing(null);
+        value *= scale;
+        return Math.log(scale);
     }
 
     @Override
-    public void scaleOne(int i, double scale) {
-    	startEditing(null);
-    	value *= scale;
+    public double getScalableValue() {
+        return value;
     }
 
     /**

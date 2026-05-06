@@ -802,7 +802,17 @@ public class Node extends BEASTObject {
 
 
     /**
-     * scale height of this node and all its descendants
+     * Affine height scaling: multiply this node's height by {@code scale},
+     * recursively. Leaves and fake (sampled-ancestor) nodes are skipped.
+     * <p>
+     * Used by {@link Tree#scaleToRootHeight(double)} for the affine
+     * "land root at target" helper. NOT used by {@link Tree#scale(double)},
+     * which applies interval scaling via {@link #intervalScale(double)}.
+     * <p>
+     * Throws {@link IllegalArgumentException} for non-ultrametric trees if a
+     * scaled internal height drops below a leaf child's height. This is the
+     * historical {@code Node.scale} behaviour, preserved here for callers
+     * that explicitly want affine scaling and can handle the failure.
      *
      * @param scale scale factor
      * @return degrees of freedom scaled (used for HR calculations)
@@ -830,6 +840,44 @@ public class Node extends BEASTObject {
         }
 
         return dof;
+    }
+
+    /**
+     * Interval scaling: multiply this node's "margin" (height above its taller
+     * child) by {@code scale}, recursively. Tip heights are preserved by
+     * construction, so the resulting tree is always valid for any positive
+     * scale factor.
+     * <p>
+     * Used by {@link Tree#scale(double)} as the contract-bound dilation
+     * operation. Each margin is independently multiplied by {@code scale}, so
+     * the tree's sum of margins (= {@link Tree#getScalableValue()}) is
+     * exactly multiplied by {@code scale}.
+     *
+     * @param scale positive scale factor
+     * @return number of intervals (margins) scaled, for HR calculations
+     */
+    public int intervalScale(final double scale) {
+        if (isLeaf()) {
+            return 0;
+        }
+        // sampled-ancestor fake nodes: skip, recurse into the non-direct-ancestor child
+        if (isFake()) {
+            if (getLeft().isDirectAncestor()) {
+                return getRight().intervalScale(scale);
+            } else {
+                return getLeft().intervalScale(scale);
+            }
+        }
+        startEditing();
+        final double oldMargin = height - Math.max(getLeft().getHeight(), getRight().getHeight());
+        int scaledNodeCount = 1;
+        scaledNodeCount += getLeft().intervalScale(scale);
+        scaledNodeCount += getRight().intervalScale(scale);
+        // recompute minHeight after children have been scaled
+        final double minChildHeight = Math.max(getLeft().getHeight(), getRight().getHeight());
+        height = oldMargin * scale + minChildHeight;
+        isDirty |= Tree.IS_DIRTY;
+        return scaledNodeCount;
     }
 
 //    /**

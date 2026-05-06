@@ -27,18 +27,22 @@ public class TreeTest  {
         assertEquals(2.0, node[6].getHeight(), EPSILON);
         
         treeParser.scale(2.0);
-        
+
         // leaf node
         node = treeParser.getNodesAsArray();
         assertEquals(0.0, node[0].getHeight(), EPSILON);
         assertEquals(0.0, node[1].getHeight(), EPSILON);
-        // leaf node, not scaled
+        // leaves are preserved (not scaled) under interval scaling
         assertEquals(0.5, node[2].getHeight(), EPSILON);
         assertEquals(0.5, node[3].getHeight(), EPSILON);
-        // internal nodes, all scaled
+        // Under interval-scaling Tree.scale(2.0):
+        //  * node4: margin 1.0 -> 2.0; new h = 0 + 2.0 = 2.0
+        //  * node5: margin 1.0 -> 2.0; new h = 0.5 + 2.0 = 2.5
+        //  * node6: old margin 0.5 -> 1.0; new min child h = max(2.0, 2.5) = 2.5
+        //          new h = 2.5 + 1.0 = 3.5
         assertEquals(2.0, node[4].getHeight(), EPSILON);
-        assertEquals(3.0, node[5].getHeight(), EPSILON);
-        assertEquals(4.0, node[6].getHeight(), EPSILON);
-		
+        assertEquals(2.5, node[5].getHeight(), EPSILON);
+        assertEquals(3.5, node[6].getHeight(), EPSILON);
+
 	}
 }

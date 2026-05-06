@@ -191,7 +191,9 @@ public class StarBeastStartState extends Tree implements StateNodeInitialiser {
 
             final ClusterTree ctree = new ClusterTree();
             ctree.initByName("initial", gtree, "clusterType", "upgma", "taxa", alignment);
-            gtree.scale(1 / mu);
+            // Affine helper: scales internal heights by 1/mu (preserving leaf heights).
+            // Tree.scale would do interval scaling, which is the wrong operation here.
+            gtree.scaleToRootHeight(gtree.getRoot().getHeight() / mu);
 
             maxNsites = max(maxNsites, alignment.getSiteCount());
         }
@@ -388,7 +390,8 @@ public class StarBeastStartState extends Tree implements StateNodeInitialiser {
             s += 1.0/k;
         }
         final double rootHeight = (1/lam) * s;
-        stree.scale(rootHeight/stree.getRoot().getHeight());
+        // Affine helper: lands species tree root at rootHeight exactly.
+        stree.scaleToRootHeight(rootHeight);
         randomInitGeneTrees(rootHeight);
 //        final List<Tree> geneTrees = genes.get();
 //        for (final Tree gtree : geneTrees) {

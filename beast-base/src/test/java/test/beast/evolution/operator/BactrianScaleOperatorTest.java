@@ -144,12 +144,17 @@ public class BactrianScaleOperatorTest extends BactrianRandomWalkOperatorTest {
         assertEquals(0.5, node[2].getHeight(), EPSILON);
         assertEquals(0.5, node[3].getHeight(), EPSILON);
         
-        // internal nodes, all scaled
-        // first determine scale factor
-        double scale = node[4].getHeight() / 1.0;
-        assertEquals(1.0 * scale, node[4].getHeight(), EPSILON);
-        assertEquals(1.5 * scale, node[5].getHeight(), EPSILON);
-        assertEquals(2.0 * scale, node[6].getHeight(), EPSILON);
+        // Under interval-scaling Tree.scale (CompEvol/beast3#70):
+        //  * node4 (parent of leaves at h=0):    margin 1.0 -> 1.0*s, new h = s
+        //  * node5 (parent of leaves at h=0.5):  margin 1.0 -> 1.0*s, new h = 0.5 + s
+        //  * node6 (root, children node4=s, node5=0.5+s):
+        //       old margin = 2.0 - 1.5 = 0.5; after recurse min child h = 0.5 + s
+        //       new h = (0.5 + s) + 0.5*s = 0.5 + 1.5*s
+        // Recover s from node4 (whose taller child is a leaf at h=0).
+        double scale = node[4].getHeight();
+        assertEquals(scale,             node[4].getHeight(), EPSILON);
+        assertEquals(0.5 + scale,       node[5].getHeight(), EPSILON);
+        assertEquals(0.5 + 1.5 * scale, node[6].getHeight(), EPSILON);
 	}
 
 	

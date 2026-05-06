@@ -67,17 +67,18 @@ public class UpDownOperator extends Operator {
     public final double proposal() {
 
         final double scale = (scaleFactor + (Randomizer.nextDouble() * ((1.0 / scaleFactor) - scaleFactor)));
-        int goingUp = 0, goingDown = 0;
+        double netLogJacobian = 0.0;
 
 
         if (elementWiseInput.get()) {
             int size = 0;
+            int numUp = 0, numDown = 0;
             for (StateNode up : upInput.get()) {
                 if (size == 0) size = ((Function)up).getDimension();
                 if (size > 0 && ((Function)up).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingUp += 1;
+                numUp += 1;
             }
 
             for (StateNode down : downInput.get()) {
@@ -85,7 +86,7 @@ public class UpDownOperator extends Operator {
                 if (size > 0 && ((Function)down).getDimension() != size) {
                     throw new RuntimeException("elementWise=true but parameters of differing lengths!");
                 }
-                goingDown += 1;
+                numDown += 1;
             }
 
             int index = Randomizer.nextInt(size);
@@ -115,12 +116,15 @@ public class UpDownOperator extends Operator {
                     index = Randomizer.nextInt(size);
                 }
             }
+            // each up StateNode contributes +log(scale), each down -log(scale)
+            netLogJacobian = (numUp - numDown) * Math.log(scale);
         } else {
 
             try {
                 for (StateNode up : upInput.get()) {
                     up = up.getCurrentEditable(this);
-                    goingUp += ((Scalable)up).scale(scale);
+                    // scale returns log Jacobian = dof * log(scale)
+                    netLogJacobian += ((Scalable)up).scale(scale);
                 }
                 // separated this into second loop because the outsideBounds might return true transiently with
                 // related variables which would be BAD. Note current implementation of outsideBounds isn't dynamic,
@@ -134,7 +138,8 @@ public class UpDownOperator extends Operator {
 
                 for (StateNode down : downInput.get()) {
                     down = down.getCurrentEditable(this);
-                    goingDown += ((Scalable)down).scale(1.0 / scale);
+                    // scale returns log Jacobian = dof * log(1/scale) = -dof * log(scale)
+                    netLogJacobian += ((Scalable)down).scale(1.0 / scale);
                 }
                 for (StateNode down : downInput.get()) {
                     if (outsideBounds(down)) {
@@ -146,7 +151,8 @@ public class UpDownOperator extends Operator {
                 return Double.NEGATIVE_INFINITY;
             }
         }
-        return (goingUp - goingDown - 2) * Math.log(scale);
+        // kernel-symmetry correction: -2 * log(scale)
+        return netLogJacobian - 2 * Math.log(scale);
     }
 
     private boolean outsideBounds(final StateNode node) {

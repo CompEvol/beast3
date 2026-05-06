@@ -64,9 +64,10 @@ public class BactrianScaleOperator extends ScaleOperator {
                     return Math.log(scale);
                 } else {
                     // scale the beast.tree
+                    // tree.scale returns the log Jacobian (dof * log(scale));
+                    // Bactrian kernel is symmetric so no kernel-ratio correction is needed.
                     final double scale = getScaler(0, Double.NaN);
-                    final int scaledNodes = tree.scale(scale);
-                    return Math.log(scale) * scaledNodes;
+                    return tree.scale(scale);
                 }
             }
 
@@ -125,10 +126,11 @@ public class BactrianScaleOperator extends ScaleOperator {
                 // for the proof. It is supposed to be somewhere in an Alexei/Nicholes article.
 
                 // all Values assumed independent!
-            	final double scale = getScaler(0, param.getValue(0));
-                final int computedDoF = param.scale(scale);
-                final int usedDoF = (specifiedDoF > 0) ? specifiedDoF : computedDoF ;
-                hastingsRatio = usedDoF * Math.log(scale);
+                // param.scale returns the log Jacobian (dof * log(scale));
+                // Bactrian kernel is symmetric so no kernel-ratio correction is needed.
+                final double scale = getScaler(0, param.getValue(0));
+                final double paramLogJacobian = param.scale(scale);
+                hastingsRatio = (specifiedDoF > 0) ? specifiedDoF * Math.log(scale) : paramLogJacobian;
             } else {
 
                 // which position to scale
