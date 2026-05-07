@@ -83,8 +83,18 @@ public abstract class EmpiricalSubstitutionModel extends BasicGeneralSubstitutio
         int[] order = getEncodingOrder();
         int states = freqs.length;
         double [] freqsInOrder = new double[states];
+        double sum = 0.0;
         for (int i = 0; i < states; i++) {
         	freqsInOrder[i] = freqs[order[i]];
+        	sum += freqsInOrder[i];
+        }
+        // empirical frequencies published in papers are typically rounded to
+        // a few decimal places, so they don't sum to 1.0 exactly. Normalize
+        // so SimplexParam validation (tolerance 1e-10) passes.
+        if (sum > 0 && Math.abs(sum - 1.0) > 1e-10) {
+            for (int i = 0; i < states; i++) {
+                freqsInOrder[i] /= sum;
+            }
         }
         SimplexParam freqsRParam = new SimplexParam(freqsInOrder); // , 0.0, 1.0);
         Frequencies freqsParam = new Frequencies(freqsRParam);
