@@ -138,6 +138,21 @@ Links can be found in deprecated classes, for example for RealParameter there is
 
 **Important:** The strongly-typed spec parameters (`RealScalarParam`, `IntVectorParam`, etc.) are only for model parameters that are (or could be) estimated during MCMC sampling. Configuration inputs that are not subject to MCMC — such as dimension counts, category counts, boolean flags, or initializer values — should remain as plain `Input<Integer>`, `Input<Double>`, etc. For example, a `stateNumber` input that configures the size of a rate matrix is not an MCMC parameter and should stay as `Input<Integer>`.
 
+### Interface inputs (read-only) vs concrete-class inputs (mutable)
+
+Each spec parameter has both an interface form (`RealScalar`, `RealVector`, `IntScalar`, `IntVector`, `BoolScalar`, `BoolVector`) and a concrete `StateNode` form (`RealScalarParam`, `RealVectorParam`, `IntScalarParam`, `IntVectorParam`, `BoolScalarParam`, `BoolVectorParam`). The interfaces expose only getters; the classes add setters and are themselves `StateNode`s.
+
+Choose the input type by what your class does with the value:
+
+| Class kind | Input type | Why |
+|---|---|---|
+| Distribution / prior, site model, substitution model, branch rate model, likelihood, logger, BEAUti helper | `Input<RealScalar<…>>`, `Input<IntScalar<…>>`, etc. | Reads only — interface is sufficient and accepts derived/computed scalars (e.g. `AsRealScalar`, `IntSum`) as well as concrete params |
+| Operator (mutates the value) | `Input<RealScalarParam<…>>`, `Input<IntVectorParam<…>>`, etc. | Needs `set(...)` and the `StateNode` registration |
+
+A test that constructs a model and then mutates a parameter to drive different cases should hold a separate reference to the concrete `…Param` it constructed, rather than retrieving it through the (now-interface) input. That keeps the model class accepting any compatible read-only producer while still letting the test poke values.
+
+For inputs you only read, do not type to `…Param` — that needlessly excludes utilities like `AsIntScalar`, `IntSum`, and other `Tensor`-shaped producers that are not `StateNode`s.
+
 For your package
 * consider using a `<yourpackage>.spec` package if you want to be backward compatible
 * option mostly for packages that have other packages depending on them
