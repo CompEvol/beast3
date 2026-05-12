@@ -36,12 +36,16 @@ personal account or another org**, you have two options:
 
 1. Register an account at [central.sonatype.com](https://central.sonatype.com/).
 2. Verify your namespace:
-   - For `io.github.<username>`, follow the GitHub-based verification flow:
-     create a temporary public repo named after the verification code Sonatype
-     gives you, then click "Verify" on the namespace page.
+   - For `io.github.<your-github-username>` (personal account), the namespace
+     is auto-verified when you register your Sonatype account by signing in
+     with GitHub — no manual steps needed.
+   - For `io.github.<your-org-name>` (GitHub organisation), Sonatype gives
+     you a verification code on the namespace page. Create a temporary
+     public repo in that org named after the code, then click "Verify".
+     You can delete the repo afterwards.
    - For a custom domain (e.g. `org.example`), follow the DNS TXT record flow.
 3. Generate a publishing token at
-   [central.sonatype.com/account](https://central.sonatype.com/account).
+   [central.sonatype.com/usertoken](https://central.sonatype.com/usertoken).
    Save the **username** and **password** strings — these become
    `CENTRAL_USERNAME` and `CENTRAL_TOKEN`.
 
@@ -82,7 +86,9 @@ repository secret** and add:
 
 If your repo is in an org you control, you can set these as **organisation
 secrets** instead — every repo in the org inherits them. This is what
-CompEvol and BEAST2-Dev do.
+CompEvol and BEAST2-Dev do. GitHub does not support secrets at the personal
+account level, so if your packages live under your own user account you'll
+need to re-add these four secrets to each repo.
 
 ## Step 4: Wire up the workflow
 
@@ -152,7 +158,7 @@ within ~15 minutes (usually faster).
 **Publish step fails with "401 Unauthorized"**
 The `CENTRAL_USERNAME` / `CENTRAL_TOKEN` secrets are missing or wrong, or
 the token has expired. Regenerate at
-[central.sonatype.com/account](https://central.sonatype.com/account) and
+[central.sonatype.com/usertoken](https://central.sonatype.com/usertoken) and
 update the secrets.
 
 **Publish step fails with "namespace not verified"**
