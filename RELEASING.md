@@ -1,6 +1,6 @@
 # Releasing BEAST 3 to Maven Central
 
-Pushing a `v*` tag triggers the `release-central.yml` workflow, which
+Pushing a `v*` tag triggers the `ci-publish.yml` workflow, which
 derives the Maven version from the tag, builds, tests, GPG-signs, and
 auto-publishes to Maven Central.
 
@@ -34,7 +34,7 @@ git push origin v2.8.0-beta1
 ```
 
 Monitor the workflow run at:
-https://github.com/CompEvol/beast3/actions/workflows/release-central.yml
+https://github.com/CompEvol/beast3/actions/workflows/ci-publish.yml
 
 ## After release
 

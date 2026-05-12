@@ -102,16 +102,14 @@ on:
 
 Key behaviours:
 
-- The release job uses `actions/setup-java` with `server-id: central` —
-  this writes the `CENTRAL_USERNAME` / `CENTRAL_TOKEN` env vars into
-  `~/.m2/settings.xml` automatically.
-- `mvn versions:set -DnewVersion=$VERSION` strips the `v` from the tag
-  (so tag `v1.3.0-beta1` publishes as version `1.3.0-beta1`). You do
-  **not** need to bump the `<version>` in `pom.xml` before tagging —
-  leave it as `X.Y.Z-SNAPSHOT` during development.
-- `mvn deploy -Prelease -DskipTests` activates the `release` profile,
-  which adds javadoc + sources JARs, GPG-signs everything, and uploads
-  to Maven Central via the `central-publishing-maven-plugin`.
+- CI wires `CENTRAL_USERNAME` / `CENTRAL_TOKEN` from the GitHub secrets
+  into Maven automatically — no `settings.xml` editing on your side.
+- CI derives the published version from the tag (so tag `v1.3.0-beta1`
+  publishes as version `1.3.0-beta1`). You do **not** need to bump the
+  `<version>` in `pom.xml` before tagging — leave it as `X.Y.Z-SNAPSHOT`
+  during development.
+- The release build adds javadoc + sources JARs, GPG-signs everything,
+  runs tests, and uploads to Maven Central.
 
 ## Step 5: Pre-tag checklist
 
