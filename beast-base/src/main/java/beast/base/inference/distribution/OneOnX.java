@@ -7,7 +7,11 @@ import org.apache.commons.statistics.distribution.ContinuousDistribution;
 
 
 /**
- * @deprecated 1/x can be simulated. Use other distributions.
+ * @deprecated use {@link beast.base.spec.inference.distribution.LogUniform} instead —
+ * it has density proportional to 1/x on a bounded support [lower, upper] (lower > 0),
+ * which makes it a proper, normalisable replacement for this improper 1/x prior.
+ * Set {@code lower}/{@code upper} to the range of plausible values for the quantity
+ * being prior'd (e.g. clock rates, population sizes).
  */
 @Deprecated
 @Description("OneOnX distribution.  f(x) = C/x for some normalizing constant C. " +
