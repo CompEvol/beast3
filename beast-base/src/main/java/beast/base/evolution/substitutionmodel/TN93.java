@@ -61,7 +61,7 @@ import beast.base.inference.parameter.RealParameter;
 @Citation(value = "Tamura, K., & Nei, M. (1993). Estimation of the number of nucleotide substitutions in the control region " +
         "of mitochondrial DNA in humans and chimpanzees. Molecular Biology and Evolution, 10(3), 512-526.", DOI = "10.1093/oxfordjournals.molbev.a040023", year = 1994, firstAuthorSurname = "tamura")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.TN93 instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.TN93} instead
  */
 @Deprecated
 public class TN93 extends SubstitutionModel.NucleotideBase {

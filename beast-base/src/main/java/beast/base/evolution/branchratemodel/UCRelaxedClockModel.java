@@ -9,6 +9,7 @@ import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
+
 import java.util.Arrays;
 
 /**
@@ -21,7 +22,7 @@ import java.util.Arrays;
                 "  Dating with Confidence. PLoS Biol 4(5): e88", DOI = "10.1371/journal.pbio.0040088",
         year = 2006, firstAuthorSurname = "drummond")
 /**
- * @deprecated use beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel instead
+ * @deprecated use {@link beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel} instead
  */
 @Deprecated
 public class UCRelaxedClockModel extends BranchRateModel.Base {

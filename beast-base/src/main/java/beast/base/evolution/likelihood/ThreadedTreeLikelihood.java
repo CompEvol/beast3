@@ -28,24 +28,7 @@
 package beast.base.evolution.likelihood;
 
 
-
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.RejectedExecutionException;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.core.ProgramStatus;
+import beast.base.core.*;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.FilteredAlignment;
 import beast.base.evolution.sitemodel.SiteModel;
@@ -53,12 +36,18 @@ import beast.base.evolution.substitutionmodel.Frequencies;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.inference.State;
 
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+
 
 @Description("Calculates the likelihood of sequence data on a beast.tree given a site and substitution model using " +
 		"a variant of the 'peeling algorithm'. For details, see" +
 		"Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
 /**
- * @deprecated use beast.base.spec.evolution.likelihood.ThreadedTreeLikelihood instead
+ * @deprecated use {@link beast.base.spec.evolution.likelihood.ThreadedTreeLikelihood} instead
  */
 @Deprecated
 public class ThreadedTreeLikelihood extends GenericTreeLikelihood {

@@ -1,15 +1,11 @@
 package beast.base.inference.operator;
 
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.inference.Operator;
 import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
@@ -17,12 +13,16 @@ import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Description("This element represents an operator that scales two parameters in different directions. " +
         "Each operation involves selecting a scale uniformly at random between scaleFactor and 1/scaleFactor. " +
         "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
 /**
- * @deprecated Use beast.base.spec.inference.operator.UpDownOperator instead.
+ * @deprecated Use {@link beast.base.spec.evolution.operator.UpDownOperator} instead.
  */
 @Deprecated
 public class UpDownOperator extends Operator {

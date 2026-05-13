@@ -1,19 +1,15 @@
 package beast.base.inference.distribution;
 
 
-import java.util.List;
-import java.util.Random;
-
+import beast.base.core.*;
+import beast.base.core.Input.Validate;
+import beast.base.inference.Distribution;
+import beast.base.inference.State;
 import org.apache.commons.statistics.distribution.GammaDistribution;
 import org.apache.commons.statistics.distribution.LogNormalDistribution;
 
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.core.Input.Validate;
-import beast.base.inference.*;
+import java.util.List;
+import java.util.Random;
 
 
 
@@ -26,7 +22,7 @@ import beast.base.inference.*;
         "If a Jeffrey's prior is used, the first value is assumed to be distributed as 1/x, otherwise it is assumed to be uniform. " +
         "Handy for population parameters. ")
 /**
- * @deprecated use beast.base.spec.inference.distribution.MarkovChainDistribution instead
+ * @deprecated use {@link beast.base.spec.inference.distribution.MarkovChainDistribution} instead
  */
 @Deprecated
 public class MarkovChainDistribution extends Distribution {

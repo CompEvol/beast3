@@ -1,16 +1,16 @@
 package beast.base.evolution.substitutionmodel;
 
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.parameter.RealParameter;
 
+import java.lang.reflect.InvocationTargetException;
+
 @Description("A substitution model where the rates and frequencies are obtained from " +
         "empirical evidence. Especially, amino acid models like WAG.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.EmpiricalSubstitutionModel instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.EmpiricalSubstitutionModel} instead
  */
 @Deprecated
 public abstract class EmpiricalSubstitutionModel extends GeneralSubstitutionModel {

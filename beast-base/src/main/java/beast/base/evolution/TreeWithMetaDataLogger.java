@@ -1,16 +1,6 @@
 package beast.base.evolution;
 
-import java.io.PrintStream;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.branchratemodel.BranchRateModel;
 import beast.base.evolution.tree.Node;
@@ -19,9 +9,15 @@ import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 
+import java.io.PrintStream;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 @Description("Logs tree annotated with metadata and/or rates")
 /**
- * @deprecated use beast.base.spec.evolution.TreeWithMetaDataLogger instead
+ * @deprecated use {@link beast.base.spec.evolution.TreeWithMetaDataLogger} instead
  */
 @Deprecated
 public class TreeWithMetaDataLogger extends BEASTObject implements Loggable {

@@ -1,30 +1,25 @@
 package beast.base.evolution.operator;
 
+import beast.base.core.*;
+import beast.base.evolution.tree.Tree;
+import beast.base.evolution.tree.TreeMetric;
+import beast.base.inference.Operator;
+import beast.base.inference.OperatorSchedule;
+import beast.base.inference.StateNode;
+import beast.base.inference.parameter.CompoundRealParameter;
+import beast.base.inference.parameter.IntegerParameter;
+import beast.base.inference.parameter.RealParameter;
+import beast.base.internal.json.JSONArray;
+import beast.base.internal.json.JSONException;
+import beast.base.internal.json.JSONObject;
+import beast.base.internal.json.JSONStringer;
+import beast.base.util.Randomizer;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import beast.base.internal.json.JSONArray;
-import beast.base.internal.json.JSONException;
-import beast.base.internal.json.JSONObject;
-import beast.base.internal.json.JSONStringer;
-
-import beast.base.core.Citation;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.inference.Operator;
-import beast.base.inference.OperatorSchedule;
-import beast.base.inference.StateNode;
-import beast.base.inference.parameter.IntegerParameter;
-import beast.base.inference.parameter.RealParameter;
-import beast.base.core.Log;
-import beast.base.evolution.tree.Tree;
-import beast.base.util.Randomizer;
-import beast.base.evolution.tree.TreeMetric;
-import beast.base.inference.parameter.CompoundRealParameter;
 
 /**
  * 
@@ -35,7 +30,7 @@ import beast.base.inference.parameter.CompoundRealParameter;
 "After a learning period, AdaptableOperatorSampler should pick the operator which is giving the best results n a particular data set")
 @Citation(value="Douglas J, Zhang R, Bouckaert R. Adaptive dating and fast proposals: Revisiting the phylogenetic relaxed clock model. PLoS computational biology. 2021 Feb 2;17(2):e1008322.", 
 	DOI="10.1371/journal.pcbi.1008322")
-//@deprecated use beast.base.spec.evolution.operator.AdaptableOperatorSampler instead
+/** @deprecated use {@link beast.base.spec.evolution.operator.AdaptableOperatorSampler} instead */
 @Deprecated
 public class AdaptableOperatorSampler extends Operator {
 	

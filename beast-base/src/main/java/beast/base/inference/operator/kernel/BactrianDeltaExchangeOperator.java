@@ -1,10 +1,6 @@
 package beast.base.inference.operator.kernel;
 
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
@@ -13,10 +9,14 @@ import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 @Description("Delta exchange operator that proposes through a Bactrian distribution for real valued parameters")
 /**
  * @deprecated from BEAST v3.0.0
- * use strong typed {@link RealDeltaExchangeOperator}, {@link IntDeltaExchangeOperator}
+ * use {@link beast.base.spec.inference.operator.DeltaExchangeOperator}
  */
 @Deprecated(forRemoval = true)
 public class BactrianDeltaExchangeOperator extends KernelOperator {

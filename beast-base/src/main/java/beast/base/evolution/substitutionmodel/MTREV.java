@@ -8,7 +8,7 @@ import beast.base.evolution.datatype.DataType;
         " (complete sequence data of mtDNA from 24 vertebrate species) " +
         " Adachi, J., and Hasegawa, M. 1996. J. Mol. Evol. 42:459-468.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.MTREV instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.MTREV} instead
  */
 @Deprecated
 public class MTREV extends EmpiricalSubstitutionModel {

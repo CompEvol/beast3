@@ -1,7 +1,5 @@
 package beast.base.evolution.substitutionmodel;
 
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -10,10 +8,12 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.inference.parameter.RealParameter;
 
+import java.lang.reflect.InvocationTargetException;
+
 @Description("General Time Reversible model of nucleotide evolution. " +
         "Rates that are not specified are assumed to be 1. ")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.GTR instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.GTR} instead
  */
 @Deprecated
 public class GTR extends GeneralSubstitutionModel {

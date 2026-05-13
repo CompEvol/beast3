@@ -9,7 +9,7 @@ import beast.base.evolution.datatype.DataType;
         " The rapid generation of mutation data matrices from protein sequences " +
         " CABIOS  vol. 8 no. 3 1992 pp. 275-282.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.JTT instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.JTT} instead
  */
 @Deprecated
 public class JTT extends EmpiricalSubstitutionModel {

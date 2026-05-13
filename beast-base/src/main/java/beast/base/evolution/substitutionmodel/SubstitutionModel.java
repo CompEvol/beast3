@@ -97,7 +97,7 @@ public interface SubstitutionModel {
      */
     @Description(value = "Base implementation of a substitution model.", isInheritable = false)
     /**
-     * @deprecated use beast.base.spec.evolution.subsitutionmodel.Base instead
+     * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.Base} instead
      */
     @Deprecated
     public abstract class Base extends CalculationNode implements SubstitutionModel {

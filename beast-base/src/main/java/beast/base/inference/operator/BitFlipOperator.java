@@ -39,7 +39,7 @@ import beast.base.util.Randomizer;
 @Description("Flip one bit in an array of boolean bits. The hastings ratio is designed so that all subsets of vectors with the" +
         " same number of 'on' bits are equiprobable.")
 /**
- * @deprecated Use beast.base.spec.inference.operator.BitFlipOperator instead.
+ * @deprecated Use {@link beast.base.spec.inference.operator.BitFlipOperator} instead.
  */
 @Deprecated
 public class BitFlipOperator extends Operator {

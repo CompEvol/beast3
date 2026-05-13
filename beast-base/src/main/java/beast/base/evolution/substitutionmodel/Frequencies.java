@@ -24,15 +24,15 @@
 */
 package beast.base.evolution.substitutionmodel;
 
-import java.util.Arrays;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.CalculationNode;
 import beast.base.inference.parameter.RealParameter;
+
+import java.util.Arrays;
 
 
 
@@ -42,7 +42,7 @@ import beast.base.inference.parameter.RealParameter;
         "distribution if the estimate flag is set to false.")
 /**
  * @deprecated from BEAST v3.0.0
- * use beast.base.spec.evolution.substitutionmodel.Frequencies instead
+ * use {@link beast.base.spec.evolution.substitutionmodel.Frequencies} instead
  */
 @Deprecated(forRemoval = true)
 public class Frequencies extends CalculationNode {

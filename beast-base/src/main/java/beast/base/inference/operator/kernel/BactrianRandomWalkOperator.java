@@ -1,9 +1,6 @@
 package beast.base.inference.operator.kernel;
 
 
-
-import java.text.DecimalFormat;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -11,12 +8,14 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
+
 
 @Description("A random walk operator that selects a random dimension of the real parameter and perturbs the value a " +
         "random amount according to a Bactrian distribution (Yang & Rodriguez, 2013), which is a mixture of two Gaussians:"
         + "p(x) = 1/2*N(x;-m,1-m^2) + 1/2*N(x;+m,1-m^2) and more efficient than RealRandomWalkOperator")
 /**
- * @deprecated Use beast.base.spec.inference.operator.RealRandomWalkOperator instead.
+ * @deprecated Use {@link beast.base.spec.inference.operator.RealRandomWalkOperator} instead.
  */
 @Deprecated
 public class BactrianRandomWalkOperator extends KernelOperator {

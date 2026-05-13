@@ -1,10 +1,6 @@
 package beast.base.evolution.branchratemodel;
 
-import beast.base.core.Citation;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.parameter.BooleanParameter;
@@ -19,7 +15,7 @@ import beast.base.inference.parameter.RealParameter;
         DOI = "10.1186/1741-7007-8-114",
         year = 2010, firstAuthorSurname = "drummond")
 /**
- * @deprecated use beast.base.spec.evolution.branchratemodel.RandomLocalClockModel instead
+ * @deprecated use {@link beast.base.spec.evolution.branchratemodel.RandomLocalClockModel} instead
  */
 @Deprecated
 public class RandomLocalClockModel extends BranchRateModel.Base {

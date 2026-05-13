@@ -25,22 +25,15 @@
 package beast.base.evolution.sitemodel;
 
 
-
-
-import java.util.ArrayList;
-
-import org.apache.commons.statistics.distribution.GammaDistribution;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Node;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
+import org.apache.commons.statistics.distribution.GammaDistribution;
+
+import java.util.ArrayList;
 
 
 
@@ -55,7 +48,7 @@ import beast.base.inference.util.InputUtil;
         "and proportion of the sites invariant (also optional).")
 /** 
  * @deprecated from BEAST v3.0.0
- * Use beast.base.spec.evolution.sitemodel.SiteModel instead 
+ * Use {@link beast.base.spec.evolution.sitemodel.SiteModel} instead
  ***/
 @Deprecated(forRemoval = true) 
 public class SiteModel extends SiteModelInterface.Base {

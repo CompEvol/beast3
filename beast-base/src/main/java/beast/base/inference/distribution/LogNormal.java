@@ -6,6 +6,7 @@ import beast.base.core.Description;
  * A subclass of LogNormalDistributionModel with a shorter, more user-friendly name.
  * This class provides exactly the same functionality as LogNormalDistributionModel
  * but can be referenced as "LogNormal" in XML and model scripts.
+ * @deprecated replaced by {@link beast.base.spec.inference.distribution.LogNormal}
  */
 @Deprecated
 @Description("A log-normal distribution with mean and variance parameters. Alias for LogNormalDistributionModel.")

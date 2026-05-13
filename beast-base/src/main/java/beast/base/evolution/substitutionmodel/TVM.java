@@ -1,7 +1,5 @@
 package beast.base.evolution.substitutionmodel;
 
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -10,10 +8,12 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.inference.parameter.RealParameter;
 
+import java.lang.reflect.InvocationTargetException;
+
 @Description("Transversion model of nucleotide evolution (variable transversion rates, equal transition rates)." +
         "Rates that are not specified are assumed to be 1.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.TVM instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.TVM} instead
  */
 @Deprecated
 public class TVM extends GeneralSubstitutionModel {

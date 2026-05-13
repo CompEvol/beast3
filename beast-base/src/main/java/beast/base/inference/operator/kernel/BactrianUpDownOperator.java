@@ -1,27 +1,27 @@
 package beast.base.inference.operator.kernel;
 
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Description("Like the UpDownOperator, this element represents an operator that scales "
 		+ "two (or more) parameters in different directions, but uses a Bactrian proposal distribution for the scale value. "
         + "The up parameter is multiplied by this scale and the down parameter is divided by this scale.")
 /**
- * @deprecated Use beast.base.spec.inference.operator.UpDownOperator instead.
+ * @deprecated Use {@link beast.base.spec.evolution.operator.UpDownOperator} instead.
  */
 @Deprecated
 public class BactrianUpDownOperator extends KernelOperator {

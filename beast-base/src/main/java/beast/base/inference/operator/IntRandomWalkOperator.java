@@ -12,7 +12,7 @@ import beast.base.util.Randomizer;
 @Description("A random walk operator that selects a random dimension of the integer parameter and perturbs the value a " +
         "random amount within +/- windowSize.")
 /**
- * @deprecated Use beast.base.spec.inference.operator.IntRandomWalkOperator instead.
+ * @deprecated Use {@link beast.base.spec.inference.operator.IntRandomWalkOperator} instead.
  */
 @Deprecated
 public class IntRandomWalkOperator extends Operator {

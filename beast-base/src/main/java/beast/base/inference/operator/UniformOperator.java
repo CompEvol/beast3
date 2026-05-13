@@ -7,11 +7,10 @@ import beast.base.inference.Operator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
-import beast.base.spec.inference.operator.uniform.IntUniformOperator;
 import beast.base.util.Randomizer;
 
 /**
- * @deprecated replaced by {@link IntUniformOperator},
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.uniform.IntUniformOperator},
  * {@link beast.base.spec.inference.operator.uniform.IntervalOperator}
  */
 @Deprecated

@@ -1,16 +1,16 @@
 package beast.base.evolution.substitutionmodel;
 
-import java.util.Arrays;
-
 import beast.base.core.Description;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.evolution.tree.Node;
 
+import java.util.Arrays;
+
 @Description("Jukes Cantor substitution model: all rates equal and " + "uniformly distributed frequencies")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.JukesCantor instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.JukesCantor} instead
  */
 @Deprecated
 public class JukesCantor extends SubstitutionModel.Base {

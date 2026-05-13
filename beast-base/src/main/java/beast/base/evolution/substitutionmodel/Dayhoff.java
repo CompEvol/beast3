@@ -10,7 +10,7 @@ import beast.base.evolution.datatype.DataType;
         " Dayhoff, M.O. (ed.) Atlas of Protein Sequence Structur., Vol5, Suppl. 3, " +
         " National Biomedical Research Foundation, Washington DC, pp. 345-352.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.Dayhoff instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.Dayhoff} instead
  */
 @Deprecated
 public class Dayhoff extends EmpiricalSubstitutionModel {

@@ -1,9 +1,6 @@
 package beast.base.evolution.likelihood;
 
 
-import java.util.List;
-import java.util.Random;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -13,6 +10,9 @@ import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
+
+import java.util.List;
+import java.util.Random;
 
 
 
@@ -26,7 +26,7 @@ import beast.base.inference.State;
 // TODO: This could contain a generic traverse() method that takes dirty trees in account.
 //
 /**
- * @deprecated use beast.base.spec.evolution.likelihood.GenericTreeLikelihood instead
+ * @deprecated use {@link beast.base.spec.evolution.likelihood.GenericTreeLikelihood} instead
  */
 @Deprecated
 public class GenericTreeLikelihood extends Distribution {

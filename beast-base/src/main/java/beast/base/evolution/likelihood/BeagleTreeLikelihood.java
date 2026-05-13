@@ -26,18 +26,7 @@
 package beast.base.evolution.likelihood;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import beagle.Beagle;
-import beagle.BeagleBenchmarkFlag;
-import beagle.BeagleFactory;
-import beagle.BeagleFlag;
-import beagle.BeagleInfo;
-import beagle.BenchmarkedResourceDetails;
-import beagle.InstanceDetails;
-import beagle.ResourceDetails;
+import beagle.*;
 import beast.base.core.Description;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
@@ -47,6 +36,10 @@ import beast.base.evolution.substitutionmodel.EigenDecomposition;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 /**
@@ -60,7 +53,7 @@ import beast.base.inference.CalculationNode;
 
 @Description("Uses Beagle library to calculate Tree likelihood")
 /**
- * @deprecated use beast.base.spec.evolution.likelihood.BeagleTreeLikelihood instead
+ * @deprecated use {@link beast.base.spec.evolution.likelihood.BeagleTreeLikelihood} instead
  */
 @Deprecated
 public class BeagleTreeLikelihood extends TreeLikelihood {

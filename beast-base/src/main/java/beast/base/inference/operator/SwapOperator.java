@@ -1,9 +1,5 @@
 package beast.base.inference.operator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
@@ -15,11 +11,15 @@ import beast.base.inference.parameter.Parameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 
 
 @Description("A generic operator swapping a one or more pairs in a multi-dimensional parameter")
 /**
- * @deprecated Use beast.base.spec.inference.operator.SwapOperator instead.
+ * @deprecated Use {@link beast.base.spec.inference.operator.SwapOperator} instead.
  */
 @Deprecated
 public class SwapOperator extends Operator {

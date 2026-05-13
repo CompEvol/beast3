@@ -11,7 +11,7 @@ import beast.base.inference.parameter.RealParameter;
 
 @Description("Defines a mean rate for each branch in the beast.tree.")
 /**
- * @deprecated use beast.base.spec.evolution.branchratemodel.StrictClockModel instead
+ * @deprecated use {@link beast.base.spec.evolution.branchratemodel.StrictClockModel} instead
  */
 @Deprecated
 public class StrictClockModel extends BranchRateModel.Base {

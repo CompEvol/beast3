@@ -11,7 +11,7 @@ import beast.base.util.Randomizer;
 
 @Description("A uniform random operator that selects a random dimension of the integer parameter and picks a new random value within the bounds.")
 /**
- * @deprecated IntUniformOperator is deprecated. Use UniformOperator instead.
+ * @deprecated IntUniformOperator is deprecated. Use {@link beast.base.spec.inference.operator.uniform.IntUniformOperator} instead.
  */
 @Deprecated
 public class IntUniformOperator extends Operator {

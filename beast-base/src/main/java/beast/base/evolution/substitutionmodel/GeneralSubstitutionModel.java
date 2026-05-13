@@ -27,9 +27,6 @@
 package beast.base.evolution.substitutionmodel;
 
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
@@ -39,13 +36,16 @@ import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
 import beast.pkgmgmt.BEASTClassLoader;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+
 
 
 @Description("Specifies transition probability matrix with no restrictions on the rates other " +
         "than that one of the is equal to one and the others are specified relative to " +
         "this unit rate. Works for any number of states.")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.GeneralSubstitutionModel instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.GeneralSubstitutionModel} instead
  */
 @Deprecated
 public class GeneralSubstitutionModel extends SubstitutionModel.Base {

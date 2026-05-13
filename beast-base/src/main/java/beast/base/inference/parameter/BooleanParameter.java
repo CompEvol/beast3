@@ -25,14 +25,12 @@
 package beast.base.inference.parameter;
 
 
+import beast.base.core.Description;
+
 import java.io.PrintStream;
 
-import beast.base.core.Description;
-import beast.base.core.Log;
-import beast.base.spec.inference.parameter.BoolScalarParam;
-
 /**
- * @deprecated use {@link BoolScalarParam}
+ * @deprecated use {@link beast.base.spec.inference.parameter.BoolScalarParam} or {@link beast.base.spec.inference.parameter.BoolVectorParam}
  * @author Joseph Heled
  */
 @Deprecated

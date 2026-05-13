@@ -26,9 +26,6 @@
 
 package beast.base.evolution.likelihood;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
@@ -44,11 +41,14 @@ import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.State;
 import beast.pkgmgmt.BEASTClassLoader;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
 @Description("Calculates the probability of sequence data on a beast.tree given a site and substitution model using " +
         "a variant of the 'peeling algorithm'. For details, see" +
         "Felsenstein, Joseph (1981). Evolutionary trees from DNA sequences: a maximum likelihood approach. J Mol Evol 17 (6): 368-376.")
 /**
- * @deprecated use beast.base.spec.evolution.likelihood.TreeLikelihood instead
+ * @deprecated use {@link beast.base.spec.evolution.likelihood.TreeLikelihood} instead
  */
 @Deprecated
 public class TreeLikelihood extends GenericTreeLikelihood {

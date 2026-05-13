@@ -7,7 +7,7 @@ import beast.base.evolution.datatype.DataType;
 @Description(" CPREV 45 model of amino acid evolution " +
         " Adachi, J., P.J. Waddell, W. Martin, and M. Hasegawa. 2000. JME 50:348-358")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.CPREV instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.CPREV} instead
  */
 @Deprecated
 public class CPREV extends EmpiricalSubstitutionModel {

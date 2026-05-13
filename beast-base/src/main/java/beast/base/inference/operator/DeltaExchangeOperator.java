@@ -1,12 +1,6 @@
 package beast.base.inference.operator;
 
 
-
-
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
@@ -16,6 +10,10 @@ import beast.base.inference.StateNode;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -28,7 +26,7 @@ import beast.base.util.Randomizer;
  */
 @Description("A generic operator for use with a sum-constrained (possibly weighted) vector parameter.")
 /**
- * @deprecated Use beast.base.spec.inference.operator.DeltaExchangeOperator instead.
+ * @deprecated Use {@link beast.base.spec.inference.operator.DeltaExchangeOperator} instead.
  */
 @Deprecated
 public class DeltaExchangeOperator extends Operator {

@@ -40,7 +40,7 @@ import beast.base.inference.parameter.RealParameter;
                 "  molecular clock of mitochondrial DNA. Journal of Molecular Evolution\n" +
                 "  22:160-174.", DOI = "10.1007/BF02101694", year = 1985, firstAuthorSurname = "hasegawa")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.HKY instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.HKY} instead
  */
 @Deprecated
 public class HKY extends SubstitutionModel.NucleotideBase {

@@ -1,24 +1,20 @@
 package beast.base.evolution;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Function;
-import beast.base.core.Input;
-import beast.base.core.Loggable;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CalculationNode;
 import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.IntegerParameter;
 
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Description("calculates sum of a valuable")
 /**
- * @deprecated use beast.base.spec.evolution.Sum instead
+ * @deprecated use {@link beast.base.spec.evolution.Sum} instead
  */
 @Deprecated
 public class Sum extends CalculationNode implements Function, Loggable {

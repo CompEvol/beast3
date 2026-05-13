@@ -1,15 +1,14 @@
 package beast.base.evolution.substitutionmodel;
 
-import java.lang.reflect.InvocationTargetException;
-
 import beast.base.core.Description;
 import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.datatype.TwoStateCovarion;
-import beast.base.inference.parameter.RealParameter;
+
+import java.lang.reflect.InvocationTargetException;
 
 
 /**
@@ -67,7 +66,7 @@ import beast.base.inference.parameter.RealParameter;
  */
 @Description("Covarion model for Binary data")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.BinaryCovarion instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.BinaryCovarion} instead
  */
 @Deprecated
 public class BinaryCovarion extends GeneralSubstitutionModel {

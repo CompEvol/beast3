@@ -16,7 +16,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * @deprecated use {@link RealScalarParam} or {@link RealVectorParam}
+ * @deprecated use {@link beast.base.spec.type.Tensor} if read only,
+ * alternatively use {@link RealScalarParam} or {@link RealVectorParam} having setters.
  */
 @Deprecated
 public interface Parameter<T> extends Function {

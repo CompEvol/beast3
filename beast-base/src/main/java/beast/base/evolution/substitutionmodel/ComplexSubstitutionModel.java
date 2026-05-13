@@ -26,12 +26,12 @@
 package beast.base.evolution.substitutionmodel;
 
 
-import java.util.Arrays;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
+
+import java.util.Arrays;
 
 /**
  * <b>A general irreversible class for any
@@ -46,7 +46,7 @@ import beast.base.evolution.tree.Node;
         "Current Biology, 21(15), 1251-1258.",
         year = 2011, firstAuthorSurname = "Edwards", DOI="10.1016/j.cub.2011.05.058")
 /**
- * @deprecated use beast.base.spec.evolution.subsitutionmodel.ComplexSubstitutionModel instead
+ * @deprecated use {@link beast.base.spec.evolution.substitutionmodel.ComplexSubstitutionModel} instead
  */
 @Deprecated
 public class ComplexSubstitutionModel extends GeneralSubstitutionModel {

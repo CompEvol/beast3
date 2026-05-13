@@ -1,23 +1,23 @@
 package beast.base.evolution.operator;
 
 
-import java.text.DecimalFormat;
-
 import beast.base.core.Citation;
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.inference.Operator;
-import beast.base.inference.operator.kernel.KernelDistribution;
-import beast.base.inference.parameter.IntegerParameter;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeIntervals;
+import beast.base.inference.Operator;
+import beast.base.inference.operator.kernel.KernelDistribution;
+import beast.base.inference.parameter.IntegerParameter;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
 
 @Description("Scale operator that scales random epoch in a tree")
 @Citation(value="Bouckaert RR. An efficient coalescent epoch model for Bayesian phylogenetic inference. Systematic Biology, syac015, 2022", DOI="DOI:10.1093/sysbio/syac015")
-// @deprecated use beast.base.spec.evolution.operator.IntervalScaleOperator instead
+/** @deprecated use {@link beast.base.spec.evolution.operator.IntervalScaleOperator} instead */
 @Deprecated
 public class EpochFlexOperator extends Operator {
     final public Input<Tree> treeInput = new Input<>("tree", "beast.tree on which this operation is performed", Validate.REQUIRED);
