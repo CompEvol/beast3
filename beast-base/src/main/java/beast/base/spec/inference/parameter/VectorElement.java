@@ -2,10 +2,13 @@ package beast.base.spec.inference.parameter;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.core.Loggable;
 import beast.base.inference.CalculationNode;
 import beast.base.spec.domain.Real;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
+
+import java.io.PrintStream;
 
 /**
  * Scalar view of a single element in a {@link RealVector}.
@@ -15,7 +18,7 @@ import beast.base.spec.type.RealVector;
  * @param <D> the real domain type, inherited from the underlying vector
  */
 @Description("Scalar view of a single element in a RealVector")
-public class VectorElement<D extends Real> extends CalculationNode implements RealScalar<D> {
+public class VectorElement<D extends Real> extends CalculationNode implements RealScalar<D>, Loggable {
 
     final public Input<RealVector<?>> vectorInput = new Input<>("vector",
             "the vector to extract an element from", Input.Validate.REQUIRED);
@@ -50,5 +53,20 @@ public class VectorElement<D extends Real> extends CalculationNode implements Re
     @Override
     public D getDomain() {
         return (D) vector.getDomain();
+    }
+
+    @Override
+    public void init(PrintStream out) {
+        out.print(getID() + "\t");
+    }
+
+    @Override
+    public void log(long sample, PrintStream out) {
+        out.print(get() + "\t");
+    }
+
+    @Override
+    public void close(PrintStream out) {
+        // nothing to do
     }
 }
