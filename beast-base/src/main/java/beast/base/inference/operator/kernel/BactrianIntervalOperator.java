@@ -14,6 +14,7 @@ import java.text.DecimalFormat;
  * @deprecated replaced by
  * {@link beast.base.spec.inference.operator.uniform.IntervalOperator}.
  */
+@Deprecated
 @Description("A scale operator that selects a random dimension of the real parameter and scales the value a " +
         "random amount according to a Bactrian distribution such that the parameter remains in its range. "
         + "Supposed to be more efficient than UniformOperator")

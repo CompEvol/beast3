@@ -14,6 +14,10 @@ public interface BranchRateModel {
 
     public double getRateForBranch(Node node);
 
+    /**
+     * @deprecated replaced by {@link beast.base.spec.evolution.branchratemodel.Base}
+     */
+    @Deprecated
     @Description(value = "Base implementation of a clock model.", isInheritable = false)
     public abstract class Base extends CalculationNode implements BranchRateModel {
         final public Input<Function> meanRateInput = new Input<>("clock.rate", "mean clock rate (defaults to 1.0)");

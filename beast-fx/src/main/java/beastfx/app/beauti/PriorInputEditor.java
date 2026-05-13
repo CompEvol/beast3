@@ -35,6 +35,13 @@ import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.parser.PartitionContext;
 
+/**
+ * @deprecated BEAUti editor for the deprecated
+ * {@link beast.base.inference.distribution.Prior} wrapper. In the spec
+ * framework distributions take {@code param} directly (no Prior wrapper),
+ * so a separate prior editor is no longer needed.
+ */
+@Deprecated
 public class PriorInputEditor extends InputEditor.Base implements HasExpandBox {
 
 	public PriorInputEditor(BeautiDoc doc) {
