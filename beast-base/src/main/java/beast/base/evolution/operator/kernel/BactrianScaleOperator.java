@@ -211,7 +211,7 @@ public class BactrianScaleOperator extends ScaleOperator {
     }
     
     @Override
-    public double getTargetAcceptanceProbability() {
+    public double getDefaultTargetAcceptanceProbability() {
     	return 0.3;
     }
     

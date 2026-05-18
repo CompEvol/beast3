@@ -402,7 +402,7 @@ public class BactrianDeltaExchangeOperator extends KernelOperator {
     
 	
     @Override
-    public double getTargetAcceptanceProbability() {
+    public double getDefaultTargetAcceptanceProbability() {
     	return 0.3;
     }
 

@@ -96,6 +96,11 @@ public class TipDatesScaler extends TreeOperator {
         scaleFactor = value;
     }
 
+    @Override
+    public double getDefaultTargetAcceptanceProbability() {
+        return 0.3;
+    }
+
 
     @Override
     public void optimize(double logAlpha) {

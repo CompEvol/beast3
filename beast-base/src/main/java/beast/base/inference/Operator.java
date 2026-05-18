@@ -44,6 +44,10 @@ import beast.base.core.Input.Validate;
 public abstract class Operator extends BEASTObject {
     final public Input<Double> m_pWeight = new Input<>("weight", "weight with which this operator is selected", Validate.REQUIRED);
 
+    final public Input<Double> targetAcceptanceProbabilityInput = new Input<>("targetAcceptanceProbability",
+            "target acceptance probability for auto-tuning. If unset (NaN), uses the operator's default.",
+            Double.NaN);
+
     private final String STANDARD_OPERATOR_PACKAGE = "beast.base.evolution.operator";
 
     /**
@@ -158,9 +162,25 @@ public abstract class Operator extends BEASTObject {
     } // calcDelta
 
     /**
-     * @return target for automatic operator optimisation
+     * @return target for automatic operator optimisation. Resolves the
+     *         {@code targetAcceptanceProbability} XML input if set; otherwise
+     *         falls back to {@link #getDefaultTargetAcceptanceProbability()}.
+     *         Subclasses should override {@code getDefaultTargetAcceptanceProbability}
+     *         to set an operator-specific default.
      */
     public double getTargetAcceptanceProbability() {
+        Double v = targetAcceptanceProbabilityInput.get();
+        if (v == null || Double.isNaN(v)) {
+            return getDefaultTargetAcceptanceProbability();
+        }
+        return v;
+    }
+
+    /**
+     * @return operator-specific default target acceptance probability. Override
+     *         in subclasses to set the default for a particular operator.
+     */
+    public double getDefaultTargetAcceptanceProbability() {
         return 0.234;
     }
 

@@ -841,7 +841,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
     }
     
     @Override
-    public final double getTargetAcceptanceProbability() {
+    public double getDefaultTargetAcceptanceProbability() {
         return DEFAULT_ADAPTATION_TARGET;
     }
 
