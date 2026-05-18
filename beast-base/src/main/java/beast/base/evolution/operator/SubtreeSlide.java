@@ -50,26 +50,27 @@
 package beast.base.evolution.operator;
 
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.InputUtil;
 import beast.base.util.Randomizer;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Implements the subtree slide move.
+ * @deprecated replaced by {@link beast.base.evolution.operator.kernel.BactrianSubtreeSlide}
  */
 @Description("Moves the height of an internal node along the branch. " +
         "If it moves up, it can exceed the root and become a new root. " +
         "If it moves down, it may need to make a choice which branch to " +
         "slide down into.")
+@Deprecated
 public class SubtreeSlide extends TreeOperator {
 
     final public Input<Double> sizeInput = new Input<>("size", "size of the slide, default 1.0", 1.0);
