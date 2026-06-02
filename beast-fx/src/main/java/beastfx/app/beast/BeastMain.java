@@ -1,19 +1,5 @@
 package beastfx.app.beast;
-	
 
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 import beagle.BeagleFactory;
 import beagle.BeagleFlag;
@@ -25,13 +11,25 @@ import beast.pkgmgmt.Arguments;
 import beast.pkgmgmt.BEASTVersion;
 import beast.pkgmgmt.PackageManager;
 import beast.pkgmgmt.Version;
-import beastfx.app.util.Utils;
 import beastfx.app.beauti.ThemeProvider;
 import beastfx.app.util.Console;
+import beastfx.app.util.Utils;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.stage.Window;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import static beast.pkgmgmt.BEASTClassLoader.addServices;
 
@@ -166,6 +164,12 @@ public class BeastMain extends Console {
                         new Arguments.StringOption("version_file", "VERSIONFILE" ,"Provide a version file containing a list of services to explicitly allow. (Useful for package development.)").allowMultipleUse(),
                         new Arguments.StringOption("packagedir", "PACKAGEDIR" ,"Set user package directory instead of using the default"),
                 });
+
+        // issue #93 -Dbeast.args cannot take multiple args in one string
+        String argsStr = System.getProperty("beast.args");
+//        System.out.println("argsStr = " + argsStr);
+        if (argsStr != null && !argsStr.isBlank())
+            args = argsStr.trim().split("\\s+");
 
         try {
             arguments.parseArguments(args);

@@ -100,6 +100,10 @@ mvn install -DskipTests
 # Run BEAST on an XML file (paths are relative to the project root)
 mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/examples/testHKY.xml"
 
+# Run BEAST on an XML file with other args
+# Note: XML <run> tag must have chainLength="$(chainLength=5000000)" to make -D working
+mvn -pl beast-fx exec:exec -Dbeast.args="-D chainLength=10000 YOUR_PATH/testHKY.xml"
+
 # Run BEAUti
 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.beauti.Beauti
 

@@ -191,9 +191,10 @@
                         <argument>--module-path</argument>
                         <modulepath/>
                         <argument>-DBEAST_PACKAGE_PATH=${project.build.outputDirectory}</argument>
+<!-- -D flags are JVM system properties and must appear before the -m module/MainClass -->
+                        <argument>-Dbeast.args=${beast.args}</argument>
                         <argument>-m</argument>
                         <argument>beast.fx/${beast.main}</argument>
-                        <argument>${beast.args}</argument>
                     </arguments>
                 </configuration>
             </plugin>
