@@ -26,21 +26,12 @@
         </sequence>
     </data>
 
-    <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
-    <input spec="beast.base.spec.evolution.substitutionmodel.HKY" id="hky">
-        <kappa idref="hky.kappa"/>
-        <frequencies id="freqs" spec="beast.base.spec.evolution.substitutionmodel.Frequencies">
-            <data idref="alignment"/>
-        </frequencies>
-    </input>
+    <!-- The Jukes-Cantor substitution model (Jukes & Cantor, 1969)             -->
+    <input spec="beast.base.spec.evolution.substitutionmodel.JukesCantor" id="jc69"/>
 
     <!-- site model                                                              -->
     <input spec="beast.base.spec.evolution.sitemodel.SiteModel" id="siteModel" gammaCategoryCount="1">
-        <!--
-            <parameter name='shape' id='shape' value='0.5'/>
-            <parameter name='proportionInvariant' id='propInvar' value='0.2'/>
-        -->
-        <substModel idref="hky"/>
+        <substModel idref="jc69"/>
     </input>
 
     <input spec="beast.base.spec.evolution.likelihood.TreeLikelihood" id="treeLikelihood">
@@ -49,8 +40,6 @@
         <siteModel idref="siteModel"/>
     </input>
 
-    <parameter id="hky.kappa" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
-
     <tree id="tree"/>
 
     <tree spec="beast.base.spec.evolution.tree.ClusterTree" id="upgmatree" clusterType="upgma" initial="@tree">
@@ -58,7 +47,7 @@
     </tree>
     <tree spec="beast.base.spec.evolution.tree.coalescent.RandomTree" id="coalescentSimulator" initial="@tree" taxa="@alignment">
         <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation">
-            <popSize value="1" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+            <popSize value="0.05" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
         </populationModel>
     </tree>
 
@@ -66,35 +55,30 @@
 
         <init idref="coalescentSimulator"/>
         <distribution spec="CompoundDistribution" id="posterior">
-            <distribution spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa"><M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0"/><S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5"/></distribution>
             <distribution id="likelihood" idref="treeLikelihood"/>
         </distribution>
 
-        <operator id="kappaScaler" scaleFactor="0.5" weight="1" parameter="@hky.kappa" spec="beast.base.spec.inference.operator.ScaleOperator"/>
         <operator id="treeScaler" scaleFactor="0.5" weight="1" tree="@tree" spec="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
 
-        <operator id="subtreeSlide" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0" tree="@tree"/>
 
-        <operator id="uniform" weight="10" tree="@tree" spec="beast.base.evolution.operator.Uniform"/>
+        <operator weight="10" tree="@tree" spec="beast.base.evolution.operator.Uniform"/>
         <operator id="narrow" spec="Exchange" isNarrow="true" weight="1" tree="@tree"/>
         <operator id="wide" spec="Exchange" isNarrow="false" weight="1" tree="@tree"/>
-        <operator id="wilsonBalding" spec="WilsonBalding" weight="1" tree="@tree"/>
+        <operator spec="WilsonBalding" weight="1" tree="@tree"/>
 
-        <logger logEvery="10000" fileName="test.$(seed).log">
+        <logger logEvery="1000" fileName="test.$(seed).log">
             <model idref="likelihood"/>
             <log idref="likelihood"/>
-            <log idref="hky.kappa"/>
             <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
         </logger>
-        <logger logEvery="10000" fileName="test.$(seed).trees">
+        <logger logEvery="1000" fileName="test.$(seed).trees">
             <log idref="tree"/>
         </logger>
-        <logger logEvery="10000">
+        <logger logEvery="20000">
             <model idref="likelihood"/>
             <log idref="likelihood"/>
             <ESS spec="beast.base.spec.inference.util.ESS" name="log" arg="@likelihood"/>
-            <log idref="hky.kappa"/>
-            <ESS spec="beast.base.spec.inference.util.ESS" name="log" arg="@hky.kappa"/>
         </logger>
     </run>
 

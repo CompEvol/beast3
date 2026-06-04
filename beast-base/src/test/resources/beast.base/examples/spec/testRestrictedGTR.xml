@@ -29,8 +29,8 @@
                 </taxonset>
             </tree>
             <parameter id="birthRate.t:primate" name="stateNode" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
-            <parameter id="rateAG.s:primate" name="stateNode" value="2.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
-            <parameter id="rateCT.s:primate" name="stateNode" value="2.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
+            <parameter id="rateTransversion.s:primate" name="stateNode" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
+            <parameter id="rateAG.s:primate" name="stateNode" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
             <parameter dimension="4" id="freqParameter.s:primate" name="stateNode" value="0.25" spec="beast.base.spec.inference.parameter.SimplexParam"/>
         </state>
 
@@ -44,6 +44,14 @@
             <distribution id="prior" spec="CompoundDistribution">
                 <distribution birthDiffRate="@birthRate.t:primate" id="YuleModel.t:primate" spec="beast.base.spec.evolution.speciation.YuleModel" tree="@Tree.t:primate"/>
                 <distribution id="Uniform.0" spec="beast.base.spec.inference.distribution.Uniform" param="@birthRate.t:primate" upper="1.0E6"/>
+                <distribution id="LogNormalDistributionModel.0" spec="beast.base.spec.inference.distribution.LogNormal" param="@rateTransversion.s:primate">
+                        <parameter estimate="false" id="RealParameter.0" name="M" value="0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+                        <parameter estimate="false" id="RealParameter.01" name="S" value="1.25" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+                    </distribution>
+                <distribution id="LogNormalDistributionModel.01" spec="beast.base.spec.inference.distribution.LogNormal" param="@rateAG.s:primate">
+                        <parameter estimate="false" id="RealParameter.02" name="M" value="0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+                        <parameter estimate="false" id="RealParameter.03" name="S" value="1.25" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+                    </distribution>
             </distribution>
             <distribution id="likelihood" spec="CompoundDistribution">
                 <distribution data="@coding" id="treeLikelihood.coding" spec="beast.base.spec.evolution.likelihood.TreeLikelihood" tree="@Tree.t:primate">
@@ -51,7 +59,8 @@
                         <parameter estimate="false" id="mutationRate.s:primate" name="mutationRate" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
                         <parameter estimate="false" id="gammaShape.s:primate" name="shape" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
                         <parameter estimate="false" id="proportionInvariant.s:primate" name="proportionInvariant" value="0.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval"/>
-                        <substModel id="tn93.s:primate" kappa1="@rateAG.s:primate" kappa2="@rateCT.s:primate" spec="beast.base.spec.evolution.substitutionmodel.TN93">
+                        <substModel id="gtr.s:primate" rateAC="@rateTransversion.s:primate" rateAG="@rateAG.s:primate" rateAT="@rateTransversion.s:primate" rateCG="@rateTransversion.s:primate" rateGT="@rateTransversion.s:primate" spec="beast.base.spec.evolution.substitutionmodel.GTR">
+                            <parameter estimate="false" id="rateCT.s:primate" name="rateCT" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
                             <frequencies frequencies="@freqParameter.s:primate" id="estimatedFreqs.s:primate" spec="beast.base.spec.evolution.substitutionmodel.Frequencies"/>
                         </substModel>
                     </siteModel>
@@ -81,25 +90,25 @@
 
         <operator id="WilsonBalding.t:primate" spec="WilsonBalding" tree="@Tree.t:primate" weight="3.0"/>
 
-        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" weight="0.1" spec="beast.base.spec.inference.operator.ScaleOperator"/>
+        <operator id="RateTransversionScaler.s:primate" parameter="@rateTransversion.s:primate" scaleFactor="0.5" weight="0.1" spec="beast.base.spec.inference.operator.ScaleOperator"/>
 
-        <operator id="RateCTScaler.s:primate" parameter="@rateCT.s:primate" scaleFactor="0.5" weight="0.1" spec="beast.base.spec.inference.operator.ScaleOperator"/>
+        <operator id="RateAGScaler.s:primate" parameter="@rateAG.s:primate" scaleFactor="0.5" weight="0.1" spec="beast.base.spec.inference.operator.ScaleOperator"/>
 
         <operator delta="0.01" id="FrequenciesExchanger.s:primate" spec="beast.base.spec.inference.operator.DeltaExchangeOperator" weight="0.1">
             <parameter idref="freqParameter.s:primate"/>
         </operator>
 
-        <logger fileName="primate-mtDNA-tn93.log" id="tracelog" logEvery="5000" model="@posterior" sanitiseHeaders="true" sort="smart">
+        <logger fileName="primate-mtDNA-restrictedGTR.log" id="tracelog" logEvery="5000" model="@posterior" sanitiseHeaders="true" sort="smart">
             <log idref="posterior"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
+            <log idref="treeLikelihood.noncoding"/>
             <log idref="treeLikelihood.coding"/>
             <log id="TreeHeight.t:primate" spec="beast.base.evolution.tree.TreeStatLogger" tree="@Tree.t:primate"/>
             <log idref="YuleModel.t:primate"/>
             <parameter idref="birthRate.t:primate" name="log"/>
-            <log idref="treeLikelihood.noncoding"/>
+            <parameter idref="rateTransversion.s:primate" name="log"/>
             <parameter idref="rateAG.s:primate" name="log"/>
-            <parameter idref="rateCT.s:primate" name="log"/>
             <parameter idref="freqParameter.s:primate" name="log"/>
         </logger>
 
@@ -108,14 +117,10 @@
             <log arg="@posterior" id="ESS.0" spec="beast.base.spec.inference.util.ESS"/>
             <log idref="likelihood"/>
             <log idref="prior"/>
-            <parameter idref="rateAG.s:primate" name="log"/>
-            <parameter idref="rateCT.s:primate" name="log"/>
         </logger>
 
-        <logger fileName="primate-mtDNA-tn93.trees" id="treelog.t:primate" logEvery="5000" mode="tree">
+        <logger fileName="primate-mtDNA-restrictedGTR-$(tree).trees" id="treelog.t:primate" logEvery="5000" mode="tree">
             <log id="TreeWithMetaDataLogger.t:primate" spec="beast.base.spec.evolution.TreeWithMetaDataLogger" tree="@Tree.t:primate"/>
         </logger>
-
     </run>
-
 </beast>

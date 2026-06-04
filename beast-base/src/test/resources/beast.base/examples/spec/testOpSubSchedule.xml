@@ -62,13 +62,18 @@
         </populationModel>
     </tree>
 
-    <run spec="MCMC" id="mcmc" chainLength="$(chainLength=5000000)" preBurnin="50000">
+    <run spec="MCMC" id="mcmc" chainLength="$(chainLength=1000000)" preBurnin="50000">
 
         <init idref="coalescentSimulator"/>
         <distribution spec="CompoundDistribution" id="posterior">
             <distribution spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa"><M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0"/><S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5"/></distribution>
             <distribution id="likelihood" idref="treeLikelihood"/>
         </distribution>
+
+         <operatorschedule id="operatorSchedule" spec="OperatorSchedule">
+            <!-- assign 50% of total weight to operators that apply to the tree operations  -->
+            <subschedule id="operatorTrees" spec="OperatorSchedule" weight="50" weightIsPercentage="true" operatorPattern="^.*tree.*"/>
+         </operatorschedule>
 
         <operator id="kappaScaler" scaleFactor="0.5" weight="1" parameter="@hky.kappa" spec="beast.base.spec.inference.operator.ScaleOperator"/>
         <operator id="treeScaler" scaleFactor="0.5" weight="1" tree="@tree" spec="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
