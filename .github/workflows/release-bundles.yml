@@ -70,13 +70,17 @@ jobs:
         # the filename. [ -f ] guards handle any unmatched glob safely.
         run: |
           mkdir -p staging-x86 staging-aarch64 staging-windows
-          cp staging/.main-jar staging-x86/ staging-aarch64/ staging-windows/
+          cp staging/.main-jar staging-x86/
+          cp staging/.main-jar staging-aarch64/
+          cp staging/.main-jar staging-windows/
 
           for jar in staging/*.jar; do
             [ -f "$jar" ] || continue
             name=$(basename "$jar")
             [[ $name == javafx-* || $name == jdk-* ]] && continue
-            cp "$jar" staging-x86/ staging-aarch64/ staging-windows/
+            cp "$jar" staging-x86/
+            cp "$jar" staging-aarch64/
+            cp "$jar" staging-windows/
           done
 
           for jar in staging/javafx-*-linux.jar staging/jdk-*-linux.jar; do
