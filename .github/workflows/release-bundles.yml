@@ -7,8 +7,10 @@ name: Release Bundles
 #   BEAST.v<ver>.Linux.aarch64.tgz
 #   BEAST.v<ver>.Windows.zip
 #
-# Bundles are uploaded as Actions artifacts (90-day retention) and can be
-# downloaded directly from the workflow run page on GitHub.
+# Each job builds, stages, and bundles independently on its own native OS
+# runner with no shared artifacts between jobs.  The platform-specific
+# assemble-bundle.sh handles the full pipeline:
+#   stage JARs → jpackage → patch BEAST.cfg → assemble bundle
 #
 # The Mac DMG is built and signed locally via release/Mac/build-sign-dmg.sh.
 #
@@ -22,17 +24,14 @@ on:
 jobs:
 
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 1: build once on ubuntu-latest, then split JARs into per-platform
-  # staging dirs using positive selection (copy only the right JARs in).
-  # Maven downloads JavaFX JARs for ALL platforms because the javafx-* POMs
-  # declare platform classifier JARs as dependencies; JAR names carry the
-  # platform suffix, so routing by name needs no deletion.
+  # Linux x86 bundle — runs natively on ubuntu-latest (x86_64).
+  # assemble-bundle.sh detects x86_64 and keeps only javafx-*-linux.jar.
   # ────────────────────────────────────────────────────────────────────────────
-  build:
+  linux-x86:
+    name: Linux x86 Bundle
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    outputs:
-      version: ${{ steps.ver.outputs.version }}
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
 
@@ -43,93 +42,38 @@ jobs:
           cache: maven
 
       - name: Resolve version
-        id: ver
         run: |
-          # Read release version from pom.xml and strip the -SNAPSHOT suffix.
-          # -q suppresses Maven log output; -DforceStdout prints only the value.
           VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
                       | sed 's/-SNAPSHOT//')
           echo "Resolved version: $VERSION"
           mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build (skip tests)
         run: mvn clean package -DskipTests -q
 
-      - name: Stage JARs
-        # Collects all module JARs (including JavaFX classifiers for every
-        # platform) into one flat staging/ directory and writes the launcher
-        # JAR name to staging/.main-jar.
-        run: bash release/stage-jars.sh staging
+      - name: Build bundle
+        run: bash release/Linux/assemble-bundle.sh "$VERSION"
 
-      - name: Split JARs into per-platform staging dirs
-        # Positive selection: copy only the right JARs into each platform dir.
-        # Platform-agnostic JARs (beast-*, commons-*, antlr4-*, etc.) go to all
-        # three dirs. JavaFX/JDK JARs are routed by their platform suffix in
-        # the filename. [ -f ] guards handle any unmatched glob safely.
+      - name: Create tgz
         run: |
-          mkdir -p staging-x86 staging-aarch64 staging-windows
-          cp staging/.main-jar staging-x86/
-          cp staging/.main-jar staging-aarch64/
-          cp staging/.main-jar staging-windows/
-
-          for jar in staging/*.jar; do
-            [ -f "$jar" ] || continue
-            name=$(basename "$jar")
-            [[ $name == javafx-* || $name == jdk-* ]] && continue
-            cp "$jar" staging-x86/
-            cp "$jar" staging-aarch64/
-            cp "$jar" staging-windows/
-          done
-
-          for jar in staging/javafx-*-linux.jar staging/jdk-*-linux.jar; do
-            [ -f "$jar" ] && cp "$jar" staging-x86/
-          done
-
-          for jar in staging/javafx-*-linux-aarch64.jar staging/jdk-*-linux-aarch64.jar; do
-            [ -f "$jar" ] && cp "$jar" staging-aarch64/
-          done
-
-          for jar in staging/javafx-*-win.jar staging/jdk-*-win.jar; do
-            [ -f "$jar" ] && cp "$jar" staging-windows/
-          done
+          cd dist
+          tar -czf "BEAST.v${VERSION}.Linux.x86.tgz" "BEAST.v${VERSION}"
+          ls -lh "BEAST.v${VERSION}.Linux.x86.tgz"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: beast-jars-linux-x86
-          path: staging-x86/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: beast-jars-linux-aarch64
-          path: staging-aarch64/
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: beast-jars-windows
-          path: staging-windows/
+          name: Linux.x86
+          path: dist/BEAST.v${{ env.VERSION }}.Linux.x86.tgz
 
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 2: Linux bundles — x86_64 and aarch64 via matrix.
-  # Both variants run identical steps; each downloads its own pre-split
-  # staging artifact from the build job and runs jpackage directly.
+  # Linux aarch64 bundle — runs natively on ubuntu-24.04-arm (ARM64).
+  # assemble-bundle.sh detects aarch64 and keeps only javafx-*-linux-aarch64.jar.
   # ────────────────────────────────────────────────────────────────────────────
-  linux-bundle:
-    name: Linux Bundle (${{ matrix.suffix }})
-    needs: build
-    runs-on: ${{ matrix.runner }}
+  linux-aarch64:
+    name: Linux aarch64 Bundle
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 30
-    strategy:
-      fail-fast: false  # let both arch builds complete even if one fails
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            suffix: Linux.x86
-            artifact: beast-jars-linux-x86
-          - runner: ubuntu-24.04-arm
-            suffix: Linux.aarch64
-            artifact: beast-jars-linux-aarch64
 
     steps:
       - uses: actions/checkout@v4
@@ -138,81 +82,47 @@ jobs:
         with:
           distribution: zulu
           java-version: '25'
-          # No maven cache here — JARs come from the pre-split artifact, not Maven.
+          cache: maven
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: staging
-
-      - name: Set env
+      - name: Resolve version
         run: |
-          VERSION="${{ needs.build.outputs.version }}"
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
+                      | sed 's/-SNAPSHOT//')
+          echo "Resolved version: $VERSION"
+          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          MAIN_JAR=$(cat staging/.main-jar)
-          echo "MAIN_JAR=$MAIN_JAR" >> "$GITHUB_ENV"
 
-      - name: jpackage app-image
-        run: |
-          mkdir -p dist
-          # --main-jar (not --module) avoids jlink trying to process automatic modules
-          # such as antlr4-runtime.jar, which have no module-info and cause jlink to fail.
-          # --add-modules ALL-MODULE-PATH keeps all JDK modules in the bundled JRE so
-          # that external BEAST packages loaded via ModuleLayer at runtime can resolve
-          # their requires directives without a NoSuchModuleException.
-          # BEAST.cfg is patched in the next step to switch to module-path mode.
-          jpackage --type app-image \
-            --name            "BEAST" \
-            --app-version     "$VERSION" \
-            --input           staging \
-            --main-jar        "$MAIN_JAR" \
-            --main-class      "beast.pkgmgmt.launcher.BeastLauncher" \
-            --java-options    "-Xss256m" \
-            --java-options    "-Xmx8g" \
-            --java-options    "-Duser.language=en" \
-            --java-options    "-Dfile.encoding=UTF-8" \
-            --add-modules     ALL-MODULE-PATH \
-            --icon            "release/common/icons/beast.png" \
-            --dest            dist
+      - name: Build (skip tests)
+        run: mvn clean package -DskipTests -q
 
-      - name: Patch BEAST.cfg to module-path mode
-        # jpackage emits a classpath-mode BEAST.cfg; patching it to module-path mode
-        # makes module descriptors (provides/uses/requires) visible at startup so
-        # that external packages loaded via ModuleLayer resolve correctly.
-        # Linux jpackage layout: BEAST/lib/app/BEAST.cfg
-        run: python3 release/patch-beast-cfg.py "dist/BEAST/lib/app/BEAST.cfg"
-
-      - name: Assemble bundle
-        run: bash release/Linux/assemble-bundle.sh "$VERSION" dist
+      - name: Build bundle
+        run: bash release/Linux/assemble-bundle.sh "$VERSION"
 
       - name: Create tgz
         run: |
-          ARCHIVE="BEAST.v${VERSION}.${{ matrix.suffix }}.tgz"
           cd dist
-          tar -czf "$ARCHIVE" "BEAST.v${VERSION}"
-          ls -lh "$ARCHIVE"
+          tar -czf "BEAST.v${VERSION}.Linux.aarch64.tgz" "BEAST.v${VERSION}"
+          ls -lh "BEAST.v${VERSION}.Linux.aarch64.tgz"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.suffix }}
-          path: dist/BEAST.v${{ needs.build.outputs.version }}.${{ matrix.suffix }}.tgz
+          name: Linux.aarch64
+          path: dist/BEAST.v${{ env.VERSION }}.Linux.aarch64.tgz
 
   # ────────────────────────────────────────────────────────────────────────────
-  # Job 3: Windows bundle.
-  # shell: bash on windows-latest uses Git Bash (bundled with Git for Windows),
-  # as documented by GitHub Actions. All paths here are relative, so Git Bash's
-  # Unix↔Windows path translation is not a concern.
+  # Windows bundle — runs natively on windows-latest.
+  # assemble-bundle.sh keeps only javafx-*-win.jar classifier JARs.
+  # shell: bash uses Git Bash (bundled with Git for Windows).
   # Produces BEAST.v<ver>.Windows.zip containing:
-  #   BEAST/BEAST.exe   ← jpackage native launcher (GUI, opens file-chooser dialog)
-  #   BEAST/app/        ← all JARs on the module-path
+  #   BEAST/BEAST.exe   ← jpackage native launcher
+  #   BEAST/app/        ← JARs on the module-path
   #   BEAST/runtime/    ← bundled JRE
   #   bat/              ← batch wrappers for BEAUti, TreeAnnotator, etc.
   #   examples/
   #   README.txt / LICENSE.txt
   # ────────────────────────────────────────────────────────────────────────────
-  windows-bundle:
+  windows:
     name: Windows Bundle
-    needs: build
     runs-on: windows-latest
     timeout-minutes: 30
 
@@ -223,57 +133,24 @@ jobs:
         with:
           distribution: zulu
           java-version: '25'
-          # No maven cache here — JARs come from the pre-split artifact, not Maven.
+          cache: maven
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: beast-jars-windows
-          path: staging
-
-      - name: Set env
+      - name: Resolve version
         shell: bash
         run: |
-          VERSION="${{ needs.build.outputs.version }}"
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
+                      | sed 's/-SNAPSHOT//')
+          echo "Resolved version: $VERSION"
+          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          MAIN_JAR=$(cat staging/.main-jar)
-          echo "MAIN_JAR=$MAIN_JAR" >> "$GITHUB_ENV"
 
-      - name: jpackage app-image
+      - name: Build (skip tests)
         shell: bash
-        run: |
-          mkdir -p dist
-          # --main-jar (not --module) avoids jlink trying to process automatic modules
-          # such as antlr4-runtime.jar, which have no module-info and cause jlink to fail.
-          # --add-modules ALL-MODULE-PATH keeps all JDK modules in the bundled JRE so
-          # that external BEAST packages loaded via ModuleLayer at runtime can resolve
-          # their requires directives without a NoSuchModuleException.
-          # BEAST.cfg is patched in the next step to switch to module-path mode.
-          # Windows jpackage requires --app-version to be purely numeric (x.y.z).
-          jpackage --type app-image \
-            --name            "BEAST" \
-            --app-version     "$VERSION" \
-            --input           staging \
-            --main-jar        "$MAIN_JAR" \
-            --main-class      "beast.pkgmgmt.launcher.BeastLauncher" \
-            --java-options    "-Xss256m" \
-            --java-options    "-Xmx8g" \
-            --java-options    "-Duser.language=en" \
-            --java-options    "-Dfile.encoding=UTF-8" \
-            --add-modules     ALL-MODULE-PATH \
-            --icon            "release/common/icons/beast.ico" \
-            --dest            dist
+        run: mvn clean package -DskipTests -q
 
-      - name: Patch BEAST.cfg to module-path mode
-        # jpackage emits a classpath-mode BEAST.cfg; patching it to module-path mode
-        # makes module descriptors (provides/uses/requires) visible at startup so
-        # that external packages loaded via ModuleLayer resolve correctly.
-        # Windows jpackage layout: BEAST/app/BEAST.cfg  (no lib/ prefix unlike Linux)
+      - name: Build bundle
         shell: bash
-        run: python3 release/patch-beast-cfg.py "dist/BEAST/app/BEAST.cfg"
-
-      - name: Assemble bundle
-        shell: bash
-        run: bash release/Windows/assemble-bundle.sh "$VERSION" dist
+        run: bash release/Windows/assemble-bundle.sh "$VERSION"
 
       - name: Create zip
         shell: pwsh
@@ -287,4 +164,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Windows
-          path: dist/BEAST.v${{ needs.build.outputs.version }}.Windows.zip
+          path: dist/BEAST.v${{ env.VERSION }}.Windows.zip
