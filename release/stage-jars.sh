@@ -11,7 +11,7 @@
 #   <staging-dir>/*.jar   — beast-fx + all runtime dependencies, with cross-platform
 #                           empty JavaFX/JDK stub JARs removed.  Platform classifier
 #                           JARs (e.g. javafx-controls-25.0.2-linux-aarch64.jar) are
-#                           kept; the platform bundle jobs filter down to one arch each.
+#                           kept; the build job then routes them by name suffix.
 #   <staging-dir>/.main-jar — one-line file containing the launcher JAR filename
 #                             (beast-pkgmgmt-<mvn-version>.jar) so downstream jobs
 #                             don't have to re-detect it.
@@ -29,10 +29,10 @@ cp beast-fx/target/lib/*.jar       "$STAGING/"
 # every platform classifier as a dependency.  The un-suffixed root JARs (e.g.
 # javafx-controls-25.0.2.jar) are empty Maven resolution stubs — only the
 # classifier JARs (e.g. -linux-aarch64.jar, -mac-aarch64.jar, -win.jar) contain
-# real module code.  Remove the stubs; each platform bundle job then prunes the
-# classifier JARs it doesn't need.
+# real module code.  Remove the stubs; the build job then routes the classifier
+# JARs to per-platform staging dirs by name suffix (positive selection).
 find "$STAGING" \( -name "javafx-*.jar" -o -name "jdk-*.jar" \) \
-    ! -name "*-mac-*" ! -name "*-linux*" ! -name "*-win-*" -delete
+    ! -name "*-mac*" ! -name "*-linux*" ! -name "*-win*" -delete
 
 # ── Write launcher JAR name ───────────────────────────────────────────────────
 FX_JAR=$(find beast-fx/target -maxdepth 1 -name "beast-fx-*.jar" \

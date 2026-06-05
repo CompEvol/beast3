@@ -18,7 +18,7 @@ cd release/Mac
 
 Produces:
 - `dmg-staging/BEAST <version>/` — signed `.app` bundles (kept for inspection)
-- `BEAST_with_JRE.v<version>.dmg` — signed, distributable DMG
+- `BEAST.v<version>.dmg` — signed, distributable DMG
 
 The version number is read from `version.xml` at the repository root.
 The Maven artifact version is detected from `beast-fx/target/beast-fx-*.jar`
@@ -29,11 +29,11 @@ and may include a `-SNAPSHOT` suffix independently of the release version.
 After building the signed DMG, notarise and staple it before distribution:
 
 ```bash
-xcrun notarytool submit BEAST_with_JRE.v<version>.dmg \
+xcrun notarytool submit BEAST.v<version>.dmg \
     --apple-id <username> --password <app-specific-password> \
     --team-id <TEAM_ID> --wait
 
-xcrun stapler staple BEAST_with_JRE.v<version>.dmg
+xcrun stapler staple BEAST.v<version>.dmg
 ```
 
 Upload the stapled DMG to GitHub.
@@ -46,7 +46,7 @@ Reference: https://developer.apple.com/documentation/security/notarizing-macos-s
 
 ### Overall Goal
 
-Produce a signed, distributable `BEAST_with_JRE.v<version>.dmg` that passes
+Produce a signed, distributable `BEAST.v<version>.dmg` that passes
 Gatekeeper on any Mac without a separate Java install. All signing happens
 in-place to keep codesign seals intact.
 
@@ -69,7 +69,7 @@ release/Mac/
 │   │   └── LICENSE.txt
 │   ├── .background/          ← install.png for DMG Finder window
 │   └── Applications          ← symlink → /Applications
-└── BEAST_with_JRE.v<version>.dmg   ← final output
+└── BEAST.v<version>.dmg   ← final output
 ```
 
 ### Pre-flight

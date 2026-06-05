@@ -488,7 +488,7 @@ echo ""
 echo "==> Step 4: Creating DMG..."
 
 DMG_TITLE="BEAST v${VERSION}"
-DMG_NAME="BEAST_with_JRE.v${VERSION}.dmg"
+DMG_NAME="BEAST.v${VERSION}.dmg"
 
 # ── bin/ — command-line launcher scripts (from release/Linux/jrebin) ──────────
 # These shell scripts live alongside the .app bundles in the versioned folder,

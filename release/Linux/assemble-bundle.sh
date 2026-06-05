@@ -16,7 +16,7 @@
 #     lib/runtime/bin/java   ← bundled JRE
 #
 # Output:
-#   <dist-dir>/BEAST_with_JRE.v<VERSION>/
+#   <dist-dir>/BEAST.v<VERSION>/
 #     BEAST/       ← the jpackage app-image (copied in)
 #     bin/         ← shell-script wrappers for each tool
 #     examples/    ← sample XML files from beast-base
@@ -28,7 +28,7 @@ set -euo pipefail
 VERSION="${1:?Usage: $0 <VERSION> [dist-dir]}"
 DIST="${2:-dist}"
 
-BUNDLE="$DIST/BEAST_with_JRE.v${VERSION}"
+BUNDLE="$DIST/BEAST.v${VERSION}"
 mkdir -p "$BUNDLE/bin" "$BUNDLE/examples"
 
 # ── jpackage app-image ────────────────────────────────────────────────────────
