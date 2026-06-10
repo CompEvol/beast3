@@ -1,29 +1,5 @@
 # Release
 
-## JavaFX JAR structure
-
-JavaFX is published to Maven Central as two artifacts per module per version:
-
-| Artifact | Example | Contains | Purpose |
-|----------|---------|----------|---------|
-| Classifier-less stub | `javafx-graphics-25.0.2.jar` | `MANIFEST.MF` only — no bytecode, no `module-info.class` | Maven dependency-resolution trigger only; not usable at runtime |
-| OS-specific classified JAR | `javafx-graphics-25.0.2-mac-aarch64.jar` | `module-info.class` + `.class` files + native libraries (`.dylib`/`.so`/`.dll`) | Real runtime artifact; required on the module path |
-
-The stub's pom (`javafx-graphics-25.0.2.pom`) contains a self-referencing dependency with
-`<classifier>${javafx.platform}</classifier>`. The parent pom (`javafx-25.0.2.pom`) activates
-OS-specific profiles that set `${javafx.platform}` (e.g. `mac-aarch64`, `linux-aarch64`, `win`)
-based on the build host. Maven resolves this at build time and downloads only the matching
-classified JAR — **one platform, one build host**.
-
-JavaFX JARs are **not** included in the release bundle. The bundled Zulu-FX JDK already
-provides all `javafx.*` and `jdk.jsobject` modules as platform modules baked into the
-JDK's `lib/modules` image. Platform modules always take precedence over module-path JARs,
-so staging them would be redundant dead weight (~46 MB per platform, dominated by the
-36 MB `javafx-web` classified JAR).
-
-Each OS CI pipeline naturally produces the correct classified JAR via Maven — no
-cross-building or manual platform filtering is needed for compilation.
-
 ## Platform coverage
 
 | Platform | Built by |
@@ -43,9 +19,9 @@ cross-building or manual platform filtering is needed for compilation.
 
 | Artifact | File |
 |---|---|
-| `Linux.x86` | `BEAST.v<ver>.Linux.x86.tgz` |
+| `Linux.x86_64` | `BEAST.v<ver>.Linux.x86_64.tgz` |
 | `Linux.aarch64` | `BEAST.v<ver>.Linux.aarch64.tgz` |
-| `Windows` | `BEAST.v<ver>.Windows.zip` |
+| `Windows` | `BEAST.v<ver>.Windows.zip` (not yet implemented) |
 
 ## Version constraints
 
@@ -88,15 +64,21 @@ The native lib extension also confirms the OS: `.dylib` = macOS, `.so` = Linux, 
 
 ### What the Maven-produced JavaFX JARs actually are
 
-Maven publishes JavaFX in two artifacts per module:
+Maven publishes JavaFX as two artifacts per module:
 
 | Kind | Example | Size | Content |
 |---|---|---|---|
-| Stub (no classifier) | `javafx-base-25.0.2.jar` | ~302 bytes | Empty ZIP + `module-info.class` only |
+| Stub (no classifier) | `javafx-base-25.0.2.jar` | ~302 bytes | `MANIFEST.MF` only — no bytecode, no native libs |
 | Classified (platform) | `javafx-base-25.0.2-mac-aarch64.jar` | 732 KB–36 MB | Bytecode + native `.dylib`/`.so`/`.dll` |
 
-The stub is a Maven dependency-resolution trigger only. The classified JAR carries the
-real bytecode and native libraries — but those are already present inside the bundled JDK.
+The stub is a Maven dependency-resolution trigger. Its POM contains a self-referencing
+dependency with `<classifier>${javafx.platform}</classifier>`; the parent POM activates
+OS-specific profiles that set `${javafx.platform}` (e.g. `mac-aarch64`, `linux-aarch64`,
+`win`) based on the build host, so Maven downloads only the matching classified JAR —
+one platform, one build host.
+
+The classified JAR carries the real bytecode and native libraries — but those are already
+present inside the bundled Zulu-FX JDK, making them redundant in the release bundle.
 
 ### Platform modules always shadow module-path JARs
 
