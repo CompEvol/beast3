@@ -147,14 +147,13 @@ mkdir -p "$STAGING" "$DMG_STAGING" "$OUTPUT"
 # beast-fx JAR (FX UI classes)
 cp "$FX_JAR" "$STAGING/"
 
-# All runtime dependencies (beast-base, beast-pkgmgmt, JavaFX, etc.)
-cp "$REPO_ROOT/beast-fx/target/lib"/*.jar "$STAGING/"
-
-# Remove empty JavaFX/jdk classifier JARs — these are Maven dependency-resolution
-# artifacts with no code (automatic modules). Only the platform-specific JARs
-# (e.g. javafx-graphics-25.0.2-mac-aarch64.jar) contain real module descriptors.
-find "$STAGING" \( -name "javafx-*.jar" -o -name "jdk-*.jar" \) \
-    ! -name "*-mac-*" ! -name "*-linux-*" ! -name "*-win-*" -delete
+# All runtime dependencies (beast-base, beast-pkgmgmt, etc.)
+# JavaFX and jdk-jsobject JARs are excluded: the bundled Zulu-FX JDK already provides
+# javafx.* and jdk.jsobject as platform modules in lib/modules. Platform modules always
+# take precedence over module-path JARs, so staging them is redundant (~46 MB wasted).
+find "$REPO_ROOT/beast-fx/target/lib" -name "*.jar" \
+    ! -name "javafx-*" ! -name "jdk-jsobject-*" \
+    -exec cp {} "$STAGING/" \;
 
 # Verify main JAR is present
 if [ ! -f "$STAGING/$MAIN_JAR" ]; then

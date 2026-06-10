@@ -10,9 +10,8 @@
 #   dist-dir  Output directory for the bundle  (default: dist)
 #
 # Stages:
-#   1. Stage JARs — copy beast-fx + dependencies into staging/, then delete
-#      all JavaFX/JDK JARs except the -win.jar classifier JARs.
-#      No JAR renaming; classifier suffixes are preserved.
+#   1. Stage JARs — copy beast-fx + dependencies into staging/ (JavaFX JARs excluded;
+#      bundled JDK already provides them as platform modules).
 #   2. jpackage   — produces dist/BEAST/ app-image with bundled JRE.
 #                   Windows jpackage requires --app-version to be purely
 #                   numeric (x.y.z); keep pom.xml at x.y.z-SNAPSHOT and let
@@ -34,16 +33,15 @@ DIST="${2:-dist}"
 STAGING="staging"
 
 # ── Stage JARs ────────────────────────────────────────────────────────────────
-# Maven downloads JavaFX JARs for every platform because the openjfx POMs list
-# all classifier JARs as dependencies.  Keep only the -win.jar classifier JARs;
-# delete all others (foreign classifiers and empty stubs).  No JAR renaming.
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
 cp beast-fx/target/beast-fx-*.jar "$STAGING/"
-cp beast-fx/target/lib/*.jar       "$STAGING/"
-
-find "$STAGING" \( -name "javafx-*.jar" -o -name "jdk-*.jar" \) \
-    ! -name "*-win.jar" -delete
+# JavaFX and jdk-jsobject JARs are excluded: the bundled JDK already provides
+# javafx.* and jdk.jsobject as platform modules in lib/modules. Platform modules always
+# take precedence over module-path JARs, so staging them is redundant (~46 MB wasted).
+find beast-fx/target/lib -name "*.jar" \
+    ! -name "javafx-*" ! -name "jdk-jsobject-*" \
+    -exec cp {} "$STAGING/" \;
 
 # ── Detect launcher JAR ───────────────────────────────────────────────────────
 FX_JAR=$(find beast-fx/target -maxdepth 1 -name "beast-fx-*.jar" \

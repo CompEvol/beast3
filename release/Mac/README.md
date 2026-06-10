@@ -95,8 +95,9 @@ signing is done in-place — no post-build copy of a signed app ever happens,
 eliminating the main source of codesign seal corruption.
 
 - Copies `beast-fx-*.jar` and all `lib/*.jar` dependencies into `staging/`.
-- Prunes cross-platform JavaFX/JDK classifier JARs, keeping only `-mac-*`
-  (the others are empty Maven resolution artifacts with no real module content).
+- Validates that OS-classified JARs for `javafx-base`, `javafx-controls`, and
+  `javafx-graphics` are present in `beast-fx/target/lib/`; fails fast if missing.
+  Both stubs and classified JARs are copied into `staging/`.
 - Verifies `MAIN_JAR` is present before proceeding.
 
 ### Step 3 — Create BEAST.app
@@ -120,7 +121,7 @@ bundled JRE rather than whatever java is on the user's PATH.
 
 ### Step 3a — Create Wrapper .app Bundles
 
-`build_wrapper_app()` creates four shell-script bundles — BEAUti,
+`build_wrapper_app()` creates four BEAST module shell-script bundles — BEAUti,
 TreeAnnotator, LogCombiner, AppLauncher — each containing:
 - A shell-script launcher in `MacOS/` that resolves `BEAST.app/Contents`
   relative to its own location (`../../BEAST.app/Contents`) and invokes the
