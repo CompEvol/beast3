@@ -100,6 +100,7 @@ echo ""
 echo "==> Step 4: Copying JDK..."
 cp -a "$JDK_DIR/." "$BUNDLE/jdk/"
 chmod u+x "$BUNDLE/jdk/bin/java"
+rm -f "$BUNDLE/jdk/lib/src.zip"
 echo "    JDK copied ($(du -sh "$BUNDLE/jdk" | cut -f1))"
 
 # ── Step 5: Copy bin/ launcher scripts from linuxbin/ ────────────────────────

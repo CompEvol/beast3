@@ -21,11 +21,11 @@
 |---|---|
 | `Linux.x86_64` | `BEAST.v<ver>.Linux.x86_64.tgz` |
 | `Linux.aarch64` | `BEAST.v<ver>.Linux.aarch64.tgz` |
-| `Windows` | `BEAST.v<ver>.Windows.zip` (not yet implemented) |
+| `Windows.x86_64` | `BEAST.v<ver>.Windows.x86_64.zip` |
 
 ## Version constraints
 
-Version is read from `pom.xml` and must be plain `x.y.z`. Windows jpackage rejects non-numeric suffixes (e.g. `-rc1`). Keep `pom.xml` at `x.y.z-SNAPSHOT`; the CI strips `-SNAPSHOT` automatically.
+Version is read from `pom.xml` and must be plain `x.y.z`. Keep `pom.xml` at `x.y.z-SNAPSHOT`; the CI strips `-SNAPSHOT` automatically.
 
 ## Why JavaFX JARs are excluded from the release bundle
 
@@ -97,7 +97,7 @@ This applies to all three platforms:
 |---|---|---|
 | Mac | `jpackage` calls `jlink` with `ALL-MODULE-PATH` from Zulu-FX jmods → baked into `runtime/lib/modules` | Redundant |
 | Linux | Full Zulu-FX JDK copied with `cp -a` → ships with `lib/modules` containing JavaFX | Redundant |
-| Windows | `jpackage` same as Mac | Redundant |
+| Windows | Full Zulu-FX JDK copied with `cp -a` → ships with `lib/modules` containing JavaFX | Redundant |
 
 ### Not needed for compilation either
 

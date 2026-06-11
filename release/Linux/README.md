@@ -67,6 +67,51 @@ $BUNDLE_HOME/jdk/bin/java --module-path $BUNDLE_HOME/lib --add-modules ALL-MODUL
 
 `BEAGLE_LIB` is respected if set — it is appended to `LD_LIBRARY_PATH`.
 
+## Finding the CI-generated release file
+
+The `Release Bundles` workflow (`.github/workflows/release-bundles.yml`) uploads
+each assembled tgz as a **GitHub Actions artifact** — a temporary file attached
+to the specific workflow run, not to the repository itself.
+
+### Navigating to the artifact
+
+1. Open the repository on GitHub and click the **Actions** tab.
+2. In the left sidebar under **Workflows**, click **Release Bundles**.
+3. Click the workflow run you want (identified by date and the commit that
+   triggered it).
+4. Scroll to the **Artifacts** section at the bottom of the run summary page.
+5. Click **Linux.x86_64** or **Linux.aarch64** to download.
+
+GitHub wraps the file in a zip on download, so you receive
+`Linux.x86_64.zip` containing `BEAST.v2.8.0.Linux.x86_64.tgz`.
+Extract the inner tgz before distributing it.
+
+### Retention — artifacts expire after 90 days
+
+Artifacts are automatically and permanently deleted after 90 days.
+To keep a release file indefinitely, attach it to a **GitHub Release** as a
+Release Asset. Release Assets have no expiry and are publicly accessible at a
+stable URL under the repository's **Releases** page.
+
+Do this manually after downloading the artifact, or add a step to the workflow:
+
+```bash
+# create the release if it does not exist yet, then upload
+gh release create "v2.8.0" --title "BEAST v2.8.0" --draft 2>/dev/null || true
+gh release upload "v2.8.0" BEAST.v2.8.0.Linux.x86_64.tgz --clobber
+```
+
+Or as a workflow step (requires `contents: write` permission):
+
+```yaml
+- name: Attach tgz to GitHub Release
+  run: |
+    gh release create "v${VERSION}" --title "BEAST v${VERSION}" --draft 2>/dev/null || true
+    gh release upload "v${VERSION}" "dist/BEAST.v${VERSION}.Linux.x86_64.tgz" --clobber
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
 ## How assemble-bundle.sh works
 
 `release/Linux/assemble-bundle.sh` (called by `test-linux-on-mac.sh`):

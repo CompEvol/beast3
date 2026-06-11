@@ -2,21 +2,20 @@ name: Release Bundles
 
 # Triggered manually only: GitHub Actions UI → Release Bundles → Run workflow.
 #
-# Produces two Linux platform bundles (x86_64 and aarch64), each assembled on
-# its own native OS runner so the bundled JDK and JavaFX native libs are
-# correct for that platform.
+# Produces platform bundles for Linux x86_64, Linux aarch64, and Windows x86_64,
+# each assembled on its own native OS runner so the bundled JDK and JavaFX native
+# libs are correct for that platform.
 #
 # Each job:
 #   1. Installs Zulu FX JDK 25 (includes JavaFX as platform modules in lib/modules)
 #   2. Strips -SNAPSHOT from the version, then runs mvn clean package
-#   3. Calls Linux/assemble-bundle.sh with explicit env vars:
+#   3. Calls <Platform>/assemble-bundle.sh with explicit env vars:
 #        VERSION, OS_ARCH, JDK_DIR ($JAVA_HOME), DEST, REPO_ROOT
 #   4. Validates the bundled JDK binary with `file` to confirm OS and architecture
-#   5. Validates that JavaFX native libs (.so) are present in the bundled JDK
-#   6. Uploads the tgz produced by assemble-bundle.sh
+#   5. Validates that JavaFX native libs are present in the bundled JDK
+#   6. Uploads the archive produced by assemble-bundle.sh
 #
-# The Mac DMG is built and signed locally via release/Mac/build-sign-dmg.sh.
-# The Windows bundle is not yet implemented — see the commented-out job below.
+# Linux/aarch64: tgz  Windows: zip  (Mac DMG: built locally via Mac/build-sign-dmg.sh)
 
 on:
   workflow_dispatch:
@@ -90,143 +89,141 @@ jobs:
         with:
           name: Linux.x86_64
           path: dist/BEAST.v${{ env.VERSION }}.Linux.x86_64.tgz
+          compression-level: 0 # Stops GitHub from zipping the tgz file
 
   # ── Linux aarch64 bundle ──────────────────────────────────────────────────────
-  # TODO: uncomment after x86_64 works
   # Runs natively on ubuntu-24.04-arm (ARM64). Same pipeline as x86_64 above,
   # with OS_ARCH=Linux.aarch64 and the aarch64 Zulu FX JDK bundled.
   # Output: BEAST.v<ver>.Linux.aarch64.tgz
-#  linux-aarch64:
-#    name: Linux aarch64 Bundle
-#    runs-on: ubuntu-24.04-arm
-#    timeout-minutes: 30
-#
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - uses: actions/setup-java@v4
-#        with:
-#          distribution: zulu
-#          java-version: '25'
-#          java-package: jdk+fx
-#          cache: maven
-#
-#      - name: Resolve version
-#        run: |
-#          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
-#                      | sed 's/-SNAPSHOT//')
-#          echo "Resolved version: $VERSION"
-#          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
-#          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-#
-#      - name: Build (skip tests)
-#        run: mvn clean package -DskipTests -q
-#
-#      - name: Assemble Linux aarch64 bundle
-#        run: |
-#          OS_ARCH="Linux.aarch64"       \
-#          JDK_DIR="$JAVA_HOME"          \
-#          DEST="$GITHUB_WORKSPACE/dist" \
-#          bash release/Linux/assemble-bundle.sh
-#
-#      - name: Validate bundled JDK (OS + JavaFX)
-#        run: |
-#          BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
-#          JAVA_BIN="$BUNDLE/jdk/bin/java"
-#
-#          # Confirm the java binary is Linux aarch64
-#          FILE_OUT=$(file "$JAVA_BIN")
-#          echo "java binary: $FILE_OUT"
-#          if ! echo "$FILE_OUT" | grep -qE "ELF.*aarch64"; then
-#            echo "ERROR: bundled JDK is not Linux aarch64 — got: $FILE_OUT"
-#            exit 1
-#          fi
-#
-#          # Confirm JavaFX native libs are present and Linux (.so, not .dylib/.dll)
-#          FX_LIBS=$(find "$BUNDLE/jdk/lib" -name "libjavafx*.so" 2>/dev/null)
-#          if [ -z "$FX_LIBS" ]; then
-#            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JDK"
-#            exit 1
-#          fi
-#          if find "$BUNDLE/jdk/lib" -name "libjavafx*.dylib" | grep -q .; then
-#            echo "ERROR: JavaFX libs are macOS (.dylib) — bundled JDK is the wrong platform"
-#            exit 1
-#          fi
-#          echo "JavaFX native libs OK:"
-#          echo "$FX_LIBS"
-#
-#      - uses: actions/upload-artifact@v4
-#        with:
-#          name: Linux.aarch64
-#          path: dist/BEAST.v${{ env.VERSION }}.Linux.aarch64.tgz
+  linux-aarch64:
+    name: Linux aarch64 Bundle
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
 
-  # ── Windows bundle (not yet implemented) ─────────────────────────────────────
-  # TODO: uncomment and complete when Windows release is ready.
-  #
-  # windows:
-  #   name: Windows Bundle
-  #   runs-on: windows-latest
-  #   timeout-minutes: 30
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #
-  #     - uses: actions/setup-java@v4
-  #       with:
-  #         distribution: zulu
-  #         java-version: '25'
-  #         java-package: jdk+fx
-  #         cache: maven
-  #
-  #     - name: Resolve version
-  #       shell: bash
-  #       run: |
-  #         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
-  #                     | sed 's/-SNAPSHOT//')
-  #         echo "Resolved version: $VERSION"
-  #         mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
-  #         echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-  #
-  #     - name: Build (skip tests)
-  #       shell: bash
-  #       run: mvn clean package -DskipTests -q
-  #
-  #     - name: Assemble Windows bundle
-  #       shell: bash
-  #       run: |
-  #         bash release/Windows/assemble-bundle.sh "$VERSION" "$GITHUB_WORKSPACE/dist"
-  #
-  #     - name: Validate bundled JDK (OS + JavaFX)
-  #       shell: bash
-  #       run: |
-  #         BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
-  #         JAVA_BIN="$BUNDLE/BEAST/runtime/bin/java.exe"
-  #
-  #         FILE_OUT=$(file "$JAVA_BIN")
-  #         echo "java binary: $FILE_OUT"
-  #         if ! echo "$FILE_OUT" | grep -qE "PE32\+.*x86-64"; then
-  #           echo "ERROR: bundled JDK is not Windows x86-64 — got: $FILE_OUT"
-  #           exit 1
-  #         fi
-  #
-  #         FX_LIBS=$(find "$BUNDLE/BEAST/runtime/bin" -name "javafx*.dll" 2>/dev/null)
-  #         if [ -z "$FX_LIBS" ]; then
-  #           echo "ERROR: no JavaFX native libs (javafx*.dll) found in bundled JDK"
-  #           exit 1
-  #         fi
-  #         echo "JavaFX native libs OK:"
-  #         echo "$FX_LIBS"
-  #
-  #     - name: Create zip
-  #       shell: pwsh
-  #       run: |
-  #         $src = "dist\BEAST.v$env:VERSION"
-  #         $dst = "dist\BEAST.v$env:VERSION.Windows.zip"
-  #         Compress-Archive -Path $src -DestinationPath $dst -CompressionLevel Optimal
-  #         $item = Get-Item $dst
-  #         Write-Host "$($item.Name)  $([math]::Round($item.Length / 1MB, 1)) MB"
-  #
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: Windows
-  #         path: dist/BEAST.v${{ env.VERSION }}.Windows.zip
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+          java-package: jdk+fx
+          cache: maven
+
+      - name: Resolve version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
+                      | sed 's/-SNAPSHOT//')
+          echo "Resolved version: $VERSION"
+          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build (skip tests)
+        run: mvn clean package -DskipTests -q
+
+      - name: Assemble Linux aarch64 bundle
+        run: |
+          OS_ARCH="Linux.aarch64"       \
+          JDK_DIR="$JAVA_HOME"          \
+          DEST="$GITHUB_WORKSPACE/dist" \
+          bash release/Linux/assemble-bundle.sh
+
+      - name: Validate bundled JDK (OS + JavaFX)
+        run: |
+          BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
+          JAVA_BIN="$BUNDLE/jdk/bin/java"
+
+          # Confirm the java binary is Linux aarch64
+          FILE_OUT=$(file "$JAVA_BIN")
+          echo "java binary: $FILE_OUT"
+          if ! echo "$FILE_OUT" | grep -qE "ELF.*aarch64"; then
+            echo "ERROR: bundled JDK is not Linux aarch64 — got: $FILE_OUT"
+            exit 1
+          fi
+
+          # Confirm JavaFX native libs are present and Linux (.so, not .dylib/.dll)
+          FX_LIBS=$(find "$BUNDLE/jdk/lib" -name "libjavafx*.so" 2>/dev/null)
+          if [ -z "$FX_LIBS" ]; then
+            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JDK"
+            exit 1
+          fi
+          if find "$BUNDLE/jdk/lib" -name "libjavafx*.dylib" | grep -q .; then
+            echo "ERROR: JavaFX libs are macOS (.dylib) — bundled JDK is the wrong platform"
+            exit 1
+          fi
+          echo "JavaFX native libs OK:"
+          echo "$FX_LIBS"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Linux.aarch64
+          path: dist/BEAST.v${{ env.VERSION }}.Linux.aarch64.tgz
+          compression-level: 0  # Stops GitHub from zipping the tgz file
+
+  # ── Windows x86_64 bundle ─────────────────────────────────────────────────────
+  # Runs on windows-latest (x86_64). Same pipeline as Linux above, with
+  # OS_ARCH=Windows.x86_64 and bat/ launchers instead of bin/ shell scripts.
+  # Output: BEAST.v<ver>.Windows.x86_64.zip
+  windows:
+    name: Windows x86_64 Bundle
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '25'
+          java-package: jdk+fx
+          cache: maven
+
+      - name: Resolve version
+        shell: bash
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout \
+                      | sed 's/-SNAPSHOT//')
+          echo "Resolved version: $VERSION"
+          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false -q
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Build (skip tests)
+        shell: bash
+        run: mvn clean package -DskipTests -q
+
+      - name: Assemble Windows x86_64 bundle
+        shell: bash
+        run: |
+          OS_ARCH="Windows.x86_64"      \
+          JDK_DIR="$JAVA_HOME"          \
+          DEST="$GITHUB_WORKSPACE/dist" \
+          bash release/Windows/assemble-bundle.sh
+
+      - name: Validate bundled JDK (OS + JavaFX)
+        shell: bash
+        run: |
+          BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
+          JAVA_BIN="$BUNDLE/runtime/bin/java.exe"
+
+          # Confirm the java binary is Windows x86-64
+          FILE_OUT=$(file "$JAVA_BIN")
+          echo "java binary: $FILE_OUT"
+          if ! echo "$FILE_OUT" | grep -qE "PE32\+.*x86-64"; then
+            echo "ERROR: bundled JDK is not Windows x86-64 — got: $FILE_OUT"
+            exit 1
+          fi
+
+          # Confirm JavaFX native libs are present (Windows: .dll in runtime/bin/)
+          FX_LIBS=$(find "$BUNDLE/runtime/bin" -name "javafx*.dll" 2>/dev/null)
+          if [ -z "$FX_LIBS" ]; then
+            echo "ERROR: no JavaFX native libs (javafx*.dll) found in bundled JDK"
+            exit 1
+          fi
+          echo "JavaFX native libs OK:"
+          echo "$FX_LIBS"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows.x86_64
+          path: dist/BEAST.v${{ env.VERSION }}.Windows.x86_64.zip
