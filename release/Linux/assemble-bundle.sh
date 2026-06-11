@@ -9,15 +9,15 @@
 # format starting with Java 25. Use the full JDK Home as JDK_DIR instead.
 # The bundle folder is named jdk/ (not jre/) to reflect this.
 #
-# Required env var:
+# Required env vars:
 #   VERSION       Release version, e.g. 2.8.0
+#   JDK_DIR       Pre-built target-platform JDK Home to bundle
 #
 # Optional env vars:
 #   REPO_ROOT     Repo root directory (default: auto-detected from script location)
-#   JDK_DIR       Pre-built target-platform JDK Home to bundle (required)
 #   DEST          Output parent directory (default: <release>/dist)
-#   OS_ARCH            Bundle label used in tgz name, e.g. Linux.aarch64
-#                      (default: auto-detected from uname)
+#   OS_ARCH       Bundle label used in tgz name, e.g. Linux.aarch64
+#                 (default: auto-detected from uname)
 #
 # Output:
 #   $DEST/BEAST.v<VERSION>/          assembled bundle
@@ -29,8 +29,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RELEASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 VERSION="${VERSION:?ERROR: VERSION is required. Example: VERSION=2.8.0 bash assemble-bundle.sh}"
+JDK_DIR="${JDK_DIR:?ERROR: JDK_DIR is required — set it to a pre-built target-platform JDK Home}"
 DEST="${DEST:-$RELEASE_DIR/dist}"
-JDK_DIR="${JDK_DIR:-}"
 
 # ── Auto-detection ────────────────────────────────────────────────────────────
 _HOST="$(uname -s)-$(uname -m)"
@@ -52,8 +52,7 @@ echo "    Output:      ${BUNDLE}"
 
 # ── Validate inputs ───────────────────────────────────────────────────────────
 if [ ! -d "$JDK_DIR" ]; then
-    echo "ERROR: JDK_DIR not found: $JDK_DIR" >&2
-    echo "       Provide a pre-built ${OS_ARCH} JDK: JDK_DIR=/path/to/jdk bash assemble-bundle.sh" >&2
+    echo "ERROR: JDK_DIR path does not exist: $JDK_DIR" >&2
     exit 1
 fi
 
@@ -169,9 +168,9 @@ for s in beast beauti treeannotator logcombiner applauncher packagemanager logan
     [ -x "$BUNDLE/bin/$s" ] && _ok "bin/$s executable" || _fail "bin/$s not executable"
 done
 
-grep -q 'jdk/bin/java' "$BUNDLE/bin/beast" \
-    && _ok "bin/beast references jdk/bin/java" \
-    || _fail "bin/beast does not reference jdk/bin/java"
+grep -q 'BUNDLE_HOME/jdk' "$BUNDLE/bin/beast" \
+    && _ok "bin/beast references bundled jdk" \
+    || _fail "bin/beast does not reference bundled jdk"
 
 SPEC_COUNT=$(find "$BUNDLE/examples/spec" -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
 [ "$SPEC_COUNT" -gt 0 ] \

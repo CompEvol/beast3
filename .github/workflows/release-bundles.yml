@@ -55,11 +55,9 @@ jobs:
 
       - name: Assemble Linux x86_64 bundle
         run: |
-          VERSION="$VERSION"                  \
-          OS_ARCH="Linux.x86_64"              \
-          JDK_DIR="$JAVA_HOME"                \
-          DEST="$GITHUB_WORKSPACE/dist"       \
-          REPO_ROOT="$GITHUB_WORKSPACE"       \
+          OS_ARCH="Linux.x86_64"        \
+          JDK_DIR="$JAVA_HOME"          \
+          DEST="$GITHUB_WORKSPACE/dist" \
           bash release/Linux/assemble-bundle.sh
 
       - name: Validate bundled JDK (OS + JavaFX)
@@ -126,11 +124,9 @@ jobs:
 #
 #      - name: Assemble Linux aarch64 bundle
 #        run: |
-#          VERSION="$VERSION"                  \
-#          OS_ARCH="Linux.aarch64"             \
-#          JDK_DIR="$JAVA_HOME"                \
-#          DEST="$GITHUB_WORKSPACE/dist"       \
-#          REPO_ROOT="$GITHUB_WORKSPACE"       \
+#          OS_ARCH="Linux.aarch64"       \
+#          JDK_DIR="$JAVA_HOME"          \
+#          DEST="$GITHUB_WORKSPACE/dist" \
 #          bash release/Linux/assemble-bundle.sh
 #
 #      - name: Validate bundled JDK (OS + JavaFX)
