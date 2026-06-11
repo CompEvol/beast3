@@ -181,7 +181,7 @@ immediately invalidates the outer seal.
 Non-bundle content is added **after** signing, so it cannot affect any bundle
 seal (it lives alongside `.app` bundles, not inside them):
 
-- `bin/` — copied from `release/Linux/jrebin`, made executable.
+- `bin/` — copied from `release/Mac/macbin`, made executable.
 - `examples/` — top-level XML files and `nexus/` subdirectory from
   `beast-base/src/test/resources/examples`.
 - `README.txt` and `LICENSE.txt` from `release/common/`.

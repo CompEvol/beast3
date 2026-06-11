@@ -489,18 +489,18 @@ echo "==> Step 4: Creating DMG..."
 DMG_TITLE="BEAST v${VERSION}"
 DMG_NAME="BEAST.v${VERSION}.dmg"
 
-# ── bin/ — command-line launcher scripts (from release/Linux/jrebin) ──────────
+# ── bin/ — command-line launcher scripts (from release/Mac/macbin) ───────────
 # These shell scripts live alongside the .app bundles in the versioned folder,
 # not inside any .app, so they are not covered by any bundle seal. They are
 # intentionally added after signing so they cannot inadvertently affect the
 # resource seal of any already-signed bundle.
-JREBIN_DIR="$REPO_ROOT/release/Linux/jrebin"
-if [ -d "$JREBIN_DIR" ]; then
+MACBIN_DIR="$REPO_ROOT/release/Mac/macbin"
+if [ -d "$MACBIN_DIR" ]; then
     echo "    Copying bin/ scripts..."
-    cp -r "$JREBIN_DIR" "$OUTPUT/bin"
-    chmod 755 "$OUTPUT/bin"/*
+    cp -r "$MACBIN_DIR" "$OUTPUT/bin"
+    chmod u+x "$OUTPUT/bin"/*
 else
-    echo "    WARNING: $JREBIN_DIR not found — skipping bin/"
+    echo "    WARNING: $MACBIN_DIR not found — skipping bin/"
 fi
 
 # ── examples/ — example BEAST XML files ──────────────────────────────────────
