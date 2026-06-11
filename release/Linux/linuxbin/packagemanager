@@ -1,0 +1,30 @@
+#!/bin/sh
+
+if [ -z "$BUNDLE_HOME" ]; then
+	## resolve links - $0 may be a link to application
+	PRG="$0"
+
+	# need this for relative symlinks
+	while [ -h "$PRG" ] ; do
+	    ls=$(ls -ld "$PRG")
+	    link=$(expr "$ls" : '.*-> \(.*\)$')
+	    if expr "$link" : '/.*' > /dev/null; then
+		PRG="$link"
+	    else
+		PRG="$(dirname "$PRG")/$link"
+	    fi
+	done
+
+	# make it fully qualified
+	saveddir=$(pwd)
+	BUNDLE_HOME=$(cd "$(dirname "$PRG")/.." && pwd)
+	cd "$saveddir"
+fi
+
+JAVA_HOME="$BUNDLE_HOME/jdk"
+export JAVA_HOME
+JAVA="$JAVA_HOME/bin/java"
+APP="$BUNDLE_HOME/lib"
+exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH \
+    -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \
+    -m beast.pkgmgmt/beast.pkgmgmt.PackageManager "$@"
