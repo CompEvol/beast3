@@ -171,3 +171,4 @@ jobs:
         with:
           name: Windows.x86_64
           path: dist/BEAST.v${{ env.VERSION }}.Windows.x86_64.zip
+          compression-level: 0 # Stops GitHub from zipping the zip file

@@ -293,7 +293,13 @@ echo "==> All ${PASS} checks passed."
 # ── Step 10: Create zip ───────────────────────────────────────────────────────
 echo ""
 echo "==> Step 10: Creating zip..."
-(cd "$DEST" && zip -r "$(basename "$ZIP")" "BEAST.v${VERSION}")
+(cd "$DEST"
+ if command -v 7z >/dev/null 2>&1; then
+     7z a -tzip "$(basename "$ZIP")" "BEAST.v${VERSION}" > /dev/null
+ else
+     powershell -Command \
+       "Compress-Archive -Path 'BEAST.v${VERSION}' -DestinationPath '$(basename "$ZIP")' -Force"
+ fi)
 SIZE=$(du -sh "$ZIP" | cut -f1)
 
 echo ""
