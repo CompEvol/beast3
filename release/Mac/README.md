@@ -4,7 +4,7 @@ Last update 2026-03-27
 
 ## Prerequisites
 
-- **JDK 25+** with `jpackage` on your PATH
+- **JDK 25+** with `jpackage` on your PATH (jpackage is a JDK tool; jpackage + jlink produces the bundled Zulu JRE+FX 25 runtime)
 - **Maven** 3.6+
 - macOS (for `hdiutil`, `codesign`, `osascript`)
 - **Developer ID Application** certificate in your Keychain
@@ -15,6 +15,8 @@ Last update 2026-03-27
 cd release/Mac
 ./build-sign-dmg.sh
 ```
+
+The script runs four stages: Maven build → JAR staging → BEAST.app (jpackage) + wrapper apps → DMG.
 
 Produces:
 - `dmg-staging/BEAST <version>/` — signed `.app` bundles (kept for inspection)

@@ -3,15 +3,14 @@
 # assemble-bundle.sh — Assemble, verify, and package a BEAST 3 release bundle.
 #
 # No jpackage is used. JARs go into lib/ and are invoked via module-path.
-# A pre-built target-platform JDK is copied with cp -a (preserves symlinks).
-#
-# Note: Zulu (and most OpenJDK vendors) dropped the standalone JRE package
-# format starting with Java 25. Use the full JDK Home as JDK_DIR instead.
-# The bundle folder is named jdk/ (not jre/) to reflect this.
+# A pre-built Zulu JRE+FX 25 is copied with cp -a (preserves symlinks).
+# Use the jre+fx package from azul.com — it is smaller than the full JDK and
+# already contains JavaFX as platform modules in lib/modules.
+# The bundle folder is named jre/.
 #
 # Required env vars:
 #   VERSION       Release version, e.g. 2.8.0
-#   JDK_DIR       Pre-built target-platform JDK Home to bundle
+#   JRE_DIR       Zulu JRE+FX 25 home for the target platform
 #
 # Optional env vars:
 #   REPO_ROOT     Repo root directory (default: auto-detected from script location)
@@ -29,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RELEASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 VERSION="${VERSION:?ERROR: VERSION is required. Example: VERSION=2.8.0 bash assemble-bundle.sh}"
-JDK_DIR="${JDK_DIR:?ERROR: JDK_DIR is required — set it to a pre-built target-platform JDK Home}"
+JRE_DIR="${JRE_DIR:?ERROR: JRE_DIR is required — set it to the Zulu JRE+FX 25 home for the target platform}"
 DEST="${DEST:-$RELEASE_DIR/dist}"
 
 # ── Auto-detection ────────────────────────────────────────────────────────────
@@ -47,12 +46,12 @@ BUNDLE="$DEST/BEAST.v${VERSION}"
 TGZ="$DEST/BEAST.v${VERSION}.${OS_ARCH}.tgz"
 
 echo "==> Assembling BEAST ${VERSION} for ${OS_ARCH}"
-echo "    JDK_DIR:     ${JDK_DIR}"
+echo "    JRE_DIR:     ${JRE_DIR}"
 echo "    Output:      ${BUNDLE}"
 
 # ── Validate inputs ───────────────────────────────────────────────────────────
-if [ ! -d "$JDK_DIR" ]; then
-    echo "ERROR: JDK_DIR path does not exist: $JDK_DIR" >&2
+if [ ! -d "$JRE_DIR" ]; then
+    echo "ERROR: JRE_DIR path does not exist: $JRE_DIR" >&2
     exit 1
 fi
 
@@ -69,7 +68,7 @@ MAIN_JAR="beast-pkgmgmt-${MVN_VER}.jar"
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
 cp "$FX_JAR" "$STAGING/"
-# JavaFX and jdk-jsobject JARs are excluded: the bundled Zulu-FX JDK already provides
+# JavaFX and jdk-jsobject JARs are excluded: the bundled Zulu JRE+FX already provides
 # javafx.* and jdk.jsobject as platform modules in lib/modules. Platform modules always
 # take precedence over module-path JARs, so staging them is redundant (~46 MB wasted).
 find "$REPO_ROOT/beast-fx/target/lib" -name "*.jar" \
@@ -93,18 +92,18 @@ mkdir -p "$BUNDLE/bin" "$BUNDLE/examples" "$BUNDLE/lib"
 cp "$STAGING/"*.jar "$BUNDLE/lib/"
 echo "    Copied ${JAR_COUNT} JARs to lib/"
 
-# ── Step 4: Copy JDK ─────────────────────────────────────────────────────────
-# cp -a preserves symlinks. A plain cp -r dereferences JDK internal symlinks,
+# ── Step 4: Copy JRE+FX ──────────────────────────────────────────────────────
+# cp -a preserves symlinks. A plain cp -r dereferences JRE internal symlinks,
 # corrupting the runtime structure (replaces 1 KB aliases with full files).
 echo ""
-echo "==> Step 4: Copying JDK..."
-cp -a "$JDK_DIR/." "$BUNDLE/jdk/"
-chmod u+x "$BUNDLE/jdk/bin/java"
-rm -f "$BUNDLE/jdk/lib/src.zip"
-echo "    JDK copied ($(du -sh "$BUNDLE/jdk" | cut -f1))"
+echo "==> Step 4: Copying Zulu JRE+FX 25..."
+cp -a "$JRE_DIR/." "$BUNDLE/jre/"
+chmod u+x "$BUNDLE/jre/bin/java"
+rm -f "$BUNDLE/jre/lib/src.zip"
+echo "    JRE+FX copied ($(du -sh "$BUNDLE/jdk" | cut -f1))"
 
 # ── Step 5: Copy bin/ launcher scripts from linuxbin/ ────────────────────────
-# Static scripts in linuxbin/ use $BUNDLE_HOME/jdk/bin/java and $BUNDLE_HOME/lib.
+# Static scripts in linuxbin/ use $BUNDLE_HOME/jre/bin/java and $BUNDLE_HOME/lib.
 echo ""
 echo "==> Step 5: Copying bin/ launchers from linuxbin/..."
 LINUXBIN_DIR="$SCRIPT_DIR/linuxbin"
@@ -156,7 +155,7 @@ _fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 
 for f in bin/beast bin/beauti bin/treeannotator bin/logcombiner \
           bin/applauncher bin/packagemanager bin/loganalyser \
-          jdk/bin/java lib version.xml examples/spec; do
+          jre/bin/java lib version.xml examples/spec; do
     [ -e "$BUNDLE/$f" ] && _ok "$f present" || _fail "$f MISSING"
 done
 
@@ -169,7 +168,7 @@ for s in beast beauti treeannotator logcombiner applauncher packagemanager logan
     [ -x "$BUNDLE/bin/$s" ] && _ok "bin/$s executable" || _fail "bin/$s not executable"
 done
 
-grep -q 'BUNDLE_HOME/jdk' "$BUNDLE/bin/beast" \
+grep -q 'BUNDLE_HOME/jre' "$BUNDLE/bin/beast" \
     && _ok "bin/beast references bundled jdk" \
     || _fail "bin/beast does not reference bundled jdk"
 

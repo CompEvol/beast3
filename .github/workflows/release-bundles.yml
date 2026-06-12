@@ -3,14 +3,14 @@ name: Release Bundles
 # Triggered manually only: GitHub Actions UI → Release Bundles → Run workflow.
 #
 # Produces platform bundles for Linux x86_64, Linux aarch64, and Windows x86_64,
-# each assembled on its own native OS runner so the bundled JDK and JavaFX native
+# each assembled on its own native OS runner so the bundled JRE+FX and JavaFX native
 # libs are correct for that platform.
 #
 # Each job:
-#   1. Installs Zulu FX JDK 25 (includes JavaFX as platform modules in lib/modules)
+#   1. Installs Zulu JRE+FX 25 (includes JavaFX as platform modules in lib/modules)
 #   2. Strips -SNAPSHOT from the version, then runs mvn clean package
 #   3. Calls <Platform>/assemble-bundle.sh with explicit env vars:
-#        VERSION, OS_ARCH, JDK_DIR ($JAVA_HOME), DEST, REPO_ROOT
+#        VERSION, OS_ARCH, JRE_DIR ($JAVA_HOME), DEST, REPO_ROOT
 #   4. Validates the bundled JDK binary with `file` to confirm OS and architecture
 #   5. Validates that JavaFX native libs are present in the bundled JDK
 #   6. Uploads the archive produced by assemble-bundle.sh
@@ -24,8 +24,8 @@ jobs:
 
   # ── Linux x86_64 bundle ───────────────────────────────────────────────────────
   # Runs natively on ubuntu-latest (x86_64). setup-java installs Zulu FX JDK 25
-  # with JavaFX baked in; JAVA_HOME is used as JDK_DIR so the bundle ships that
-  # exact JDK.  Output: BEAST.v<ver>.Linux.x86_64.tgz
+  # with JavaFX baked in; JAVA_HOME is used as JRE_DIR so the bundle ships that
+  # exact JRE.  Output: BEAST.v<ver>.Linux.x86_64.tgz
   linux-x86_64:
     name: Linux x86_64 Bundle
     runs-on: ubuntu-latest
@@ -38,7 +38,7 @@ jobs:
         with:
           distribution: zulu
           java-version: '25'
-          java-package: jdk+fx
+          java-package: jre+fx
           cache: maven
 
       - name: Resolve version
@@ -55,30 +55,30 @@ jobs:
       - name: Assemble Linux x86_64 bundle
         run: |
           OS_ARCH="Linux.x86_64"        \
-          JDK_DIR="$JAVA_HOME"          \
+          JRE_DIR="$JAVA_HOME"          \
           DEST="$GITHUB_WORKSPACE/dist" \
           bash release/Linux/assemble-bundle.sh
 
-      - name: Validate bundled JDK (OS + JavaFX)
+      - name: Validate bundled JRE+FX (OS + JavaFX)
         run: |
           BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
-          JAVA_BIN="$BUNDLE/jdk/bin/java"
+          JAVA_BIN="$BUNDLE/jre/bin/java"
 
           # Confirm the java binary is Linux x86-64
           FILE_OUT=$(file "$JAVA_BIN")
           echo "java binary: $FILE_OUT"
           if ! echo "$FILE_OUT" | grep -qE "ELF.*x86-64"; then
-            echo "ERROR: bundled JDK is not Linux x86-64 — got: $FILE_OUT"
+            echo "ERROR: bundled JRE is not Linux x86-64 — got: $FILE_OUT"
             exit 1
           fi
 
           # Confirm JavaFX native libs are present and Linux (.so, not .dylib/.dll)
-          FX_LIBS=$(find "$BUNDLE/jdk/lib" -name "libjavafx*.so" 2>/dev/null)
+          FX_LIBS=$(find "$BUNDLE/jre/lib" -name "libjavafx*.so" 2>/dev/null)
           if [ -z "$FX_LIBS" ]; then
-            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JDK"
+            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JRE"
             exit 1
           fi
-          if find "$BUNDLE/jdk/lib" -name "libjavafx*.dylib" | grep -q .; then
+          if find "$BUNDLE/jre/lib" -name "libjavafx*.dylib" | grep -q .; then
             echo "ERROR: JavaFX libs are macOS (.dylib) — bundled JDK is the wrong platform"
             exit 1
           fi
@@ -107,7 +107,7 @@ jobs:
         with:
           distribution: zulu
           java-version: '25'
-          java-package: jdk+fx
+          java-package: jre+fx
           cache: maven
 
       - name: Resolve version
@@ -124,30 +124,30 @@ jobs:
       - name: Assemble Linux aarch64 bundle
         run: |
           OS_ARCH="Linux.aarch64"       \
-          JDK_DIR="$JAVA_HOME"          \
+          JRE_DIR="$JAVA_HOME"          \
           DEST="$GITHUB_WORKSPACE/dist" \
           bash release/Linux/assemble-bundle.sh
 
-      - name: Validate bundled JDK (OS + JavaFX)
+      - name: Validate bundled JRE+FX (OS + JavaFX)
         run: |
           BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
-          JAVA_BIN="$BUNDLE/jdk/bin/java"
+          JAVA_BIN="$BUNDLE/jre/bin/java"
 
           # Confirm the java binary is Linux aarch64
           FILE_OUT=$(file "$JAVA_BIN")
           echo "java binary: $FILE_OUT"
           if ! echo "$FILE_OUT" | grep -qE "ELF.*aarch64"; then
-            echo "ERROR: bundled JDK is not Linux aarch64 — got: $FILE_OUT"
+            echo "ERROR: bundled JRE is not Linux aarch64 — got: $FILE_OUT"
             exit 1
           fi
 
           # Confirm JavaFX native libs are present and Linux (.so, not .dylib/.dll)
-          FX_LIBS=$(find "$BUNDLE/jdk/lib" -name "libjavafx*.so" 2>/dev/null)
+          FX_LIBS=$(find "$BUNDLE/jre/lib" -name "libjavafx*.so" 2>/dev/null)
           if [ -z "$FX_LIBS" ]; then
-            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JDK"
+            echo "ERROR: no JavaFX native libs (libjavafx*.so) found in bundled JRE"
             exit 1
           fi
-          if find "$BUNDLE/jdk/lib" -name "libjavafx*.dylib" | grep -q .; then
+          if find "$BUNDLE/jre/lib" -name "libjavafx*.dylib" | grep -q .; then
             echo "ERROR: JavaFX libs are macOS (.dylib) — bundled JDK is the wrong platform"
             exit 1
           fi
@@ -176,7 +176,7 @@ jobs:
         with:
           distribution: zulu
           java-version: '25'
-          java-package: jdk+fx
+          java-package: jre+fx
           cache: maven
 
       - name: Resolve version
@@ -196,11 +196,11 @@ jobs:
         shell: bash
         run: |
           OS_ARCH="Windows.x86_64"      \
-          JDK_DIR="$JAVA_HOME"          \
+          JRE_DIR="$JAVA_HOME"          \
           DEST="$GITHUB_WORKSPACE/dist" \
           bash release/Windows/assemble-bundle.sh
 
-      - name: Validate bundled JDK (OS + JavaFX)
+      - name: Validate bundled JRE+FX (OS + JavaFX)
         shell: bash
         run: |
           BUNDLE="$GITHUB_WORKSPACE/dist/BEAST.v${VERSION}"
@@ -210,14 +210,14 @@ jobs:
           FILE_OUT=$(file "$JAVA_BIN")
           echo "java binary: $FILE_OUT"
           if ! echo "$FILE_OUT" | grep -qE "PE32\+.*x86-64"; then
-            echo "ERROR: bundled JDK is not Windows x86-64 — got: $FILE_OUT"
+            echo "ERROR: bundled JRE is not Windows x86-64 — got: $FILE_OUT"
             exit 1
           fi
 
           # Confirm JavaFX native libs are present (Windows: .dll in runtime/bin/)
           FX_LIBS=$(find "$BUNDLE/runtime/bin" -name "javafx*.dll" 2>/dev/null)
           if [ -z "$FX_LIBS" ]; then
-            echo "ERROR: no JavaFX native libs (javafx*.dll) found in bundled JDK"
+            echo "ERROR: no JavaFX native libs (javafx*.dll) found in bundled JRE"
             exit 1
           fi
           echo "JavaFX native libs OK:"

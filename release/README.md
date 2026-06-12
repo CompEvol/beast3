@@ -6,7 +6,7 @@
 |---|---|
 | Linux x86, Linux aarch64 | `release-bundles.yml` (CI) |
 | Windows | `release-bundles.yml` (CI) |
-| Mac DMG | `release/Mac/build-sign-dmg.sh` (local, requires Apple signing) |
+| Mac DMG | `release/Mac/build-sign-dmg.sh` (local, requires Apple signing) — see [Mac/README.md](Mac/README.md) |
 
 ## Release steps
 
@@ -29,9 +29,9 @@ Version is read from `pom.xml` and must be plain `x.y.z`. Keep `pom.xml` at `x.y
 
 ## Why JavaFX JARs are excluded from the release bundle
 
-### The bundled JDK already provides JavaFX as platform modules
+### The bundled JRE+FX already provides JavaFX as platform modules
 
-BEAST bundles a Zulu-FX JDK in every release. Running `java --list-modules` on that JDK
+BEAST bundles a Zulu JRE+FX 25 in every release. Running `java --list-modules` on that JRE
 confirms JavaFX is baked directly into `lib/modules` as platform modules:
 
 ```
@@ -43,11 +43,12 @@ javafx.media@25.0.2      jdk.jsobject@25.0.2
 These are available to every `java` invocation automatically, without any `--module-path`
 argument pointing at JAR files.
 
-To verify which OS and architecture the bundled JDK targets, use the `file` command on
+To verify which OS and architecture the bundled JRE targets, use the `file` command on
 its `java` binary:
 
 ```bash
-file dist/BEAST.v2.8.0/jdk/bin/java
+file dist/BEAST.v2.8.0/jre/bin/java   # Linux
+file dist/BEAST.v2.8.0/runtime/bin/java.exe   # Windows
 ```
 
 Quick reference for all platforms:
@@ -78,7 +79,7 @@ OS-specific profiles that set `${javafx.platform}` (e.g. `mac-aarch64`, `linux-a
 one platform, one build host.
 
 The classified JAR carries the real bytecode and native libraries — but those are already
-present inside the bundled Zulu-FX JDK, making them redundant in the release bundle.
+present inside the bundled Zulu JRE+FX, making them redundant in the release bundle.
 
 ### Platform modules always shadow module-path JARs
 
@@ -95,9 +96,9 @@ This applies to all three platforms:
 
 | Platform | How JDK is bundled | JavaFX JARs in lib/ |
 |---|---|---|
-| Mac | `jpackage` calls `jlink` with `ALL-MODULE-PATH` from Zulu-FX jmods → baked into `runtime/lib/modules` | Redundant |
-| Linux | Full Zulu-FX JDK copied with `cp -a` → ships with `lib/modules` containing JavaFX | Redundant |
-| Windows | Full Zulu-FX JDK copied with `cp -a` → ships with `lib/modules` containing JavaFX | Redundant |
+| Mac | `jpackage` + `jlink` with `ALL-MODULE-PATH` from Zulu JRE+FX → baked into `runtime/lib/modules` | Redundant |
+| Linux | Zulu JRE+FX copied with `cp -a` into `jre/` → ships with `lib/modules` containing JavaFX | Redundant |
+| Windows | `jpackage` + `jlink` from Zulu JRE+FX → trimmed runtime in `runtime/lib/modules` | Redundant |
 
 ### Not needed for compilation either
 

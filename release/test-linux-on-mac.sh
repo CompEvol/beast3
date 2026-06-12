@@ -11,13 +11,6 @@
 #   2. Runs Maven build (skippable with --skip-build)
 #   3. Calls Linux/assemble-bundle.sh (assembles, verifies, creates tgz)
 #
-# Mac-specific notes:
-#   JDK_DIR: Zulu (and most OpenJDK vendors) dropped the standalone JRE package
-#   format starting with Java 25. The default points to the local Zulu 25 JDK.
-#   This is a macOS JDK — it produces a structurally correct bundle but
-#   jdk/bin/java inside will be a macOS binary. For a real distributable Linux
-#   bundle set JDK_DIR to a Linux aarch64 JDK 25+ (e.g. from azul.com).
-#
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -25,8 +18,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$SCRIPT_DIR"
 
+# ── Configurable: path to the extracted Zulu JRE+FX 25 for the target Linux arch.
+# Download the jre+fx package from azul.com and extract it here (or anywhere),
+# then update this path. The directory name matches the Azul download convention.
+# Override at runtime: JRE_DIR=/other/path bash test-linux-on-mac.sh
+ZULU_JRE_FX_DIR="${HOME}/Downloads/zulu25.34.17-ca-fx-jre25.0.3-linux_aarch64"
+
 # ── Mac-specific defaults ─────────────────────────────────────────────────────
-JDK_DIR="${JDK_DIR:-/Library/Java/JavaVirtualMachines/zulu-25.jdk/Contents/Home}"
+JRE_DIR="${JRE_DIR:-${ZULU_JRE_FX_DIR}}"
 
 SKIP_BUILD=false
 for arg in "$@"; do
@@ -58,6 +57,6 @@ echo ""
 echo "=== Step 3: Assemble Linux aarch64 ==="
 VERSION="$VERSION"      \
 OS_ARCH="Linux.aarch64" \
-JDK_DIR="$JDK_DIR"      \
+JRE_DIR="$JRE_DIR"      \
 REPO_ROOT="$REPO_ROOT"  \
 bash Linux/assemble-bundle.sh

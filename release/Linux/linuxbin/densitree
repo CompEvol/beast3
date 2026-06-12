@@ -21,7 +21,7 @@ if [ -z "$BUNDLE_HOME" ]; then
 	cd "$saveddir"
 fi
 
-JAVA_HOME="$BUNDLE_HOME/jdk"
+JAVA_HOME="$BUNDLE_HOME/jre"
 export JAVA_HOME
 JAVA="$JAVA_HOME/bin/java"
 exec "$JAVA" -Xmx4g -Duser.language=en -Dfile.encoding=UTF-8 \
