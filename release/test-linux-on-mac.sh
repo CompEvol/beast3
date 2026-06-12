@@ -22,7 +22,7 @@ cd "$SCRIPT_DIR"
 # Download the jre+fx package from azul.com and extract it here (or anywhere),
 # then update this path. The directory name matches the Azul download convention.
 # Override at runtime: JRE_DIR=/other/path bash test-linux-on-mac.sh
-ZULU_JRE_FX_DIR="${HOME}/Downloads/zulu25.34.17-ca-fx-jre25.0.3-linux_aarch64"
+ZULU_JRE_FX_DIR="${HOME}/WorkSpace/beast3/release/zulu25.34.17-ca-fx-jre25.0.3-macosx_aarch64"
 
 # ── Mac-specific defaults ─────────────────────────────────────────────────────
 JRE_DIR="${JRE_DIR:-${ZULU_JRE_FX_DIR}}"

@@ -270,7 +270,7 @@ CONTENTS_DIR="\$(cd "\$(dirname "\$0")/.." && pwd)"
 BEAST_APP="\$(cd "\$CONTENTS_DIR/../../BEAST.app/Contents" && pwd)"
 $launch_cmd
 LAUNCHER
-    chmod 755 "$contents/MacOS/$app_name"
+    chmod u+x "$contents/MacOS/$app_name"
 
     # ── Info.plist ──
     local icon_basename
@@ -335,7 +335,7 @@ exec "$BEAST_APP/runtime/Contents/Home/bin/java" \
     -Xmx4g -Duser.language=en -Dfile.encoding=UTF-8 \
     -jar "$CONTENTS_DIR/Java/DensiTree.jar" "$@"
 LAUNCHER
-    chmod 755 "$DT_CONTENTS/MacOS/DensiTree"
+    chmod u+x "$DT_CONTENTS/MacOS/DensiTree"
 
     cat > "$DT_CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -397,8 +397,9 @@ app="$OUTPUT/BEAST.app"
 # including the shared bin/java binary that wrapper apps and bin/ scripts invoke.
 # Must be done before sealing the runtime bundle or the outer BEAST.app bundle.
 #
-# IMPORTANT: --entitlements must be passed here. bin/java is copied from the
-# build JDK and retains a stale code signature tied to the source JDK bundle.
+# IMPORTANT: --entitlements must be passed here. bin/java is copied from
+# BUILD_JAVA_HOME (the Zulu JRE+FX) and retains a stale code signature tied
+# to that JRE bundle.
 # Without re-signing it with entitlements.plist under Hardened Runtime, running
 # bin/java directly produces "Trace/BPT trap: 5" (SIGTRAP — kernel kills the
 # process because the signature is invalid in its new bundle context).
@@ -516,7 +517,7 @@ else
 fi
 
 # ── examples/ — example BEAST XML files ──────────────────────────────────────
-EXAMPLES_DIR="$REPO_ROOT/beast-base/src/test/resources/examples"
+EXAMPLES_DIR="$REPO_ROOT/beast-base/src/test/resources/beast.base/examples"
 if [ -d "$EXAMPLES_DIR" ]; then
     echo "    Copying examples/..."
     mkdir -p "$OUTPUT/examples"
@@ -525,6 +526,9 @@ if [ -d "$EXAMPLES_DIR" ]; then
     # Copy nexus subdirectory
     if [ -d "$EXAMPLES_DIR/nexus" ]; then
         cp -r "$EXAMPLES_DIR/nexus" "$OUTPUT/examples/nexus"
+    fi
+    if [ -d "$EXAMPLES_DIR/spec" ]; then
+        cp -r "$EXAMPLES_DIR/spec" "$OUTPUT/examples/spec"
     fi
 else
     echo "    WARNING: $EXAMPLES_DIR not found — skipping examples/"
