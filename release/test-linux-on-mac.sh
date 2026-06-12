@@ -55,8 +55,9 @@ fi
 # assemble-bundle.sh handles assembly, verification, and tgz creation.
 echo ""
 echo "=== Step 3: Assemble Linux aarch64 ==="
-VERSION="$VERSION"      \
-OS_ARCH="Linux.aarch64" \
-JRE_DIR="$JRE_DIR"      \
-REPO_ROOT="$REPO_ROOT"  \
+VERSION="$VERSION"         \
+OS_ARCH="Linux.aarch64"    \
+JRE_DIR="$JRE_DIR"         \
+REPO_ROOT="$REPO_ROOT"     \
+DEST="$SCRIPT_DIR/dist"    \
 bash Linux/assemble-bundle.sh

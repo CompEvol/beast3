@@ -75,6 +75,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+# ── Configurable: path to extracted Zulu JRE+FX 25 for macOS ─────────────────
+# Download the jre+fx package for your architecture from azul.com and extract it
+# locally. The extracted directory IS the .jre bundle (Contents/ is at its root);
+# BUILD_JAVA_HOME points to Contents/Home inside it.
+# Override: ZULU_JRE_FX_DIR=/other/path bash build-sign-dmg.sh
+ZULU_JRE_FX_DIR="${ZULU_JRE_FX_DIR:-${HOME}/WorkSpace/beast3/release/zulu25.34.17-ca-fx-jre25.0.3-macosx_aarch64}"
+BUILD_JAVA_HOME="${ZULU_JRE_FX_DIR}/Contents/Home"
+
 # ── Code-signing configuration ────────────────────────────────────────────────
 CODESIGN_IDENTITY="Developer ID Application: Walter Xie (27V5YMX65C)"
 ENTITLEMENTS="$SCRIPT_DIR/entitlements.plist"
@@ -110,6 +118,12 @@ if ! command -v jpackage &>/dev/null; then
     exit 1
 fi
 echo "==> jpackage: $(jpackage --version)"
+if [ ! -d "$BUILD_JAVA_HOME" ]; then
+    echo "ERROR: BUILD_JAVA_HOME not found: $BUILD_JAVA_HOME"
+    echo "       Set ZULU_JRE_FX_DIR to the extracted Zulu JRE+FX 25 directory."
+    exit 1
+fi
+echo "==> JRE+FX home: ${BUILD_JAVA_HOME}"
 
 # ── Step 1: Maven build ─────────────────────────────────────────────────────
 echo ""
@@ -148,7 +162,7 @@ mkdir -p "$STAGING" "$DMG_STAGING" "$OUTPUT"
 cp "$FX_JAR" "$STAGING/"
 
 # All runtime dependencies (beast-base, beast-pkgmgmt, etc.)
-# JavaFX and jdk-jsobject JARs are excluded: the bundled Zulu-FX JDK already provides
+# JavaFX and jdk-jsobject JARs are excluded: the bundled Zulu JRE+FX already provides
 # javafx.* and jdk.jsobject as platform modules in lib/modules. Platform modules always
 # take precedence over module-path JARs, so staging them is redundant (~46 MB wasted).
 find "$REPO_ROOT/beast-fx/target/lib" -name "*.jar" \
@@ -181,8 +195,8 @@ jpackage --type app-image \
     --main-class "beast.pkgmgmt.launcher.BeastLauncher" \
     --java-options "$JAVA_OPTS" \
     --arguments "-window" \
-    --add-modules ALL-MODULE-PATH \
-    --dest "$OUTPUT" 
+    --runtime-image "$BUILD_JAVA_HOME" \
+    --dest "$OUTPUT"
     
 # jpackage --main-jar/--main-class writes app.classpath + app.mainclass to BEAST.cfg,
 # which puts all JARs on the classpath. Patch to module-path mode so that module
@@ -202,16 +216,14 @@ java-options=--module-path=\$APPDIR\
 java-options=--add-modules=ALL-MODULE-PATH
 ' "$BEAST_CFG"
 
-# jpackage deliberately strips bin/java from the bundled runtime (it uses its own
-# native launcher instead). Restore it so that wrapper .app bundles and bin/ scripts
-# can locate and invoke java directly from the bundled JRE rather than relying on
-# whatever java happens to be on the user's PATH.
+# jpackage may strip bin/java from the bundled runtime (it uses its own native
+# launcher). Restore it from the Zulu JRE+FX so wrapper .app bundles and bin/
+# scripts can invoke java directly without depending on the user's PATH java.
 RUNTIME_HOME="$OUTPUT/BEAST.app/Contents/runtime/Contents/Home"
-BUILD_JAVA_HOME="$(/usr/libexec/java_home)"
 mkdir -p "$RUNTIME_HOME/bin"
 cp "$BUILD_JAVA_HOME/bin/java" "$RUNTIME_HOME/bin/java"
-chmod 755 "$RUNTIME_HOME/bin/java"
-echo "    Copied java binary into runtime."
+chmod u+x "$RUNTIME_HOME/bin/java"
+echo "    Copied java binary from JRE+FX into runtime."
 
 echo "    BEAST.app created."
 

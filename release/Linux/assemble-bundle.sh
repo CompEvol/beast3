@@ -45,6 +45,8 @@ STAGING="$RELEASE_DIR/staging-${OS_ARCH}"
 BUNDLE="$DEST/BEAST.v${VERSION}"
 TGZ="$DEST/BEAST.v${VERSION}.${OS_ARCH}.tgz"
 
+trap 'rm -rf "$STAGING"' EXIT
+
 echo "==> Assembling BEAST ${VERSION} for ${OS_ARCH}"
 echo "    JRE_DIR:     ${JRE_DIR}"
 echo "    Output:      ${BUNDLE}"
@@ -100,7 +102,7 @@ echo "==> Step 4: Copying Zulu JRE+FX 25..."
 cp -a "$JRE_DIR/." "$BUNDLE/jre/"
 chmod u+x "$BUNDLE/jre/bin/java"
 rm -f "$BUNDLE/jre/lib/src.zip"
-echo "    JRE+FX copied ($(du -sh "$BUNDLE/jdk" | cut -f1))"
+echo "    JRE+FX copied ($(du -sh "$BUNDLE/jre" | cut -f1))"
 
 # ── Step 5: Copy bin/ launcher scripts from linuxbin/ ────────────────────────
 # Static scripts in linuxbin/ use $BUNDLE_HOME/jre/bin/java and $BUNDLE_HOME/lib.
@@ -169,8 +171,25 @@ for s in beast beauti treeannotator logcombiner applauncher packagemanager logan
 done
 
 grep -q 'BUNDLE_HOME/jre' "$BUNDLE/bin/beast" \
-    && _ok "bin/beast references bundled jdk" \
-    || _fail "bin/beast does not reference bundled jdk"
+    && _ok "bin/beast references bundled jre" \
+    || _fail "bin/beast does not reference bundled jre"
+
+case "$OS_ARCH" in
+    Linux.x86_64)  _ARCH_PAT="ELF.*x86-64"  ;;
+    Linux.aarch64) _ARCH_PAT="ELF.*aarch64"  ;;
+    *)             _ARCH_PAT="ELF"           ;;
+esac
+_FILE_OUT=$(file "$BUNDLE/jre/bin/java" 2>/dev/null || true)
+echo "$_FILE_OUT" | grep -qE "$_ARCH_PAT" \
+    && _ok "jre/bin/java matches $OS_ARCH" \
+    || _fail "jre/bin/java arch mismatch — expected $_ARCH_PAT, got: $_FILE_OUT"
+
+_FX_SO=$(find "$BUNDLE/jre/lib" -name "libjavafx*.so" 2>/dev/null | head -1)
+[ -n "$_FX_SO" ] \
+    && _ok "JavaFX native libs present in jre/lib/ (.so)" \
+    || _fail "no JavaFX native libs (libjavafx*.so) found in jre/lib/"
+find "$BUNDLE/jre/lib" -name "libjavafx*.dylib" 2>/dev/null | grep -q . \
+    && _fail "JavaFX .dylib files found in jre/lib/ — wrong platform bundled"
 
 SPEC_COUNT=$(find "$BUNDLE/examples/spec" -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
 [ "$SPEC_COUNT" -gt 0 ] \

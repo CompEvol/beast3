@@ -94,11 +94,11 @@ uses the built-in `javafx.graphics@25.0.2` etc. from `lib/modules` instead.
 
 This applies to all three platforms:
 
-| Platform | How JDK is bundled | JavaFX JARs in lib/ |
+| Platform | How JRE is bundled | JavaFX JARs in lib/ |
 |---|---|---|
-| Mac | `jpackage` + `jlink` with `ALL-MODULE-PATH` from Zulu JRE+FX → baked into `runtime/lib/modules` | Redundant |
-| Linux | Zulu JRE+FX copied with `cp -a` into `jre/` → ships with `lib/modules` containing JavaFX | Redundant |
-| Windows | `jpackage` + `jlink` from Zulu JRE+FX → trimmed runtime in `runtime/lib/modules` | Redundant |
+| Mac | `jpackage --runtime-image` copies Zulu JRE+FX into `runtime/`; JavaFX in `runtime/lib/modules` | Redundant |
+| Linux | Zulu JRE+FX copied with `cp -a` into `jre/`; JavaFX in `jre/lib/modules` | Redundant |
+| Windows | `jpackage --runtime-image` copies Zulu JRE+FX into `runtime/`; JavaFX in `runtime/lib/modules` | Redundant |
 
 ### Not needed for compilation either
 

@@ -4,7 +4,9 @@ Last update 2026-03-27
 
 ## Prerequisites
 
-- **JDK 25+** with `jpackage` on your PATH (jpackage is a JDK tool; jpackage + jlink produces the bundled Zulu JRE+FX 25 runtime)
+- **JDK 25+** with `jpackage` on your PATH (jpackage is a JDK tool; used with `--runtime-image` to embed the Zulu JRE+FX 25 as the bundled runtime)
+- **Zulu JRE+FX 25** extracted locally — set `ZULU_JRE_FX_DIR` at the top of `build-sign-dmg.sh`
+  (default: `~/WorkSpace/beast3/release/zulu25.34.17-ca-fx-jre25.0.3-macosx_aarch64`)
 - **Maven** 3.6+
 - macOS (for `hdiutil`, `codesign`, `osascript`)
 - **Developer ID Application** certificate in your Keychain
@@ -82,6 +84,8 @@ release/Mac/
   if the file does not already exist.
 - Parses `VERSION` from `version.xml` via Perl.
 - Checks `jpackage` is on PATH.
+- Validates `BUILD_JAVA_HOME` (`$ZULU_JRE_FX_DIR/Contents/Home`) exists; fails
+  fast if the Zulu JRE+FX is not downloaded or `ZULU_JRE_FX_DIR` is wrong.
 
 ### Step 1 — Maven Build
 
@@ -104,9 +108,10 @@ eliminating the main source of codesign seal corruption.
 
 ### Step 3 — Create BEAST.app
 
-`jpackage --type app-image` builds a native macOS `.app` with a bundled JRE
-into `OUTPUT/`. **No signing flag is passed to jpackage** — all signing is
-done manually in Step 3b for full inside-out control.
+`jpackage --type app-image --runtime-image $BUILD_JAVA_HOME` builds a native
+macOS `.app` into `OUTPUT/`, embedding the Zulu JRE+FX 25 directly as the
+bundled runtime (no jlink). **No signing flag is passed to jpackage** — all
+signing is done manually in Step 3b for full inside-out control.
 
 **BEAST.cfg patch** (3 `sed` calls immediately after jpackage):
 jpackage's `--main-jar/--main-class` writes classpath-mode config. The patch
@@ -114,12 +119,14 @@ switches to module-path mode so that module descriptors (`provides`/`requires`)
 are visible at runtime and external BEAST packages loaded as `ModuleLayer`s
 resolve correctly. `--module/--module-path` cannot be used at jpackage time
 because automatic modules (e.g. `antlr4-runtime.jar`) are incompatible with
-jlink's `ALL-MODULE-PATH` resolution.
+jlink's `ALL-MODULE-PATH` resolution. (`--runtime-image` replaces jlink;
+`--add-modules` is not used in the jpackage call itself.)
 
-**Restore `bin/java`:** jpackage strips the `java` binary from the bundled
-runtime (it uses its own native launcher). The binary is copied from the build
-JDK so that wrapper `.app` bundles and `bin/` scripts can call java from the
-bundled JRE rather than whatever java is on the user's PATH.
+**Restore `bin/java`:** jpackage may strip the `java` binary from the bundled
+runtime (it uses its own native launcher). The binary is explicitly copied from
+`BUILD_JAVA_HOME` (Zulu JRE+FX `Contents/Home`) so wrapper `.app` bundles and
+`bin/` scripts can invoke java from the bundled JRE without depending on the
+user's PATH.
 
 ### Step 3a — Create Wrapper .app Bundles
 
@@ -155,8 +162,9 @@ immediately invalidates the outer seal.
    `.so`, or executable (`+111`). Signs the entire bundled JRE in one pass,
    including the shared `bin/java` binary used by all wrapper apps and `bin/`
    scripts. **`--entitlements` must be passed here.** `bin/java` is copied from
-   the build JDK and carries a stale signature tied to the source JDK bundle;
-   without re-signing it with `entitlements.plist` under Hardened Runtime,
+   `BUILD_JAVA_HOME` (the Zulu JRE+FX) and carries a stale signature tied to
+   that JRE bundle; without re-signing it with `entitlements.plist` under
+   Hardened Runtime,
    running it produces `Trace/BPT trap: 5` (SIGTRAP — the kernel kills the
    process because the signature is invalid in its new bundle context).
 2. **Sign native launcher** — `Contents/MacOS/BEAST` only. Signing all of
@@ -220,8 +228,8 @@ Verified with `--verify --verbose=4 --deep --strict`.
 |---|---|
 | `OUTPUT` inside `dmg-staging/` | jpackage builds in-place; no post-build copy of signed apps needed |
 | No `--mac-app-image-sign-identity` in jpackage | All signing done manually for full inside-out order control |
-| `--main-jar` + cfg patch instead of `--module` | Automatic modules (antlr4) incompatible with jlink `ALL-MODULE-PATH` |
-| Restore `bin/java` manually | jpackage strips it; wrappers and `bin/` scripts need it |
+| `--main-jar` + cfg patch instead of `--module` | Automatic modules (antlr4) incompatible with jlink; `--runtime-image` replaces jlink but `--main-jar` is still required |
+| Restore `bin/java` manually | jpackage may strip it; copy from `BUILD_JAVA_HOME` (Zulu JRE+FX) so wrappers and `bin/` scripts can invoke java |
 | Unique JRE `CFBundleIdentifier` | Apple rejects `--deep` signing with duplicate nested bundle IDs |
 | `bin/` and `examples/` added after signing | Outside any `.app` bundle; cannot affect bundle seals |
 | UDRW → UDZO two-phase DMG | AppleScript Finder layout requires a writable mount |
