@@ -746,46 +746,16 @@ public class PackageManager {
         	skippedDirs = stillSkippedDirs;
         }
 
-        // Re-run addInstalledPackages() so that packages loaded via plugin layers in the steps
-        // above are reflected in the package map before the dependency check below.
+        // Re-run addInstalledPackages() so that any packages installed from the queued
+        // install list (processInstallList) above are reflected in the package map before
+        // the dependency check below.
         addInstalledPackages(packages);
 
-        // Safety net: if BEAST.app is still somehow not marked installed (e.g. a broken
-        // distribution where BeastLauncher did not bootstrap it into ~/.beast/2.8/), attempt
-        // a one-time network auto-install. Under normal deployment this block is never entered
-        // because addInstalledPackages() always marks BEAST.app installed synthetically.
-        Exception autoInstallFailure = null;
-        Package beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
-            try {
-                addAvailablePackages(packages);
-                beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-                if (beastAppPkg != null && beastAppPkg.isAvailable()) {
-                    Map<Package, PackageVersion> toInstall = new HashMap<>();
-                    toInstall.put(beastAppPkg, beastAppPkg.getLatestVersion());
-                    installPackages(toInstall, false, null);
-                    addInstalledPackages(packages);   // refresh map with newly installed package
-                    beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-                }
-            } catch (Exception e) {
-                autoInstallFailure = e;
-                System.err.println("Warning: could not auto-install " + BEAST_APP_PACKAGE_NAME + ": " + e);
-            }
-        }
-
-        // Dependency check runs here — after all Maven and ZIP packages are loaded, all plugin
-        // layers are registered, and addInstalledPackages() has been re-run — so the package map
-        // is complete. Running earlier would flag valid dependencies as missing. Placed before the
-        // BEAST.app hard-fail so all dependency warnings are visible even in a broken installation.
+        // Dependency check runs here -- after all Maven and ZIP packages are loaded and all
+        // plugin layers are registered -- so the package map is complete. Running it earlier
+        // would flag valid dependencies (resolved via plugin layers) as missing.
         Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
         checkInstalledDependencies(packages);
-
-        // Hard-fail after dependency check so all warnings are visible first.
-        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
-            throw new RuntimeException(BEAST_APP_PACKAGE_NAME + " is required but is not installed "
-                + "and could not be auto-installed. Run: packagemanager -add " + BEAST_APP_PACKAGE_NAME,
-                autoInstallFailure);
-        }
 
         externalJarsLoaded = true;
     	Utils6.logToSplashScreen("PackageManager::Done");
