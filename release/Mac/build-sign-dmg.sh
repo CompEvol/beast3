@@ -169,6 +169,14 @@ find "$REPO_ROOT/beast-fx/target/lib" -name "*.jar" \
     ! -name "javafx-*" ! -name "jdk-jsobject-*" \
     -exec cp {} "$STAGING/" \;
 
+# Move the core BEAST modules (beast.base, beast.fx) off the boot module path:
+# they ship as user-installable packages (bundled below, seeded into the user
+# package dir on first run, and loaded as plugin module layers) so the package
+# manager can upgrade them in place. The launcher (beast-pkgmgmt) and the
+# third-party dependencies stay on the boot module path; JavaFX is provided by
+# the bundled Zulu JRE+FX as platform modules.
+rm -f "$STAGING"/beast-base-*.jar "$STAGING"/beast-fx-*.jar
+
 # Verify main JAR is present
 if [ ! -f "$STAGING/$MAIN_JAR" ]; then
     echo "ERROR: Main JAR not found in staging: $MAIN_JAR"
@@ -226,6 +234,26 @@ chmod u+x "$RUNTIME_HOME/bin/java"
 echo "    Copied java binary from JRE+FX into runtime."
 
 echo "    BEAST.app created."
+
+# ── Bundle core package zips for first-run seeding ───────────────────────────
+# BEAST.base and BEAST.app ship as full package zips inside the app image
+# (Contents/app/packages/) rather than on the boot module path. On first launch
+# BeastLauncher.seedBundledPackage() extracts them into the user package dir, where
+# they load as plugin module layers, so the package manager can upgrade them in
+# place. Placed after jpackage so codesign seals them, in a subdirectory kept out
+# of the module path.
+APP_DIR_IN_BUNDLE="$OUTPUT/BEAST.app/Contents/app"
+mkdir -p "$APP_DIR_IN_BUNDLE/packages"
+BASE_PKG_ZIP=$(find "$REPO_ROOT/beast-base/target" -maxdepth 1 -name "BEAST.base.package.v*.zip" | head -1)
+APP_PKG_ZIP=$(find "$REPO_ROOT/beast-fx/target" -maxdepth 1 -name "BEAST.app.package.v*.zip" | head -1)
+for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
+    if [ -z "$PKG_ZIP" ]; then
+        echo "ERROR: a core package zip was not found (run 'mvn package' first)"
+        exit 1
+    fi
+    cp "$PKG_ZIP" "$APP_DIR_IN_BUNDLE/packages/"
+    echo "    Bundled $(basename "$PKG_ZIP") into Contents/app/packages/"
+done
 
 
 

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Bootstrap launcher for BEAST.
@@ -189,6 +191,128 @@ public class BeastLauncher {
 		}
 	}
 
+	/**
+	 * Seed a bundled core package (e.g. BEAST.base, BEAST.app) into the user
+	 * package directory. The application bundle ships these as full package zips
+	 * under {@code <app dir>/packages/}. On first run -- or whenever the bundled
+	 * version is newer than the copy already in the user dir -- the zip is
+	 * extracted into {@code <user package dir>/<packageName>/}. A user copy that
+	 * is the same or newer (e.g. an in-place upgrade applied by the package
+	 * manager) is left untouched, so upgrades survive application relaunches.
+	 *
+	 * @return true if a bundled package zip was found and handled (callers can
+	 *         then skip the legacy single-jar seeding); false if no bundled zip
+	 *         exists (e.g. running from an IDE or a developer build).
+	 */
+	static boolean seedBundledPackage(String packageName) {
+		pathDelimiter = isWindows() ? "\\\\" : "/";
+		try {
+			File bundledZip = findBundledPackageZip(packageName);
+			if (bundledZip == null) {
+				return false;
+			}
+			double bundledVersion = parseVersion(readVersionFromZip(bundledZip));
+
+			File pkgDir = new File(getPackageUserDir() + pathDelimiter + packageName);
+			File userVersionFile = new File(pkgDir, "version.xml");
+			if (userVersionFile.exists()) {
+				double userVersion = parseVersion(readVersion(new FileReader(userVersionFile)));
+				if (userVersion >= bundledVersion) {
+					// user dir already holds a same-or-newer copy -- keep it
+					return true;
+				}
+				// bundled copy is newer (app was updated): replace the stale lib
+				File libDir = new File(pkgDir, "lib");
+				if (libDir.exists()) {
+					deleteDir(libDir);
+				}
+			}
+
+			if (!pkgDir.exists() && !pkgDir.mkdirs()) {
+				return false;
+			}
+			PackageManager.doUnzip(bundledZip.getAbsolutePath(), pkgDir.getAbsolutePath());
+			return true;
+		} catch (Exception e) {
+			// never let seeding hold up launch of BEAST & friends
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/**
+	 * Locate a bundled package zip (named {@code <packageName>.package*.zip}) by
+	 * walking up from the launcher jar looking for a {@code packages} directory.
+	 * Returns null when none is found (developer/IDE runs).
+	 */
+	static private File findBundledPackageZip(String packageName) throws UnsupportedEncodingException {
+		BeastLauncher clu = new BeastLauncher();
+		String launcherJar = clu.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		launcherJar = URLDecoder.decode(launcherJar, "UTF-8");
+		File dir = new File(launcherJar).getParentFile();
+		while (dir != null) {
+			File packagesDir = new File(dir, "packages");
+			if (packagesDir.isDirectory()) {
+				File[] matches = packagesDir.listFiles((d, name) ->
+						name.startsWith(packageName + ".package") && name.endsWith(".zip"));
+				if (matches != null && matches.length > 0) {
+					return matches[0];
+				}
+			}
+			dir = dir.getParentFile();
+		}
+		return null;
+	}
+
+	/** Read the version="x.y.z" attribute from a package zip's version.xml entry. */
+	static private String readVersionFromZip(File zip) throws IOException {
+		try (ZipFile zf = new ZipFile(zip)) {
+			ZipEntry entry = zf.getEntry("version.xml");
+			if (entry == null) {
+				return "0.0.0";
+			}
+			return readVersion(new InputStreamReader(zf.getInputStream(entry)));
+		}
+	}
+
+	/** Extract the value of the first version="..." (or version='...') attribute. */
+	static private String readVersion(Reader reader) throws IOException {
+		StringBuilder buf = new StringBuilder();
+		try (BufferedReader fin = new BufferedReader(reader)) {
+			String line;
+			while ((line = fin.readLine()) != null) {
+				buf.append(line).append(' ');
+				if (buf.indexOf("version=") >= 0) {
+					break;
+				}
+			}
+		}
+		String s = buf.toString();
+		int start = s.indexOf("version=");
+		if (start < 0) {
+			return "0.0.0";
+		}
+		char quote = s.charAt(start + 8);
+		int from = start + 9;
+		int end = s.indexOf(quote, from);
+		return end < 0 ? "0.0.0" : s.substring(from, end);
+	}
+
+	/** Recursively delete a directory tree. */
+	static private void deleteDir(File dir) {
+		File[] files = dir.listFiles();
+		if (files != null) {
+			for (File f : files) {
+				if (f.isDirectory()) {
+					deleteDir(f);
+				} else {
+					f.delete();
+				}
+			}
+		}
+		dir.delete();
+	}
+
 	private static boolean checkForBEAST(File jarDir, String packageName) throws IOException {
 		//System.err.println("Checking out " + jarDir.getAbsolutePath());
 		boolean foundOne = false;
@@ -311,8 +435,16 @@ public class BeastLauncher {
 	 * @return Class path string for main BEAST process, enclosed in literal quotes.
 	 */
 	public static String getPath(boolean useStrictVersions, String beastFile) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
-		installBEASTPackage("BEAST.base", false);
-		installBEASTPackage("BEAST.app", false);
+		// Seed the bundled core packages into the user package dir. In an installed
+		// application these extract <app>/packages/<pkg>.package*.zip so the package
+		// manager can upgrade them in place; in developer/IDE runs no bundled zip
+		// exists, so fall back to the legacy single-jar seeding.
+		if (!seedBundledPackage("BEAST.base")) {
+			installBEASTPackage("BEAST.base", false);
+		}
+		if (!seedBundledPackage("BEAST.app")) {
+			installBEASTPackage("BEAST.app", false);
+		}
 		PackageManager.initialise();
 
 
