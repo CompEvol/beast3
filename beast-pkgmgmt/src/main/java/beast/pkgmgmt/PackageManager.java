@@ -924,14 +924,20 @@ public class PackageManager {
 			String packageVersion, String description) {
 		try {
 			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
-			ModuleLayer parent = ModuleLayer.boot();
-			Set<String> availableModules = parent.modules().stream()
+
+			// Parents for the new layer: the boot layer plus every previously
+			// registered plugin layer, so a package can read modules provided by
+			// other packages (e.g. beast.fx -> beast.base once the core modules
+			// leave the boot layer). The skip/retry loop in loadExternalJars loads
+			// dependencies before their dependents.
+			List<ModuleLayer> parentLayers = new ArrayList<>();
+			parentLayers.add(ModuleLayer.boot());
+			parentLayers.addAll(BEASTClassLoader.getPluginLayers());
+
+			Set<String> availableModules = parentLayers.stream()
+				.flatMap(l -> l.modules().stream())
 				.map(Module::getName)
 				.collect(Collectors.toCollection(HashSet::new));
-			// Also include modules from already-loaded plugin layers
-			for (ModuleLayer layer : BEASTClassLoader.getPluginLayers()) {
-				layer.modules().stream().map(Module::getName).forEach(availableModules::add);
-			}
 
 			// Collect candidate modules (not already loaded)
 			Set<String> candidates = finder.findAll().stream()
@@ -990,10 +996,13 @@ public class PackageManager {
 				.toList();
 
 			ModuleFinder filteredFinder = ModuleFinder.of(resolvableJars.toArray(Path[]::new));
-			Configuration config = parent.configuration()
-				.resolveAndBind(filteredFinder, ModuleFinder.of(), resolvable);
-			ModuleLayer layer = parent.defineModulesWithOneLoader(
-				config, ClassLoader.getSystemClassLoader());
+			List<Configuration> parentConfigs = parentLayers.stream()
+				.map(ModuleLayer::configuration)
+				.collect(Collectors.toList());
+			Configuration config = Configuration.resolveAndBind(
+				filteredFinder, parentConfigs, ModuleFinder.of(), resolvable);
+			ModuleLayer layer = ModuleLayer.defineModulesWithOneLoader(
+				config, parentLayers, ClassLoader.getSystemClassLoader()).layer();
 			BEASTClassLoader.registerPluginLayer(layer, services);
 			return skipped.isEmpty();
 		} catch (Exception e) {
