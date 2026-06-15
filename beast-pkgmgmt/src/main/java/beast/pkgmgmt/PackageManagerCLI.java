@@ -25,8 +25,11 @@
 
 package beast.pkgmgmt;
 
-import java.io.*;
-import java.net.*;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -97,9 +100,12 @@ public class PackageManagerCLI {
         ps.println();
 
 
-        // Print formatted package information
+        // Print core packages (BEAST.base and BEAST.app) pinned above the separator line.
+        // Both are treated as co-core: always present in a full deployment and sorted first
+        // by comparePackageNames(), so they are displayed together as a pair.
         for (Package pkg : packageList) {
-        	if (pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME)) {
+        	if (pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME) ||
+        	    pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
         		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : "NA"); ps.print(sep);
 		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
@@ -111,9 +117,10 @@ public class PackageManagerCLI {
             ps.print("-");
         ps.println();
 
-        // Print formatted package information
+        // Print all other (third-party) packages below the separator line.
         for (Package pkg : packageList) {
-        	if (!pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME)) {
+        	if (!pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME) &&
+        	    !pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
 	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() :
 	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);

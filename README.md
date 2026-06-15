@@ -98,7 +98,7 @@ From within the beast3 directory, you can also use the `exec-maven-plugin`:
 mvn install -DskipTests
 
 # Run BEAST on an XML file (paths are relative to the project root)
-mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/examples/testHKY.xml"
+mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/beast.base/examples/testHKY.xml"
 
 # Run BEAST on an XML file with other args
 # Note: XML <run> tag must have chainLength="$(chainLength=5000000)" to make -D working

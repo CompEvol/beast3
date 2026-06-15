@@ -1,7 +1,7 @@
 package beast.pkgmgmt.launcher;
 
-import beast.pkgmgmt.Package;
 import beast.pkgmgmt.*;
+import beast.pkgmgmt.Package;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -312,6 +312,7 @@ public class BeastLauncher {
 	 */
 	public static String getPath(boolean useStrictVersions, String beastFile) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
 		installBEASTPackage("BEAST.base", false);
+		installBEASTPackage("BEAST.app", false);
 		PackageManager.initialise();
 
 

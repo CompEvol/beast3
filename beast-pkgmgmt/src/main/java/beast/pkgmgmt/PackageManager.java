@@ -31,9 +31,6 @@
 package beast.pkgmgmt;
 
 
-
-
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -41,35 +38,62 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.xml.parsers.DocumentBuilder;
+import javax.swing.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import java.io.*;
 import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.net.*;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
- * This class is used to manage beast 2 packages, and can
- * - install a new package
- * - un-install an package
- * - list directories that may contain packages
- * - load jars from installed packages
- * - discover classes in packages that implement a certain interface or a derived from a certain class
+ * Manages the full lifecycle of BEAST 2 packages.
+ *
+ * <p><b>Two deployment modes</b> govern how packages are loaded at startup:
+ * <ul>
+ *   <li><b>Developer mode (Maven)</b> — packages are resolved directly from the Maven build.
+ *       Example: {@code mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/examples/testHKY.xml"}.
+ *       In this mode the JPMS modules ({@code beast.base}, {@code beast.fx}, etc.) are already
+ *       in the boot layer, so no files are copied to disk. {@link #addInstalledPackages}
+ *       recognises this and marks {@code BEAST.base} and {@code BEAST.app} as installed
+ *       synthetically without requiring a {@code version.xml} on disk.</li>
+ *   <li><b>User mode (release)</b> — packages are loaded from the user package directory,
+ *       typically {@code ~/.beast/2.8/}. {@code BeastLauncher.getPath()} bootstraps
+ *       {@code BEAST.base} and {@code BEAST.app} into that directory from the app bundle before
+ *       {@link #loadExternalJarsEvenIfAlreadyLoaded} is called, so their {@code version.xml}
+ *       files are present on disk and picked up by the normal scan.</li>
+ * </ul>
+ *
+ * <p><b>Installation</b> ({@code packagemanager -add NAME}): resolves transitive dependencies,
+ * removes any conflicting installed version, downloads and extracts the package ZIP into the
+ * target directory ({@code ~/.beast/2.8/} by default), and verifies there are no service
+ * namespace collisions. See {@link #installPackages} and {@link PackageInstaller#getPackageDir}.
+ *
+ * <p><b>Startup loading</b> ({@link #loadExternalJarsEvenIfAlreadyLoaded}): scans
+ * {@link #getBeastDirectories} for installed packages, loads Maven packages first, then legacy
+ * ZIP packages, each into a new JPMS {@link ModuleLayer} via
+ * {@link #createAndRegisterModuleLayer}. A retry loop resolves inter-package JPMS dependencies
+ * regardless of directory order. Dependency checking runs after all loading is complete.
+ *
+ * <p><b>Core packages</b>: {@code BEAST.base} and {@code BEAST.app} are always marked as
+ * installed in the package map — either from a {@code version.xml} found on disk or
+ * synthetically at the current runtime version — so that third-party packages declaring
+ * dependencies on them are resolved correctly in both deployment modes.
+ * See {@link #addInstalledPackages}.
+ *
+ * <p><b>Services</b>: each {@code version.xml} declares service-to-implementation mappings
+ * parsed by {@link #parseServices} and stored in {@link BEASTClassLoader}.
+ *
+ * <p><b>Class discovery</b>: {@link #find(Class, String)} locates all non-abstract
+ * implementations of a class or interface visible on the JVM classpath.
  */
 // TODO: on windows allow installation on drive D: and pick up add-ons in drive C:
 public class PackageManager {
@@ -86,6 +110,10 @@ public class PackageManager {
     
     public final static String BEAST_PACKAGE_NAME = "BEAST";
     public final static String BEAST_BASE_PACKAGE_NAME = "BEAST.base";
+    // BEAST.app co-ships with every BEAST distribution alongside BEAST.base.
+    // addInstalledPackages() always marks it as installed synthetically so that
+    // DependencyResolver never treats it as a missing or unresolvable dependency.
+    public final static String BEAST_APP_PACKAGE_NAME = "BEAST.app";
 
     public final static String PACKAGES_XML = PackageRepository.PACKAGES_XML;
     public final static String PACKAGES_XML_BACKUP = PackageRepository.PACKAGES_XML_BACKUP;
@@ -250,6 +278,24 @@ public class PackageManager {
             PackageVersion beastPkgVersion = new PackageVersion(beastVersion.getVersion());
             Set<PackageDependency> beastPkgDeps = new TreeSet<PackageDependency>();
             beastPkg.setInstalled(beastPkgVersion, beastPkgDeps);
+        }
+
+        // Register BEAST.app and mark it installed synthetically, exactly like BEAST.base above.
+        // BEAST.app co-ships with every BEAST distribution (Maven build and release bundle) so it
+        // is always present on the runtime classpath. If a real version.xml was found on disk by
+        // the scan above, setInstalled() is already set and this block is a no-op. Otherwise the
+        // synthetic version prevents DependencyResolver from reporting BEAST.app as missing.
+        // BeastLauncher.getPath() ensures the physical files land in ~/.beast/2.8/BEAST.app/ via
+        // installBEASTPackage("BEAST.app", false) before PackageManager.initialise() is called.
+        Package beastAppPkg;
+        if (packageMap.containsKey(BEAST_APP_PACKAGE_NAME)) {
+            beastAppPkg = packageMap.get(BEAST_APP_PACKAGE_NAME);
+        } else {
+            beastAppPkg = new Package(BEAST_APP_PACKAGE_NAME);
+            packageMap.put(BEAST_APP_PACKAGE_NAME, beastAppPkg);
+        }
+        if (!beastAppPkg.isInstalled()) {
+            beastAppPkg.setInstalled(new PackageVersion(beastVersion.getVersion()), new TreeSet<>());
         }
 
     }
@@ -607,8 +653,10 @@ public class PackageManager {
     	Utils6.logToSplashScreen("PackageManager::processInstallList");
         processInstallList(packages);
 
-    	Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
-        checkInstalledDependencies(packages);
+        // checkInstalledDependencies() is intentionally deferred to after all packages are
+        // loaded (see end of this method). Running it here — before loadMavenPackages() and
+        // loadPackage() — would check dependencies against an incomplete package map, causing
+        // false warnings for packages whose dependencies arrive via plugin layers.
 
         // Log BEAST-related modules already in the boot layer:
         // core beast.* modules plus any module that requires one of them
@@ -696,6 +744,47 @@ public class PackageManager {
         		}
         	}
         	skippedDirs = stillSkippedDirs;
+        }
+
+        // Re-run addInstalledPackages() so that packages loaded via plugin layers in the steps
+        // above are reflected in the package map before the dependency check below.
+        addInstalledPackages(packages);
+
+        // Safety net: if BEAST.app is still somehow not marked installed (e.g. a broken
+        // distribution where BeastLauncher did not bootstrap it into ~/.beast/2.8/), attempt
+        // a one-time network auto-install. Under normal deployment this block is never entered
+        // because addInstalledPackages() always marks BEAST.app installed synthetically.
+        Exception autoInstallFailure = null;
+        Package beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
+        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
+            try {
+                addAvailablePackages(packages);
+                beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
+                if (beastAppPkg != null && beastAppPkg.isAvailable()) {
+                    Map<Package, PackageVersion> toInstall = new HashMap<>();
+                    toInstall.put(beastAppPkg, beastAppPkg.getLatestVersion());
+                    installPackages(toInstall, false, null);
+                    addInstalledPackages(packages);   // refresh map with newly installed package
+                    beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
+                }
+            } catch (Exception e) {
+                autoInstallFailure = e;
+                System.err.println("Warning: could not auto-install " + BEAST_APP_PACKAGE_NAME + ": " + e);
+            }
+        }
+
+        // Dependency check runs here — after all Maven and ZIP packages are loaded, all plugin
+        // layers are registered, and addInstalledPackages() has been re-run — so the package map
+        // is complete. Running earlier would flag valid dependencies as missing. Placed before the
+        // BEAST.app hard-fail so all dependency warnings are visible even in a broken installation.
+        Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
+        checkInstalledDependencies(packages);
+
+        // Hard-fail after dependency check so all warnings are visible first.
+        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
+            throw new RuntimeException(BEAST_APP_PACKAGE_NAME + " is required but is not installed "
+                + "and could not be auto-installed. Run: packagemanager -add " + BEAST_APP_PACKAGE_NAME,
+                autoInstallFailure);
         }
 
         externalJarsLoaded = true;
@@ -1639,7 +1728,7 @@ public class PackageManager {
         PackageManagerCLI.main(args);
     }
 
-    /** Compare package names, putting BEAST.base in front, then alphabetical ignoring case. */
+    /** Compare package names: BEAST.base first, BEAST.app second, then alphabetical. */
 	public static int comparePackageNames(String s1, String s2) {
     	if (s1.equals(BEAST_BASE_PACKAGE_NAME)) {
     		if (s2.equals(BEAST_BASE_PACKAGE_NAME)) {
@@ -1648,6 +1737,16 @@ public class PackageManager {
     		return -1;
     	}
     	if (s2.equals(BEAST_BASE_PACKAGE_NAME)) {
+    		return 1;
+    	}
+    	// BEAST.app sorts immediately after BEAST.base to reflect its co-core status.
+    	if (s1.equals(BEAST_APP_PACKAGE_NAME)) {
+    		if (s2.equals(BEAST_APP_PACKAGE_NAME)) {
+    			return 0;
+    		}
+    		return -1;
+    	}
+    	if (s2.equals(BEAST_APP_PACKAGE_NAME)) {
     		return 1;
     	}
     	return s1.toLowerCase().compareTo(s2.toLowerCase());
