@@ -1,0 +1,33 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
+    <!-- Builds the installable BEAST.base package zip:
+           version.xml          (the BEAST.base package descriptor, at repo root)
+           lib/beast-base.jar    + its third-party runtime dependencies
+         beast-pkgmgmt is excluded: it is the bootstrap/launcher and is always
+         provided by the core distribution, so bundling it here would duplicate
+         the beast.pkgmgmt module on the module path. -->
+    <id>package</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <files>
+        <file>
+            <source>${project.basedir}/../version.xml</source>
+            <outputDirectory>.</outputDirectory>
+        </file>
+    </files>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <scope>runtime</scope>
+            <excludes>
+                <exclude>io.github.compevol:beast-pkgmgmt</exclude>
+            </excludes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

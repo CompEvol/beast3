@@ -1,0 +1,40 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
+    <!-- Builds the installable BEAST.app package zip:
+           version.xml          (the BEAST.app package descriptor)
+           lib/beast-fx.jar      + JavaFX modules only
+         beast-base, beast-pkgmgmt and base's third-party deps (commons, beagle,
+         antlr) are deliberately NOT bundled: BEAST.app <depends on="BEAST.base">,
+         so those are provided by the BEAST.base package / bootstrap. Only JavaFX,
+         which is unique to the FX layer, is shipped alongside beast-fx.jar.
+
+         NOTE: org.openjfx artifacts are platform-classified. A zip built on one
+         OS carries that OS's JavaFX natives. Cross-platform distribution needs a
+         per-platform packaging strategy (or bundling all classifiers) - tracked
+         separately. -->
+    <id>package</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <files>
+        <file>
+            <source>${project.basedir}/version.xml</source>
+            <outputDirectory>.</outputDirectory>
+        </file>
+    </files>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <scope>runtime</scope>
+            <includes>
+                <include>io.github.compevol:beast-fx</include>
+                <include>org.openjfx:*</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>
