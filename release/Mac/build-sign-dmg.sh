@@ -219,9 +219,14 @@ sed -i '' '/^app\.classpath/d' "$BEAST_CFG"
 sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher|' "$BEAST_CFG"
 # The native launcher resolves $APPDIR to the app/ directory at runtime.
 # Use = syntax because each java-options line is passed as a single JVM argument.
+# JavaFX and jdk.jsobject are added explicitly: beast.fx (which requires them) is no
+# longer on the boot module path, so nothing else pulls them out of the bundled
+# JRE+FX. Naming them here resolves them into the boot layer, where the beast.fx
+# plugin module layer reads them. Their transitive requires (javafx.graphics/base/
+# media) come along automatically.
 sed -i '' '/^\[JavaOptions\]/a\
 java-options=--module-path=\$APPDIR\
-java-options=--add-modules=ALL-MODULE-PATH
+java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject
 ' "$BEAST_CFG"
 
 # jpackage may strip bin/java from the bundled runtime (it uses its own native

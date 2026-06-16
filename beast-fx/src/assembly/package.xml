@@ -3,16 +3,18 @@
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
     <!-- Builds the installable BEAST.app package zip:
            version.xml          (the BEAST.app package descriptor)
-           lib/beast-fx.jar      + JavaFX modules only
-         beast-base, beast-pkgmgmt and base's third-party deps (commons, beagle,
-         antlr) are deliberately NOT bundled: BEAST.app <depends on="BEAST.base">,
-         so those are provided by the BEAST.base package / bootstrap. Only JavaFX,
-         which is unique to the FX layer, is shipped alongside beast-fx.jar.
+           lib/beast-fx.jar
+         Only beast-fx.jar is bundled. Its dependencies are provided at runtime:
+         beast-base (the BEAST.base package), beast-pkgmgmt (the bootstrap), and
+         JavaFX + jdk.jsobject (the bundled JRE+FX, resolved into the boot layer).
 
-         NOTE: org.openjfx artifacts are platform-classified. A zip built on one
-         OS carries that OS's JavaFX natives. Cross-platform distribution needs a
-         per-platform packaging strategy (or bundling all classifiers) - tracked
-         separately. -->
+         JavaFX is deliberately NOT bundled here: Maven resolves both the empty
+         automatic-module jars (e.g. javafx-graphics-25.0.2.jar) and the
+         platform-classified jars, and the empty ones fail module resolution
+         ("javafx.graphics not found"). In the app image JavaFX already comes from
+         the JRE+FX, so bundling it is redundant as well as broken.
+         NOTE: a standalone/CBAN install on a plain JRE (no FX) will need JavaFX
+         provided separately - tracked with the per-platform packaging work. -->
     <id>package</id>
     <formats>
         <format>zip</format>
@@ -33,7 +35,6 @@
             <scope>runtime</scope>
             <includes>
                 <include>io.github.compevol:beast-fx</include>
-                <include>org.openjfx:*</include>
             </includes>
         </dependencySet>
     </dependencySets>
