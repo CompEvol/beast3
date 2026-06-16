@@ -44,11 +44,11 @@ else
 fi
 
 if [ -n "$BEAST_EXTRA_LIBS" ]; then
-  exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH \
+  exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \
       -Xss256m -Xmx8g -Djava.library.path="$BEAST_EXTRA_LIBS" -Duser.language=en -Dfile.encoding=UTF-8 \
       -m beast.pkgmgmt/beast.pkgmgmt.launcher.AppLauncherLauncher beastfx.app.tools.LogAnalyser "$@"
 else
-  exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH \
+  exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \
       -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \
       -m beast.pkgmgmt/beast.pkgmgmt.launcher.AppLauncherLauncher beastfx.app.tools.LogAnalyser "$@"
 fi

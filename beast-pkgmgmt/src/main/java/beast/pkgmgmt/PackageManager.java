@@ -746,46 +746,16 @@ public class PackageManager {
         	skippedDirs = stillSkippedDirs;
         }
 
-        // Re-run addInstalledPackages() so that packages loaded via plugin layers in the steps
-        // above are reflected in the package map before the dependency check below.
+        // Re-run addInstalledPackages() so that any packages installed from the queued
+        // install list (processInstallList) above are reflected in the package map before
+        // the dependency check below.
         addInstalledPackages(packages);
 
-        // Safety net: if BEAST.app is still somehow not marked installed (e.g. a broken
-        // distribution where BeastLauncher did not bootstrap it into ~/.beast/2.8/), attempt
-        // a one-time network auto-install. Under normal deployment this block is never entered
-        // because addInstalledPackages() always marks BEAST.app installed synthetically.
-        Exception autoInstallFailure = null;
-        Package beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
-            try {
-                addAvailablePackages(packages);
-                beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-                if (beastAppPkg != null && beastAppPkg.isAvailable()) {
-                    Map<Package, PackageVersion> toInstall = new HashMap<>();
-                    toInstall.put(beastAppPkg, beastAppPkg.getLatestVersion());
-                    installPackages(toInstall, false, null);
-                    addInstalledPackages(packages);   // refresh map with newly installed package
-                    beastAppPkg = packages.get(BEAST_APP_PACKAGE_NAME);
-                }
-            } catch (Exception e) {
-                autoInstallFailure = e;
-                System.err.println("Warning: could not auto-install " + BEAST_APP_PACKAGE_NAME + ": " + e);
-            }
-        }
-
-        // Dependency check runs here — after all Maven and ZIP packages are loaded, all plugin
-        // layers are registered, and addInstalledPackages() has been re-run — so the package map
-        // is complete. Running earlier would flag valid dependencies as missing. Placed before the
-        // BEAST.app hard-fail so all dependency warnings are visible even in a broken installation.
+        // Dependency check runs here -- after all Maven and ZIP packages are loaded and all
+        // plugin layers are registered -- so the package map is complete. Running it earlier
+        // would flag valid dependencies (resolved via plugin layers) as missing.
         Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
         checkInstalledDependencies(packages);
-
-        // Hard-fail after dependency check so all warnings are visible first.
-        if (beastAppPkg == null || !beastAppPkg.isInstalled()) {
-            throw new RuntimeException(BEAST_APP_PACKAGE_NAME + " is required but is not installed "
-                + "and could not be auto-installed. Run: packagemanager -add " + BEAST_APP_PACKAGE_NAME,
-                autoInstallFailure);
-        }
 
         externalJarsLoaded = true;
     	Utils6.logToSplashScreen("PackageManager::Done");
@@ -924,14 +894,20 @@ public class PackageManager {
 			String packageVersion, String description) {
 		try {
 			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
-			ModuleLayer parent = ModuleLayer.boot();
-			Set<String> availableModules = parent.modules().stream()
+
+			// Parents for the new layer: the boot layer plus every previously
+			// registered plugin layer, so a package can read modules provided by
+			// other packages (e.g. beast.fx -> beast.base once the core modules
+			// leave the boot layer). The skip/retry loop in loadExternalJars loads
+			// dependencies before their dependents.
+			List<ModuleLayer> parentLayers = new ArrayList<>();
+			parentLayers.add(ModuleLayer.boot());
+			parentLayers.addAll(BEASTClassLoader.getPluginLayers());
+
+			Set<String> availableModules = parentLayers.stream()
+				.flatMap(l -> l.modules().stream())
 				.map(Module::getName)
 				.collect(Collectors.toCollection(HashSet::new));
-			// Also include modules from already-loaded plugin layers
-			for (ModuleLayer layer : BEASTClassLoader.getPluginLayers()) {
-				layer.modules().stream().map(Module::getName).forEach(availableModules::add);
-			}
 
 			// Collect candidate modules (not already loaded)
 			Set<String> candidates = finder.findAll().stream()
@@ -990,10 +966,13 @@ public class PackageManager {
 				.toList();
 
 			ModuleFinder filteredFinder = ModuleFinder.of(resolvableJars.toArray(Path[]::new));
-			Configuration config = parent.configuration()
-				.resolveAndBind(filteredFinder, ModuleFinder.of(), resolvable);
-			ModuleLayer layer = parent.defineModulesWithOneLoader(
-				config, ClassLoader.getSystemClassLoader());
+			List<Configuration> parentConfigs = parentLayers.stream()
+				.map(ModuleLayer::configuration)
+				.collect(Collectors.toList());
+			Configuration config = Configuration.resolveAndBind(
+				filteredFinder, parentConfigs, ModuleFinder.of(), resolvable);
+			ModuleLayer layer = ModuleLayer.defineModulesWithOneLoader(
+				config, parentLayers, ClassLoader.getSystemClassLoader()).layer();
 			BEASTClassLoader.registerPluginLayer(layer, services);
 			return skipped.isEmpty();
 		} catch (Exception e) {

@@ -1,0 +1,41 @@
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.1"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
+    <!-- Builds the installable BEAST.app package zip:
+           version.xml          (the BEAST.app package descriptor)
+           lib/beast-fx.jar
+         Only beast-fx.jar is bundled. Its dependencies are provided at runtime:
+         beast-base (the BEAST.base package), beast-pkgmgmt (the bootstrap), and
+         JavaFX + jdk.jsobject (the bundled JRE+FX, resolved into the boot layer).
+
+         JavaFX is deliberately NOT bundled here: Maven resolves both the empty
+         automatic-module jars (e.g. javafx-graphics-25.0.2.jar) and the
+         platform-classified jars, and the empty ones fail module resolution
+         ("javafx.graphics not found"). In the app image JavaFX already comes from
+         the JRE+FX, so bundling it is redundant as well as broken.
+         NOTE: a standalone/CBAN install on a plain JRE (no FX) will need JavaFX
+         provided separately - tracked with the per-platform packaging work. -->
+    <id>package</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <files>
+        <file>
+            <source>${project.basedir}/version.xml</source>
+            <outputDirectory>.</outputDirectory>
+        </file>
+    </files>
+
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>lib</outputDirectory>
+            <useProjectArtifact>true</useProjectArtifact>
+            <scope>runtime</scope>
+            <includes>
+                <include>io.github.compevol:beast-fx</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>

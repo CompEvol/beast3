@@ -169,6 +169,14 @@ find "$REPO_ROOT/beast-fx/target/lib" -name "*.jar" \
     ! -name "javafx-*" ! -name "jdk-jsobject-*" \
     -exec cp {} "$STAGING/" \;
 
+# Move the core BEAST modules (beast.base, beast.fx) off the boot module path:
+# they ship as user-installable packages (bundled below, seeded into the user
+# package dir on first run, and loaded as plugin module layers) so the package
+# manager can upgrade them in place. The launcher (beast-pkgmgmt) and the
+# third-party dependencies stay on the boot module path; JavaFX is provided by
+# the bundled Zulu JRE+FX as platform modules.
+rm -f "$STAGING"/beast-base-*.jar "$STAGING"/beast-fx-*.jar
+
 # Verify main JAR is present
 if [ ! -f "$STAGING/$MAIN_JAR" ]; then
     echo "ERROR: Main JAR not found in staging: $MAIN_JAR"
@@ -211,9 +219,14 @@ sed -i '' '/^app\.classpath/d' "$BEAST_CFG"
 sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher|' "$BEAST_CFG"
 # The native launcher resolves $APPDIR to the app/ directory at runtime.
 # Use = syntax because each java-options line is passed as a single JVM argument.
+# JavaFX and jdk.jsobject are added explicitly: beast.fx (which requires them) is no
+# longer on the boot module path, so nothing else pulls them out of the bundled
+# JRE+FX. Naming them here resolves them into the boot layer, where the beast.fx
+# plugin module layer reads them. Their transitive requires (javafx.graphics/base/
+# media) come along automatically.
 sed -i '' '/^\[JavaOptions\]/a\
 java-options=--module-path=\$APPDIR\
-java-options=--add-modules=ALL-MODULE-PATH
+java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject
 ' "$BEAST_CFG"
 
 # jpackage may strip bin/java from the bundled runtime (it uses its own native
@@ -226,6 +239,26 @@ chmod u+x "$RUNTIME_HOME/bin/java"
 echo "    Copied java binary from JRE+FX into runtime."
 
 echo "    BEAST.app created."
+
+# ── Bundle core package zips for first-run seeding ───────────────────────────
+# BEAST.base and BEAST.app ship as full package zips inside the app image
+# (Contents/app/packages/) rather than on the boot module path. On first launch
+# BeastLauncher.seedBundledPackage() extracts them into the user package dir, where
+# they load as plugin module layers, so the package manager can upgrade them in
+# place. Placed after jpackage so codesign seals them, in a subdirectory kept out
+# of the module path.
+APP_DIR_IN_BUNDLE="$OUTPUT/BEAST.app/Contents/app"
+mkdir -p "$APP_DIR_IN_BUNDLE/packages"
+BASE_PKG_ZIP=$(find "$REPO_ROOT/beast-base/target" -maxdepth 1 -name "BEAST.base.package.v*.zip" | head -1)
+APP_PKG_ZIP=$(find "$REPO_ROOT/beast-fx/target" -maxdepth 1 -name "BEAST.app.package.v*.zip" | head -1)
+for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
+    if [ -z "$PKG_ZIP" ]; then
+        echo "ERROR: a core package zip was not found (run 'mvn package' first)"
+        exit 1
+    fi
+    cp "$PKG_ZIP" "$APP_DIR_IN_BUNDLE/packages/"
+    echo "    Bundled $(basename "$PKG_ZIP") into Contents/app/packages/"
+done
 
 
 
@@ -249,17 +282,25 @@ build_wrapper_app() {
     # ── Launcher shell script ──
     # Derive the module/class from the fully qualified main class
     # e.g. beast.pkgmgmt.launcher.BeautiLauncher → -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeautiLauncher
+    #
+    # --add-modules MUST name javafx.* and jdk.jsobject explicitly, exactly as
+    # BEAST.cfg does for the jpackage launcher. The JavaFX JARs are no longer on
+    # the module path ($BEAST_APP/app) — they come from the bundled JRE+FX as
+    # platform modules, which ALL-MODULE-PATH does not pull in. The launcher loads
+    # beast.fx as a plugin ModuleLayer; beast.fx requires javafx.graphics/controls,
+    # so without these the GUI apps (BEAUti/TreeAnnotator/LogCombiner/AppLauncher)
+    # fail module resolution and die silently when double-clicked from Finder.
     local module_name
     module_name=$(echo "$main_class" | sed 's/\.launcher\..*//')
     local launch_cmd
     if [ -n "$extra_args" ]; then
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class $extra_args \"\$@\""
     else
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class \"\$@\""
     fi
