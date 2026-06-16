@@ -185,16 +185,22 @@ echo "    Exe files at bundle root: $(find "$BUNDLE" -maxdepth 1 -name '*.exe' |
 # jpackage emits classpath-mode cfg when --main-jar is used. Three transforms:
 #   1. Delete app.classpath= (all JARs go on module-path, not classpath)
 #   2. app.mainclass=<cls> → app.mainmodule=beast.pkgmgmt/<cls> (module-path launch)
-#   3. Inject --module-path=$APPDIR and --add-modules=ALL-MODULE-PATH into [JavaOptions]
-#      so module descriptors (provides/requires) resolve at runtime.
+#   3. Inject --module-path=$APPDIR and --add-modules=ALL-MODULE-PATH (plus the
+#      JavaFX + jdk.jsobject modules) into [JavaOptions] so module descriptors
+#      (provides/requires) resolve at runtime.
 # $APPDIR is jpackage's own placeholder; the native launcher resolves it at runtime.
+# JavaFX and jdk.jsobject MUST be named explicitly: the JavaFX JARs are not on the
+# module path (they were excluded from staging) — they come from the bundled JRE+FX
+# as platform modules, which ALL-MODULE-PATH does not pull in. The launcher loads
+# beast.fx as a plugin ModuleLayer; beast.fx requires javafx.graphics/controls, so
+# without these the GUI apps fail module resolution and never open a window.
 echo ""
 echo "==> Step 5: Patching .cfg files to module-path mode..."
 for cfg in "$BUNDLE/app/"*.cfg; do
     sed -i \
         -e '/^app\.classpath/d' \
         -e 's|^app\.mainclass=\(.*\)|app.mainmodule=beast.pkgmgmt/\1|' \
-        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH' \
+        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject' \
         "$cfg"
 done
 

@@ -282,17 +282,25 @@ build_wrapper_app() {
     # ── Launcher shell script ──
     # Derive the module/class from the fully qualified main class
     # e.g. beast.pkgmgmt.launcher.BeautiLauncher → -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeautiLauncher
+    #
+    # --add-modules MUST name javafx.* and jdk.jsobject explicitly, exactly as
+    # BEAST.cfg does for the jpackage launcher. The JavaFX JARs are no longer on
+    # the module path ($BEAST_APP/app) — they come from the bundled JRE+FX as
+    # platform modules, which ALL-MODULE-PATH does not pull in. The launcher loads
+    # beast.fx as a plugin ModuleLayer; beast.fx requires javafx.graphics/controls,
+    # so without these the GUI apps (BEAUti/TreeAnnotator/LogCombiner/AppLauncher)
+    # fail module resolution and die silently when double-clicked from Finder.
     local module_name
     module_name=$(echo "$main_class" | sed 's/\.launcher\..*//')
     local launch_cmd
     if [ -n "$extra_args" ]; then
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class $extra_args \"\$@\""
     else
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class \"\$@\""
     fi

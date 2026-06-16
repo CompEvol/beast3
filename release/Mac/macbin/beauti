@@ -27,6 +27,6 @@ BEAST_APP="$BEAST/BEAST.app/Contents"
 export JAVA_HOME="$BEAST_APP/runtime/Contents/Home"
 JAVA="$JAVA_HOME/bin/java"
 "$JAVA" -Dlauncher.wait.for.exit=true \
-    --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH \
+    --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeautiLauncher -capture "$@"
