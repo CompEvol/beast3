@@ -141,9 +141,9 @@ for (Module m : ModuleLayer.boot().modules()) {
 
 ---
 
-## 2. Original Design: Two Deployment Environments
+## 2. Two Environments: Developer vs. User
 
-Two deployment environments govern how BEAST packages are loaded at runtime:
+Two environments govern how BEAST packages are loaded at runtime:
 
 | Env | Launch method | Package source |
 |---|---|---|
@@ -499,9 +499,7 @@ and deduplicated. The same ordering is applied to BEAST package names via `compa
 
 ---
 
-## 8. Design Conformance — Gaps and Differences
-
-### 8.1 Confirmed Conforming Behaviours
+## 8. Design Conformance 
 
 | Original Design Goal | Implementation Status |
 |---|---|
@@ -510,60 +508,7 @@ and deduplicated. The same ordering is applied to BEAST package names via `compa
 | User mode option ii: install Maven release jars locally | **Implemented** — `installMavenPackage()`, `loadMavenPackages()`, `maven-packages.xml` config |
 | Maven packages take precedence over ZIP packages | **Implemented** — Maven loaded first; `putIfAbsent` in class-loader map |
 
-### 8.2 Divergences and Implementation Details Not in Original Design
 
-**A. `BEAST.app` synthetic marking (new)**  
-`BEAST.app` is now always marked as installed synthetically alongside `BEAST.base`
-(`PackageManager:283–299`), ensuring `DependencyResolver` never treats it as a missing dependency.
-In earlier designs only `BEAST.base` received this treatment.
-
-**B. Core modules moved off the boot layer; bundled package ZIP seeding (new)**  
-`beast.base` and `beast.fx` are intentionally **excluded from the boot module path** in the
-released bundle. Each platform's assembly script removes them from staging before (or after)
-`jpackage` runs so they never land in `app/` (Windows/Mac) or `lib/` (Linux) as boot-layer JARs.
-Instead, they are shipped as full package ZIPs inside the bundle:
-
-| Platform | Boot-layer JARs location | Core package ZIPs location |
-|---|---|---|
-| macOS | `BEAST.app/Contents/app/` | `BEAST.app/Contents/app/packages/` |
-| Windows | `BEAST.v<ver>/app/` | `BEAST.v<ver>/app/packages/` |
-| Linux | `BEAST.v<ver>/lib/` | `BEAST.v<ver>/lib/packages/` |
-
-On first launch, `BeastLauncher.seedBundledPackage()` (`BeastLauncher:207`) extracts
-`BEAST.base.package*.zip` and `BEAST.app.package*.zip` from the `packages/` subdirectory into
-`~/.beast/2.8/`, with a version check so a user-upgraded copy is never overwritten by an older
-bundled one. They are then loaded as plugin `ModuleLayer`s exactly like any other package.
-
-**Why:** Because `beast.base` and `beast.fx` are plugin layers rather than boot-layer modules,
-the package manager can upgrade them in-place — the user runs `packagemanager -add BEAST.base` or
-a future GUI equivalent, and the new JARs take effect on next launch. No new launcher release is
-needed to ship a patch to core BEAST behaviour. Only changes to `beast.pkgmgmt` itself (the
-launcher on the boot layer) require a new distributed bundle.
-
-The older `installBEASTPackage()` single-JAR copy approach remains as a fallback for legacy
-distributions that predate the package-ZIP format.
-
-**C. `checkInstalledDependencies()` deferred to post-load**  
-A subtle correctness fix: dependency checking is intentionally run **after** all plugin layers are
-loaded, not during `addInstalledPackages()`. Running it early would produce false warnings for
-packages whose dependencies arrive via later plugin layers. This is noted in a comment at
-`PackageManager:656–659`.
-
-**D. `getLatestBeastArchiveDirectories()` is dead code**  
-The method exists at `PackageManager:543` but is not called anywhere in the current codebase.
-`getBeastDirectories()` does not invoke it. Archive-path loading is deprecated; the preferred
-approach is explicit reinstall of a specific version. Any documentation claiming this method
-"supplements" the directory list is incorrect.
-
-**E. Maven resolver scopes and repository isolation**  
-`MavenPackageResolver` (`MavenPackageResolver:132–154`) configures the Aether session with:
-- `ScopeDependencySelector("test", "provided")` — prunes test/provided deps from POM traversal
-- `OptionalDependencySelector()` — skips optional deps
-- `setIgnoreArtifactDescriptorRepositories(true)` — prevents POM-declared repos (e.g. Sonatype
-  snapshots) from being added, avoiding hangs from unreachable repositories
-- `"aether.dependencyCollector.impl", "df"` — depth-first collector to avoid thread-pool deadlocks
-
-These are pragmatic implementation choices not mentioned in the original design.
 
 ---
 
@@ -605,37 +550,4 @@ These are pragmatic implementation choices not mentioned in the original design.
 | `toInstallList` | `~/.beast/2.8/toInstallList` | Packages to install on next startup (deferred when toDeleteList exists) |
 | `maven-repo/` | `~/.beast/2.8/maven-repo/` | Local Maven repository cache (Eclipse Aether layout) |
 
----
 
-## 10. Future Work
-
-Remaining improvements identified during the 2026 refactoring, roughly in priority order:
-
-1. **Move `find()` to `BEASTClassLoader`.** The `find(Class, String)`, `find(String, String)`,
-   and `find(Class, String[])` methods are class-discovery operations, not package management.
-   Moving them would leave `PackageManager` with no class-loading responsibility. The related
-   helpers `loadAllClasses()`, `isSubclass()`, and `hasInterface()` would move too.
-
-2. **Deprecate unused `PackageManager` delegates.** No external package calls `prepareForInstall`,
-   `installPackages`, `uninstallPackage`, `getRepositoryURLs`, or `saveRepositoryURLs` — those
-   are only used within the beast3 repo. Update those callers to use `PackageInstaller` /
-   `PackageRepository` directly and deprecate the `PackageManager` wrappers.
-
-3. **Thread safety of `useArchive`.** The flag is on `PackageInstaller` but is still static
-   mutable state toggled externally. Pass it as a parameter to `getPackageDir` /
-   `installPackages` / `uninstallPackage` instead.
-
-4. **Cross-system conflict detection.** Warn when the same package is installed via both Maven
-   and CBAN ZIP. Currently the two systems only collide at the JPMS module layer level.
-
-5. **Break circular callbacks in `PackageInstaller`.** `processInstallList()` calls back into
-   `PackageManager.addAvailablePackages()`. The caller should populate the map first and pass it
-   in. Similarly, `hasNamespaceClash()` calls `PackageManager.parseServices()` — move
-   `parseServices` to a shared location (it is pure XML parsing, not package management).
-
-6. **De-duplicate `RECOMMENDED_PACKAGES`.** The set exists on both `PackageManager` (update
-   policy) and `PackageManagerCLI` (display). Expose it once as a package-visible constant.
-
-7. **Package integrity verification.** Add SHA-256 checksums to the CBAN `packages2.xml` format
-   and verify on download. This is an ecosystem-level change requiring coordination with CBAN
-   maintainers.
