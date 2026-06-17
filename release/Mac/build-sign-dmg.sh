@@ -558,21 +558,15 @@ else
 fi
 
 # ── examples/ — example BEAST XML files ──────────────────────────────────────
-EXAMPLES_DIR="$REPO_ROOT/beast-base/src/test/resources/beast.base/examples"
-if [ -d "$EXAMPLES_DIR" ]; then
-    echo "    Copying examples/..."
-    mkdir -p "$OUTPUT/examples"
-    # Copy top-level XML files
-    find "$EXAMPLES_DIR" -maxdepth 1 -name "*.xml" -exec cp {} "$OUTPUT/examples/" \;
-    # Copy nexus subdirectory
-    if [ -d "$EXAMPLES_DIR/nexus" ]; then
-        cp -r "$EXAMPLES_DIR/nexus" "$OUTPUT/examples/nexus"
-    fi
-    if [ -d "$EXAMPLES_DIR/spec" ]; then
-        cp -r "$EXAMPLES_DIR/spec" "$OUTPUT/examples/spec"
-    fi
+# Extracted from the BEAST.base package zip seeded into the user dir
+# (Contents/app/packages/), so the example set has a single source of truth
+# (beast-base/src/assembly/package.xml) and the bundle-root and packaged copies
+# cannot drift. The bundle-root copy is kept so `beast -validate examples/...`
+# works from the install dir before first-run seeding.
+if [ -n "$BASE_PKG_ZIP" ] && unzip -o -q "$BASE_PKG_ZIP" 'examples/*' -d "$OUTPUT"; then
+    echo "    Extracted examples/ from $(basename "$BASE_PKG_ZIP")"
 else
-    echo "    WARNING: $EXAMPLES_DIR not found — skipping examples/"
+    echo "    WARNING: no examples found in BEAST.base package zip — skipping examples/"
 fi
 
 # ── README and LICENSE ─────────────────────────────────────────────────────

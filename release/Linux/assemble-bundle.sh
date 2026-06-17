@@ -152,20 +152,19 @@ else
     echo "    WARNING: DensiTree.jar not found — densitree script will not work"
 fi
 
-# ── Step 6: Copy examples ─────────────────────────────────────────────────────
+# ── Step 6: Extract examples from the BEAST.base package zip ──────────────────
+# The bundle-root examples/ are extracted from the same package zip seeded into
+# the user dir (lib/packages/), so the example set has a single source of truth
+# (beast-base/src/assembly/package.xml) and the bundle-root and packaged copies
+# cannot drift. The bundle-root copy is kept so `beast -validate examples/...`
+# works from the install dir before first-run seeding.
 echo ""
-echo "==> Step 6: Copying examples..."
-EXAMPLES_DIR="$REPO_ROOT/beast-base/src/test/resources/beast.base/examples"
-if [ -d "$EXAMPLES_DIR" ]; then
-    find "$EXAMPLES_DIR" -maxdepth 1 -name "*.xml" -exec cp {} "$BUNDLE/examples/" \;
-    mkdir -p "$BUNDLE/examples/spec"
-    [ -d "$EXAMPLES_DIR/spec" ] && \
-        find "$EXAMPLES_DIR/spec" -maxdepth 1 -name "*.xml" -exec cp {} "$BUNDLE/examples/spec/" \;
-    [ -d "$EXAMPLES_DIR/nexus" ] && cp -r "$EXAMPLES_DIR/nexus" "$BUNDLE/examples/"
+echo "==> Step 6: Extracting examples from $(basename "$BASE_PKG_ZIP")..."
+if unzip -o -q "$BASE_PKG_ZIP" 'examples/*' -d "$BUNDLE"; then
     EXAMPLE_COUNT=$(find "$BUNDLE/examples" -name "*.xml" | wc -l | tr -d ' ')
-    echo "    Copied ${EXAMPLE_COUNT} example XML files (incl. spec/)"
+    echo "    Extracted ${EXAMPLE_COUNT} example XML files (incl. spec/)"
 else
-    echo "    WARNING: examples not found at $EXAMPLES_DIR"
+    echo "    WARNING: no examples found in $BASE_PKG_ZIP"
 fi
 
 # ── Step 7: Copy version.xml and docs ────────────────────────────────────────
