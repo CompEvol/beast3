@@ -233,15 +233,6 @@ public class ScaleOperator extends AbstractScale {
         return getScaler(i, Double.NaN);
     }
 
-    @Override
-    public void optimize(double logAlpha) {
-        // must be overridden by operator implementation to have an effect
-        if (optimiseInput.get()) {
-            double delta = calcDelta(logAlpha);
-            double scaleFactor = getCoercableParameterValue();
-            delta += Math.log(scaleFactor);
-            scaleFactor = Math.exp(delta);
-            setCoercableParameterValue(scaleFactor);
-        }
-    }
+    // optimize(logAlpha) is inherited from AbstractScale, which tunes the Bactrian
+    // scaleFactor multiplicatively in the correct direction.
 } // class ScaleOperator
