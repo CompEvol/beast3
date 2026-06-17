@@ -17,7 +17,7 @@ public abstract class AbstractScale extends KernelOperator {
             "scale of the Bactrian kernel: close to zero is very small jumps, " +
                     "larger values give larger jumps.", 0.75);
     final public Input<Double> scaleUpperLimit = new Input<>("upper",
-            "Upper Limit of scale factor", 1.0 - 1e-8);
+            "Upper Limit of scale factor", 10.0);
     final public Input<Double> scaleLowerLimit = new Input<>("lower",
             "Lower limit of scale factor", 1e-8);
 
@@ -40,10 +40,6 @@ public abstract class AbstractScale extends KernelOperator {
     public void initAndValidate() {
         super.initAndValidate();
         scaleFactor = scaleFactorInput.get();
-        //TODO why?
-        if (scaleUpperLimit.get() == 1 - 1e-8) {
-            scaleUpperLimit.setValue(10.0, this);
-        }
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
     }
