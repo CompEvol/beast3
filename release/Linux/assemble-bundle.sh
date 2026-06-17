@@ -94,6 +94,32 @@ mkdir -p "$BUNDLE/bin" "$BUNDLE/examples" "$BUNDLE/lib"
 cp "$STAGING/"*.jar "$BUNDLE/lib/"
 echo "    Copied ${JAR_COUNT} JARs to lib/"
 
+# ── Step 3a: Remove core modules from boot module path ───────────────────────
+# beast.base and beast.fx must NOT sit on the boot module path — they ship as
+# user-installable packages (seeded below), loaded as plugin module layers so
+# the package manager can upgrade them in place.
+echo ""
+echo "==> Step 3a: Removing beast-base/beast-fx from lib/ (plugin layer modules)..."
+rm -f "$BUNDLE/lib"/beast-base-*.jar "$BUNDLE/lib"/beast-fx-*.jar
+echo "    Removed. Remaining JARs: $(find "$BUNDLE/lib" -name '*.jar' | wc -l | tr -d ' ')"
+
+# ── Step 3b: Bundle core package zips for first-run seeding ──────────────────
+# On first launch BeastLauncher.seedBundledPackage() extracts these into the
+# user package dir, where they are loaded as plugin module layers.
+echo ""
+echo "==> Step 3b: Bundling core package zips into lib/packages/..."
+mkdir -p "$BUNDLE/lib/packages"
+BASE_PKG_ZIP=$(find "$REPO_ROOT/beast-base/target" -maxdepth 1 -name "BEAST.base.package.v*.zip" | head -1)
+APP_PKG_ZIP=$(find "$REPO_ROOT/beast-fx/target"   -maxdepth 1 -name "BEAST.app.package.v*.zip"  | head -1)
+for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
+    if [ -z "$PKG_ZIP" ]; then
+        echo "ERROR: a core package zip was not found (run 'mvn package' first)" >&2
+        exit 1
+    fi
+    cp "$PKG_ZIP" "$BUNDLE/lib/packages/"
+    echo "    Bundled $(basename "$PKG_ZIP") into lib/packages/"
+done
+
 # ── Step 4: Copy JRE+FX ──────────────────────────────────────────────────────
 # cp -a preserves symlinks. A plain cp -r dereferences JRE internal symlinks,
 # corrupting the runtime structure (replaces 1 KB aliases with full files).
@@ -165,6 +191,15 @@ VJAR_COUNT=$(find "$BUNDLE/lib" -name "*.jar" | wc -l | tr -d ' ')
 [ "$VJAR_COUNT" -gt 5 ] \
     && _ok "lib/ has ${VJAR_COUNT} JARs" \
     || _fail "lib/ has too few JARs: ${VJAR_COUNT}"
+
+[ -z "$(find "$BUNDLE/lib" -maxdepth 1 -name 'beast-base-*.jar' -o -name 'beast-fx-*.jar' 2>/dev/null)" ] \
+    && _ok "beast-base/beast-fx removed from lib/ (plugin layer only)" \
+    || _fail "beast-base or beast-fx JAR still on boot module path in lib/"
+
+PKG_COUNT=$(find "$BUNDLE/lib/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
+[ "$PKG_COUNT" -ge 2 ] \
+    && _ok "lib/packages/ has ${PKG_COUNT} core package zip(s)" \
+    || _fail "lib/packages/ has too few package zips: ${PKG_COUNT} (expected ≥2)"
 
 for s in beast beauti treeannotator logcombiner applauncher packagemanager loganalyser; do
     [ -x "$BUNDLE/bin/$s" ] && _ok "bin/$s executable" || _fail "bin/$s not executable"

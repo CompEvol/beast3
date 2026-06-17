@@ -161,6 +161,7 @@ jpackage --type app-image \
     --java-options    "-Xmx8g" \
     --java-options    "-Duser.language=en" \
     --java-options    "-Dfile.encoding=UTF-8" \
+    --arguments       "-window" \
     --runtime-image   "$JRE_DIR" \
     --icon            "$RELEASE_DIR/common/icons/beast.ico" \
     --dest            "$DEST" \
@@ -180,6 +181,32 @@ echo ""
 echo "==> Step 4: Renaming app-image to bundle root..."
 mv "$DEST/beast" "$BUNDLE"
 echo "    Exe files at bundle root: $(find "$BUNDLE" -maxdepth 1 -name '*.exe' | wc -l | tr -d ' ')"
+
+# ── Step 4a: Remove core modules from boot module path ───────────────────────
+# beast.base and beast.fx must NOT sit on the boot module path — they ship as
+# user-installable packages (seeded below), loaded as plugin module layers so
+# the package manager can upgrade them in place.
+echo ""
+echo "==> Step 4a: Removing beast-base/beast-fx from app/ (plugin layer modules)..."
+rm -f "$BUNDLE/app"/beast-base-*.jar "$BUNDLE/app"/beast-fx-*.jar
+echo "    Removed. Remaining JARs: $(find "$BUNDLE/app" -name '*.jar' | wc -l | tr -d ' ')"
+
+# ── Step 4b: Bundle core package zips for first-run seeding ──────────────────
+# On first launch BeastLauncher.seedBundledPackage() extracts these into the
+# user package dir, where they are loaded as plugin module layers.
+echo ""
+echo "==> Step 4b: Bundling core package zips into app/packages/..."
+mkdir -p "$BUNDLE/app/packages"
+BASE_PKG_ZIP=$(find "$REPO_ROOT/beast-base/target" -maxdepth 1 -name "BEAST.base.package.v*.zip" | head -1)
+APP_PKG_ZIP=$(find "$REPO_ROOT/beast-fx/target"   -maxdepth 1 -name "BEAST.app.package.v*.zip"  | head -1)
+for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
+    if [ -z "$PKG_ZIP" ]; then
+        echo "ERROR: a core package zip was not found (run 'mvn package' first)" >&2
+        exit 1
+    fi
+    cp "$PKG_ZIP" "$BUNDLE/app/packages/"
+    echo "    Bundled $(basename "$PKG_ZIP") into app/packages/"
+done
 
 # ── Step 5: Patch all .cfg files to module-path mode ─────────────────────────
 # jpackage emits classpath-mode cfg when --main-jar is used. Three transforms:
@@ -264,6 +291,15 @@ CFG_COUNT=$(find "$BUNDLE/app" -name "*.cfg" | wc -l | tr -d ' ')
 grep -q 'app.mainmodule' "$BUNDLE/app/beast.cfg" \
     && _ok "app/beast.cfg patched to module-path mode" \
     || _fail "app/beast.cfg not patched — still classpath mode"
+
+[ -z "$(find "$BUNDLE/app" -maxdepth 1 -name 'beast-base-*.jar' -o -name 'beast-fx-*.jar' 2>/dev/null)" ] \
+    && _ok "beast-base/beast-fx removed from app/ (plugin layer only)" \
+    || _fail "beast-base or beast-fx JAR still on boot module path in app/"
+
+PKG_COUNT=$(find "$BUNDLE/app/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
+[ "$PKG_COUNT" -ge 2 ] \
+    && _ok "app/packages/ has ${PKG_COUNT} core package zip(s)" \
+    || _fail "app/packages/ has too few package zips: ${PKG_COUNT} (expected ≥2)"
 
 SPEC_COUNT=$(find "$BUNDLE/examples/spec" -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
 [ "$SPEC_COUNT" -gt 0 ] \
