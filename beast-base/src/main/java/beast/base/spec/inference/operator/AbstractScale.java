@@ -14,10 +14,10 @@ import java.text.DecimalFormat;
 public abstract class AbstractScale extends KernelOperator {
 
     public final Input<Double> scaleFactorInput = new Input<>("scaleFactor",
-            "scaling factor: range from 0 to 1. Close to zero is very large jumps, " +
-                    "close to 1.0 is very small jumps.", 0.75);
+            "scale of the Bactrian kernel: close to zero is very small jumps, " +
+                    "larger values give larger jumps.", 0.75);
     final public Input<Double> scaleUpperLimit = new Input<>("upper",
-            "Upper Limit of scale factor", 1.0 - 1e-8);
+            "Upper Limit of scale factor", 10.0);
     final public Input<Double> scaleLowerLimit = new Input<>("lower",
             "Lower limit of scale factor", 1e-8);
 
@@ -40,10 +40,6 @@ public abstract class AbstractScale extends KernelOperator {
     public void initAndValidate() {
         super.initAndValidate();
         scaleFactor = scaleFactorInput.get();
-        //TODO why?
-        if (scaleUpperLimit.get() == 1 - 1e-8) {
-            scaleUpperLimit.setValue(10.0, this);
-        }
         upper = scaleUpperLimit.get();
         lower = scaleLowerLimit.get();
     }
@@ -79,9 +75,16 @@ public abstract class AbstractScale extends KernelOperator {
     @Override
     public void optimize(final double logAlpha) {
         if (optimiseInput.get()) {
+            // The scaleFactor here is the Bactrian kernel scale: larger scaleFactor means
+            // larger jumps (lower acceptance), the opposite of the legacy ScaleOperator
+            // where scaleFactor close to 0 meant large jumps. Tune multiplicatively so the
+            // direction matches the kernel: acceptance too high (delta > 0) increases the
+            // scaleFactor, acceptance too low (delta < 0) decreases it. The legacy
+            // 1/(exp(delta + log(1/sf - 1)) + 1) transform inverted this and broke (NaN)
+            // for scaleFactor >= 1.
             double delta = calcDelta(logAlpha);
-            delta += Math.log(1.0 / scaleFactor - 1.0);
-            setCoercableParameterValue(1.0 / (Math.exp(delta) + 1.0));
+            delta += Math.log(scaleFactor);
+            setCoercableParameterValue(Math.exp(delta));
         }
     }
 

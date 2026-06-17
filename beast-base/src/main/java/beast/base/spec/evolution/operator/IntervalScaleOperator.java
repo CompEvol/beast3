@@ -38,10 +38,10 @@ public class IntervalScaleOperator extends TreeOperator {
     protected KernelDistribution kernelDistribution;
 
 
-    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 1.0 - 1e-8);
+    final public Input<Double> scaleUpperLimit = new Input<>("upper", "Upper Limit of scale factor", 10.0);
     final public Input<Double> scaleLowerLimit = new Input<>("lower", "Lower limit of scale factor", 1e-8);
 
-    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scaling factor: range from 0 to 1. Close to zero is very large jumps, close to 1.0 is very small jumps.", 0.75);
+    public final Input<Double> scaleFactorInput = new Input<>("scaleFactor", "scale of the Bactrian kernel: close to zero is very small jumps, larger values give larger jumps.", 0.75);
 
     final public Input<Boolean> optimiseInput = new Input<>("optimise",
 			"flag to indicate that the scale factor is automatically changed in order to achieve a good acceptance rate (default true)",
