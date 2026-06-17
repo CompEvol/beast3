@@ -12,7 +12,11 @@
 #      bypassing jlink. --add-launcher adds one .exe per additional tool.
 #   2. The app-image is renamed to BUNDLE/ within DEST so exe files, app/, and
 #      runtime/ all land directly under BEAST.v<VERSION>/.
-#   3. All .cfg files in app/ are patched to module-path mode (inline sed).
+#   3. beast-base-*.jar and beast-fx-*.jar are removed from app/ — they must NOT
+#      sit on the boot module path. Their package ZIPs are placed in app/packages/
+#      so BeastLauncher seeds them into ~/.beast/2.8/ on first run and loads them
+#      as plugin ModuleLayers, allowing core patch releases without a new launcher.
+#   4. All .cfg files in app/ are patched to module-path mode (inline sed).
 #
 # --main-jar is used (not --module) to avoid jlink failing on automatic modules
 # (e.g. antlr4-runtime has no module-info). Module resolution at runtime is handled
@@ -31,8 +35,9 @@
 # Output:
 #   $DEST/BEAST.v<VERSION>/
 #     beast.exe, beauti.exe, treeannotator.exe, …   ← double-clickable launchers
-#     app/      ← JARs + patched .cfg files (module path at runtime)
-#     runtime/  ← bundled JRE  (runtime/bin/java.exe)
+#     app/          ← boot-layer JARs (beast-pkgmgmt + deps) + patched .cfg files
+#     app/packages/ ← beast-base and beast-fx as package ZIPs (seeded on first run)
+#     runtime/      ← bundled JRE  (runtime/bin/java.exe)
 #     bat/      ← .bat CLI launchers
 #     examples/, version.xml, README.txt, LICENSE.txt
 #   $DEST/BEAST.v<VERSION>.<OS_ARCH>.zip

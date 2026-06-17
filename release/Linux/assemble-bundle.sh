@@ -2,7 +2,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # assemble-bundle.sh — Assemble, verify, and package a BEAST 3 release bundle.
 #
-# No jpackage is used. JARs go into lib/ and are invoked via module-path.
+# No jpackage is used. Boot-layer JARs (beast-pkgmgmt + deps) go into lib/ and
+# are invoked via module-path by shell scripts in bin/. beast-base and beast-fx
+# are NOT placed in lib/ — they ship as package ZIPs in lib/packages/ and are
+# seeded into ~/.beast/2.8/ on first run by BeastLauncher, then loaded as plugin
+# ModuleLayers. This allows core patch releases without a new launcher build.
 # A pre-built Zulu JRE+FX 25 is copied with cp -a (preserves symlinks).
 # Use the jre+fx package from azul.com — it is smaller than the full JDK and
 # already contains JavaFX as platform modules in lib/modules.

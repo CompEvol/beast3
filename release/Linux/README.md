@@ -52,7 +52,9 @@ BEAST.v<version>/
   examples/         sample XML files + nexus/
     spec/           beast3 spec XMLs
   jre/              bundled Zulu JRE+FX 25 (target platform)
-  lib/              all JARs on the module path (incl. DensiTree.jar)
+  lib/              boot-layer JARs (beast-pkgmgmt + deps, DensiTree.jar)
+  lib/packages/     beast-base and beast-fx package ZIPs — seeded into
+                    ~/.beast/2.8/ on first run, loaded as plugin layers
   version.xml
   README.txt
   LICENSE.txt
@@ -115,28 +117,33 @@ Or as a workflow step (requires `contents: write` permission):
 
 `release/Linux/assemble-bundle.sh` (called by `test-linux-on-mac.sh`):
 
-1. **Stage JARs** — validates that OS-classified JARs for `javafx-base`,
-   `javafx-controls`, and `javafx-graphics` are present in `beast-fx/target/lib/`
-   (Maven downloads them automatically when running on the target OS; fails fast
-   if missing). Then copies all JARs — both stubs and classified — into
-   `staging-<OS_ARCH>/`.
+1. **Stage JARs** — copies beast-fx + dependencies into `staging-<OS_ARCH>/`.
+   All `javafx-*` and `jdk-jsobject-*` JARs excluded (already in the bundled
+   JRE+FX as platform modules).
 2. **Create bundle dirs** — `bin/`, `examples/`, `jre/`, `lib/`
-3. **Copy JARs → lib/** — flat directory, becomes the module path at runtime.
-4. **Copy JRE+FX** — `cp -a` from `JRE_DIR` to preserve all symlinks inside the
+3. **Copy JARs → lib/** — boot-layer JARs (beast-pkgmgmt + deps, DensiTree.jar).
+4. **Remove core modules from lib/** — `beast-base-*.jar` and `beast-fx-*.jar`
+   are deleted from `lib/` so they are not on the boot module path.
+5. **Bundle core package ZIPs** — `BEAST.base.package.v*.zip` and
+   `BEAST.app.package.v*.zip` are placed in `lib/packages/`. On first launch,
+   `BeastLauncher.seedBundledPackage()` extracts them into `~/.beast/2.8/` and
+   loads them as plugin `ModuleLayer`s, allowing patch releases without a new tgz.
+6. **Copy JRE+FX** — `cp -a` from `JRE_DIR` to preserve all symlinks inside the
    JRE tree (a plain `cp -r` dereferences symlinks, corrupting the runtime).
-5. **Copy bin/ scripts** — static launcher scripts are copied from
+7. **Copy bin/ scripts** — static launcher scripts are copied from
    `release/Linux/linuxbin/` into `bin/` and made executable. Each script
    resolves `BUNDLE_HOME` symlink-safely, sets `JAVA_HOME=$BUNDLE_HOME/jre`,
    and invokes `jre/bin/java` with `--module-path lib/`.
-6. **Copy examples** — XML files and `nexus/` from
+8. **Copy examples** — XML files and `nexus/` from
    `beast-base/src/test/resources/beast.base/examples/`;
    `spec/*.xml` files go into `examples/spec/`.
-7. **Copy version.xml and docs** — `version.xml`, `README.txt`, `LICENSE.txt`.
-8. **Verify bundle** — checks required files, JAR count, no JavaFX stub JARs remain,
-   bin/ executability, and `jre/bin/java` references.
-   Fails immediately if any check fails.
-9. **Create tgz** — packages `BEAST.v<VERSION>/` into
-   `dist/BEAST.v<VERSION>.<OS_ARCH>.tgz`.
+9. **Copy version.xml and docs** — `version.xml`, `README.txt`, `LICENSE.txt`.
+10. **Verify bundle** — checks required files, JAR count, beast-base/beast-fx
+    absent from `lib/`, package ZIPs present in `lib/packages/`, bin/
+    executability, and `jre/bin/java` arch and JavaFX `.so` libs.
+    Fails immediately if any check fails.
+11. **Create tgz** — packages `BEAST.v<VERSION>/` into
+    `dist/BEAST.v<VERSION>.<OS_ARCH>.tgz`.
 
 Staging is deleted after assembly. The `release/dist/BEAST.v<version>/` bundle is kept
 for inspection; delete it manually once the tgz is verified.

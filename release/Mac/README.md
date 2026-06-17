@@ -100,10 +100,15 @@ that jpackage builds BEAST.app directly into its final DMG location. All
 signing is done in-place — no post-build copy of a signed app ever happens,
 eliminating the main source of codesign seal corruption.
 
-- Copies `beast-fx-*.jar` and all `lib/*.jar` dependencies into `staging/`.
-- Validates that OS-classified JARs for `javafx-base`, `javafx-controls`, and
-  `javafx-graphics` are present in `beast-fx/target/lib/`; fails fast if missing.
-  Both stubs and classified JARs are copied into `staging/`.
+- Copies `beast-fx-*.jar` and all `lib/*.jar` dependencies into `staging/`,
+  excluding all `javafx-*` and `jdk-jsobject-*` JARs (redundant — the bundled
+  Zulu JRE+FX already provides these as platform modules in `lib/modules`).
+- Removes `beast-base-*.jar` and `beast-fx-*.jar` from staging so they are
+  **not** placed on the boot module path by jpackage. Instead their full package
+  ZIPs are placed in `BEAST.app/Contents/app/packages/` after jpackage runs,
+  where `BeastLauncher.seedBundledPackage()` extracts them into `~/.beast/2.8/`
+  on first launch and loads them as plugin `ModuleLayer`s. This allows core
+  patch releases without rebuilding the launcher or producing a new DMG.
 - Verifies `MAIN_JAR` is present before proceeding.
 
 ### Step 3 — Create BEAST.app
@@ -233,3 +238,4 @@ Verified with `--verify --verbose=4 --deep --strict`.
 | Unique JRE `CFBundleIdentifier` | Apple rejects `--deep` signing with duplicate nested bundle IDs |
 | `bin/` and `examples/` added after signing | Outside any `.app` bundle; cannot affect bundle seals |
 | UDRW → UDZO two-phase DMG | AppleScript Finder layout requires a writable mount |
+| `beast-base`/`beast-fx` removed from staging | Core modules must not be on the boot layer; they ship as package ZIPs in `BEAST.app/Contents/app/packages/`, seeded on first launch, loaded as plugin `ModuleLayer`s — enabling patch releases without a new DMG |
