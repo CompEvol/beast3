@@ -1,5 +1,10 @@
 <beast version='2.0'
-       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.tree.coalescent:beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
 
     <data id="alignment" dataType="nucleotide">
         <sequence taxon="A">
@@ -16,7 +21,7 @@
         </sequence>
     </data>
 
-   <tree spec='beast.base.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+   <tree spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
         <trait spec='beast.base.evolution.tree.TraitSet' traitname='date-forward' units='day'
                value='
 		A  = 0,
@@ -28,7 +33,7 @@
 		<taxa idref='alignment'/>
     </tree>
 
-    <parameter id="popSize" value="10000" lower="0.0"/>
+    <parameter id="popSize" value="10000" spec="RealScalarParam" domain="PositiveReal"/>
 
     <run spec="MCMC" id="mcmc" chainLength="1000000"> <!--autoOptimize="true"-->
         <state>
@@ -40,7 +45,7 @@
                 <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
                      <tree idref="tree"/>
                 </treeIntervals>
-                <populationModel spec="ConstantPopulation" id='ConstantPopulation'>
+                <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation" id='ConstantPopulation'>
                     <popSize idref="popSize"/>
                 </populationModel>
             </distribution>

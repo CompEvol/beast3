@@ -1,6 +1,11 @@
 <beast version='2.0'
-       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
-    <!-- equivalent to testCoalescentNoClock1.xml in BEAST 1          -->
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.tree.coalescent:beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
+    <!-- equivalent to testCoalescentNoClock1.xml in BEAST 1 -->
 
     <!-- The sequence alignment (each sequence refers to a taxon above).         -->
     <!-- ntax=6 nchar=768                                                        -->
@@ -52,10 +57,10 @@
           taxa='@alignment'/>
 
 
-    <parameter id="hky.kappa" value="2.0" lower="0.0"/>
-    <parameter id="hky.frequencies" value="0.25" dimension="4"/>
-    <parameter id="popSize" value="0.077" lower="0.0"/>
-
+    <!-- Parameters -->
+    <parameter id="hky.kappa" value="2.0" spec="RealScalarParam" domain="PositiveReal"/>
+    <parameter id="hky.frequencies" dimension="4" value="0.25" spec="SimplexParam"/>
+    <parameter id="popSize" value="0.077" spec="RealScalarParam" domain="PositiveReal"/>
 
     <run spec="MCMC" id="mcmc" chainLength="20000000"> <!--autoOptimize="true"-->
         <state>
@@ -70,24 +75,27 @@
                 <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
                     <tree idref="tree"/>
                 </treeIntervals>
-                <populationModel spec="ConstantPopulation" id='ConstantPopulation'>
+                <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation" id='ConstantPopulation'>
                     <popSize idref="popSize"/>
                 </populationModel>
             </distribution>
             <distribution id='likelihood' idref="treeLikelihood"/>
         </distribution>
 
-        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.75" weight="0.1" parameter="@hky.kappa"/>
-        <operator id='frequenciesDelta' spec='DeltaExchangeOperator' delta="0.01" weight="0.1"
-                  parameter="@hky.frequencies"/>
-        <operator id='popSizeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@popSize"/>
-        <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" tree="@tree"/>
+        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.ScaleOperator'
+                  scaleFactor="0.75" weight="0.1" parameter="@hky.kappa"/>
+        <operator id='frequenciesDelta' spec='beast.base.spec.inference.operator.DeltaExchangeOperator'
+                  delta="0.01" weight="0.1" rvparameter="@hky.frequencies"/>
+        <operator id='popSizeScaler' spec='beast.base.spec.inference.operator.ScaleOperator'
+                  scaleFactor="0.75" weight="3" parameter="@popSize"/>
+        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator'
+                  scaleFactor="0.75" weight="3" tree="@tree"/>
+
         <operator spec='Uniform' weight="30" tree="@tree"/>
         <operator spec='SubtreeSlide' weight="15" gaussian="true" size="0.0077" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="15" tree="@tree"/>
         <operator id='wide' spec='Exchange' isNarrow='false' weight="3" tree="@tree"/>
         <operator spec='WilsonBalding' weight="1" tree="@tree"/>
-
 
         <logger logEvery="1000" fileName="test.$(seed).log">
             <model idref='posterior'/>

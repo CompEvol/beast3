@@ -1,7 +1,7 @@
-<?xml version="1.0" standalone="yes"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <!-- test Yule birth model and Birth Death model per Gernhard 2008-->
-<beast version='2.0'
-       namespace='beast.base.evolution.speciation:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+<beast version="2.8"
+       namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
 
     <data id="alignment" dataType="nucleotide">
         <sequence taxon="A">A</sequence>
@@ -12,78 +12,77 @@
     
     <!-- A prior on the distribution node heights defined given                  -->
     <!-- a Yule speciation process (a pure birth process).                       -->
-    <input spec='YuleModel' id="yule">
-        <parameter name='birthDiffRate' idref="birthRate"/>
-	<tree spec='beast.base.evolution.tree.TreeParser' id='tree' IsLabelledNewick='true' taxa='@alignment'
-	        newick='((A:1.0,B:1.0):1.0,(C:1.0,D:1.0):1.0);'/>
+    <input spec="beast.base.spec.evolution.speciation.YuleModel" id="yule">
+        <parameter name="birthDiffRate" idref="birthRate"/>
+	<tree spec="beast.base.evolution.tree.TreeParser" id="tree" IsLabelledNewick="true" taxa="@alignment" newick="((A:1.0,B:1.0):1.0,(C:1.0,D:1.0):1.0);"/>
     </input>
 
-    <input spec='BirthDeathGernhard08Model' id="yulelike" type='unscaled' tree='@tree'>
-        <parameter name='birthDiffRate' idref="birthRate"/>
-	    <parameter name='relativeDeathRate' idref='relativeDeathRate'/>
+    <input spec="beast.base.spec.evolution.speciation.BirthDeathGernhard08Model" id="yulelike" type="unscaled" tree="@tree">
+        <parameter name="birthDiffRate" idref="birthRate"/>
+	    <parameter name="relativeDeathRate" idref="relativeDeathRate"/>
     </input>
 
     <!-- site model                                                              -->
-    <input spec='SiteModel' id="siteModel" gammaCategoryCount='1'>
-	<substModel spec='HKY' id='hky'>
-	    <kappa id='hky.kappa' spec='parameter.RealParameter' value='1.0'/>
-	    <frequencies id='freqs' spec='Frequencies'>
-	       <data idref='alignment'/>
+    <input spec="beast.base.spec.evolution.sitemodel.SiteModel" id="siteModel" gammaCategoryCount="1">
+	<substModel spec="beast.base.spec.evolution.substitutionmodel.HKY" id="hky">
+	    <kappa id="hky.kappa" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+	    <frequencies id="freqs" spec="beast.base.spec.evolution.substitutionmodel.Frequencies">
+	       <data idref="alignment"/>
 	    </frequencies>
 	</substModel>
     </input>
 
-    <parameter id="birthRate" value="1.0" lower="0.0" upper="100.0"/>
-    <parameter id='relativeDeathRate' value='0'/>
+    <parameter id="birthRate" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+    <parameter id="relativeDeathRate" value="0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
 
     <!-- initial yule prior = -6.0, yule-like prior = -2.8219461696520542 -->
     <!-- expected yule prior = 1/(n.lambda)\sum_{k=1}^{n-1}k/(n-k) where lambda = birth rate, n = number of taxa
 	with lambda=1, n=-4 we expect 1/4(1/3+2/2+3/1)=1.155555555
  -->
-    <run spec='MCMC' chainLength="10">
+    <run spec="MCMC" chainLength="10">
 	<state>
-	    <stateNode idref='tree'/>
-	    <stateNode idref='birthRate'/>
-	    <stateNode id='tree-test-single-child-parsing' IsLabelledNewick='true' spec='beast.base.evolution.tree.TreeParser' singlechild='true' newick='((A:1.0):2,C:3);' >
-			<taxonset spec='beast.base.evolution.alignment.TaxonSet'>
-				<taxon spec='beast.base.evolution.alignment.Taxon' id='A'/>
-				<taxon spec='beast.base.evolution.alignment.Taxon' id='C'/>
+	    <stateNode idref="tree"/>
+	    <stateNode idref="birthRate"/>
+	    <stateNode id="tree-test-single-child-parsing" IsLabelledNewick="true" spec="beast.base.evolution.tree.TreeParser" singlechild="true" newick="((A:1.0):2,C:3);">
+			<taxonset spec="beast.base.evolution.alignment.TaxonSet">
+				<taxon spec="beast.base.evolution.alignment.Taxon" id="A"/>
+				<taxon spec="beast.base.evolution.alignment.Taxon" id="C"/>
 			</taxonset>
 		</stateNode>
 	</state>
 
-	<distribution spec='CompoundDistribution'>
-	        <distribution id="yule.prior" idref='yule'/>
+	<distribution spec="CompoundDistribution">
+	        <distribution id="yule.prior" idref="yule"/>
 <!--
 		<distribution spec='TreeLikelihood' id="treeLikelihood" data='@alignment' tree='@tree' siteModel='@siteModel'/>
 -->
-	        <distribution id="yulelike.prior" idref='yulelike'/>
+	        <distribution id="yulelike.prior" idref="yulelike"/>
 	</distribution>
 
-        <operator spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0" tree="@tree"/>
 <!--
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
 -->
-        <operator spec='Uniform' weight="10" tree="@tree"/>
-        <operator id='narrow' spec='Exchange' isNarrow='true' weight="1" tree="@tree"/>
-        <operator id='wide' spec='Exchange' isNarrow='false' weight="1" tree="@tree"/>
-        <operator spec='WilsonBalding' weight="1" tree="@tree"/>
+        <operator weight="10" tree="@tree" spec="beast.base.evolution.operator.Uniform"/>
+        <operator id="narrow" spec="Exchange" isNarrow="true" weight="1" tree="@tree"/>
+        <operator id="wide" spec="Exchange" isNarrow="false" weight="1" tree="@tree"/>
+        <operator spec="WilsonBalding" weight="1" tree="@tree"/>
 <!--
         <operator spec='ScaleOperator' scaleFactor="0.75" weight="3">
             <parameter idref="birthRate"/>
         </operator>
 -->
-	<logger logEvery='100'>
-	    <log idref='yule.prior'/>
+	<logger logEvery="100">
+	    <log idref="yule.prior"/>
 	    <!--log idref='treeLikelihood'/-->
-	    <log idref='yulelike.prior'/>
-            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
+	    <log idref="yulelike.prior"/>
+            <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
 	</logger>
-	<logger logEvery='100' fileName='$(seed).log'>
-	    <log idref='yule.prior'/>
+	<logger logEvery="100" fileName="$(seed).log">
+	    <log idref="yule.prior"/>
 	    <!--log idref='treeLikelihood'/-->
 	    <!--log idref='yulelike.prior'/-->
-            <log spec='beast.base.evolution.tree.TreeStatLogger' tree='@tree'/>
+            <log spec="beast.base.evolution.tree.TreeStatLogger" tree="@tree"/>
 	</logger>
     </run>
 

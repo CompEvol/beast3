@@ -1,5 +1,10 @@
 <beast version='2.0'
-       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.tree.coalescent:beast.evolution.nuc:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.evolution.likelihood'>
 
     <!-- same as testMCMC.xml in BEAST 1                                         -->
     <!-- The sequence alignment                                                  -->
@@ -26,6 +31,11 @@
         </sequence>
     </data>
 
+    <input id="hky.kappa" spec="RealScalarParam" domain="PositiveReal" value="1.0"/>
+<!--    <parameter id="hky.kappa" value="1.0" lower="0.0"/>-->
+
+<!--    <input id="freqs" spec="SimplexParam" dimension="4" value="0.25 0.25 0.25 0.25"/>-->
+
     <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
     <input spec='HKY' id='hky'>
         <kappa idref='hky.kappa'/>
@@ -45,9 +55,8 @@
         <siteModel idref="siteModel"/>
     </input>
 
-    <parameter id="hky.kappa" value="1.0" lower="0.0"/>
 
-    <tree spec='beast.base.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+    <tree spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
         <taxa idref='alignment'/>
     </tree>
 
@@ -60,8 +69,8 @@
 
         <distribution id='likelihood' idref="treeLikelihood"/>
 
-        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
-        <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
+        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="1" parameter="@hky.kappa"/>
+        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
         <operator spec='Uniform' weight="10" tree="@tree"/>
         <operator spec='SubtreeSlide' weight="5" gaussian="true" size="1.0" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="1" tree="@tree"/>
@@ -77,12 +86,12 @@
 <!--         <logger logEvery="1000" fileName="test.$(seed).trees">
             <log idref="tree"/>
         </logger>       -->
-        <logger logEvery="10000">
+        <logger logEvery="100000">
 	        <model idref='likelihood'/>
             <log idref="likelihood"/>
-    	    <ESS spec='ESS' name='log' arg="@likelihood"/>
+    	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@likelihood"/>
             <log idref='hky.kappa'/>
-    	    <ESS spec='ESS' name='log' arg="@hky.kappa"/>
+    	    <ESS spec='beast.base.spec.inference.util.ESS' name='log' arg="@hky.kappa"/>
         </logger>
     </run>
 
