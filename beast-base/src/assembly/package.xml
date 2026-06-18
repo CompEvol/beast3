@@ -3,6 +3,7 @@
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
     <!-- Builds the installable BEAST.base package zip:
            version.xml          (the BEAST.base package descriptor, at repo root)
+           BEAST.base.src.jar   the package sources, at the zip root (BEAST2 convention)
            lib/beast-base.jar    + its third-party runtime dependencies
            examples/             example XML (+ nexus data) shown in BEAUti
          beast-pkgmgmt is excluded: it is the bootstrap/launcher and is always
@@ -26,6 +27,15 @@
         <file>
             <source>${project.basedir}/../version.xml</source>
             <outputDirectory>.</outputDirectory>
+        </file>
+        <!-- Source jar at the zip root as BEAST.base.src.jar, matching the BEAST2
+             convention (<PackageName>.src.jar). The -sources.jar is built by
+             maven-source-plugin (jar-no-fork) in the same package phase, ordered
+             before the assembly execution so it exists when this runs. -->
+        <file>
+            <source>${project.build.directory}/${project.build.finalName}-sources.jar</source>
+            <outputDirectory>.</outputDirectory>
+            <destName>BEAST.base.src.jar</destName>
         </file>
     </files>
 

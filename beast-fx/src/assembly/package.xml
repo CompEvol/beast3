@@ -3,6 +3,7 @@
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.1 http://maven.apache.org/xsd/assembly-2.1.1.xsd">
     <!-- Builds the installable BEAST.app package zip:
            version.xml          (the BEAST.app package descriptor)
+           BEAST.app.src.jar    the package sources, at the zip root (BEAST2 convention)
            lib/beast-fx.jar
          Only beast-fx.jar is bundled. Its dependencies are provided at runtime:
          beast-base (the BEAST.base package), beast-pkgmgmt (the bootstrap), and
@@ -25,6 +26,15 @@
         <file>
             <source>${project.basedir}/version.xml</source>
             <outputDirectory>.</outputDirectory>
+        </file>
+        <!-- Source jar at the zip root as BEAST.app.src.jar, matching the BEAST2
+             convention (<PackageName>.src.jar). The -sources.jar is built by
+             maven-source-plugin (jar-no-fork) in the same package phase, ordered
+             before the assembly execution so it exists when this runs. -->
+        <file>
+            <source>${project.build.directory}/${project.build.finalName}-sources.jar</source>
+            <outputDirectory>.</outputDirectory>
+            <destName>BEAST.app.src.jar</destName>
         </file>
     </files>
 
