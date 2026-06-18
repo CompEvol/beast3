@@ -9,12 +9,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.spi.ToolProvider;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -62,6 +65,47 @@ public class ModuleLayerCrossDependencyTest {
         Class<?> pluginClass = BEASTClassLoader.forName("mptestplugin.Plugin");
         String result = (String) pluginClass.getMethod("go").invoke(null);
         assertEquals("base+plugin", result, "cross-layer call should execute");
+    }
+
+    /**
+     * Regression test for the BEAUti "ClassNotFoundException: beastfx.app.inputeditor.*"
+     * failure. A package's service providers are listed in its version.xml. If a
+     * version.xml scan registers a provider (via addServices → resolveLoaderFor)
+     * before the owning package's plugin ModuleLayer is registered, the provider
+     * is mapped to the fallback system loader, which cannot load it. registerPluginLayer()
+     * uses putIfAbsent and so cannot replace that stale mapping. forName() must still
+     * resolve the class by falling through to the plugin layers.
+     */
+    @Test
+    public void forNameHealsStaleFallbackLoaderMapping() throws Exception {
+        ToolProvider javac = ToolProvider.findFirst("javac").orElse(null);
+        Assumptions.assumeTrue(javac != null, "no javac tool available - skipping");
+
+        Path work = Files.createTempDirectory("stale-loader-test");
+
+        // A modular jar exporting a provider class, mimicking beast.fx's input editors.
+        Path editorJar = buildModuleJar(javac, work, "fxstaletest", null,
+                "module fxstaletest { exports fxstaletest; }",
+                "fxstaletest", "Editor",
+                "package fxstaletest; public class Editor { }");
+
+        // 1. Simulate the version.xml scan that runs before the plugin layer exists:
+        //    the provider is mapped to the fallback system loader (cannot load it).
+        Map<String, Set<String>> services = Map.of(
+                "fxstaletest.InputEditor", Set.of("fxstaletest.Editor"));
+        BEASTClassLoader.classLoader.addServices("FxStaleTest", services);
+
+        // 2. Register the package's real plugin layer. putIfAbsent leaves the
+        //    stale fallback mapping from step 1 in place.
+        boolean loaded = PackageManager.createAndRegisterModuleLayer(
+                List.of(editorJar), null, "FxStaleTest", "1.0", "FxStaleTest");
+        assertTrue(loaded, "provider module should load into a plugin layer");
+
+        // 3. Despite the stale mapping, forName must resolve the class via the
+        //    plugin layer (previously threw ClassNotFoundException here).
+        Class<?> editor = BEASTClassLoader.forName("fxstaletest.Editor");
+        assertNotNull(editor);
+        assertEquals("fxstaletest.Editor", editor.getName());
     }
 
     /** Compile a single-package module and pack it into a jar; return the jar path. */

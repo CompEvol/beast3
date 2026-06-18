@@ -4,9 +4,18 @@
     <!-- Builds the installable BEAST.base package zip:
            version.xml          (the BEAST.base package descriptor, at repo root)
            lib/beast-base.jar    + its third-party runtime dependencies
+           examples/             example XML (+ nexus data) shown in BEAUti
          beast-pkgmgmt is excluded: it is the bootstrap/launcher and is always
          provided by the core distribution, so bundling it here would duplicate
-         the beast.pkgmgmt module on the module path. -->
+         the beast.pkgmgmt module on the module path.
+
+         Examples are shipped *inside the package* (not only in the release
+         bundle root) so that a BEAST.base point release can update them via the
+         package manager: seedBundledPackage()/the package manager extract them
+         to <user package dir>/BEAST.base/examples, which BeautiTabPane and
+         PackageHealthChecker discover by scanning getBeastDirectories(). The
+         curated subset mirrors what release/.../assemble-bundle.sh copies into
+         the bundle root. -->
     <id>package</id>
     <formats>
         <format>zip</format>
@@ -19,6 +28,18 @@
             <outputDirectory>.</outputDirectory>
         </file>
     </files>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/test/resources/beast.base/examples</directory>
+            <outputDirectory>examples</outputDirectory>
+            <includes>
+                <include>*.xml</include>
+                <include>spec/*.xml</include>
+                <include>nexus/**</include>
+            </includes>
+        </fileSet>
+    </fileSets>
 
     <dependencySets>
         <dependencySet>

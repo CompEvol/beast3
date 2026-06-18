@@ -76,6 +76,14 @@ public class BEASTClassLoader {
             ClassLoader loader = class2loaderMap.get(className);
             try {
                 return Class.forName(className, false, loader);
+            } catch (ClassNotFoundException e) {
+                // The mapped loader cannot see this class. This happens when the
+                // provider was registered from a version.xml scan (via
+                // resolveLoaderFor → fallback system/context loader) before the
+                // owning package's plugin ModuleLayer was registered: the later
+                // putIfAbsent in registerPluginLayer() then cannot replace the
+                // stale fallback loader. Fall through to search the plugin layers
+                // and correct the mapping below.
             } catch (NoClassDefFoundError e) {
                 String missing = e.getMessage();
                 if (missing != null && (missing.startsWith("beastfx/") || missing.startsWith("beastfx.")
@@ -91,8 +99,15 @@ public class BEASTClassLoader {
         // 2. Plugin layers (external BEAST packages)
         for (ModuleLayer layer : pluginLayers) {
             for (Module module : layer.modules()) {
+                ClassLoader mcl = module.getClassLoader();
+                if (mcl == null) continue;
                 try {
-                    return Class.forName(className, false, module.getClassLoader());
+                    Class<?> c = Class.forName(className, false, mcl);
+                    // Self-heal: cache the loader that actually resolved the
+                    // class so subsequent lookups skip the failing mapped loader
+                    // (and the exception-driven fall-through above).
+                    class2loaderMap.put(className, mcl);
+                    return c;
                 } catch (ClassNotFoundException | NoClassDefFoundError e) {
                     // try next module
                 }
@@ -557,6 +572,20 @@ public class BEASTClassLoader {
             if (desc != null && desc.packages().contains(pkg)) {
                 ClassLoader loader = m.getClassLoader();
                 if (loader != null) return loader;
+            }
+        }
+        // Also consult already-registered plugin layers: a package's classes
+        // live in its own plugin ModuleLayer (e.g. beast.fx for the BEAUti
+        // input editors), not in the boot layer. Without this, providers listed
+        // in a version.xml would be mapped to the fallback system loader, which
+        // cannot load them, leaving forName() to fall through on every lookup.
+        for (ModuleLayer layer : pluginLayers) {
+            for (Module m : layer.modules()) {
+                java.lang.module.ModuleDescriptor desc = m.getDescriptor();
+                if (desc != null && desc.packages().contains(pkg)) {
+                    ClassLoader loader = m.getClassLoader();
+                    if (loader != null) return loader;
+                }
             }
         }
         return fallbackClassLoader();
