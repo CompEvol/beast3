@@ -160,12 +160,16 @@ fi
 # works from the install dir before first-run seeding.
 echo ""
 echo "==> Step 6: Extracting examples from $(basename "$BASE_PKG_ZIP")..."
-if unzip -o -q "$BASE_PKG_ZIP" 'examples/*' -d "$BUNDLE"; then
-    EXAMPLE_COUNT=$(find "$BUNDLE/examples" -name "*.xml" | wc -l | tr -d ' ')
-    echo "    Extracted ${EXAMPLE_COUNT} example XML files (incl. spec/)"
-else
-    echo "    WARNING: no examples found in $BASE_PKG_ZIP"
-fi
+# Extract the full zip to a temp dir then copy examples/ — avoids unzip glob
+# portability issues where 'examples/*' may not match subdirs on some platforms.
+# Which subdirs are included/excluded is controlled by the include patterns in
+# beast-base/src/assembly/package.xml (e.g. spec/*.xml excludes spec/beast2vs1/).
+EXAMPLES_TMP=$(mktemp -d)
+unzip -o -q "$BASE_PKG_ZIP" -d "$EXAMPLES_TMP"
+cp -r "$EXAMPLES_TMP/examples/." "$BUNDLE/examples/"
+rm -rf "$EXAMPLES_TMP"
+EXAMPLE_COUNT=$(find "$BUNDLE/examples" -name "*.xml" | wc -l | tr -d ' ')
+echo "    Extracted ${EXAMPLE_COUNT} example XML files (incl. spec/)"
 
 # ── Step 7: Copy version.xml and docs ────────────────────────────────────────
 echo ""
