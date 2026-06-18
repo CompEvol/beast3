@@ -69,6 +69,6 @@ if [ -n "$BEAST_EXTRA_LIBS" ]; then
 	fi
 fi
 
-exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \
+exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \
     -Xss256m -Xmx8g -Djava.library.path="$LD_LIBRARY_PATH" -Duser.language=en -Dfile.encoding=UTF-8 \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher "$@"
