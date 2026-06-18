@@ -232,7 +232,7 @@ for cfg in "$BUNDLE/app/"*.cfg; do
     sed -i \
         -e '/^app\.classpath/d' \
         -e 's|^app\.mainclass=\(.*\)|app.mainmodule=beast.pkgmgmt/\1|' \
-        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject' \
+        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\njava-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web' \
         "$cfg"
 done
 

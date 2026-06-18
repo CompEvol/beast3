@@ -25,6 +25,6 @@ JAVA_HOME="$BUNDLE_HOME/jre"
 export JAVA_HOME
 JAVA="$JAVA_HOME/bin/java"
 APP="$BUNDLE_HOME/lib"
-exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \
+exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeautiLauncher -capture "$@"

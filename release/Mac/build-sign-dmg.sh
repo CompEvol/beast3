@@ -226,7 +226,8 @@ sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launc
 # media) come along automatically.
 sed -i '' '/^\[JavaOptions\]/a\
 java-options=--module-path=\$APPDIR\
-java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject
+java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\
+java-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web
 ' "$BEAST_CFG"
 
 # jpackage may strip bin/java from the bundled runtime (it uses its own native
@@ -295,12 +296,12 @@ build_wrapper_app() {
     local launch_cmd
     if [ -n "$extra_args" ]; then
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class $extra_args \"\$@\""
     else
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject \\
+    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class \"\$@\""
     fi
