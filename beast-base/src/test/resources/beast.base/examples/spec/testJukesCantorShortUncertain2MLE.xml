@@ -53,7 +53,7 @@
         </populationModel>
     </tree>
 
-    <run spec="MCMC" id="mcmc" chainLength="$(chainLength=5000000)" preBurnin="50000">
+    <run spec="MCMC" id="mcmc" chainLength="5000000" preBurnin="50000">
 
         <init idref="coalescentSimulator"/>
         <distribution spec="CompoundDistribution" id="posterior">

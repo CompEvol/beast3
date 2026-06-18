@@ -73,7 +73,7 @@
 
     <tree spec="beast.base.spec.evolution.tree.ClusterTree" id="tree" clusterType="upgma" taxa="@alignment.p1"/>
 
-    <run spec="MCMC" id="mcmc" chainLength="$(chainLength=10000000)">
+    <run spec="MCMC" id="mcmc" chainLength="10000000">
         <state storeEvery="100000">
             <stateNode idref="hky.kappa.p1"/>
             <stateNode idref="hky.kappa.p2"/>

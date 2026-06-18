@@ -39,7 +39,7 @@
     <!-- expected yule prior = 1/(n.lambda)\sum_{k=1}^{n-1}k/(n-k) where lambda = birth rate, n = number of taxa
 	with lambda=1, n=-4 we expect 1/4(1/3+2/2+3/1)=1.155555555
  -->
-    <run spec="MCMC" chainLength="$(chainLength=10)">
+    <run spec="MCMC" chainLength="10">
 	<state>
 	    <stateNode idref="tree"/>
 	    <stateNode idref="birthRate"/>
