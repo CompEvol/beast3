@@ -17,7 +17,7 @@
 # version.xml must NOT be copied to Contents/ root — Apple's codesign resource
 # rules reject plain files directly in Contents/.
 #
-# Also includes bin/ (command-line launchers) and examples/ (sample XML files, incl. spec/).
+# Also includes bin/ (command-line launchers) and examples/ (sample beast3 XML files).
 #
 # Usage:
 #   cd release/Mac && ./build-sign-dmg.sh

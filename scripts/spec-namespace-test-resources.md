@@ -41,7 +41,7 @@ module exclusively owns its JPMS module name, no two modules can collide.
 src/test/resources/examples/   →   src/test/resources/beast.base/examples/
 ```
 
-All contents (XMLs, subdirectories `nexus/`, `beast2vs1/`, `spec/`, `fasta/`,
+All contents (XMLs, subdirectories `nexus/`, `beast2vs1/`, `fasta/`,
 `benchmark/`, `parameterised/`, `starbeastinit/`, `testDirichlet/`) move
 unchanged.
 
@@ -53,7 +53,7 @@ unchanged.
 | `test/beast/util/NexusParserTest.java:160` | `"/examples/nexus/Primates.nex"` | `"/beast.base/examples/nexus/Primates.nex"` |
 | `test/beast/integration/XMLProducerTest.java:37` | `"/examples/nexus"` | `"/beast.base/examples/nexus"` |
 | `test/beast/beast2vs1/TestFramework.java:28` | `"/examples/beast2vs1/"` | `"/beast.base/examples/beast2vs1/"` |
-| `beast/base/spec/beast2vs1/TestFramework.java:35` | `"/examples/spec/beast2vs1/"` | `"/beast.base/examples/spec/beast2vs1/"` |
+| `beast/base/spec/beast2vs1/TestFramework.java:35` | `"/examples/spec/beast2vs1/"` | `"/beast.base/examples/beast2vs1/"` |
 
 ### beast-fx
 

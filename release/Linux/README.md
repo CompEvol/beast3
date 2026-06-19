@@ -49,8 +49,7 @@ BEAST.v<version>/
   bin/              shell launchers (beast, beauti, treeannotator,
                     logcombiner, applauncher, packagemanager,
                     loganalyser, densitree)
-  examples/         sample XML files + nexus/
-    spec/           beast3 spec XMLs
+  examples/         beast3 XML files + nexus/ + fasta/
   jre/              bundled Zulu JRE+FX 25 (target platform)
   lib/              boot-layer JARs (beast-pkgmgmt + deps, DensiTree.jar)
   lib/packages/     beast-base and beast-fx package ZIPs — seeded into
@@ -134,9 +133,9 @@ Or as a workflow step (requires `contents: write` permission):
    `release/Linux/linuxbin/` into `bin/` and made executable. Each script
    resolves `BUNDLE_HOME` symlink-safely, sets `JAVA_HOME=$BUNDLE_HOME/jre`,
    and invokes `jre/bin/java` with `--module-path lib/`.
-8. **Copy examples** — XML files and `nexus/` from
-   `beast-base/src/test/resources/beast.base/examples/`;
-   `spec/*.xml` files go into `examples/spec/`.
+8. **Copy examples** — beast3 XML files, `nexus/`, and `fasta/` from
+   `beast-base/src/test/resources/beast.base/examples/` into `examples/`.
+   `beast2vs1/` and `legacy/` subdirectories are excluded from the release.
 9. **Copy version.xml and docs** — `version.xml`, `README.txt`, `LICENSE.txt`.
 10. **Verify bundle** — checks required files, JAR count, beast-base/beast-fx
     absent from `lib/`, package ZIPs present in `lib/packages/`, bin/
