@@ -1,13 +1,12 @@
 package test.beastfx.integration;
 
-import java.io.File;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
 
 /**
  * check that a chain can be resumed after termination *
@@ -24,9 +23,9 @@ public class ResumeTest  {
     public void test_ThatXmlExampleResumes() throws Exception {
         Randomizer.setSeed(127);
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
-        String dir = System.getProperty("user.dir") + "/beast.base/examples";
+        String dir = System.getProperty("user.dir") + "beast-base/src/test/resources/beast.base/examples/spec";
         if (!new File(dir).exists()) {
-        	dir = System.getProperty("user.dir") + "/../beast2/examples";
+        	dir = System.getProperty("user.dir") + "/../beast-base/src/test/resources/beast.base/examples/spec";
         }
         String fileName = dir + "/" + XML_FILE;
 
