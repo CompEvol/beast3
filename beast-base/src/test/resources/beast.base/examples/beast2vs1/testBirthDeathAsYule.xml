@@ -1,7 +1,12 @@
 <?xml version="1.0" standalone="yes"?>
 <!-- test Yule birth model and Birth Death model per Gernhard 2008-->
 <beast version='2.0'
-       namespace='beast.base.evolution.speciation:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
 
     <data id="alignment" dataType="nucleotide">
         <sequence taxon="tip1">A</sequence>
@@ -112,16 +117,16 @@
 
     <!-- A prior on the distribution node heights defined given                  -->
     <!-- a Yule speciation process (a pure birth process).                       -->
-    <input spec='BirthDeathGernhard08Model' id="birthDeath">
+    <input spec='beast.base.spec.evolution.speciation.BirthDeathGernhard08Model' id="birthDeath">
         <birthDiffRate idref="birthRate"/>
         <relativeDeathRate idref='relativeDeathRate'/>
         <sampleProbability idref="sampleProbability"/>
         <tree idref='tree'/>
     </input>
 
-    <parameter id="birthRate" value="1.0" lower="0.0" upper="1000000.0"/>
-    <parameter id='relativeDeathRate' value='0.0' lower="0.0" upper="1.0"/>
-    <parameter id="sampleProbability" value="1.0"/>
+    <parameter id="birthRate" value="1.0" spec="RealScalarParam" domain="PositiveReal"/>
+    <parameter id="relativeDeathRate" value="0.0" spec="RealScalarParam" domain="NonNegativeReal"/>
+    <parameter id="sampleProbability" value="1.0" spec="RealScalarParam" domain="UnitInterval"/>
 
     <run spec='MCMC' chainLength="1000000">
         <state>
@@ -131,12 +136,11 @@
 
         <distribution spec="CompoundDistribution" id="posterior">
             <distribution id="birthDeath.prior" idref='birthDeath'/>
-            <distribution id="birthRate.prior" spec="beast.base.inference.distribution.Prior" x="@birthRate">
-                <distr id="OneOnX" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
-            </distribution>
+            <distribution id="birthRate.prior" spec="beast.base.spec.beast2vs1.OneOnX" param="@birthRate"/>
         </distribution>
 
-        <operator id='birthScaler' spec='ScaleOperator' scaleFactor="0.75" weight="1" parameter="@birthRate"/>
+        <operator id='birthScaler' spec='beast.base.spec.inference.operator.ScaleOperator'
+                  scaleFactor="0.75" weight="1" parameter="@birthRate"/>
 
         <logger logEvery="1000" fileName="test.$(seed).log">
             <model idref='posterior'/>

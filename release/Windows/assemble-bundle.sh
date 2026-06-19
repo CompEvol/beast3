@@ -255,13 +255,13 @@ echo "==> Step 7: Extracting examples from $(basename "$BASE_PKG_ZIP")..."
 # Extract the full zip to a temp dir then copy examples/ — avoids unzip glob
 # portability issues where 'examples/*' may not match subdirs on some platforms.
 # Which subdirs are included/excluded is controlled by the include patterns in
-# beast-base/src/assembly/package.xml (e.g. spec/*.xml excludes spec/beast2vs1/).
+# beast-base/src/assembly/package.xml (beast2vs1/ and legacy/ are excluded).
 EXAMPLES_TMP=$(mktemp -d)
 unzip -o -q "$BASE_PKG_ZIP" -d "$EXAMPLES_TMP"
 cp -r "$EXAMPLES_TMP/examples/." "$BUNDLE/examples/"
 rm -rf "$EXAMPLES_TMP"
 EXAMPLE_COUNT=$(find "$BUNDLE/examples" -name "*.xml" | wc -l | tr -d ' ')
-echo "    Extracted ${EXAMPLE_COUNT} example XML files (incl. spec/)"
+echo "    Extracted ${EXAMPLE_COUNT} example XML files"
 
 # ── Step 8: Copy version.xml and docs ────────────────────────────────────────
 echo ""
@@ -282,7 +282,7 @@ _fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 
 for f in beast.exe beauti.exe treeannotator.exe logcombiner.exe \
           loganalyser.exe applauncher.exe packagemanager.exe \
-          runtime/bin/java.exe app version.xml examples/spec; do
+          runtime/bin/java.exe app version.xml examples; do
     [ -e "$BUNDLE/$f" ] && _ok "$f present" || _fail "$f MISSING"
 done
 
@@ -309,10 +309,10 @@ PKG_COUNT=$(find "$BUNDLE/app/packages" -name "*.zip" 2>/dev/null | wc -l | tr -
     && _ok "app/packages/ has ${PKG_COUNT} core package zip(s)" \
     || _fail "app/packages/ has too few package zips: ${PKG_COUNT} (expected ≥2)"
 
-SPEC_COUNT=$(find "$BUNDLE/examples/spec" -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
+SPEC_COUNT=$(find "$BUNDLE/examples" -maxdepth 1 -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
 [ "$SPEC_COUNT" -gt 0 ] \
-    && _ok "examples/spec/ has ${SPEC_COUNT} XML files" \
-    || _fail "examples/spec/ is empty — no XML files copied"
+    && _ok "examples/ has ${SPEC_COUNT} beast3 XML files" \
+    || _fail "examples/ is empty — no XML files copied"
 
 if $DENSITREE_FOUND; then
     [ -f "$BUNDLE/app/DensiTree.jar" ] \

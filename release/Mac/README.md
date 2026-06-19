@@ -68,7 +68,7 @@ release/Mac/
 │   │   ├── AppLauncher.app   ← shell-script wrapper
 │   │   ├── DensiTree.app     ← standalone JAR wrapper (if present)
 │   │   ├── bin/              ← command-line launcher scripts
-│   │   ├── examples/         ← sample XML files + nexus/ + spec/
+│   │   ├── examples/         ← beast3 XML files + nexus/ + fasta/
 │   │   ├── README.txt
 │   │   └── LICENSE.txt
 │   ├── .background/          ← install.png for DMG Finder window
@@ -197,8 +197,8 @@ Non-bundle content is added **after** signing, so it cannot affect any bundle
 seal (it lives alongside `.app` bundles, not inside them):
 
 - `bin/` — copied from `release/Mac/macbin`, made executable.
-- `examples/` — top-level XML files, `nexus/` and `spec/` subdirectories from
-  `beast-base/src/test/resources/beast.base/examples`.
+- `examples/` — beast3 XML files, `nexus/`, and `fasta/` from
+  `beast-base/src/test/resources/beast.base/examples`. `beast2vs1/` and `legacy/` are excluded.
 - `README.txt` and `LICENSE.txt` from `release/common/`.
 
 **DMG creation (two-phase):**

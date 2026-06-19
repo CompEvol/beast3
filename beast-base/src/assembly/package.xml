@@ -45,7 +45,7 @@
             <outputDirectory>examples</outputDirectory>
             <includes>
                 <include>*.xml</include>
-                <include>spec/*.xml</include>
+                <include>fasta/**</include>
                 <include>nexus/**</include>
             </includes>
         </fileSet>

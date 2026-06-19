@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beast version='2.0'
-       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.base.evolution.branchratemodel'>
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.base.evolution.tree.coalescent:beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
 
     <!-- 17 taxa, 1485 sites, 138 patterns -->
     <data dataType="nucleotide" id="alignment">
@@ -70,7 +75,7 @@
 
     </data>
 
-    <tree spec='beast.base.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+    <tree spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
         <trait spec='beast.base.evolution.tree.TraitSet' traitname='date-forward' units='year'
                value='
 		TREESPARROW_HENAN_1_2004=2004.0,
@@ -94,22 +99,22 @@
 		PEREGRINEFALCON_HK_D0028_2004=2004.0,
 		TREESPARROW_HENAN_2_2004=2004.0,
 		HONGKONG_538_1997=1997.0'>
-		<taxa spec='beast.base.evolution.alignment.TaxonSet' alignment='@alignment'/>
+            <taxa spec='beast.base.evolution.alignment.TaxonSet' alignment='@alignment'/>
         </trait>
         <taxa idref='alignment'/>
     </tree>
 
     <siteModel spec='SiteModel' id="siteModel" gammaCategoryCount="4">
-        <parameter id='siteModel.alpha' name='shape' value="0.05" lower="0.0" upper="100.0"/>
+        <parameter id='siteModel.alpha' name='shape' spec="RealScalarParam" domain="PositiveReal" value="0.05"/>
 
         <substModel spec='HKY' id="hky">
-            <parameter name='kappa' id="hky.kappa" value="2.0" lower="0.0" upper="100.0"/>
+            <kappa id="hky.kappa" spec="RealScalarParam" domain="PositiveReal" value="2.0"/>
             <frequencies id='freqs' spec='Frequencies' data="@alignment"/>
         </substModel>
     </siteModel>
 
-    <input spec='StrictClockModel' id="branchRates">
-        <parameter name='clock.rate' id='clockRate' value="4.0E-4"/>
+    <input spec='beast.base.spec.evolution.branchratemodel.StrictClockModel' id="branchRates">
+        <parameter id="clockRate" name='clock.rate' spec="RealScalarParam" domain="PositiveReal" value="4.0E-4"/>
     </input>
 
     <input spec='TreeLikelihood' id="treeLikelihood">
@@ -119,7 +124,7 @@
         <branchRateModel idref="branchRates"/>
     </input>
 
-    <parameter id="popSize" value="380.0" lower="0.0" upper="38000.0"/>
+    <parameter id="popSize" spec="RealScalarParam" domain="PositiveReal" value="380.0"/>
 
     <run spec="MCMC" id="mcmc" chainLength="5000000"> <!--autoOptimize="true"-->
         <state>
@@ -131,40 +136,43 @@
         </state>
 
         <distribution spec="CompoundDistribution" id="posterior">
-            <!--<distribution spec="CompoundDistribution" id="prior">-->
-                <!--<distribution id="hky.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@hky.kappa">-->
-                <!--<distr id="LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false" spec="beast.base.inference.distribution.LogNormalDistributionModel"/>-->
-                <!--</distribution>-->
-                <!--<distribution id="hky.frequencies.prior" spec="beast.base.inference.distribution.Prior" x="@hky.frequencies">-->
-                <!--<distr id="Uniform" lower="0.0" upper="1.0" spec="beast.base.inference.distribution.Uniform"/>-->
-                <!--</distribution>-->
-                <!--<distribution id="popSize.prior" spec="beast.base.inference.distribution.Prior" x="@popSize">-->
-                <!--<distr id="OneOnX" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>-->
-                <!--</distribution>-->
+<!--use Uniform or TruncatedDistribution to replace bounds -->
+<!--            <distribution id="shape.prior" spec="beast.base.spec.inference.distribution.Uniform" param="@siteModel.alpha">-->
+<!--                <lower id="shape.lower" spec="RealScalarParam" domain="Real" value="0.001"/>-->
+<!--                <upper id="shape.upper" spec="RealScalarParam" domain="Real" value="100.0"/>-->
+<!--            </distribution>-->
+<!--            <distribution id="kappa.prior" spec="beast.base.spec.inference.distribution.Uniform" param="@hky.kappa">-->
+<!--                <lower id="kappa.lower" spec="RealScalarParam" domain="Real" value="0.001"/>-->
+<!--                <upper id="kappa.upper" spec="RealScalarParam" domain="Real" value="100.0"/>-->
+<!--            </distribution>-->
+<!--            <distribution id="popSize.prior" spec="beast.base.spec.inference.distribution.Uniform" param="@popSize">-->
+<!--                <lower id="popSize.lower" spec="RealScalarParam" domain="Real" value="0.001"/>-->
+<!--                <upper id="popSize.upper" spec="RealScalarParam" domain="Real" value="38000.0"/>-->
+<!--            </distribution>-->
 
-                <distribution id="coalescent" spec="Coalescent">
-                    <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
-                        <tree idref="tree"/>
-                    </treeIntervals>
-                    <populationModel spec="ConstantPopulation">
-                        <popSize idref="popSize"/>
-                    </populationModel>
-                </distribution>
+            <distribution id="coalescent" spec="Coalescent">
+                <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
+                    <tree idref="tree"/>
+                </treeIntervals>
+                <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation">
+                    <popSize idref="popSize"/>
+                </populationModel>
+            </distribution>
             <!--</distribution>-->
             <distribution id='likelihood' idref="treeLikelihood"/>
         </distribution>
 
-        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.75" weight="1" parameter="@hky.kappa"/>
-        <operator id='shapeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="1" parameter="@siteModel.alpha"/>
-        <operator id='clockRateScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" parameter="@clockRate"/>
-        <operator id='popSizeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@popSize"/>
-        <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" tree="@tree"/>
+        <operator id='kappaScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="1" parameter="@hky.kappa"/>
+        <operator id='shapeScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="1" parameter="@siteModel.alpha"/>
+        <operator id='clockRateScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="1" parameter="@clockRate"/>
+        <operator id='popSizeScaler' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="3" parameter="@popSize"/>
+        <operator id='treeScaler' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.75" weight="3" tree="@tree"/>
         <operator spec='Uniform' weight="30" tree="@tree"/>
         <operator spec='SubtreeSlide' weight="15" gaussian="true" size="0.0077" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="15" tree="@tree"/>
         <operator id='wide' spec='Exchange' isNarrow='false' weight="3" tree="@tree"/>
         <operator spec='WilsonBalding' weight="1" tree="@tree"/>
-        <operator spec='UpDownOperator' scaleFactor="0.75" weight="3" up="@clockRate" down="@tree"/>
+        <operator spec='beast.base.spec.evolution.operator.UpDownOperator' scaleFactor="0.75" weight="3" up="@clockRate" down="@tree"/>
 
         <logger logEvery="500" fileName="test.$(seed).log">
             <model idref='posterior'/>

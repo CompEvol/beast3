@@ -1,7 +1,12 @@
 <?xml version="1.0" standalone="yes"?>
 <!-- test Yule birth model and Birth Death model per Gernhard 2008-->
 <beast version='2.0'
-       namespace='beast.base.evolution.speciation:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference.util:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood'>
+       namespace='beast.pkgmgmt:beast.base.core:beast.base.inference:
+       beast.evolution.nuc:beast.base.evolution.alignment:
+       beast.base.evolution.operator:beast.base.spec.inference.operator:
+       beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.substitutionmodel:
+       beast.base.spec.inference.parameter:beast.base.spec.inference.util:
+       beast.base.spec.inference.distribution:beast.base.spec.evolution.likelihood'>
 
     <data id="alignment" dataType="nucleotide">
         <sequence taxon="A">A</sequence>
@@ -16,18 +21,18 @@
         <sequence taxon="J">A</sequence>
     </data>
 
-    <input spec='beast.base.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+    <input spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma' allowSampledAncestors='false' isUltrametric='true'>
         <taxa idref='alignment'/>
     </input>
 
     <!-- A prior on the distribution node heights defined given                  -->
     <!-- a Yule speciation process (a pure birth process).                       -->
-    <input spec='YuleModel' id="yule">
+    <input spec='beast.base.spec.evolution.speciation.YuleModel' id="yule">
         <birthDiffRate idref="birthRate"/>
         <tree idref='tree'/>
     </input>
 
-    <parameter id="birthRate" value="2.0" lower="0.0" upper="100.0"/>
+    <parameter id="birthRate" value="2.0" spec="RealScalarParam" domain="PositiveReal"/>
 
     <run spec='MCMC' chainLength="2000000">
         <state>
