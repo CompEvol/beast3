@@ -15,9 +15,9 @@ import java.net.URL;
 public class ResumeTest  {
 
     final static String XML_FILE = "testHKY.xml";
-    // Classpath path to the spec example, copied from beast-base test resources
+    // Classpath path to the example, copied from beast-base test resources
     // by Maven's generate-test-resources phase (see beast-fx/pom.xml).
-    final static String XML_CLASSPATH = "beast.base/examples/spec/" + XML_FILE;
+    final static String XML_CLASSPATH = "beast.base/examples/" + XML_FILE;
 
 	{
 		ExampleXmlParsingTest.setUpTestDir();
