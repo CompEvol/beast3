@@ -42,8 +42,15 @@ public class ParameterUtils {
     public static void parseParameter(final Node node, StateNode param) {
 
         final NamedNodeMap atts = node.getAttributes();
-        param.setID(atts.getNamedItem("id").getNodeValue());
-        final String str = node.getTextContent();
+        final String id = atts.getNamedItem("id").getNodeValue();
+        param.setID(id);
+        final String fullStr = node.getTextContent();
+
+        // Parameter IDs can contain colons (e.g. "rateAC.s:primate"), so we cannot
+        // use the first colon in the text as the id/value separator.  Strip the known
+        // ID prefix so the remainder has the unambiguous form "{shape}: value(s)" or
+        // ": value" — the separator colon is then always the very first character.
+        final String str = fullStr.startsWith(id) ? fullStr.substring(id.length()) : fullStr;
 
         // Explicit bounds in state files are a BEAST2 legacy format.
         // In BEAST3, bounds are derived from the domain (see BoundedParam removal).
@@ -54,17 +61,14 @@ public class ParameterUtils {
                 ":\\s*(.*)\\s*$");
         if (boundedPattern.matcher(str).matches()) {
             throw new IllegalArgumentException(
-                    "XML file entry '" + str + "' contains explicit bounds, which are not " +
+                    "XML file entry '" + fullStr + "' contains explicit bounds, which are not " +
                     "supported in BEAST3. Bounds are now derived from the parameter domain; " +
                     "values can be constrained further using a prior distribution.");
         }
 
-        // All BEAST3 parameter types serialize without explicit bounds.
-        // The non-greedy prefix (.*?) ensures the optional {shape} group is captured
-        // for vector types (e.g. "freqs{4}: 0.25 ..."), and the non-greedy suffix (.*?)
-        // lets the trailing \s* absorb any whitespace the vector loop appends.
-        // Format: id{shape}: value(s)  — {shape} is absent for scalars.
-        Pattern noboundPattern = Pattern.compile("^.*?" +
+        // After stripping the ID prefix, str is ": value" (scalar) or "{shape}: value(s)"
+        // (vector).  No leading wildcard is needed since the ID is already removed.
+        Pattern noboundPattern = Pattern.compile("^" +
                 "(?:\\{(\\d+|\\[\\d+,\\s*\\d+\\])\\})?" +
                 ":\\s*(.*?)\\s*$");
         Matcher matcher = noboundPattern.matcher(str);

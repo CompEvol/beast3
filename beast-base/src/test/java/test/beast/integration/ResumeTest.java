@@ -35,10 +35,10 @@ public class ResumeTest {
 
     final String[] xmlFiles = {
             "testHKY.xml",           // tree + continuous params
-//TODO            "testGTR.xml",           // constrained rate matrix
+            "testGTR.xml",           // constrained rate matrix
             "bitflip.xml",           // discrete boolean state
             "testOpSubSchedule.xml", // custom operator schedule
-            "testPlates.xml",        // multi-partition
+            "testPlates.xml"        // multi-partition
     };
 
     @Test
