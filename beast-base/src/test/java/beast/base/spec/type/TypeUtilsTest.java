@@ -1,10 +1,9 @@
 package beast.base.spec.type;
 
-import org.junit.Test;
-
 import beast.base.spec.domain.Domain;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test class for TypeUtils
@@ -26,26 +25,22 @@ public class TypeUtilsTest {
 
 		@Override
 		public Object get(int... idx) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public Domain getDomain() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public int rank() {
-			// TODO Auto-generated method stub
-			return 0;
+			return shape.length;
 		}
 
 		@Override
 		public boolean isValid(Object value) {
-			// TODO Auto-generated method stub
-			return false;
+			return true; // test validation in other tests
 		}
     }
 
