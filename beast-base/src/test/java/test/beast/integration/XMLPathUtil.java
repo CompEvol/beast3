@@ -1,4 +1,4 @@
-package test.beastfx.integration;
+package test.beast.integration;
 
 import java.io.File;
 import java.net.URISyntaxException;

@@ -1,4 +1,4 @@
-package test.beastfx.integration;
+package test.beast.integration;
 
 
 import beast.base.inference.Logger;

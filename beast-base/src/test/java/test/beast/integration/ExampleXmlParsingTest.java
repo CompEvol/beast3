@@ -1,11 +1,11 @@
-package test.beastfx.integration;
+package test.beast.integration;
 
 
 import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
+import beast.base.minimal.BeastMain;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
-import beastfx.app.beast.BeastMain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledForJreRange;

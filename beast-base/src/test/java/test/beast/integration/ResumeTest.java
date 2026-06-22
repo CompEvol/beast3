@@ -1,4 +1,4 @@
-package test.beastfx.integration;
+package test.beast.integration;
 
 import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
@@ -21,7 +21,7 @@ public class ResumeTest  {
     public void test_ThatXmlExampleResumes() throws Exception {
         Randomizer.setSeed(127);
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
-        String fileName = new File(XMLPathUtil.resolveExamplesDir(), "testGTR.xml").getAbsolutePath();
+        String fileName = new File(XMLPathUtil.resolveExamplesDir(), "testHKY.xml").getAbsolutePath();
 
         System.out.println("Processing " + fileName);
         XMLParser parser = new XMLParser();
