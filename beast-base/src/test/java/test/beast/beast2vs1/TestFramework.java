@@ -1,17 +1,23 @@
 package test.beast.beast2vs1;
 
-import java.io.File;
-import java.util.List;
-
 import beagle.BeagleFlag;
 import beast.base.inference.Logger;
 import beast.base.parser.XMLParser;
-import beast.base.util.Randomizer;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import beast.base.trace.Expectation;
 import beast.base.trace.LogAnalyser;
+import beast.base.util.Randomizer;
 
+import java.io.File;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * @deprecated Use {@link beast.base.spec.beast2vs1.TestFramework} instead,
+ *             which resolves XML files via {@code getResource()} (classpath-based)
+ *             rather than {@code System.getProperty("user.dir")}.
+ */
+@Deprecated
 public abstract class TestFramework  {
     protected static long SEED = 128;
     private String[] xmls;

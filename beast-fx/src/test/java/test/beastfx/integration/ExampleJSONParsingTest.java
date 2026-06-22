@@ -1,34 +1,31 @@
 package test.beastfx.integration;
 
 
+import beast.base.inference.Logger;
+import beast.base.inference.MCMC;
+import beast.base.parser.JSONParser;
+import beast.base.util.Randomizer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-
-import beast.base.inference.Logger;
-import beast.base.inference.MCMC;
-import beast.base.parser.JSONParser;
-import beast.base.util.Randomizer;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * check whether all example files parse *
  */
 public class ExampleJSONParsingTest  {
-	{
-		ExampleXmlParsingTest.setUpTestDir();
-	}
-	
+
+    @BeforeEach
+    void setUp() { XMLPathUtil.setUpOutputDir(); }
+
     @Test
     public void test_ThatXmlExamplesParse() {
-        String dir = System.getProperty("user.dir") + "/beast.base/examples";
-        if (!new File(dir).exists()) {
-        	dir = System.getProperty("user.dir") + "/../beast2/examples";
-        }
-    	test_ThatJSONExamplesParse(dir);
+    	test_ThatJSONExamplesParse(XMLPathUtil.resolveExamplesDir());
     }
     
     public void test_ThatJSONExamplesParse(String dir) {
@@ -37,6 +34,7 @@ public class ExampleJSONParsingTest  {
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test JSON Examples in " + dir);
             File exampleDir = new File(dir);
+            assertTrue(exampleDir.exists(), "Example directory does not exist: " + dir);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {
                 @Override
 				public boolean accept(File dir, String name) {
@@ -73,8 +71,7 @@ public class ExampleJSONParsingTest  {
 
     @Test
     public void test_ThatJSONExamplesRun() {
-        String dir = System.getProperty("user.dir") + "/beast.base/examples";
-        test_ThatJSONExamplesRun(dir);
+        test_ThatJSONExamplesRun(XMLPathUtil.resolveExamplesDir());
     }
     
     public void test_ThatJSONExamplesRun(String dir) {
@@ -82,6 +79,7 @@ public class ExampleJSONParsingTest  {
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test that JSON Examples run in " + dir);
             File exampleDir = new File(dir);
+            assertTrue(exampleDir.exists(), "Example directory does not exist: " + dir);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {
                 @Override
 				public boolean accept(File dir, String name) {
