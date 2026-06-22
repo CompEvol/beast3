@@ -47,9 +47,25 @@ public class XMLPathUtil {
      * Call from {@code @BeforeEach} in each integration test class.
      */
     public static void setUpOutputDir() {
-        File testDir = new File("./test");
-        if (!testDir.exists())
-            testDir.mkdir();
-        System.setProperty("file.name.prefix", "test/");
+        setUpOutputDir("");
+    }
+
+    /**
+     * Creates {@code ./test/<subdir>/} and sets {@code file.name.prefix} to that
+     * path, isolating log and tree files for one specific test from those of others.
+     * Use when multiple tests in the same class share log-file names (e.g. when
+     * XMLs all write to {@code test.$(seed).log}).
+     *
+     * <p>Note: {@code file.name.prefix} is a JVM-wide system property, so this only
+     * prevents collisions between sequentially executed tests. For truly concurrent
+     * (multi-threaded) execution, per-JVM forking ({@code forkCount} in Surefire) is
+     * the safe approach.
+     */
+    public static void setUpOutputDir(String subdir) {
+        String path = subdir == null || subdir.isEmpty() ? "test/" : "test/" + subdir + "/";
+        File dir = new File("./" + path);
+        if (!dir.exists())
+            dir.mkdirs();
+        System.setProperty("file.name.prefix", path);
     }
 }
