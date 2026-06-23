@@ -77,18 +77,7 @@ public class ResumeTest {
 
             // --- initial run ---
             System.out.println("Processing " + fileName);
-            Logger.FILE_MODE = Logger.LogFileMode.overwrite;
-            XMLParser parser = new XMLParser();
-            beast.base.inference.Runnable runable = parser.parseFile(new File(fileName));
-            runable.setStateFile(stateFile, false);
-            MCMC mcmc = assertInstanceOf(MCMC.class, runable,
-                    xmlFileName + ": expected an MCMC runnable, cannot test resume");
-            mcmc.setInputValue("preBurnin", 0);
-            mcmc.setInputValue("chainLength", CHAIN_LENGTH);
-            for (Logger logger : mcmc.loggersInput.get()) {
-                logger.initByName("logEvery", LOG_EVERY);
-            }
-            mcmc.run();
+            runMcmc(fileName, xmlFileName, stateFile, Logger.LogFileMode.overwrite, false);
             System.out.println("Done " + fileName);
 
             // assert 1: state file must exist and record the correct checkpoint position
@@ -114,18 +103,7 @@ public class ResumeTest {
 
             // --- resume ---
             System.out.println("Resuming " + fileName);
-            Logger.FILE_MODE = Logger.LogFileMode.resume;
-            parser = new XMLParser();
-            runable = parser.parseFile(new File(fileName));
-            runable.setStateFile(stateFile, true);
-            MCMC resumeMcmc = assertInstanceOf(MCMC.class, runable,
-                    xmlFileName + ": expected an MCMC runnable, cannot test resume");
-            resumeMcmc.setInputValue("preBurnin", 0);
-            resumeMcmc.setInputValue("chainLength", CHAIN_LENGTH);
-            for (Logger logger : resumeMcmc.loggersInput.get()) {
-                logger.initByName("logEvery", LOG_EVERY);
-            }
-            resumeMcmc.run();
+            runMcmc(fileName, xmlFileName, stateFile, Logger.LogFileMode.resume, true);
             System.out.println("Done " + fileName);
 
             // assert 4: resumed run appended at least one further sample
@@ -140,6 +118,21 @@ public class ResumeTest {
                     ", resume appended " + (afterResume-beforeResume) + " lines.");
             System.out.println("**********************************\n\n");
         }
+    }
+
+    private void runMcmc(String fileName, String xmlFileName, String stateFile,
+                         Logger.LogFileMode fileMode, boolean resuming) throws Exception {
+        Logger.FILE_MODE = fileMode;
+        beast.base.inference.Runnable runable = new XMLParser().parseFile(new File(fileName));
+        runable.setStateFile(stateFile, resuming);
+        MCMC mcmc = assertInstanceOf(MCMC.class, runable,
+                xmlFileName + ": expected an MCMC runnable, cannot test resume");
+        mcmc.setInputValue("preBurnin", 0);
+        mcmc.setInputValue("chainLength", CHAIN_LENGTH);
+        for (Logger logger : mcmc.loggersInput.get()) {
+            logger.initByName("logEvery", LOG_EVERY);
+        }
+        mcmc.run();
     }
 
     /**
