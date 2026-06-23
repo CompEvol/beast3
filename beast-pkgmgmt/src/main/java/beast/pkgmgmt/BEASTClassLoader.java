@@ -1,10 +1,12 @@
 package beast.pkgmgmt;
 
 import java.io.File;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.module.ModuleReader;
+import java.lang.module.ModuleReference;
 import java.lang.module.ResolvedModule;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -466,6 +468,77 @@ public class BEASTClassLoader {
             if (url != null) return url;
         }
         return ClassLoader.getSystemResource(resourceName);
+    }
+
+    /**
+     * A resource discovered inside a module (boot or plugin layer) by
+     * {@link #listResources(String)}. The {@code path} is the resource's path
+     * within its module (e.g. {@code beast.fx/fxtemplates/Standard.xml}); call
+     * {@link #open()} to read its contents.
+     */
+    public static class ModuleResource {
+        public final String moduleName;
+        public final String path;
+        private final ModuleReference reference;
+
+        ModuleResource(String moduleName, String path, ModuleReference reference) {
+            this.moduleName = moduleName;
+            this.path = path;
+            this.reference = reference;
+        }
+
+        /** Open a stream to the resource. Closing the stream releases the
+         *  underlying {@link ModuleReader}. */
+        public InputStream open() throws IOException {
+            ModuleReader reader = reference.open();
+            Optional<InputStream> ois;
+            try {
+                ois = reader.open(path);
+            } catch (IOException e) {
+                reader.close();
+                throw e;
+            }
+            if (ois.isEmpty()) {
+                reader.close();
+                throw new IOException("Resource no longer present: " + path + " in " + moduleName);
+            }
+            return new FilterInputStream(ois.get()) {
+                @Override
+                public void close() throws IOException {
+                    try {
+                        super.close();
+                    } finally {
+                        reader.close();
+                    }
+                }
+            };
+        }
+    }
+
+    /**
+     * List every resource across the boot layer and all registered plugin
+     * layers whose path contains {@code pathFragment}. Useful for discovering
+     * package-provided resources (e.g. BEAUti templates) without knowing in
+     * advance which module ships them. Unreadable modules are skipped.
+     */
+    public static List<ModuleResource> listResources(String pathFragment) {
+        List<ModuleResource> result = new ArrayList<>();
+        List<ModuleLayer> layers = new ArrayList<>();
+        layers.add(ModuleLayer.boot());
+        layers.addAll(pluginLayers);
+        for (ModuleLayer layer : layers) {
+            for (ResolvedModule rm : layer.configuration().modules()) {
+                ModuleReference ref = rm.reference();
+                try (ModuleReader reader = ref.open()) {
+                    reader.list()
+                            .filter(r -> r.contains(pathFragment))
+                            .forEach(r -> result.add(new ModuleResource(rm.name(), r, ref)));
+                } catch (IOException e) {
+                    // skip unreadable modules
+                }
+            }
+        }
+        return result;
     }
 
     // ------------------------------------------------------------------
