@@ -93,35 +93,27 @@ public class ParameterUtils {
                 ":(?=[^:]*$)\\s*(.*?)\\s*$");
         Matcher matcher = noboundPattern.matcher(str);
 
-        Pattern scalarPattern = Pattern.compile("^.*?" +
-                ":\\s+(.*?)\\s*$");
-        Matcher scalarMatcher = scalarPattern.matcher(str);
-
-        String shape = null; // null for scalars
-        String valuesAsString = null;
         if (matcher.matches()) {
-            shape = matcher.group(1);
-            valuesAsString = matcher.group(2);
-        } else if (scalarMatcher.matches()) {
-            valuesAsString = scalarMatcher.group(1);
+            final String shape = matcher.group(1);         // null for scalars
+            final String valuesAsString = matcher.group(2);
+            final String[] valuesStr = valuesAsString.split("\\s+");
+
+            if (param instanceof RealScalarParam<?> realScalarParam) {
+                realScalarParam.fromXML(shape, valuesStr);
+            } else if (param instanceof IntScalarParam<?> intScalarParam) {
+                intScalarParam.fromXML(shape, valuesStr);
+            } else if (param instanceof RealVectorParam<?> realVectorParam) {
+                realVectorParam.fromXML(shape, valuesStr);
+            } else if (param instanceof IntVectorParam<?> intVectorParam) {
+                intVectorParam.fromXML(shape, valuesStr);
+            } else if (param instanceof BoolScalarParam boolScalar) {
+                boolScalar.fromXML(valuesStr[0]);
+            } else if (param instanceof BoolVectorParam boolVector) {
+                boolVector.fromXML(valuesStr);
+            } else
+                throw new RuntimeException("Unknown parameter type : " + param.getClass().getName());
         } else {
             throw new RuntimeException("String could not be parsed to parameter : " + str);
-        }
-        String[] valuesStr = valuesAsString.split("\\s+");
-        if (param instanceof RealScalarParam<?> realScalarParam) {
-            realScalarParam.fromXML(shape, valuesStr);
-        } else if (param instanceof IntScalarParam<?> intScalarParam) {
-            intScalarParam.fromXML(shape, valuesStr);
-        } else if (param instanceof RealVectorParam<?> realVectorParam) {
-            realVectorParam.fromXML(shape, valuesStr);
-        } else if (param instanceof IntVectorParam<?> intVectorParam) {
-            intVectorParam.fromXML(shape, valuesStr);
-        } else if (param instanceof BoolScalarParam boolScalar) {
-            boolScalar.fromXML(valuesStr[0]);
-        } else if (param instanceof BoolVectorParam boolVector) {
-            boolVector.fromXML(valuesStr);
-        } else {
-            throw new RuntimeException("Unknown parameter type : " + param.getClass().getName());
         }
 
     }
