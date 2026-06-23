@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -80,14 +81,14 @@ public class ResumeTest {
             XMLParser parser = new XMLParser();
             beast.base.inference.Runnable runable = parser.parseFile(new File(fileName));
             runable.setStateFile(stateFile, false);
-            if (runable instanceof MCMC mcmc) {
-                mcmc.setInputValue("preBurnin", 0);
-                mcmc.setInputValue("chainLength", CHAIN_LENGTH);
-                for (Logger logger : mcmc.loggersInput.get()) {
-                    logger.initByName("logEvery", LOG_EVERY);
-                }
-                mcmc.run();
+            MCMC mcmc = assertInstanceOf(MCMC.class, runable,
+                    xmlFileName + ": expected an MCMC runnable, cannot test resume");
+            mcmc.setInputValue("preBurnin", 0);
+            mcmc.setInputValue("chainLength", CHAIN_LENGTH);
+            for (Logger logger : mcmc.loggersInput.get()) {
+                logger.initByName("logEvery", LOG_EVERY);
             }
+            mcmc.run();
             System.out.println("Done " + fileName);
 
             // assert 1: state file must exist and record the correct checkpoint position
@@ -117,14 +118,14 @@ public class ResumeTest {
             parser = new XMLParser();
             runable = parser.parseFile(new File(fileName));
             runable.setStateFile(stateFile, true);
-            if (runable instanceof MCMC mcmc) {
-                mcmc.setInputValue("preBurnin", 0);
-                mcmc.setInputValue("chainLength", CHAIN_LENGTH);
-                for (Logger logger : mcmc.loggersInput.get()) {
-                    logger.initByName("logEvery", LOG_EVERY);
-                }
-                mcmc.run();
+            MCMC resumeMcmc = assertInstanceOf(MCMC.class, runable,
+                    xmlFileName + ": expected an MCMC runnable, cannot test resume");
+            resumeMcmc.setInputValue("preBurnin", 0);
+            resumeMcmc.setInputValue("chainLength", CHAIN_LENGTH);
+            for (Logger logger : resumeMcmc.loggersInput.get()) {
+                logger.initByName("logEvery", LOG_EVERY);
             }
+            resumeMcmc.run();
             System.out.println("Done " + fileName);
 
             // assert 4: resumed run appended at least one further sample
