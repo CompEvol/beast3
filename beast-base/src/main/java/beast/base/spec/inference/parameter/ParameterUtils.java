@@ -23,20 +23,23 @@ public class ParameterUtils {
      * This method is used by {@link StateNode#fromXML(Node)} to restore a parameter from its
      * serialized state-file string, and must stay consistent with {@link #paramToString(StateNode)}.
      * <p>
-     * In BEAST3, bounds are derived from the parameter's domain and are never written to the
-     * state file. The expected format is therefore always bound-free:
+     * The XML node's {@code id} attribute is set on {@code param} directly; the node's text
+     * content is the full {@link #paramToString(StateNode)} output, which still begins with the
+     * parameter ID.  In BEAST 3, bounds are derived from the domain at runtime and are never
+     * written to the state file.  Expected formats:
      * <ul>
      *   <li>scalar: {@code kappa: 29}</li>
      *   <li>vector: {@code freqs{4}: 0.25 0.25 0.25 0.25}</li>
      *   <li>boolean scalar: {@code isEstimated: true}</li>
      *   <li>boolean vector: {@code isSelected{2}: true false}</li>
      * </ul>
-     * A state file entry that still contains explicit bounds (BEAST2 legacy format such as
-     * {@code kappa{[0.0,Infinity]}: 29}) is rejected with {@link IllegalArgumentException}.
+     * A state file entry in the BEAST 2 format — where explicit bounds are embedded as
+     * {@code kappa [0.0 Infinity] (0.0,Infinity): 29 } — is rejected with
+     * {@link IllegalArgumentException}.
      *
      * @param node   XML node whose text content is the serialized parameter string
      * @param param  the target {@link StateNode} to restore
-     * @throws IllegalArgumentException if the string contains legacy explicit bounds
+     * @throws IllegalArgumentException if the string matches the BEAST 2 bounded parameter format
      * @throws RuntimeException         if the string format is unrecognised
      */
     public static void parseParameter(final Node node, StateNode param) {
@@ -44,33 +47,50 @@ public class ParameterUtils {
         final NamedNodeMap atts = node.getAttributes();
         final String id = atts.getNamedItem("id").getNodeValue();
         param.setID(id);
-        final String fullStr = node.getTextContent();
+        final String str = node.getTextContent();
 
-        // Parameter IDs can contain colons (e.g. "rateAC.s:primate"), so we cannot
-        // use the first colon in the text as the id/value separator.  Strip the known
-        // ID prefix so the remainder has the unambiguous form "{shape}: value(s)" or
-        // ": value" — the separator colon is then always the very first character.
-        final String str = fullStr.startsWith(id) ? fullStr.substring(id.length()) : fullStr;
-
-        // Explicit bounds in state files are a BEAST2 legacy format.
-        // In BEAST3, bounds are derived from the domain (see BoundedParam removal).
-        // Fail fast so the user knows to restart rather than resume from such a file.
-        Pattern boundedPattern = Pattern.compile("^.*" +
-                "\\{" + "(?:(\\d+|\\[\\d+,\\s*\\d+\\]),\\s*)?" +
-                "[\\[\\(](.*),(.*)[\\]\\)]" + "\\}" +
-                ":\\s*(.*)\\s*$");
-        if (boundedPattern.matcher(str).matches()) {
-            throw new IllegalArgumentException(
-                    "XML file entry '" + fullStr + "' contains explicit bounds, which are not " +
-                    "supported in BEAST3. Bounds are now derived from the parameter domain; " +
-                    "values can be constrained further using a prior distribution.");
+        // beast2 cases: 1. hky.frequencies[4 1] (-Infinity,Infinity): 0.2 0.2 0.2 0.4
+        //               2. hky.kappa[1 1] (0.0,Infinity): 5.0
+        Pattern b2pattern1 = Pattern.compile("^.*\\[(.*) (.*)\\].*\\((.*),(.*)\\):\\s*(.*)\\s*$");
+        Pattern b2pattern2 = Pattern.compile(".*\\[(.*)\\].*\\((.*),(.*)\\):\\s*(.*)\\s*$");
+        if (b2pattern1.matcher(str).matches() || b2pattern2.matcher(str).matches()) {
+            throw new IllegalArgumentException("XML file entry '" + str +
+                    " is BEAST 2 version, please use BEAST 3 !");
         }
 
-        // After stripping the ID prefix, str is ": value" (scalar) or "{shape}: value(s)"
-        // (vector).  No leading wildcard is needed since the ID is already removed.
-        Pattern noboundPattern = Pattern.compile("^" +
+        // str is the full paramToString() output; the ID prefix is NOT pre-stripped.
+        // Examples: "hky.kappa: 2.5"  or  "freqParameter.s:primate{4}: 0.25 0.25 0.25 0.25"
+        //
+        // Segment 1 — ^.*?
+        //   Non-greedy wildcard that skips the parameter ID.  Non-greedy is required
+        //   because the ID may itself contain colons (e.g. "freqParameter.s:primate"),
+        //   so greedy .* would overshoot past the shape token {N}.
+        //
+        // Segment 2 — (?:\{(\d+|\[\d+,\s*\d+\])\})?
+        //   The whole segment is optional (?:...)?  — absent for scalar parameters.
+        //   \{  \}       literal braces that wrap the shape token
+        //   (...)        capturing group(1): the shape token itself, two alternatives:
+        //     \d+          vector: one or more digits, e.g. "4"  → matches {4}
+        //     |
+        //     \[\d+,\s*\d+\]  matrix: literal "[", digits (rows), comma, optional
+        //                     whitespace \s*, digits (cols), literal "]"
+        //                     e.g. "[2,3]" or "[2, 3]"  → matches {[2,3]}
+        //   group(1) is null when the segment is absent (scalar).
+        //
+        // Segment 3 — :(?=[^:]*$)\s*(.*?)\s*$
+        //   :            literal colon — the key-value separator
+        //   (?=[^:]*$)   lookahead: [^:]* matches zero or more non-colon characters,
+        //                anchored to $ (end of string).  This asserts that no further
+        //                colon exists after this one, so we always match the LAST colon
+        //                even when the ID contains colons.
+        //   \s*          skips optional whitespace between the colon and the value
+        //   (.*?)        capturing group(2): the value string (non-greedy, so the
+        //                trailing \s* below can absorb whitespace rather than group(2))
+        //   \s*$         absorbs trailing whitespace (e.g. the space paramToString()
+        //                appends after each vector element) without including it in group(2)
+        Pattern noboundPattern = Pattern.compile("^.*?" +
                 "(?:\\{(\\d+|\\[\\d+,\\s*\\d+\\])\\})?" +
-                ":\\s*(.*?)\\s*$");
+                ":(?=[^:]*$)\\s*(.*?)\\s*$");
         Matcher matcher = noboundPattern.matcher(str);
 
         if (matcher.matches()) {
