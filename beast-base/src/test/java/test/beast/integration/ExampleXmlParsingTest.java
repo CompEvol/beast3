@@ -1,6 +1,17 @@
-package test.beastfx.integration;
+package test.beast.integration;
 
 
+import beast.base.inference.Logger;
+import beast.base.inference.MCMC;
+import beast.base.minimal.BeastMain;
+import beast.base.parser.XMLParser;
+import beast.base.util.Randomizer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -9,39 +20,21 @@ import java.security.Permission;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
-
-import beastfx.app.beast.BeastMain;
-import beast.base.inference.Logger;
-import beast.base.inference.MCMC;
-import beast.base.parser.XMLParser;
-import beast.base.util.Randomizer;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * check whether all example files parse *
  */
+// Logger.FILE_MODE and file.name.prefix are JVM-wide globals; serialize all classes
+// that mutate them so parallel test runs don't clobber each other's prefix mid-run.
+@ResourceLock(value = "beast.logger.globals", mode = ResourceAccessMode.READ_WRITE)
 public class ExampleXmlParsingTest  {
-	public static void setUpTestDir() {
-		// make sure output goes to test directory
-		File testDir = 	new File("./test");
-		if (!testDir.exists()) {
-			testDir.mkdir();
-		}
-		System.setProperty("file.name.prefix","test/");
-	}
-	
-	{
-		setUpTestDir();
-	}
+    @BeforeEach
+    void setUp() { XMLPathUtil.setUpOutputDir(); }
 
     @Test
     public void test_ThatXmlExamplesParse() {
-        // Examples are copied from beast-base test resources to target/test-classes/beast.base/examples/
-        String dir = System.getProperty("user.dir") + "/beast.base/examples";
-    	test_ThatXmlExamplesParse(dir);
+    	test_ThatXmlExamplesParse(XMLPathUtil.resolveExamplesDir());
     }
     
     public void test_ThatXmlExamplesParse(String dir) {
@@ -87,8 +80,7 @@ public class ExampleXmlParsingTest  {
 
     @Test
     public void test_ThatXmlExamplesRun() {
-        String dir = System.getProperty("user.dir") + "/beast.base/examples";
-        test_ThatXmlExamplesRun(dir);
+        test_ThatXmlExamplesRun(XMLPathUtil.resolveExamplesDir());
     }
     
     public void test_ThatXmlExamplesRun(String dir) {
@@ -157,7 +149,7 @@ public class ExampleXmlParsingTest  {
     @DisabledForJreRange(min = JRE.JAVA_18, disabledReason = "SecurityManager removed in Java 18+")
 	@Test
     public void test_ThatParameterisedXmlExamplesRuns() throws IOException {
-        String dir = System.getProperty("user.dir") + "/beast.base/examples/parameterised";
+        String dir = XMLPathUtil.resolveExamplesDir() + "/parameterised";
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
         System.out.println("Test that parameterised XML example runs in " + dir + "/RSV2.xml");
         Randomizer.setSeed(127);

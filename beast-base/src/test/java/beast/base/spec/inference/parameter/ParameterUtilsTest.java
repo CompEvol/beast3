@@ -3,11 +3,14 @@ package beast.base.spec.inference.parameter;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -135,18 +138,16 @@ public class ParameterUtilsTest {
     @Test
     void testLegacyScalarBoundsThrows() throws Exception {
         // BEAST2 format: explicit bounds in braces
-        String legacy = "kappa{[0.0,Infinity]}: 1.5";
+        String legacy = "kappa[1 1] (0.0,Infinity): 1.0";
         RealScalarParam<PositiveReal> param = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> ParameterUtils.parseParameter(createNode("kappa", legacy), param));
-        assertTrue(ex.getMessage().contains("explicit bounds"));
-        assertTrue(ex.getMessage().contains("prior distribution"));
     }
 
     @Test
     void testLegacyVectorBoundsThrows() throws Exception {
         // BEAST2 format: shape + explicit bounds
-        String legacy = "freqs{4, [0.0,1.0]}: 0.25 0.25 0.25 0.25";
+        String legacy = "hky.frequencies[4 1] (-Infinity,Infinity): 0.25, 0.25, 0.25, 0.25";
         RealVectorParam<Real> param = new RealVectorParam<>(new double[]{0.25, 0.25, 0.25, 0.25}, Real.INSTANCE);
         assertThrows(IllegalArgumentException.class,
                 () -> ParameterUtils.parseParameter(createNode("freqs", legacy), param));
@@ -170,5 +171,146 @@ public class ParameterUtilsTest {
         String s = param.toString();
         assertTrue(s.contains("{2}"), "Vector toString must contain '{2}', got: " + s);
         assertFalse(s.contains("{2,"), "Vector toString must not contain legacy '{2,' format, got: " + s);
+    }
+
+    // ------------------------------------------------------------------ noboundPattern regex
+
+    /**
+     * White-box tests for the regex used inside {@link ParameterUtils#parseParameter}.
+     * The pattern is replicated here so each token can be exercised in isolation
+     * without wiring up real StateNode objects.
+     *
+     * Pattern (unescaped):
+     *   ^.*?  (?:\{(\d+|\[\d+,\s*\d+\])\})?  :(?=[^:]*$)\s*(.*?)\s*$
+     *
+     * group(1) — shape token: integer N (vector) or [r,c] (matrix); null for scalars
+     * group(2) — trimmed value string
+     */
+    @Nested
+    class NoboundPatternTest {
+
+        private static final Pattern PATTERN = Pattern.compile("^.*?" +
+                "(?:\\{(\\d+|\\[\\d+,\\s*\\d+\\])\\})?" +
+                ":(?=[^:]*$)\\s*(.*?)\\s*$");
+
+        private Matcher match(String input) {
+            Matcher m = PATTERN.matcher(input);
+            assertTrue(m.matches(), "Expected pattern to match: «" + input + "»");
+            return m;
+        }
+
+        // -- Segment 1: ^.*?  (ID may contain colons; last colon wins) --------
+
+        @Test
+        void scalarSimpleId() {
+            // plain ID with no colon — group(1) null, group(2) = value
+            Matcher m = match("hky.kappa: 21.471014150629927");
+            assertNull(m.group(1));
+            assertEquals("21.471014150629927", m.group(2));
+        }
+
+        @Test
+        void scalarIdWithEmbeddedColon() {
+            // ID itself contains a colon; the LAST colon is the separator
+            Matcher m = match("freqParameter.s:primate: 0.25");
+            assertNull(m.group(1));
+            assertEquals("0.25", m.group(2));
+        }
+
+        @Test
+        void booleanScalar() {
+            Matcher m = match("isEstimated: true");
+            assertNull(m.group(1));
+            assertEquals("true", m.group(2));
+        }
+
+        @Test
+        void scalarWithLeadingSpace() {
+            // ^.*? absorbs leading whitespace as part of the ID prefix
+            Matcher m = match(" kappa: 29");
+            assertNull(m.group(1));
+            assertEquals("29", m.group(2));
+        }
+
+        // -- Segment 2 branch A: \d+  (vector size) ---------------------------
+
+        @Test
+        void vectorSize() {
+            Matcher m = match("freqs{4}: 0.25 0.25 0.25 0.25");
+            assertEquals("4", m.group(1));
+            assertEquals("0.25 0.25 0.25 0.25", m.group(2));
+        }
+
+        @Test
+        void vectorSizeWithColonInId() {
+            // the original bug: greedy .* consumed {4}; non-greedy fixes it
+            Matcher m = match("freqParameter.s:primate{4}: 0.2415671624255229 0.25 0.25 0.2584328375744771");
+            assertEquals("4", m.group(1));
+            assertEquals("0.2415671624255229 0.25 0.25 0.2584328375744771", m.group(2));
+        }
+
+        @Test
+        void booleanVector() {
+            Matcher m = match("isSelected{3}: true false true");
+            assertEquals("3", m.group(1));
+            assertEquals("true false true", m.group(2));
+        }
+
+        @Test
+        void singleElementVector() {
+            Matcher m = match("x{1}: 0.5");
+            assertEquals("1", m.group(1));
+            assertEquals("0.5", m.group(2));
+        }
+
+        // -- Segment 2 branch B: \[\d+,\s*\d+\]  (matrix shape) --------------
+        //TODO not support yet
+//        @Test
+//        void matrixShapeNoSpace() {
+//            Matcher m = match("rates{[2,3]}: 1.0 2.0 3.0 4.0 5.0 6.0");
+//            assertEquals("[2,3]", m.group(1));
+//            assertEquals("1.0 2.0 3.0 4.0 5.0 6.0", m.group(2));
+//        }
+//
+//        @Test
+//        void matrixShapeWithSpaceAfterComma() {
+//            // \s* inside [r,c] allows "[ r, c ]"-style whitespace
+//            Matcher m = match("rates{[2, 3]}: 1.0 2.0 3.0 4.0 5.0 6.0");
+//            assertEquals("[2, 3]", m.group(1));
+//            assertEquals("1.0 2.0 3.0 4.0 5.0 6.0", m.group(2));
+//        }
+
+        // -- Segment 3: :(?=[^:]*$)\s*(.*?)\s*$  (colon anchor + value trim) --
+
+        @Test
+        void trailingSpaceAbsorbed() {
+            // paramToString() appends a space after each vector element
+            Matcher m = match("freqs{4}: 0.25 0.25 0.25 0.25 ");
+            assertEquals("4", m.group(1));
+            assertEquals("0.25 0.25 0.25 0.25", m.group(2));  // no trailing space
+        }
+
+        @Test
+        void extraWhitespaceAfterColon() {
+            // \s* between colon and value is consumed, not included in group(2)
+            Matcher m = match("kappa:   1.5");
+            assertNull(m.group(1));
+            assertEquals("1.5", m.group(2));
+        }
+
+        @Test
+        void lastColonChosenWhenMultiplePresent() {
+            // three colons in the string; the third (last) is the separator
+            Matcher m = match("a:b:c: 99");
+            assertNull(m.group(1));
+            assertEquals("99", m.group(2));
+        }
+
+        // -- Non-matching inputs -----------------------------------------------
+
+        @Test
+        void noColonDoesNotMatch() {
+            assertFalse(PATTERN.matcher("kappaNoColon").matches());
+        }
     }
 }

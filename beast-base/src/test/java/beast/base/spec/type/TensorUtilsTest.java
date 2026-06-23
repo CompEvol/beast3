@@ -2,12 +2,12 @@ package beast.base.spec.type;
 
 import beast.base.spec.domain.Domain;
 import beast.base.spec.domain.Real;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
-
+import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for TensorUtils using RealScalar
@@ -55,20 +55,19 @@ public class TensorUtilsTest {
 
 		@Override
 		public Real getDomain() {
-			// TODO Auto-generated method stub
-			return null;
+			return Real.INSTANCE;
 		}
 
 		@Override
 		public boolean isValid(Double value) {
-			// TODO Auto-generated method stub
-			return false;
+			return Real.INSTANCE.isValid(value);
 		}
 
 		@Override
 		public List<Double> getElements() {
-			// TODO Auto-generated method stub
-			return null;
+			List<Double> list = new ArrayList<>();
+			for (double v : values) list.add(v);
+			return list;
 		}
     }
 
@@ -90,46 +89,18 @@ public class TensorUtilsTest {
         assertArrayEquals(new Object[]{1.0, 2.0, 3.0}, result);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testValuesToObjectArrayWithUnsupportedTensor() {
         Tensor unsupportedTensor = new Tensor() {
-            @Override
-            public int size() {
-                return 1;
-            }
-
-			@Override
-			public Object get(int... idx) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public Domain getDomain() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public int rank() {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-
-			@Override
-			public int[] shape() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public boolean isValid(Object value) {
-				// TODO Auto-generated method stub
-				return false;
-			}
+            @Override public int size() { return 1; }
+            @Override public Object get(int... idx) { return null; }
+            @Override public Domain getDomain() { return null; }
+            @Override public int rank() { return 0; }
+            @Override public int[] shape() { return null; }
+            @Override public boolean isValid(Object value) { return false; }
         };
-
-        TensorUtils.valuesToObjectArray(unsupportedTensor);
+        assertThrows(UnsupportedOperationException.class,
+                () -> TensorUtils.valuesToObjectArray(unsupportedTensor));
     }
 
     @Test
@@ -150,45 +121,17 @@ public class TensorUtilsTest {
         assertArrayEquals(new double[]{1.0, 2.0, 3.0}, result, 1e-10);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testValuesToDoubleArrayWithUnsupportedTensor() {
         Tensor unsupportedTensor = new Tensor() {
-            @Override
-            public int size() {
-                return 1;
-            }
-
-			@Override
-			public Object get(int... idx) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public Domain getDomain() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public int rank() {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-
-			@Override
-			public int[] shape() {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			@Override
-			public boolean isValid(Object value) {
-				// TODO Auto-generated method stub
-				return false;
-			}
+            @Override public int size() { return 1; }
+            @Override public Object get(int... idx) { return null; }
+            @Override public Domain getDomain() { return null; }
+            @Override public int rank() { return 0; }
+            @Override public int[] shape() { return null; }
+            @Override public boolean isValid(Object value) { return false; }
         };
-
-        TensorUtils.valuesToDoubleArray(unsupportedTensor);
+        assertThrows(UnsupportedOperationException.class,
+                () -> TensorUtils.valuesToDoubleArray(unsupportedTensor));
     }
 }

@@ -1,9 +1,9 @@
 package beast.base.spec.type;
 
 import beast.base.spec.domain.Int;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for the Scalar interface
@@ -25,28 +25,8 @@ public class ScalarTest {
             return domain;
         }
 
-        @Override
-        public int rank() {
-            return 0; // Scalar has rank 0
-        }
-
-        @Override
-        public int[] shape() {
-            return new int[] {}; // Scalar has no shape
-        }
-
-        public Integer getValue() {
-            return value;
-        }
-
-        @Override
-        public boolean isValid(Integer value) {
-            return domain.isValid(value); // Validate against domain constraints
-        }
-
 		@Override
 		public Integer get(int... idx) {
-			// TODO Auto-generated method stub
 			return null;
 		}
     }

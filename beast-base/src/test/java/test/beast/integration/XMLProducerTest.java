@@ -1,12 +1,5 @@
 package test.beast.integration;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.Test;
-
 import beast.base.core.BEASTInterface;
 import beast.base.evolution.datatype.Nucleotide;
 import beast.base.inference.Logger;
@@ -14,7 +7,13 @@ import beast.base.parser.NexusParser;
 import beast.base.parser.XMLParser;
 import beast.base.parser.XMLProducer;
 import beast.base.util.Randomizer;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class XMLProducerTest  {
@@ -34,9 +33,12 @@ public class XMLProducerTest  {
     @Test
     public void test_ThatNexusExamplesProduces() {
         try {
-            String dirName = System.getProperty("user.dir") + "/beast.base/examples/nexus";
+            // Delegate to XMLPathUtil so classpath resolution and user.dir fallback
+            // logic lives in one place; nexus/ is a subdirectory of examples/.
+            String dirName = new File(XMLPathUtil.resolveExamplesDir(), "nexus").getAbsolutePath();
             System.out.println("Test Nexus Examples in " + dirName);
             File exampleDir = new File(dirName);
+            assertTrue(exampleDir.exists(), "Nexus example directory does not exist: " + dirName);
             String[] exampleFiles = exampleDir.list(new FilenameFilter() {
                 @Override
 				public boolean accept(File dir, String name) {
