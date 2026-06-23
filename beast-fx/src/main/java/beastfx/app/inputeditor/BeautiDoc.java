@@ -29,11 +29,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
@@ -520,40 +521,11 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
      */
     public String processTemplate(String fileName) throws IOException {
         final String MERGE_ELEMENT = "mergepoint";
-        // first gather the set of potential directories with templates
-        Set<String> dirs = new HashSet<>();
-        String pathSep = System.getProperty("path.separator");
-        String classpath = "";
-		try {
-			classpath = BeastLauncher.getPath(false, null);
-			classpath = classpath.substring(1, classpath.length()-1);
-		} catch (NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException e1) {
-			e1.printStackTrace();
-		}
-        // Also include java.class.path — the package classpath above only
-        // covers installed packages; the app's own JARs (containing fxtemplates)
-        // are on java.class.path when launched via jpackage or bin/ scripts.
-        String javaClassPath = System.getProperty("java.class.path");
-        if (javaClassPath != null && !javaClassPath.isEmpty()) {
-            classpath = classpath.isEmpty() ? javaClassPath : classpath + pathSep + javaClassPath;
-        }
+        // gather the set of potential directories with templates
+        Set<String> dirs = getTemplateDirs();
         String fileSep = System.getProperty("file.separator");
         if (fileSep.equals("\\")) {
             fileSep = "\\\\";
-        }
-        dirs.add(".");
-        for (String path : classpath.split(pathSep)) {
-            path = path.replaceAll(fileSep, "/");
-            if (path.endsWith(".jar")) {
-                path = path.substring(0, path.lastIndexOf("/"));
-            }
-            if (path.indexOf("/") >= 0) {
-                path = path.substring(0, path.lastIndexOf("/"));
-            }
-            if (!dirs.contains(path)) {
-                dirs.add(path);
-            }
         }
 
         // read main template, try all template directories if necessary
@@ -612,67 +584,23 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         Set<String> loadedTemplates = new HashSet<>();
         loadedTemplates.add(new File(fileName).getName());
 
-        // 1. Scan filesystem directories for sub-templates
-        for (String dirName : dirs) {
-            Log.info.println("Investigating " + dirName);
-            // Check both bare fxtemplates/ (deployed packages) and
-            // beast.fx/fxtemplates/ (module-namespaced, IDE development)
-            File templates = new File(dirName + fileSep + BeautiConfig.TEMPLATE_DIR);
-            if (!templates.exists()) {
-                templates = new File(dirName + fileSep + "beast.fx" + fileSep + BeautiConfig.TEMPLATE_DIR);
+        // Scan every available template (filesystem dirs and package JARs) for
+        // sub-templates to merge. getTemplateSources() already dedups by file
+        // name; loadedTemplates additionally skips the main template itself.
+        for (TemplateSource src : getTemplateSources()) {
+            if (loadedTemplates.contains(src.fileName)) {
+                Log.warning.println("Skipping " + src.describe() + " since "
+                        + src.fileName + " is already processed");
+                continue;
             }
-            File[] files = templates.listFiles();
-            if (files != null) {
-                for (File template : files) {
-                    if (template.getName().toLowerCase().endsWith(".xml")) {
-                        if (!loadedTemplates.contains(template.getName())) {
-                            Log.warning.println("Processing " + template.getAbsolutePath());
-                            FXUtils.logToSplashScreen("Processing " + template.getName());
-                            loadedTemplates.add(template.getName());
-                            String xml2 = load(template.getAbsolutePath());
-                            processSubTemplate(template.getName(), xml2, mergePoints, loadedTemplates, namespaces);
-                        } else {
-                            Log.warning.println("Skipping " + template.getAbsolutePath() + " since "
-                                    + template.getName() + " is already processed");
-                        }
-                    }
-                }
-            }
-        }
-
-        // 2. Scan module resources (JARs) for sub-templates
-        // Match both module-namespaced paths (e.g. beast.fx/fxtemplates/Standard.xml)
-        // and legacy paths (e.g. fxtemplates/Standard.xml)
-        String fxDir = "/" + BeautiConfig.TEMPLATE_DIR + "/";
-        for (ModuleLayer layer : getAllModuleLayers()) {
-            for (ResolvedModule rm : layer.configuration().modules()) {
-                try (ModuleReader reader = rm.reference().open()) {
-                    List<String> fxResources = reader.list()
-                            .filter(r -> r.contains(fxDir) && r.endsWith(".xml"))
-                            .collect(Collectors.toList());
-                    for (String resource : fxResources) {
-                        int idx = resource.lastIndexOf(fxDir);
-                        String name = resource.substring(idx + fxDir.length());
-                        if (!loadedTemplates.contains(name)) {
-                            loadedTemplates.add(name);
-                            try {
-                                Optional<InputStream> ois = reader.open(resource);
-                                if (ois.isPresent()) {
-                                    try (InputStream is = ois.get()) {
-                                        String xml2 = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-                                        Log.warning.println("Processing module resource: " + resource + " from " + rm.name());
-                                        FXUtils.logToSplashScreen("Processing " + name);
-                                        processSubTemplate(name, xml2, mergePoints, loadedTemplates, namespaces);
-                                    }
-                                }
-                            } catch (IOException e) {
-                                Log.warning.println("Failed to read resource " + resource + " from " + rm.name());
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    // skip unreadable modules
-                }
+            loadedTemplates.add(src.fileName);
+            try {
+                String xml2 = src.readXML();
+                Log.warning.println("Processing " + src.describe());
+                FXUtils.logToSplashScreen("Processing " + src.fileName);
+                processSubTemplate(src.fileName, xml2, mergePoints, loadedTemplates, namespaces);
+            } catch (IOException e) {
+                Log.warning.println("Failed to read template " + src.describe());
             }
         }
 
@@ -793,6 +721,184 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         }
         fin.close();
         return buf.toString();
+    }
+
+    /** Descriptor for a switchable BEAUti template, i.e. an fxtemplates entry
+     *  carrying a {@code templateinfo} attribute. Returned by
+     *  {@link #getAvailableTemplates()} and consumed by the BEAUti menu. */
+    public static class TemplateInfo {
+        /** Display name, e.g. "Standard". */
+        public final String name;
+        /** Value to pass to {@link #loadNewTemplate(String)} to load this template. */
+        public final String loadName;
+        /** The templateinfo text, used as the menu tooltip. */
+        public final String info;
+
+        public TemplateInfo(String name, String loadName, String info) {
+            this.name = name;
+            this.loadName = loadName;
+            this.info = info;
+        }
+    }
+
+    /** A template file/resource discovered on disk or inside a package JAR. */
+    private abstract static class TemplateSource {
+        /** Base file name, e.g. "Standard.xml". */
+        final String fileName;
+
+        TemplateSource(String fileName) {
+            this.fileName = fileName;
+        }
+
+        /** The full XML content of the template. */
+        abstract String readXML() throws IOException;
+
+        /** Value to pass to {@link #loadNewTemplate(String)} to load this template. */
+        abstract String loadName();
+
+        /** Human-readable origin, for logging. */
+        abstract String describe();
+    }
+
+    private static class FileTemplateSource extends TemplateSource {
+        final File file;
+
+        FileTemplateSource(File file) {
+            super(file.getName());
+            this.file = file;
+        }
+
+        @Override String readXML() throws IOException { return load(file.getAbsolutePath()); }
+        @Override String loadName() { return file.getAbsolutePath(); }
+        @Override String describe() { return file.getAbsolutePath(); }
+    }
+
+    private static class ModuleTemplateSource extends TemplateSource {
+        final BEASTClassLoader.ModuleResource resource;
+
+        ModuleTemplateSource(String fileName, BEASTClassLoader.ModuleResource resource) {
+            super(fileName);
+            this.resource = resource;
+        }
+
+        @Override String readXML() throws IOException {
+            try (InputStream is = resource.open()) {
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        }
+        @Override String loadName() { return fileName; }
+        @Override String describe() { return "module resource " + resource.path + " in " + resource.moduleName; }
+    }
+
+    /** Candidate directories that may hold an {@code fxtemplates/} folder: the
+     *  classpath-derived directories (covering IDE/dev and jpackage layouts) plus
+     *  the installed BEAST package directories. Insertion order is preserved so
+     *  classpath entries take precedence over installed packages. */
+    private static Set<String> getTemplateDirs() {
+        Set<String> dirs = new LinkedHashSet<>();
+        String pathSep = System.getProperty("path.separator");
+        String classpath = "";
+        try {
+            classpath = BeastLauncher.getPath(false, null);
+            classpath = classpath.substring(1, classpath.length() - 1);
+        } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException | IOException e1) {
+            e1.printStackTrace();
+        }
+        // The package classpath above only covers installed packages; the app's
+        // own JARs (containing fxtemplates) are on java.class.path when launched
+        // via jpackage or bin/ scripts.
+        String javaClassPath = System.getProperty("java.class.path");
+        if (javaClassPath != null && !javaClassPath.isEmpty()) {
+            classpath = classpath.isEmpty() ? javaClassPath : classpath + pathSep + javaClassPath;
+        }
+        String fileSep = System.getProperty("file.separator");
+        if (fileSep.equals("\\")) {
+            fileSep = "\\\\";
+        }
+        dirs.add(".");
+        for (String path : classpath.split(pathSep)) {
+            path = path.replaceAll(fileSep, "/");
+            if (path.endsWith(".jar")) {
+                path = path.substring(0, path.lastIndexOf("/"));
+            }
+            if (path.indexOf("/") >= 0) {
+                path = path.substring(0, path.lastIndexOf("/"));
+            }
+            dirs.add(path);
+        }
+        dirs.addAll(PackageManager.getBeastDirectories());
+        return dirs;
+    }
+
+    /** Enumerate every {@code fxtemplates/*.xml} available on the filesystem and
+     *  inside package JARs. Filesystem entries take precedence; a JAR entry whose
+     *  file name is already present on disk is skipped, so a template is never
+     *  loaded twice (e.g. once from the dev area and once from a package). */
+    private static List<TemplateSource> getTemplateSources() {
+        LinkedHashMap<String, TemplateSource> byName = new LinkedHashMap<>();
+        // 1. filesystem: <dir>/fxtemplates (deployed packages) and
+        //    <dir>/beast.fx/fxtemplates (module-namespaced, IDE development)
+        for (String dirName : getTemplateDirs()) {
+            for (String sub : new String[] {BeautiConfig.TEMPLATE_DIR, "beast.fx/" + BeautiConfig.TEMPLATE_DIR}) {
+                File[] files = new File(dirName + "/" + sub).listFiles();
+                if (files != null) {
+                    for (File f : files) {
+                        if (f.getName().toLowerCase().endsWith(".xml") && !byName.containsKey(f.getName())) {
+                            byName.put(f.getName(), new FileTemplateSource(f));
+                        }
+                    }
+                }
+            }
+        }
+        // 2. package JARs: any module resource at .../fxtemplates/*.xml
+        String fxDir = BeautiConfig.TEMPLATE_DIR + "/";
+        for (BEASTClassLoader.ModuleResource res : BEASTClassLoader.listResources(fxDir)) {
+            if (!res.path.toLowerCase().endsWith(".xml")) {
+                continue;
+            }
+            String base = res.path.substring(res.path.lastIndexOf(fxDir) + fxDir.length());
+            if (!byName.containsKey(base)) {
+                byName.put(base, new ModuleTemplateSource(base, res));
+            }
+        }
+        return new ArrayList<>(byName.values());
+    }
+
+    /** The switchable templates available to BEAUti: every fxtemplates entry, on
+     *  disk or inside a package JAR, that carries a {@code templateinfo} attribute.
+     *  This is the single source of truth shared by the loader and the menu. */
+    public static List<TemplateInfo> getAvailableTemplates() {
+        List<TemplateInfo> templates = new ArrayList<>();
+        for (TemplateSource src : getTemplateSources()) {
+            try {
+                String xml = src.readXML();
+                if (xml.contains("templateinfo=")) {
+                    String name = src.fileName.substring(0, src.fileName.length() - 4);
+                    templates.add(new TemplateInfo(name, src.loadName(), templateInfoFromXML(xml, name)));
+                }
+            } catch (IOException e) {
+                Log.warning.println("Failed to read template " + src.describe());
+            }
+        }
+        return templates;
+    }
+
+    /** Read the {@code templateinfo} attribute from a template's root element,
+     *  falling back to a generated description if absent or unparseable. */
+    private static String templateInfoFromXML(String xml, String name) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            Document doc = factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
+            doc.normalize();
+            String info = doc.getDocumentElement().getAttribute("templateinfo");
+            if (info != null && info.length() > 0) {
+                return info;
+            }
+        } catch (Exception e) {
+            // ignore, fall through to default
+        }
+        return "switch to " + name + " template";
     }
 
     /** All module layers: boot + external packages. */

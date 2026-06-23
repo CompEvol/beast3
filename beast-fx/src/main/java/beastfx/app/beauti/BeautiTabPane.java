@@ -26,8 +26,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import beastfx.app.beauti.theme.Default;
@@ -62,7 +60,6 @@ import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 import beast.pkgmgmt.Utils6;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.awt.Toolkit;
@@ -960,36 +957,17 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
         String m_sFileName;
         String templateInfo;
 
-        public TemplateAction(File file) {
-            super("xx", file.getAbsolutePath(), null, null);
-            m_sFileName = file.getAbsolutePath();
-            String fileSep = System.getProperty("file.separator");
-            if (fileSep.equals("\\")) {
-                fileSep = "\\";
-            }
-            int i = m_sFileName.lastIndexOf(fileSep) + 1;
-            String name = m_sFileName.substring(
-                    i, m_sFileName.length() - 4);
-            //putValue(Action.NAME, name);
-            setText(name);
-            setId(name.replaceAll(" ", ""));
-            //((Label)getContent()).setText(name);
-            try {
-                DocumentBuilderFactory factory = DocumentBuilderFactory
-                        .newInstance();
-                Document doc = factory.newDocumentBuilder().parse(file);
-                doc.normalize();
-                // get name and version of add-on
-                Element template = doc.getDocumentElement();
-                templateInfo = template.getAttribute("templateinfo");
-                if (templateInfo == null || templateInfo.length() == 0) {
-                    templateInfo = "switch to " + name + " template";
-                }
-        		Tooltip tooltip = new Tooltip(templateInfo);
-//        		Tooltip.install(getContent(), tooltip);		
-            } catch (Exception e) {
-                // ignore
-            }
+        /** Construct from a {@link BeautiDoc.TemplateInfo} descriptor. The template
+         *  may live on disk or inside a package JAR; {@code loadName} is whatever
+         *  {@link BeautiDoc#loadNewTemplate} needs to resolve it. */
+        public TemplateAction(BeautiDoc.TemplateInfo template) {
+            super("xx", template.info, null, null);
+            m_sFileName = template.loadName;
+            this.templateInfo = template.info;
+            setText(template.name);
+            setId(template.name.replaceAll(" ", ""));
+            Tooltip tooltip = new Tooltip(template.info);
+//            Tooltip.install(getContent(), tooltip);
         }
 
         @Override
@@ -1017,44 +995,13 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
 
 	private List<MyAction> getTemplateActions() {
         List<MyAction> actions = new ArrayList<>();
-        List<String> beastDirectories = PackageManager.getBeastDirectories();
-        for (String dirName : beastDirectories) {
-            File dir = new File(dirName + "/" + BeautiConfig.TEMPLATE_DIR);
-            getTemplateActionForDir(dir, actions);
+        // BeautiDoc is the single source of truth for which templates exist,
+        // covering both loose files on disk and templates bundled inside package
+        // JARs (e.g. beast-fx.jar at beast.fx/fxtemplates/).
+        for (BeautiDoc.TemplateInfo template : BeautiDoc.getAvailableTemplates()) {
+            actions.add(new TemplateAction(template));
         }
         return actions;
-    }
-
-    private void getTemplateActionForDir(File dir, List<MyAction> actions) {
-        if (dir.exists() && dir.isDirectory()) {
-            File[] files = dir.listFiles();
-            if (files != null) {
-                for (File template : files) {
-                    if (template.getName().toLowerCase().endsWith(".xml")) {
-                        try {
-                            String xml2 = BeautiDoc.load(template.getAbsolutePath());
-                            if (xml2.contains("templateinfo=")) {
-                            	String fileName = template.getName();
-                                fileName = fileName.substring(0, fileName.length() - 4);
-                                boolean duplicate = false;
-                            	for (MyAction action : actions) {
-                            		//String name = ((Label)action.getContent()).getText();
-                            		String name = action.getText();
-                            		if (name.equals(fileName)) {
-                            			duplicate = true;
-                            		}
-                            	}
-                            	if (!duplicate) {
-                            		actions.add(new TemplateAction(template));
-                            	}
-                            }
-                        } catch (Exception e) {
-                        	Log.warning.println(e.getMessage());
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private List<MenuItem> getWorkDirActions() {
