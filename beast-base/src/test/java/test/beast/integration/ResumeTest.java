@@ -4,11 +4,15 @@ import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
 import beast.base.parser.XMLParser;
 import beast.base.util.Randomizer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * so subdirectory isolation is essential. Each subdirectory must contain exactly one
  * .log file; both the initial run and the resume must produce at least one data sample.
  */
+// Logger.FILE_MODE and file.name.prefix are JVM-wide globals; serialize all classes
+// that mutate them so parallel test runs don't clobber each other's prefix mid-run.
+@ResourceLock(value = "beast.logger.globals", mode = ResourceAccessMode.READ_WRITE)
 public class ResumeTest {
     private static final long CHAIN_LENGTH = 1000L;
     private static final int LOG_EVERY = 100;
@@ -40,6 +47,20 @@ public class ResumeTest {
             "testOpSubSchedule.xml", // custom operator schedule
             "testPlates.xml"        // multi-partition
     };
+
+    // Remove subdirectories left by previous local runs so the "exactly 1 .log file"
+    // assertion never sees stale files. CI always starts clean; this only matters locally.
+    @BeforeEach
+    void cleanOutputDirs() throws Exception {
+        for (String xmlFileName : xmlFiles) {
+            Path dir = Path.of("test/" + xmlFileName.replace(".xml", ""));
+            if (Files.exists(dir)) {
+                try (var stream = Files.walk(dir)) {
+                    stream.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+                }
+            }
+        }
+    }
 
     @Test
     public void test_ThatXmlExamplesResume() throws Exception {

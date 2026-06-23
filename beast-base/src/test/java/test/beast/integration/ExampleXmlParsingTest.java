@@ -10,6 +10,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.parallel.ResourceAccessMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -23,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * check whether all example files parse *
  */
+// Logger.FILE_MODE and file.name.prefix are JVM-wide globals; serialize all classes
+// that mutate them so parallel test runs don't clobber each other's prefix mid-run.
+@ResourceLock(value = "beast.logger.globals", mode = ResourceAccessMode.READ_WRITE)
 public class ExampleXmlParsingTest  {
     @BeforeEach
     void setUp() { XMLPathUtil.setUpOutputDir(); }
