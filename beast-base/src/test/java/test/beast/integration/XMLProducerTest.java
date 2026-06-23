@@ -11,8 +11,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,22 +30,12 @@ public class XMLProducerTest  {
     
     
     
-    private static String resolveNexusDir() {
-        URL url = XMLProducerTest.class.getClassLoader().getResource("beast.base/examples/nexus");
-        if (url != null) {
-            try {
-                return new File(url.toURI()).getAbsolutePath();
-            } catch (URISyntaxException e) {
-                // fall through
-            }
-        }
-        return System.getProperty("user.dir") + "/beast.base/examples/nexus";
-    }
-
     @Test
     public void test_ThatNexusExamplesProduces() {
         try {
-            String dirName = resolveNexusDir();
+            // Delegate to XMLPathUtil so classpath resolution and user.dir fallback
+            // logic lives in one place; nexus/ is a subdirectory of examples/.
+            String dirName = new File(XMLPathUtil.resolveExamplesDir(), "nexus").getAbsolutePath();
             System.out.println("Test Nexus Examples in " + dirName);
             File exampleDir = new File(dirName);
             assertTrue(exampleDir.exists(), "Nexus example directory does not exist: " + dirName);
