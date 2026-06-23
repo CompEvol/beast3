@@ -5,7 +5,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
- * Shared test infrastructure for beast-fx integration tests.
+ * Shared test infrastructure for beast-base integration tests.
  *
  * <p>Two distinct concerns are kept as separate methods on purpose:
  * <ul>
@@ -56,10 +56,10 @@ public class XMLPathUtil {
      * Use when multiple tests in the same class share log-file names (e.g. when
      * XMLs all write to {@code test.$(seed).log}).
      *
-     * <p>Note: {@code file.name.prefix} is a JVM-wide system property, so this only
-     * prevents collisions between sequentially executed tests. For truly concurrent
-     * (multi-threaded) execution, per-JVM forking ({@code forkCount} in Surefire) is
-     * the safe approach.
+     * <p>Note: {@code file.name.prefix} is a JVM-wide system property. Callers that
+     * mutate it must declare {@code @ResourceLock("beast.logger.globals")} so JUnit 5's
+     * parallel scheduler serializes them; see {@code junit-platform.properties} for the
+     * full list of affected classes.
      */
     public static void setUpOutputDir(String subdir) {
         String path = subdir == null || subdir.isEmpty() ? "test/" : "test/" + subdir + "/";
