@@ -12,6 +12,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -191,14 +193,33 @@ public class BeastLauncher {
 		}
 	}
 
+	/** Name of the marker file holding the checksum of the bundled package zip
+	 *  that was last extracted into a user package directory. */
+	private static final String BUNDLED_CHECKSUM_FILE = ".bundled.checksum";
+
 	/**
 	 * Seed a bundled core package (e.g. BEAST.base, BEAST.app) into the user
 	 * package directory. The application bundle ships these as full package zips
-	 * under {@code <app dir>/packages/}. On first run -- or whenever the bundled
-	 * version is newer than the copy already in the user dir -- the zip is
-	 * extracted into {@code <user package dir>/<packageName>/}. A user copy that
-	 * is the same or newer (e.g. an in-place upgrade applied by the package
-	 * manager) is left untouched, so upgrades survive application relaunches.
+	 * under {@code <app dir>/packages/}. The zip is extracted into
+	 * {@code <user package dir>/<packageName>/} on first run, and re-extracted
+	 * whenever its contents differ from the copy already seeded there.
+	 *
+	 * <p>The version number alone is not enough to decide, because the package
+	 * version string ({@code version.xml}) does not change between development
+	 * rebuilds (it stays e.g. {@code 2.8.0} for the whole release cycle) nor
+	 * between re-released betas. A purely version-based check would leave a stale
+	 * {@code lib/} in place after {@code mvn package} + a fresh application build,
+	 * so the running app would keep loading the old classes even though the
+	 * source was fixed. So when the user copy reports the <em>same</em> version
+	 * as the bundled one, we additionally compare a checksum of the bundled zip
+	 * against the checksum recorded when the user copy was seeded (stored in
+	 * {@link #BUNDLED_CHECKSUM_FILE}); a mismatch triggers re-seeding.
+	 *
+	 * <p>The other cases are decided by version alone: a user copy reporting a
+	 * strictly newer version (e.g. an in-place upgrade applied by the package
+	 * manager) is never downgraded, and a strictly older one is always replaced.
+	 * The (potentially large) checksum is therefore only computed when the
+	 * versions match, or when re-seeding, to record the marker for next time.
 	 *
 	 * @return true if a bundled package zip was found and handled (callers can
 	 *         then skip the legacy single-jar seeding); false if no bundled zip
@@ -215,13 +236,29 @@ public class BeastLauncher {
 
 			File pkgDir = new File(getPackageUserDir() + pathDelimiter + packageName);
 			File userVersionFile = new File(pkgDir, "version.xml");
+			File checksumFile = new File(pkgDir, BUNDLED_CHECKSUM_FILE);
+			String bundledChecksum = null; // computed lazily -- only when needed
 			if (userVersionFile.exists()) {
 				double userVersion = parseVersion(readVersion(new FileReader(userVersionFile)));
-				if (userVersion >= bundledVersion) {
-					// user dir already holds a same-or-newer copy -- keep it
+				if (userVersion > bundledVersion) {
+					// user dir holds a strictly newer copy (e.g. a package-manager
+					// upgrade) -- never downgrade it
 					return true;
 				}
-				// bundled copy is newer (app was updated): replace the stale lib
+				if (userVersion == bundledVersion) {
+					// Same version string, but content may still differ (a
+					// development rebuild or re-released beta). Fall back to a
+					// content checksum to decide whether the seeded copy is stale.
+					bundledChecksum = checksum(bundledZip);
+					if (bundledChecksum != null
+							&& bundledChecksum.equals(readChecksumFile(checksumFile))) {
+						// already seeded from this exact zip -- nothing to do
+						return true;
+					}
+				}
+				// The bundled copy is a newer version (app was updated), or it is
+				// the same version with different content. Replace the stale lib so
+				// the freshly built classes are the ones that load.
 				File libDir = new File(pkgDir, "lib");
 				if (libDir.exists()) {
 					deleteDir(libDir);
@@ -232,11 +269,59 @@ public class BeastLauncher {
 				return false;
 			}
 			PackageManager.doUnzip(bundledZip.getAbsolutePath(), pkgDir.getAbsolutePath());
+			if (bundledChecksum == null) {
+				bundledChecksum = checksum(bundledZip);
+			}
+			writeChecksumFile(checksumFile, bundledChecksum);
 			return true;
 		} catch (Exception e) {
 			// never let seeding hold up launch of BEAST & friends
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	/** SHA-256 of a file's bytes as a lowercase hex string, or null on failure.
+	 *  Used to detect when a bundled package zip differs from the copy already
+	 *  seeded into the user dir, even when the version string is unchanged. */
+	private static String checksum(File file) {
+		try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+			MessageDigest md = MessageDigest.getInstance("SHA-256");
+			byte[] buf = new byte[1 << 16];
+			int n;
+			while ((n = in.read(buf)) > 0) {
+				md.update(buf, 0, n);
+			}
+			StringBuilder sb = new StringBuilder();
+			for (byte b : md.digest()) {
+				sb.append(Character.forDigit((b >> 4) & 0xf, 16));
+				sb.append(Character.forDigit(b & 0xf, 16));
+			}
+			return sb.toString();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/** Read a previously written checksum marker, or null if absent/unreadable. */
+	private static String readChecksumFile(File f) {
+		try {
+			return f.exists() ? Files.readString(f.toPath()).trim() : null;
+		} catch (IOException e) {
+			return null;
+		}
+	}
+
+	/** Record the bundled zip's checksum alongside the extracted package. A
+	 *  failure here is non-fatal: the worst case is a needless re-seed next launch. */
+	private static void writeChecksumFile(File f, String checksum) {
+		if (checksum == null) {
+			return;
+		}
+		try {
+			Files.writeString(f.toPath(), checksum);
+		} catch (IOException e) {
+			// non-fatal
 		}
 	}
 
