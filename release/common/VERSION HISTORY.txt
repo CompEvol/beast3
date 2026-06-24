@@ -1,10 +1,28 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: April 2026
+Last updated: June 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta6 June 2026
+	o Fix OffsetReal.calculateLogP() double-subtracting offset #72
+	o Fix auto-optimisation direction and scale factor upper limit for Bactrian scale operators #97
+	o Fix resume error (NumberFormatException/IllegalArgumentException) for scalar and vector parameters #104 #108
+	o Fix empty BEAUti Template menu after installable-packages refactor #110 #111
+	o Re-seed bundled core packages when content changes at the same version #113
+	o Fix BEAST.app package dependency resolution in package manager #94
+	o Make BEAST.base and BEAST.app user-installable packages loaded from user dir #95
+	o Make operator target acceptance probability configurable via XML input; bump 1-D defaults to 0.3 #71
+	o EmpiricalSubstitutionModel: normalize empirical frequencies to fix initialisation failure #75
+	o VectorElement implements Loggable #88
+	o Windows and Linux (x86_64 and aarch64) release bundles #92
+	o Convert example XMLs to beast3 format #90
+	o Deprecate SubtreeSlide in favour of BactrianSubtreeSlide #91
+	o Point OneOnX deprecation at LogUniform #86
+	o Add missing @Deprecated annotations on legacy classes #76 #89
+	o Update DensiTree.jar #34
+
 Version 2.8.0-beta5 April 2026
 	o Add LogUniform distribution (proper, scale-invariant replacement for OneOnX) #69
 	o Fix BEASTClassLoader dual-loader class identity split #65 #66
