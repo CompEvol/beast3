@@ -407,10 +407,10 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 					BEASTInterface p = (BEASTInterface) o;
 					if (b == null) {
 						b = new StringBuilder();
-						b.append(p.getInput("value").get().toString().replaceAll("[\\[\\] ]", "").trim());
+						b.append(p.getInput("value").get().toString().trim());
 					} else {
 						b.append(',');
-						b.append(p.getInput("value").get().toString().replaceAll("[\\[\\] ]", "").trim());
+						b.append(p.getInput("value").get().toString().trim());
 					}
 	    		} else if (o != null && o instanceof Double && !input.getName().equals("offset")) {
 	    			Double p = (Double) o;
