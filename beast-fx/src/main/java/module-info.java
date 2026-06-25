@@ -104,6 +104,7 @@ open module beast.fx {
         beastfx.app.beauti.TreeDistributionInputEditor,
         beastfx.app.inputeditor.spec.SiteModelInputEditor,
         beastfx.app.inputeditor.spec.ScalarInputEditor,
+        beastfx.app.inputeditor.spec.VectorInputEditor,
         beastfx.app.inputeditor.ScalarDistributionInputEditor,
         beastfx.app.inputeditor.TensorDistributionInputEditor,
         beastfx.app.inputeditor.IIDInputEditor;
