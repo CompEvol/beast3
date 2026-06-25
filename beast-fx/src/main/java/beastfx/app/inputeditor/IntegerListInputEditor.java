@@ -70,7 +70,7 @@ public class IntegerListInputEditor extends ListInputEditor {
         	for (Integer d : (List<Integer>) m_input.get()) {
         		str += d + " ";
         	}
-        	str = str.substring(0, str.length() - 1);
+        	str =  str.length() > 0 ? str.substring(0, str.length() - 1) : "";
             m_entry.setText(str);
         }
     }
