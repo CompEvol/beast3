@@ -151,7 +151,7 @@ For **headless / library** usage (no JavaFX dependency):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-base</artifactId>
-    <version>2.8.0-beta5</version>
+    <version>2.8.0-beta6</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -162,7 +162,7 @@ For **GUI** usage (includes JavaFX, BEAUti, and all GUI tools):
 <dependency>
     <groupId>io.github.compevol</groupId>
     <artifactId>beast-fx</artifactId>
-    <version>2.8.0-beta5</version>
+    <version>2.8.0-beta6</version>
     <scope>provided</scope>
 </dependency>
 ```
