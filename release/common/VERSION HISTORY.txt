@@ -22,6 +22,8 @@ Version 2.8.0-beta6 June 2026
 	o Point OneOnX deprecation at LogUniform #86
 	o Add missing @Deprecated annotations on legacy classes #76 #89
 	o Update DensiTree.jar #34
+	o Fix BEAUti template menu in released user environment #112
+	o Fix BEAUti panel display bugs: add VectorInputEditor, fix IntegerListInputEditor, fix starting-tree panel view #115
 
 Version 2.8.0-beta5 April 2026
 	o Add LogUniform distribution (proper, scale-invariant replacement for OneOnX) #69
