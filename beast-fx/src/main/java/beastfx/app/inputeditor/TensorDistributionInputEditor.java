@@ -1,37 +1,15 @@
 package beastfx.app.inputeditor;
 
 
-
-
-
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
-import beast.base.spec.domain.Int;
-import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.Real;
+import beast.base.spec.domain.*;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.parameter.BoolScalarParam;
-import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
-import beast.base.spec.type.IntScalar;
-import beast.base.spec.type.IntVector;
-import beast.base.spec.type.RealScalar;
-import beast.base.spec.type.RealVector;
-import beast.base.spec.type.Scalar;
+import beast.base.spec.inference.parameter.*;
+import beast.base.spec.type.*;
 import beastfx.app.util.FXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -41,6 +19,10 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class TensorDistributionInputEditor extends BEASTObjectInputEditor implements HasExpandBox {
 
@@ -420,6 +402,16 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 	    				b.append(',');
 	    				b.append(p.getInput("value").get().toString().trim());
 	    			}
+	    		} else if (o != null && o instanceof RealVectorParam<?> || o instanceof IntVectorParam<?> || o instanceof BoolVectorParam) {
+	    			// vector hyperparameters (e.g. alpha of Dirichlet)
+					BEASTInterface p = (BEASTInterface) o;
+					if (b == null) {
+						b = new StringBuilder();
+						b.append(p.getInput("value").get().toString().trim());
+					} else {
+						b.append(',');
+						b.append(p.getInput("value").get().toString().trim());
+					}
 	    		} else if (o != null && o instanceof Double && !input.getName().equals("offset")) {
 	    			Double p = (Double) o;
 	    			if (b == null) {
