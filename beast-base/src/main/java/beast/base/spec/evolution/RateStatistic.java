@@ -23,38 +23,37 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.evolution;
+package beast.base.spec.evolution;
 
-
-import java.io.PrintStream;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
-import beast.base.core.Function;
 import beast.base.core.Input;
-import beast.base.core.Loggable;
 import beast.base.core.Input.Validate;
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.branchratemodel.Base;
+import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.spec.type.RealScalar;
 import beast.base.util.DiscreteStatistics;
 
-
+import java.io.PrintStream;
 
 
 @Description("A statistic that tracks the mean, variance and coefficent of variation of rates. " +
         "It has three dimensions, one for each statistic.")
-public class RateStatistic extends BEASTObject implements Loggable, Function {
+public class RateStatistic extends BEASTObject implements Loggable, RealScalar<PositiveReal> {
 	
     final public Input<GenericTreeLikelihood> likelihoodInput = new Input<>("treeLikelihood", "TreeLikelihood containing branch rate model that provides rates for a tree");
-    final public Input<BranchRateModel> branchRateModelInput = new Input<>("branchratemodel", "model that provides rates for a tree", Validate.XOR, likelihoodInput);
+    final public Input<Base> branchRateModelInput = new Input<>("branchratemodel", "model that provides rates for a tree", Validate.XOR, likelihoodInput);
     final public Input<Tree> treeInput = new Input<>("tree", "tree for which the rates apply", Validate.REQUIRED);
     final public Input<Boolean> internalInput = new Input<>("internal", "consider internal nodes, default true", true);
     final public Input<Boolean> externalInput = new Input<>("external", "consider external nodes, default true", true);
 
     private Tree tree = null;
-    private BranchRateModel branchRateModel = null;
+    private Base branchRateModel = null;
     private boolean internal = true;
     private boolean external = true;
 
@@ -144,24 +143,33 @@ public class RateStatistic extends BEASTObject implements Loggable, Function {
      * Valuable implementation *
      */
 
-    @Override
-    public int getDimension() {
-        return 3;
-    }
+//    @Override
+//    public int getDimension() {
+//        return 3;
+//    }
+//
+//    @Override
+//    public double getArrayValue() {
+//        return calcValues()[0];
+//    }
+//
+//    @Override
+//    public double getArrayValue(final int dim) {
+//        if (dim > 3) {
+//            throw new IllegalArgumentException();
+//        }
+//        return calcValues()[dim];
+//    }
 
     @Override
-    public double getArrayValue() {
+    public double get() {
         return calcValues()[0];
     }
 
     @Override
-    public double getArrayValue(final int dim) {
-        if (dim > 3) {
-            throw new IllegalArgumentException();
-        }
-        return calcValues()[dim];
+    public PositiveReal getDomain() {
+        return PositiveReal.INSTANCE;
     }
-
 
     /**
      * Loggable implementation *
