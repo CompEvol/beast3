@@ -8,7 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
+/**
+ * @deprecated replaced by {@link beast.base.spec.evolution.SumTest}
+ */
+@Deprecated
 public class SumTest  {
 
 
