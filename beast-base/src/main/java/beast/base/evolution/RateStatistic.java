@@ -23,44 +23,39 @@
  * Boston, MA  02110-1301  USA
  */
 
-package beast.base.spec.evolution;
+package beast.base.evolution;
 
 
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Input;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
-import beast.base.core.Loggable;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.likelihood.GenericTreeLikelihood;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.evolution.branchratemodel.Base;
-import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.spec.type.RealVector;
 import beast.base.util.DiscreteStatistics;
 
 import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
+/**
+ * @deprecated use {@link beast.base.spec.evolution.RateStatistic} instead
+ */
+@Deprecated
 @Description("A statistic that tracks the mean, variance and coefficent of variation of rates. " +
         "It has three dimensions, one for each statistic.")
-public class RateStatistic extends BEASTObject implements Loggable, RealVector<PositiveReal> {
+public class RateStatistic extends BEASTObject implements Loggable, Function {
 	
     final public Input<GenericTreeLikelihood> likelihoodInput = new Input<>("treeLikelihood", "TreeLikelihood containing branch rate model that provides rates for a tree");
-    final public Input<Base> branchRateModelInput = new Input<>("branchratemodel", "model that provides rates for a tree", Validate.XOR, likelihoodInput);
+    final public Input<BranchRateModel> branchRateModelInput = new Input<>("branchratemodel", "model that provides rates for a tree", Validate.XOR, likelihoodInput);
     final public Input<Tree> treeInput = new Input<>("tree", "tree for which the rates apply", Validate.REQUIRED);
     final public Input<Boolean> internalInput = new Input<>("internal", "consider internal nodes, default true", true);
     final public Input<Boolean> externalInput = new Input<>("external", "consider external nodes, default true", true);
 
     private Tree tree = null;
-    private Base branchRateModel = null;
+    private BranchRateModel branchRateModel = null;
     private boolean internal = true;
     private boolean external = true;
 
-    // array index
     final static int MEAN = 0;
     final static int VARIANCE = 1;
     final static int COEFFICIENT_OF_VARIATION = 2;
@@ -132,11 +127,13 @@ public class RateStatistic extends BEASTObject implements Loggable, RealVector<P
             totalTreeLength += branchLengths[i];
         }
         values[MEAN] = totalWeightedRate / totalTreeLength;
-        // compute mean/variance once and reuse: DiscreteStatistics.variance(rates) alone
-        // would recompute mean(rates) internally, duplicating both passes done here
+        // Q2R why not?
+//  final double mean = DiscreteStatistics.mean(rates);
+//        values[VARIANCE] = DiscreteStatistics.variance(rates, mean);
+//        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(D values[VARIANCE]) / mean;
+        values[VARIANCE] = DiscreteStatistics.variance(rates);
         final double mean = DiscreteStatistics.mean(rates);
-        values[VARIANCE] = DiscreteStatistics.variance(rates, mean);
-        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(values[VARIANCE]) / mean;
+        values[COEFFICIENT_OF_VARIATION] = Math.sqrt(DiscreteStatistics.variance(rates, mean)) / mean;
         return values;
     }
 
@@ -145,45 +142,24 @@ public class RateStatistic extends BEASTObject implements Loggable, RealVector<P
      * Valuable implementation *
      */
 
-    @Deprecated
-    public int getDimension() {
-        return size();
-    }
-
-    @Deprecated
-    public double getArrayValue() {
-        return get(0);
-    }
-
-    @Deprecated
-    public double getArrayValue(final int dim) {
-        return get(dim);
-    }
-
-    // new API
-
     @Override
-    public int size() {
+    public int getDimension() {
         return 3;
     }
 
     @Override
-    public double get(int i) {
-        if (i < 0 || i >= size()) {
+    public double getArrayValue() {
+        return calcValues()[0];
+    }
+
+    @Override
+    public double getArrayValue(final int dim) {
+        if (dim > 3) {
             throw new IllegalArgumentException();
         }
-        return calcValues()[i];
+        return calcValues()[dim];
     }
 
-    @Override
-    public List<Double> getElements() {
-        return Arrays.stream(calcValues()).boxed().collect(Collectors.toList());
-    }
-
-    @Override
-    public PositiveReal getDomain() {
-        return PositiveReal.INSTANCE;
-    }
 
     /**
      * Loggable implementation *

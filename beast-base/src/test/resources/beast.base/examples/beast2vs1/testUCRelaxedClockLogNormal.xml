@@ -142,7 +142,7 @@
             <log idref="hky.frequencies" />
             <log idref="M" />
             <log idref="S" />
-            <log id='rate' spec='beast.base.evolution.RateStatistic' tree='@tree' branchratemodel='@branchRates'/>
+            <log id='rate' spec='beast.base.spec.evolution.RateStatistic' tree='@tree' branchratemodel='@branchRates'/>
             <log idref="rateCategories" /> 
         </logger>
         <!-- <logger logEvery="10000" fileName="test.$(seed).trees">

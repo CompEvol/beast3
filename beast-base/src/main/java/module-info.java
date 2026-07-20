@@ -281,6 +281,7 @@ open module beast.base {
         beast.base.spec.inference.distribution.TruncatedReal,
         beast.base.spec.inference.distribution.TruncatedInt,
         beast.base.spec.FunctionOfTensor,
+        beast.base.spec.evolution.RateStatistic,
         beast.base.spec.evolution.Sum,
         beast.base.spec.evolution.IntSum,
         beast.base.spec.evolution.TreeWithMetaDataLogger,
