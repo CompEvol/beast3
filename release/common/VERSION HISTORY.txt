@@ -1,10 +1,16 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: June 2026
+Last updated: July 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta7 July 2026
+	o Fix spec RandomTree silently dropping spec MRCAPrior monophyletic constraints, causing every BEAUti-generated calibrated analysis to fail to initialise #121
+	o Make LoggerTest hermetic against leaked JVM-wide logger state (flaky test fix)
+	o Recover and deprecate old SumTest in favour of spec-based test #13 #30
+	o Upgrade central-publishing-maven-plugin to 0.11.0 to fix Maven release failure #117
+
 Version 2.8.0-beta6 June 2026
 	o Fix OffsetReal.calculateLogP() double-subtracting offset #72
 	o Fix auto-optimisation direction and scale factor upper limit for Bactrian scale operators #97
