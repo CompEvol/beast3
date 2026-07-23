@@ -33,15 +33,15 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.TaxonSet;
-import beast.base.evolution.tree.MRCAPrior;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.TraitSet;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.coalescent.PopulationFunction;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
-import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.HeapSort;
 import beast.base.util.Randomizer;
@@ -87,7 +87,7 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
     List<Set<String>> taxonSets;
 
     // list of parametric distribution constraining the MRCA of taxon sets, null if not present
-    List<ParametricDistribution> distributions;
+    List<ScalarDistribution> distributions;
 
     // hard bound for the set, if any
     List<Bound> m_bounds;
@@ -224,7 +224,7 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
 	                }
 	                usedTaxa.add(taxonID);
 	            }
-	            final ParametricDistribution distr = prior.distInput.get();
+	            final ScalarDistribution distr = prior.distInput.get();
 	            final Bound bounds = new Bound();
 	            if (distr != null) {
 	        		List<BEASTInterface> beastObjects = new ArrayList<>();
@@ -233,8 +233,8 @@ public class RandomTree extends Tree implements StateNodeInitialiser {
 	        			beastObjects.get(i).initAndValidate();
 	        		}
 	                try {
-	                	double tLow = distr.inverseCumulativeProbability(0.0);
-	                	double tHi = distr.inverseCumulativeProbability(1.0);
+	                	double tLow = ((Number) distr.inverseCumulativeProbability(0.0)).doubleValue();
+	                	double tHi = ((Number) distr.inverseCumulativeProbability(1.0)).doubleValue();
 						bounds.lower = getDate(tLow);
 		                bounds.upper = getDate(tHi);
 		                if (bounds.lower > bounds.upper && tLow < tHi) {

@@ -22,8 +22,28 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 public class LoggerTest {
     Logger logger;
 
+    /**
+     * Logger.sampleOffset is protected static, so it is not reachable from this package
+     * directly; a subclass can reach it because protected static members are inherited
+     * regardless of package.
+     */
+    private static class LoggerGlobals extends Logger {
+        static void reset() {
+            Logger.sampleOffset = -1;
+        }
+    }
+
     @BeforeEach
     public void setUp() throws Exception {
+        // file.name.prefix, Logger.FILE_MODE and Logger.sampleOffset are JVM-wide globals
+        // that the integration tests set and do not restore (see XMLPathUtil.setUpOutputDir
+        // and ResumeTest). Whether this class runs before or after them varies between
+        // surefire runs, which made testFileLog fail intermittently: a stale prefix sends
+        // the log to <prefix>beast.log while the assertions resolve "beast.log" against the
+        // working directory, and a stale sampleOffset is added to every logged sample.
+        System.clearProperty("file.name.prefix");
+        Logger.FILE_MODE = Logger.LogFileMode.only_new;
+        LoggerGlobals.reset();
         logger = new Logger();
     }
 
