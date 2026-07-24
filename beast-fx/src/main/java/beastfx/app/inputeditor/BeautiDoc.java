@@ -22,9 +22,13 @@ import java.io.Writer;
 import java.lang.module.ModuleReader;
 import java.lang.module.ResolvedModule;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -790,6 +794,97 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         @Override String describe() { return "module resource " + resource.path + " in " + resource.moduleName; }
     }
 
+    /** A template found by scanning the class path (see {@link #classpathTemplateSources}).
+     *  Used when BEAUti runs with its dependencies on the class path rather than the
+     *  module path -- e.g. embedded in another tool or under a test runner -- where the
+     *  module-layer scan in {@link BEASTClassLoader#listResources} finds nothing. The
+     *  content is still read from the jar (or classes dir) via the resource URL. */
+    private static class UrlTemplateSource extends TemplateSource {
+        final URL url;
+
+        UrlTemplateSource(String fileName, URL url) {
+            super(fileName);
+            this.url = url;
+        }
+
+        @Override String readXML() throws IOException {
+            try (InputStream is = url.openStream()) {
+                return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        }
+        @Override String loadName() { return fileName; }
+        @Override String describe() { return "class-path resource " + url; }
+    }
+
+    /** Enumerate {@code fxtemplates/*.xml} on the class path by scanning the entries of
+     *  {@code java.class.path} (jars and directories). This is the class-path counterpart
+     *  to {@link BEASTClassLoader#listResources}, which only sees resources inside
+     *  resolved module layers: when BEAUti is launched on the module path (the installed
+     *  launcher, {@code -m beast.fx/...}) that scan already finds every template and this
+     *  method's results are dropped as duplicates by name; it only contributes when the
+     *  dependencies are on the class path instead.
+     *
+     *  <p>Templates are namespaced by module, e.g. {@code beast.fx/fxtemplates/Standard.xml}
+     *  or {@code bmodeltest/fxtemplates/bModelTest.xml}, so we match any path ending in
+     *  {@code fxtemplates/<name>.xml}. Reading a fragment of the class path this way does
+     *  not follow a manifest-only {@code Class-Path} (as some launchers use for very long
+     *  class paths); in that case the module-layer scan is expected to have covered it. */
+    private static List<TemplateSource> classpathTemplateSources() {
+        List<TemplateSource> sources = new ArrayList<>();
+        String classpath = System.getProperty("java.class.path");
+        if (classpath == null || classpath.isEmpty()) {
+            return sources;
+        }
+        String needle = "/" + BeautiConfig.TEMPLATE_DIR + "/"; // "/fxtemplates/"
+        for (String entry : classpath.split(System.getProperty("path.separator"))) {
+            File f = new File(entry);
+            if (!f.exists()) {
+                continue;
+            }
+            try {
+                if (f.isDirectory()) {
+                    collectTemplateFilesInDir(new File(f, BeautiConfig.TEMPLATE_DIR), sources);
+                    // module-namespaced layout: <dir>/<module>/fxtemplates/*.xml
+                    File[] subdirs = f.listFiles(File::isDirectory);
+                    if (subdirs != null) {
+                        for (File sub : subdirs) {
+                            collectTemplateFilesInDir(new File(sub, BeautiConfig.TEMPLATE_DIR), sources);
+                        }
+                    }
+                } else if (entry.toLowerCase().endsWith(".jar")) {
+                    try (ZipFile zip = new ZipFile(f)) {
+                        Enumeration<? extends ZipEntry> en = zip.entries();
+                        while (en.hasMoreElements()) {
+                            String name = en.nextElement().getName();
+                            if (name.toLowerCase().endsWith(".xml")
+                                    && (name.contains(needle) || name.startsWith(BeautiConfig.TEMPLATE_DIR + "/"))) {
+                                String base = name.substring(name.lastIndexOf('/') + 1);
+                                URL url = new URL("jar:" + f.toURI().toURL() + "!/" + name);
+                                sources.add(new UrlTemplateSource(base, url));
+                            }
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                // skip unreadable class-path entry
+            }
+        }
+        return sources;
+    }
+
+    /** Add every {@code *.xml} directly inside {@code dir} as a template source. */
+    private static void collectTemplateFilesInDir(File dir, List<TemplateSource> sources) throws IOException {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File f : files) {
+            if (f.isFile() && f.getName().toLowerCase().endsWith(".xml")) {
+                sources.add(new UrlTemplateSource(f.getName(), f.toURI().toURL()));
+            }
+        }
+    }
+
     /** Candidate directories that may hold an {@code fxtemplates/} folder: the
      *  classpath-derived directories (covering IDE/dev and jpackage layouts) plus
      *  the installed BEAST package directories. Insertion order is preserved so
@@ -862,6 +957,14 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 byName.put(base, new ModuleTemplateSource(base, res));
             }
         }
+        // 3. class path: covers launches where dependencies are on the class path rather
+        //    than in a module layer, which (1) and (2) miss. Added last so filesystem and
+        //    module entries keep precedence when the same template is visible both ways.
+        for (TemplateSource src : classpathTemplateSources()) {
+            if (!byName.containsKey(src.fileName)) {
+                byName.put(src.fileName, src);
+            }
+        }
         return new ArrayList<>(byName.values());
     }
 
@@ -931,6 +1034,23 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 } catch (IOException e) {
                     // skip unreadable modules
                 }
+            }
+        }
+        // Class-path fallback: when BEAUti's dependencies are on the class path rather
+        // than in a module layer, the scan above finds nothing. The template still lives
+        // in the jar and is reachable by its namespaced resource name (e.g.
+        // beast.fx/fxtemplates/Standard.xml), with the un-namespaced name as a fallback.
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        if (cl == null) {
+            cl = BeautiDoc.class.getClassLoader();
+        }
+        for (String candidate : new String[] {"beast.fx/" + resourcePath, resourcePath}) {
+            try (InputStream is = cl.getResourceAsStream(candidate)) {
+                if (is != null) {
+                    return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                }
+            } catch (IOException e) {
+                // try next candidate
             }
         }
         return null;
