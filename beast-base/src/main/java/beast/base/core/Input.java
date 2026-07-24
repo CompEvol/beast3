@@ -509,7 +509,7 @@ public class Input<T> {
                 }                
                 
             }
-            throw new RuntimeException("Input 102b: type mismatch for input " + getName());
+            throw new RuntimeException(typeMismatchMessage("102b", value, beastObject));
         } else {
             if (theClass.isAssignableFrom(value.getClass())) {
                 if (value instanceof BEASTInterface) {
@@ -703,6 +703,54 @@ public class Input<T> {
     public boolean isTensorClass(Class<?> rawType) {
         return Scalar.class.isAssignableFrom(rawType)
                 || Vector.class.isAssignableFrom(rawType);
+    }
+
+    /**
+     * Build a type-mismatch message that says which input failed, on which object,
+     * what it expected and what it was actually given.
+     *
+     * <p>The bare "type mismatch for input x" is very hard to act on: it names neither
+     * the expected nor the supplied type, and the surrounding XML parser error only
+     * points at the enclosing element, not at the offending child. Where the supplied
+     * value is a legacy BEAST 2 class and the input wants a BEAST 3 spec one -- by far
+     * the most common cause while packages are being migrated -- say so explicitly,
+     * because the two are usually indistinguishable by name.
+     *
+     * @param code       the error code to report, e.g. "102b"
+     * @param value      the value that could not be assigned
+     * @param beastObject the object whose input was being set, may be null
+     */
+    private String typeMismatchMessage(String code, Object value, BEASTInterface beastObject) {
+        final Class<?> expected = tensorClass != null ? tensorClass : theClass;
+        final String expectedName = expected == null ? "<unknown>" : expected.getName();
+        final String actualName = value == null ? "null" : value.getClass().getName();
+
+        final StringBuilder b = new StringBuilder();
+        b.append("Input ").append(code).append(": type mismatch for input '").append(getName()).append("'");
+        if (beastObject != null) {
+            b.append(" of ").append(beastObject.getClass().getName());
+            if (beastObject.getID() != null) {
+                b.append(" id='").append(beastObject.getID()).append("'");
+            }
+        }
+        b.append("\n  expected: ").append(expectedName);
+        if (tensorClass != null && theClass != null) {
+            // for a tensor input the domain is carried separately, e.g. RealScalar<PositiveReal>
+            b.append(" with domain ").append(theClass.getName());
+        }
+        b.append("\n  but got:  ").append(actualName);
+
+        if (expectedName.startsWith("beast.base.spec.")
+                && actualName.startsWith("beast.base.")
+                && !actualName.startsWith("beast.base.spec.")) {
+            final String simpleName = value.getClass().getSimpleName();
+            b.append("\n\n").append(actualName).append(" is a legacy BEAST 2 class, but this input expects")
+             .append(" a BEAST 3 spec class.\nIn XML this usually means a bare element name was used, as in")
+             .append(" <").append(simpleName).append(" name='").append(getName()).append("'>, which resolves")
+             .append(" to the legacy\nclass. Name the input and give it an explicit spec instead, as in")
+             .append(" <").append(getName()).append(" spec='beast.base.spec...'>.");
+        }
+        return b.toString();
     }
 
     /**
