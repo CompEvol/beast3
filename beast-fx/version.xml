@@ -57,7 +57,10 @@
                 <provider classname="beastfx.app.inputeditor.OutFileListInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.ParameterInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.ParametricDistributionInputEditor"/>
-                <provider classname="beastfx.app.inputeditor.SiteModelInputEditor"/>
+                <!-- Legacy SiteModelInputEditor intentionally not registered: the spec
+                     SiteModelInputEditor is the BEAUti editor for SiteModelInterface.Base
+                     in 2.8. Registering both let service order pick the winner, and the
+                     legacy one could emit legacy operators. -->
                 <provider classname="beastfx.app.inputeditor.StringInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.TreeFileInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.TreeFileListInputEditor"/>
