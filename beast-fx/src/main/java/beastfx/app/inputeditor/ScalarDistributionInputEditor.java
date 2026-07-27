@@ -49,6 +49,8 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 
     boolean useDefaultBehavior;
 	boolean mayBeUnstable;
+	/** object that owns m_input -- not necessarily the distribution being edited **/
+	BEASTInterface inputOwner;
 
     @Override
     public Class<?> type() {
@@ -65,21 +67,29 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     public void init(Input<?> input, BEASTInterface beastObject, int itemNr, ExpandOption isExpandOption, boolean addButtons) {
         // useDefaultBehavior = !((beastObject instanceof beast.base.inference.distribution.Prior) || beastObject instanceof MRCAPrior || beastObject instanceof TreeDistribution);
         
-    	if (scalarTemplates == null) {
+        // m_beastObject is set to the distribution below, so keep track of the
+        // object that owns the input being edited as well
+        inputOwner = beastObject;
+
+    	ScalarDistribution<?,?> currentDist = getDistribution(input, itemNr);
+    	if (scalarTemplates == null && currentDist != null) {
     		Input<ScalarDistribution<?,?>> _input = new Input<>("param", "dummy input");
         	_input.setType(ScalarDistribution.class);
-        	scalarTemplates = doc.getInputEditorFactory().getAvailableTemplates(_input, beastObject, null, doc);
+        	List<BeautiSubTemplate> templates = doc.getInputEditorFactory().getAvailableTemplates(_input, beastObject, null, doc);
 
-        	templateInstances = new ArrayList<>();
-        	templateDomains = new ArrayList<>();
-            List<?> list = (List<?>) input.get();
-            PartitionContext context = doc.getContextFor((BEASTInterface) list.get(itemNr));
-            ScalarDistribution<?,?> prior1 = (ScalarDistribution <?,?>) list.get(itemNr);
-        	for (BeautiSubTemplate template : scalarTemplates) {
-            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, prior1, _input, true);
-            	templateInstances.add(newDist);
-            	templateDomains.add(getDomain(newDist));
+        	List<ScalarDistribution<?,?>> instances = new ArrayList<>();
+        	List<Class<?>> domains = new ArrayList<>();
+            PartitionContext context = contextFor(currentDist);
+        	for (BeautiSubTemplate template : templates) {
+            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, currentDist, _input, true);
+            	instances.add(newDist);
+            	domains.add(getDomain(newDist));
         	}
+        	// only publish the caches once they are complete, so that a failure
+        	// half way cannot leave them inconsistent for later editors
+        	templateInstances = instances;
+        	templateDomains = domains;
+        	scalarTemplates = templates;
     	}
     	
     	
@@ -90,7 +100,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         m_input = input;
 
         if (beastObject instanceof ScalarDistribution<?, ?>) {
-            m_beastObject = beastObject;        	
+            m_beastObject = beastObject;
+        } else if (currentDist != null) {
+        	// editing a distribution valued input, e.g. the distr input of a Prior
+            m_beastObject = currentDist;
         } else {
         	// m_input = beastObject.getInput("distr");
             m_beastObject = (ScalarDistribution<?, ?>) beastObject.getInput("distr").get();
@@ -116,7 +129,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         } else {
         	pane = new HBox();
         }
-        pane.getChildren().add(createComboBox(m_beastObject, m_input));
+        ComboBox<BeautiSubTemplate> distrComboBox = createComboBox(m_beastObject, m_input);
+        if (distrComboBox != null) {
+        	pane.getChildren().add(distrComboBox);
+        }
     	pane.setPadding(new Insets(5));
         if (m_beastObject != null) {
         	FXUtils.createHMCButton(pane, m_beastObject, m_input);
@@ -132,9 +148,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	            Button rangeButton = new Button(paramToString(p));
 	            rangeButton.setOnAction(e -> {
 	                Button rangeButton1 = (Button) e.getSource();
-	
-	                List<?> list = (List<?>) m_input.get();
-	                ScalarDistribution<?,?> prior1 = (ScalarDistribution<?,?>) list.get(itemNr);
+
+	                ScalarDistribution<?,?> prior1 = getDistribution(m_input, itemNr);
+	                if (prior1 == null || prior1.paramInput.get() == null) {
+	                	return;
+	                }
 	                BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
 	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, RealScalar.class, doc);
 	                if (dlg.showDialog()) {
@@ -153,9 +171,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	            Button rangeButton = new Button(paramToString(p));
 	            rangeButton.setOnAction(e -> {
 	                Button rangeButton1 = (Button) e.getSource();
-	
-	                List<?> list = (List<?>) m_input.get();
-	                ScalarDistribution<?,?> prior1 = (ScalarDistribution<?,?>) list.get(itemNr);
+
+	                ScalarDistribution<?,?> prior1 = getDistribution(m_input, itemNr);
+	                if (prior1 == null || prior1.paramInput.get() == null) {
+	                	return;
+	                }
 	                BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
 	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, IntScalar.class, doc);
 	                if (dlg.showDialog()) {
@@ -181,6 +201,43 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 //        getChildren().add(pane);
 
     } // init
+
+
+	/**
+	 * The distribution being edited, which is either the itemNr-th entry of a list
+	 * of distributions (e.g. the priors panel), or the value of the input itself
+	 * when the editor is created for a single ScalarDistribution input,
+	 * like the distr input of a Prior. Returns null if neither applies.
+	 */
+	private ScalarDistribution<?,?> getDistribution(Input<?> input, int itemNr) {
+		if (input == null) {
+			return null;
+		}
+		Object o = input.get();
+		if (o instanceof List<?> list) {
+			if (itemNr < 0 || itemNr >= list.size()) {
+				return null;
+			}
+			o = list.get(itemNr);
+		}
+		return o instanceof ScalarDistribution<?,?> dist ? dist : null;
+	}
+
+
+	/**
+	 * Partition context of a distribution. Distributions nested inside another
+	 * distribution need not have an ID of their own, in which case the context of
+	 * the object owning the input is used.
+	 */
+	private PartitionContext contextFor(BEASTInterface dist) {
+		if (dist != null && dist.getID() != null) {
+			return doc.getContextFor(dist);
+		}
+		if (inputOwner != null && inputOwner.getID() != null) {
+			return doc.getContextFor(inputOwner);
+		}
+		return new PartitionContext("");
+	}
 
 
 	private Class<?> getDomain(ScalarDistribution<?, ?> value) {
@@ -605,6 +662,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox(BEASTInterface m_beastObject, Input<?> m_input) {
+		if (scalarTemplates == null || templateDomains == null || templateDomains.size() != scalarTemplates.size()) {
+			// templates could not be collected, so there is nothing to choose from
+			return null;
+		}
 		ComboBox<BeautiSubTemplate> comboBox = new ComboBox<>();
 
         TensorDistribution<?,?> prior = (TensorDistribution<?,?>) m_beastObject;
@@ -680,11 +741,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 
             
             try {
-	            if (m_input.get() instanceof List) {
+	            if (m_input.get() instanceof List<?> l && itemNr >= 0 && itemNr < l.size()) {
 		            List<Distribution> list = (List<Distribution>) m_input.get();
 		
 		            BeautiSubTemplate template = (BeautiSubTemplate) comboBox1.getValue();
-		            PartitionContext context = doc.getContextFor((BEASTInterface) list.get(itemNr));
+		            PartitionContext context = contextFor((BEASTInterface) list.get(itemNr));
 		            
 		            Object item = list.get(itemNr);
 		            if (item instanceof ScalarDistribution<?,?>) {
@@ -706,8 +767,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	            } else {
 		    		
 		            BeautiSubTemplate template = (BeautiSubTemplate) comboBox1.getValue();
-		            PartitionContext context = doc.getContextFor((BEASTInterface) m_beastObject);
-	            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, m_beastObject, m_input, true);
+		            PartitionContext context = contextFor(m_beastObject);
+		            // the new distribution becomes the value of m_input, so it must be
+		            // registered as output of the object owning that input
+		            BEASTInterface owner = inputOwner != null ? inputOwner : m_beastObject;
+	            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, owner, m_input, true);
 	            }
             } catch (Exception e1) {
                 e1.printStackTrace();
