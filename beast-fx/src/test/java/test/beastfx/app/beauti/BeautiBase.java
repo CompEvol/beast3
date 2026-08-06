@@ -16,6 +16,8 @@ import beastfx.app.inputeditor.AlignmentListInputEditor.Partition0;
 import beastfx.app.inputeditor.BeautiConfig;
 import beastfx.app.inputeditor.BeautiDoc;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
@@ -26,6 +28,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
+import javafx.stage.Screen;
+import javafx.stage.Window;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -578,6 +582,7 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 			}
 		    return false;
 		}).queryAs(Node.class);
+		moveOnScreen(robot, node);
 		robot.clickOn(node);
 		return robot;
 	}
@@ -589,12 +594,36 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 		});
 		Set<Node> nodes = q.queryAll();
 		if (nodes.size() > 0) {
-			robot.clickOn((Node)(nodes.toArray()[0]));
+			Node node = (Node)(nodes.toArray()[0]);
+			moveOnScreen(robot, node);
+			robot.clickOn(node);
 		}
 //		for (Node node : nodes) {
 //			robot.clickOn(node);
 //		}
 		return robot;
+	}
+
+	/**
+	 * Clicks are delivered to a point on the screen, so a node that lies outside the
+	 * screen can never be clicked. Windows are cascaded down the screen as they are
+	 * created, and BEAUti windows are nearly as high as the screen, so nodes at the
+	 * bottom of a window drop off the screen once enough windows have been opened in
+	 * the same JVM -- which depends on how many tests ran before. Move the window so
+	 * that the node is on the screen.
+	 */
+	private void moveOnScreen(FxRobot robot, Node node) {
+		Window window = node.getScene().getWindow();
+		Bounds bounds = node.localToScreen(node.getBoundsInLocal());
+		Rectangle2D screen = Screen.getPrimary().getVisualBounds();
+		double dx = Math.max(bounds.getMaxX() - screen.getMaxX(), 0);
+		double dy = Math.max(bounds.getMaxY() - screen.getMaxY(), 0);
+		if (dx > 0 || dy > 0) {
+			robot.interact(() -> {
+				window.setX(Math.max(window.getX() - dx, screen.getMinX()));
+				window.setY(Math.max(window.getY() - dy, screen.getMinY()));
+			});
+		}
 	}
 
     protected void setPartitionTableCell(FxRobot robot, int col, String string) {
