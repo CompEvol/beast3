@@ -72,7 +72,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         inputOwner = beastObject;
 
     	ScalarDistribution<?,?> currentDist = getDistribution(input, itemNr);
-    	if (scalarTemplates == null && currentDist != null) {
+    	if (scalarTemplates == null && (currentDist != null || beastObject != null)) {
+    		// the templates are only used to populate the combo box, so they can be
+    		// collected even when there is no distribution to edit yet, in which case
+    		// the object owning the input takes its place
+    		BEASTInterface templateOwner = currentDist != null ? currentDist : beastObject;
     		Input<ScalarDistribution<?,?>> _input = new Input<>("param", "dummy input");
         	_input.setType(ScalarDistribution.class);
         	List<BeautiSubTemplate> templates = doc.getInputEditorFactory().getAvailableTemplates(_input, beastObject, null, doc);
@@ -81,7 +85,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         	List<Class<?>> domains = new ArrayList<>();
             PartitionContext context = contextFor(currentDist);
         	for (BeautiSubTemplate template : templates) {
-            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, currentDist, _input, true);
+            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, templateOwner, _input, true);
             	instances.add(newDist);
             	domains.add(getDomain(newDist));
         	}
@@ -106,10 +110,12 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             m_beastObject = currentDist;
         } else {
         	// m_input = beastObject.getInput("distr");
-            m_beastObject = (ScalarDistribution<?, ?>) beastObject.getInput("distr").get();
+        	// m_beastObject remains null when there is no distribution to edit,
+        	// e.g. the distr input of an MRCAPrior that was just added
+            m_beastObject = distrOf(beastObject);
         }
 
-        if (useDefaultBehavior && (beastObject instanceof MRCAPrior)) {
+        if (useDefaultBehavior && (beastObject instanceof MRCAPrior) && m_beastObject != null) {
         	useDefaultBehavior = false;
         	pane = new HBox();
         	expandedInit(input, beastObject);
@@ -124,10 +130,15 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         //m_bAddButtons = true;
         
 		this.itemNr = itemNr;
-        if (input.get() != null) {
+		boolean paneAdded = false;
+        if (input.get() != null && m_beastObject != null) {
             super.init(input, m_beastObject, itemNr, ExpandOption.FALSE, m_bAddButtons);
+            paneAdded = true;
         } else {
+        	// there is nothing to edit, so only offer a combo box to select a
+        	// distribution from, labelled with the name of the input
         	pane = new HBox();
+        	addInputLabel();
         }
         ComboBox<BeautiSubTemplate> distrComboBox = createComboBox(m_beastObject, m_input);
         if (distrComboBox != null) {
@@ -195,12 +206,26 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         
         
 //        Pane pane1 = pane;
-        registerAsListener(pane);        
+        registerAsListener(pane);
 //        pane = FXUtils.newHBox();
 //        pane.getChildren().add(pane1);
 //        getChildren().add(pane);
+        if (!paneAdded) {
+        	// super.init() adds the pane it creates itself, this one still needs adding
+        	getChildren().add(pane);
+        }
 
     } // init
+
+
+	/**
+	 * The ScalarDistribution held by the distr input of beastObject, or null if
+	 * there is no such input, or it has no value.
+	 */
+	private ScalarDistribution<?,?> distrOf(BEASTInterface beastObject) {
+		Input<?> distr = beastObject.getInputs().get("distr");
+		return distr != null && distr.get() instanceof ScalarDistribution<?,?> dist ? dist : null;
+	}
 
 
 	/**
@@ -354,7 +379,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     @Override
     /** suppress input label**/
     protected void addInputLabel() {
-        String name = formatName(m_beastObject.getID());
+    	// the label is the ID of the distribution being edited, but there need not
+    	// be a distribution, in which case fall back to the name of the input
+    	String id = m_beastObject != null ? m_beastObject.getID() : null;
+        String name = formatName(id != null ? id : m_input.getName());
         boolean b = m_bAddButtons;
         m_bAddButtons = true;
         addInputLabel(name, m_input.getTipText());
@@ -856,6 +884,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	private String getParameters() {
     	StringBuilder b = null;
     	TensorDistribution<?,?> distr = (TensorDistribution<?,?>) m_beastObject;
+    	if (distr == null) {
+    		// no distribution selected yet, so there are no parameters to show
+    		return "";
+    	}
     	for (Input<?> input: distr.listInputs()) {
     		if (!input.getName().equals("param")) {
     		Object o = input.get();

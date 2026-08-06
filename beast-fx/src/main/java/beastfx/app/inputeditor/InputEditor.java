@@ -308,7 +308,8 @@ public abstract class Base extends Pane implements InputEditor {
     }
 
     protected String formatName(String name) {
-	    if (doc.beautiConfig.inputLabelMap.containsKey(m_beastObject.getClass().getName() + "." + name)) {
+    	// m_beastObject can be null when the input has no value to edit yet
+	    if (m_beastObject != null && doc.beautiConfig.inputLabelMap.containsKey(m_beastObject.getClass().getName() + "." + name)) {
 	        name = doc.beautiConfig.inputLabelMap.get(m_beastObject.getClass().getName() + "." + name);
 	    } else {
 	        name = name.replaceAll("([a-z])([A-Z])", "$1 $2");
