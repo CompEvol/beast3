@@ -27,6 +27,7 @@ import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -36,6 +37,9 @@ import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.InputEditor;
 import beastfx.app.inputeditor.ScalarDistributionInputEditor;
 import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
 
 
@@ -135,6 +139,65 @@ public class ScalarDistributionInputEditorTest {
 		if (!failures.isEmpty()) {
 			fail("could not create input editor for distr input: " + failures);
 		}
+	}
+
+
+	/**
+	 * An MRCAPrior starts out without a distribution, which used to make the editor
+	 * for its distr input throw a NullPointerException, so that BEAUti popped up a
+	 * "Could not add entry for distr" message when the prior was added (issue #128).
+	 */
+	@Test
+	public void testEditorForMRCAPriorWithoutDistribution() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<Throwable> failures = new ArrayList<>();
+		AtomicReference<InputEditor> editor = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			MRCAPrior prior = new MRCAPrior();
+			prior.setID("allTaxa.prior");
+			doc.registerPlugin(prior);
+
+			// this is what BEAUti does for every input of an item in the priors panel
+			try {
+				editor.set(doc.getInputEditorFactory().createInputEditor(
+						(Input<?>) prior.distInput, (BEASTInterface) prior, doc));
+			} catch (Throwable e) {
+				e.printStackTrace();
+				failures.add(e);
+			}
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		if (!failures.isEmpty()) {
+			fail("could not create input editor for distr input without distribution: " + failures);
+		}
+		assertNotNull(editor.get(), "no input editor created for distr input");
+		// the editor should offer a way to select a distribution
+		assertNotNull(findComboBox(editor.get().getComponent()),
+				"no combo box to select a distribution from");
+	}
+
+
+	/** first combo box in the node tree rooted at node, or null if there is none **/
+	private static ComboBox<?> findComboBox(Node node) {
+		if (node instanceof ComboBox<?> comboBox) {
+			return comboBox;
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				ComboBox<?> comboBox = findComboBox(child);
+				if (comboBox != null) {
+					return comboBox;
+				}
+			}
+		}
+		return null;
 	}
 
 
