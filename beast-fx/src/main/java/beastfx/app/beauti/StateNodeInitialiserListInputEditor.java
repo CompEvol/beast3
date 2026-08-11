@@ -1,20 +1,6 @@
 package beastfx.app.beauti;
 
 
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.application.Platform;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Pane;
-
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.BeautiSubTemplate;
-import beastfx.app.inputeditor.InputEditor;
-import beastfx.app.inputeditor.ListInputEditor;
-import beastfx.app.util.FXUtils;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.evolution.tree.Tree;
@@ -23,6 +9,18 @@ import beast.base.inference.State;
 import beast.base.inference.StateNode;
 import beast.base.inference.StateNodeInitialiser;
 import beast.base.parser.PartitionContext;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.BeautiSubTemplate;
+import beastfx.app.inputeditor.InputEditor;
+import beastfx.app.inputeditor.ListInputEditor;
+import beastfx.app.util.FXUtils;
+import javafx.application.Platform;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StateNodeInitialiserListInputEditor extends ListInputEditor {
 
@@ -128,8 +126,14 @@ public class StateNodeInitialiserListInputEditor extends ListInputEditor {
         // scrub Tree initialisers
     	
         // 0. collect state node info
-        List<StateNodeInitialiser> inits = ((MCMC)doc.mcmc.get()).initialisersInput.get();
-        State state = ((MCMC)doc.mcmc.get()).startStateInput.get();
+        // doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+        // ClassCastException on a plain (MCMC) doc.mcmc.get() cast; nothing to scrub if there's no MCMC.
+        MCMC mcmc = doc.getMCMC();
+        if (mcmc == null) {
+            return false;
+        }
+        List<StateNodeInitialiser> inits = mcmc.initialisersInput.get();
+        State state = mcmc.startStateInput.get();
         List<StateNode> stateNodes = state.stateNodeInput.get();
         List<Tree> trees = new ArrayList<>();
         for (StateNode s: stateNodes) {

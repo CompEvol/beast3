@@ -1,23 +1,36 @@
 package beastfx.app.beauti;
 
 
-
-
-
-
+import beast.base.core.BEASTInterface;
+import beast.base.core.BEASTVersion2;
+import beast.base.core.Log;
+import beast.base.core.ProgramStatus;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.parser.XMLParserException;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beast.pkgmgmt.BEASTClassLoader;
+import beast.pkgmgmt.PackageManager;
+import beast.pkgmgmt.Utils6;
+import beastfx.app.beauti.theme.Default;
+import beastfx.app.inputeditor.*;
+import beastfx.app.inputeditor.BeautiDoc.ActionOnExit;
+import beastfx.app.inputeditor.BeautiDoc.DOC_STATUS;
+import beastfx.app.methodsection.MethodsText;
+import beastfx.app.methodsection.Phrase;
+import beastfx.app.methodsection.XML2HTMLPaneFX;
+import beastfx.app.methodsection.XML2Text;
+import beastfx.app.tools.AppLauncher;
+import beastfx.app.util.Alert;
+import beastfx.app.util.FXUtils;
+import beastfx.app.util.Utils;
 import javafx.event.ActionEvent;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.*;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.RadioMenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -25,44 +38,10 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-
 import org.xml.sax.SAXException;
 
-import beastfx.app.beauti.theme.Default;
-import beastfx.app.inputeditor.BEASTObjectDialog;
-import beastfx.app.inputeditor.BEASTObjectPanel;
-import beastfx.app.inputeditor.BeautiAlignmentProvider;
-import beastfx.app.inputeditor.BeautiConfig;
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.BeautiDocListener;
-import beastfx.app.inputeditor.BeautiPanel;
-import beastfx.app.inputeditor.BeautiPanelConfig;
-import beastfx.app.inputeditor.MyAction;
-import beastfx.app.methodsection.MethodsText;
-import beastfx.app.methodsection.Phrase;
-import beastfx.app.methodsection.XML2HTMLPaneFX;
-import beastfx.app.methodsection.XML2Text;
-import beastfx.app.util.Alert;
-import beastfx.app.util.FXUtils;
-import beastfx.app.inputeditor.BeautiDoc.ActionOnExit;
-import beastfx.app.inputeditor.BeautiDoc.DOC_STATUS;
-import beastfx.app.tools.AppLauncher;
-import beastfx.app.util.Utils;
-import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTVersion2;
-import beast.base.core.Log;
-import beast.base.core.ProgramStatus;
-import beast.base.evolution.alignment.Alignment;
-import beast.base.inference.MCMC;
-import beast.base.parser.XMLParserException;
-import beast.base.spec.evolution.tree.MRCAPrior;
-import beast.pkgmgmt.BEASTClassLoader;
-import beast.pkgmgmt.PackageManager;
-import beast.pkgmgmt.Utils6;
-
 import javax.xml.parsers.ParserConfigurationException;
-
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.StringSelection;
@@ -75,6 +54,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 
 
 public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane implements BeautiDocListener {
@@ -512,7 +492,9 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
 			XML2Text xml2text = new XML2Text(doc);
 			try {
 				MethodsText.initNameMap();
-				String text = xml2text.initialise((MCMC) doc.mcmc.get());
+				// doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+				// ClassCastException on a plain (MCMC) doc.mcmc.get() cast.
+				String text = xml2text.initialise(doc.getMCMC());
 				List<Phrase> m = xml2text.getPhrases();
 				String html = XML2HTMLPaneFX.header + Phrase.toHTML(doc, m) + XML2HTMLPaneFX.footer + "</body>\n</html>";
 				WebView webView = new WebView();

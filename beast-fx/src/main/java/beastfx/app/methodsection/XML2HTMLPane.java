@@ -1,11 +1,29 @@
 package beastfx.app.methodsection;
 
 
-import static javafx.concurrent.Worker.State.FAILED;
+import beast.base.core.BEASTInterface;
+import beast.base.inference.MCMC;
+import beast.base.parser.XMLParser;
+import beastfx.app.inputeditor.BeautiConfig;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.methodsection.implementation.BEASTObjectMethodsText;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker;
+import javafx.concurrent.Worker.State;
+import javafx.embed.swing.JFXPanel;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebEvent;
+import javafx.scene.web.WebView;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.events.EventListener;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
@@ -18,34 +36,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
-import javafx.application.*;
-import javafx.beans.value.*;
-import javafx.concurrent.*;
-import javafx.concurrent.Worker.State;
-import javafx.embed.swing.JFXPanel;
-import javafx.event.EventHandler;
-import javafx.scene.*;
-import javafx.scene.web.*;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.events.EventListener;
-
-import beast.base.core.BEASTInterface;
-import beast.base.inference.MCMC;
-import beast.base.parser.XMLParser;
-import beastfx.app.inputeditor.BeautiConfig;
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.methodsection.implementation.BEASTObjectMethodsText;
-
+import static javafx.concurrent.Worker.State.FAILED;
 
 
 public class XML2HTMLPane extends JPanel {
@@ -93,16 +84,19 @@ public class XML2HTMLPane extends JPanel {
 		}
 		
 		XMLParser parser = new XMLParser();
-		MCMC mcmc = (MCMC) parser.parseFile(file);
-		beautiDoc.mcmc.setValue(mcmc, beautiDoc);
+		// keep whatever the file's top-level Runnable actually is (MCMC, or a driver like
+		// PathSampler that wraps one) rather than pre-unwrapping it away; beautiDoc.getMCMC()
+		// unwraps it on demand instead of hard-casting straight to MCMC.
+		beast.base.inference.Runnable runnable = parser.parseFile(file);
+		beautiDoc.mcmc.setValue(runnable, beautiDoc);
 		for (BEASTInterface o : InputFilter.getDocumentObjects(beautiDoc.mcmc.get())) {
 			beautiDoc.registerPlugin(o);
 		}
 		beautiDoc.determinePartitions();
 		BEASTObjectMethodsText.setBeautiCFG(beautiDoc.beautiConfig);
-		
+
 		MethodsText.initNameMap();
-		initialise((MCMC) beautiDoc.mcmc.get(), true);		
+		initialise(beautiDoc.getMCMC(), true);
 	}
 	
 	final static String header = "<!DOCTYPE html>\n" +
@@ -118,7 +112,9 @@ public class XML2HTMLPane extends JPanel {
 	
 	public void initialise(MCMC mcmc, boolean update) throws Exception {		
 		xml2textProducer = new XML2Text(beautiDoc);
-		xml2textProducer.initialise((MCMC) beautiDoc.mcmc.get());
+		// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+		xml2textProducer.initialise(beautiDoc.getMCMC());
 		m = xml2textProducer.getPhrases();
 		
 		html = header + Phrase.toHTML(beautiDoc, m) + "</body>\n</html>";
@@ -397,7 +393,9 @@ public class XML2HTMLPane extends JPanel {
 	public String getText(CitationPhrase.mode mode) throws Exception {		
 		CitationPhrase.CitationMode = mode;
 		xml2textProducer = new XML2Text(beautiDoc);
-		xml2textProducer.initialise((MCMC) beautiDoc.mcmc.get());
+		// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+		xml2textProducer.initialise(beautiDoc.getMCMC());
 		m = xml2textProducer.getPhrases();
 		return Phrase.toString(m);
 	}

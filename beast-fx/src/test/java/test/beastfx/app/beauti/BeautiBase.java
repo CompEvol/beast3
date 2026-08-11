@@ -16,11 +16,11 @@ import beastfx.app.inputeditor.AlignmentListInputEditor.Partition0;
 import beastfx.app.inputeditor.BeautiConfig;
 import beastfx.app.inputeditor.BeautiDoc;
 import javafx.application.Platform;
-import javafx.geometry.Bounds;
-import javafx.geometry.Rectangle2D;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.SnapshotParameters;
@@ -53,7 +53,6 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 
 
 /**
@@ -209,7 +208,9 @@ public class BeautiBase extends ApplicationExtension {
 	}
 
 	String operatorsAsString() {
-		MCMC mcmc = (MCMC) doc.mcmc.get();
+		// doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) doc.mcmc.get() cast.
+		MCMC mcmc = doc.getMCMC();
 		List<Operator> operators = mcmc.operatorsInput.get();
 		return "assertOperatorsEqual" + pluginListAsString(operators);
 	}
@@ -326,7 +327,9 @@ public class BeautiBase extends ApplicationExtension {
 	void assertOperatorsEqual(String... ids) {
 		if (skipAssertions) return;
 		System.err.println("assertOperatorsEqual");
-		MCMC mcmc = (MCMC) doc.mcmc.get();
+		// doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) doc.mcmc.get() cast.
+		MCMC mcmc = doc.getMCMC();
 		List<Operator> operators = mcmc.operatorsInput.get();
 		asserListsEqual(operators, ids);
 	}

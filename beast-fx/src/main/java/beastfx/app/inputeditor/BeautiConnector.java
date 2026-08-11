@@ -1,20 +1,16 @@
 package beastfx.app.inputeditor;
 
 
-import java.lang.reflect.Method;
-import java.util.List;
-
-import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Input;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
-import beast.base.core.Log;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.parser.PartitionContext;
 import beast.pkgmgmt.BEASTClassLoader;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Description("Specifies which part of the template get connected to the main network")
@@ -199,7 +195,10 @@ public class BeautiConnector extends BEASTObject {
                         break;
                     //System.err.println("isActivated::is in posterior");
                     case IS_NOT_AN_OPERTOR:
-        				List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+        				// doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of
+        				// throwing ClassCastException on a plain (MCMC) doc.mcmc.get() cast.
+        				MCMC mcmc = doc.getMCMC();
+        				List<Operator> operators = mcmc == null ? new ArrayList<>() : mcmc.operatorsInput.get();
         				if (operators.contains(beastObject)) {
         					return false;
         				}

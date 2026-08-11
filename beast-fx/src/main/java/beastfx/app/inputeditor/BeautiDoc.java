@@ -1,87 +1,13 @@
 package beastfx.app.inputeditor;
 
 
-
-
-
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.lang.module.ModuleReader;
-import java.lang.module.ResolvedModule;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import beastfx.app.util.Alert;
-import beastfx.app.util.FXUtils;
-import javafx.scene.control.ButtonType;
-import javafx.stage.Stage;
-
-import javax.swing.JOptionPane;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import beastfx.app.beauti.BeautiTabPane;
-import beastfx.app.util.PartitionContextUtil;
-import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.FilteredAlignment;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
 import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.spec.evolution.branchratemodel.Base;
-import beast.base.spec.evolution.branchratemodel.StrictClockModel;
-import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.spec.evolution.tree.MRCAPrior;
-import beast.base.spec.inference.distribution.Normal;
-import beast.base.spec.inference.distribution.ScalarDistribution;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.evolution.operator.TipDatesRandomWalker;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.TraitSet;
@@ -93,17 +19,50 @@ import beast.base.inference.MCMC;
 import beast.base.inference.StateNode;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.Parameter;
-//import beast.base.inference.parameter.RealParameter;
-import beast.base.parser.JSONProducer;
-import beast.base.parser.NexusParser;
-import beast.base.parser.PartitionContext;
-import beast.base.parser.XMLParser;
-import beast.base.parser.XMLParserException;
-import beast.base.parser.XMLProducer;
+import beast.base.parser.*;
 import beast.base.parser.XMLParser.RequiredInputProvider;
+import beast.base.spec.evolution.branchratemodel.Base;
+import beast.base.spec.evolution.branchratemodel.StrictClockModel;
+import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.ScalarDistribution;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 import beast.pkgmgmt.launcher.BeastLauncher;
+import beastfx.app.beauti.BeautiTabPane;
+import beastfx.app.util.Alert;
+import beastfx.app.util.FXUtils;
+import beastfx.app.util.PartitionContextUtil;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.lang.module.ModuleReader;
+import java.lang.module.ResolvedModule;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+//import beast.base.inference.parameter.RealParameter;
 
 
 @Description("Beauti document in doc-view pattern, not useful in models")
@@ -123,6 +82,26 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 
     final public Input<beast.base.inference.Runnable> mcmc = new Input<>("runnable", "main entry of analysis",
             Validate.REQUIRED);
+
+    /** mcmc.get() is usually an MCMC, but a Runnable such as a path-sampling/stepping-stone
+     *  driver can wrap its own MCMC as an input named "mcmc" instead of extending MCMC directly
+     *  (see modelselection.inference.PathSampler). Use this instead of hard-casting mcmc.get()
+     *  to MCMC, so picking such a Runnable in the MCMC panel doesn't crash BEAUti with a
+     *  ClassCastException. Returns null if no MCMC can be found either way. */
+    public MCMC getMCMC() {
+        return getMCMC(mcmc.get());
+    }
+
+    /** Same unwrap as {@link #getMCMC()}, for a Runnable obtained from somewhere other than
+     *  this doc's own mcmc input -- e.g. a freshly parsed XML file (parser.parseFile(...) also
+     *  returns a plain Runnable, not necessarily an MCMC). */
+    public static MCMC getMCMC(beast.base.inference.Runnable runnable) {
+        if (runnable instanceof MCMC) {
+            return (MCMC) runnable;
+        }
+        Object inner = runnable == null ? null : runnable.getInputValue("mcmc");
+        return (inner instanceof MCMC) ? (MCMC) inner : null;
+    }
 
     public List<BranchRateModel> clockModels;
     // protected List<TreeDistribution> treePriors;
@@ -1608,7 +1587,9 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 // so we need to check that the model changed, and if so,
                 // revisit the BeautiConnectors
                 List<BEASTInterface> posteriorPredecessors2 = new ArrayList<>();
-                collectPredecessors(((MCMC) mcmc.get()).posteriorInput.get(), posteriorPredecessors2);
+                // getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+                // ClassCastException on a plain (MCMC) mcmc.get() cast.
+                collectPredecessors(getMCMC().posteriorInput.get(), posteriorPredecessors2);
                 if (posteriorPredecessors.size() != posteriorPredecessors2.size()) {
                     progress = true;
                 } else {
@@ -1652,7 +1633,9 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 
     public void setUpActivePlugins() {
         posteriorPredecessors = new ArrayList<>();
-        collectPredecessors(((MCMC) mcmc.get()).posteriorInput.get(), posteriorPredecessors);
+        // getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+        // ClassCastException on a plain (MCMC) mcmc.get() cast.
+        collectPredecessors(getMCMC().posteriorInput.get(), posteriorPredecessors);
         likelihoodPredecessors = new ArrayList<>();
         if (pluginmap.containsKey("likelihood")) {
             collectPredecessors(pluginmap.get("likelihood"), likelihoodPredecessors);
@@ -1877,6 +1860,18 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
             if (target == null) {
                 Log.trace.println("BeautiDoc: Could not find object " + targetID);
                 return;
+            }
+            // A wrapper Runnable such as a path-sampling/stepping-stone driver (see
+            // modelselection.inference.PathSampler) does not itself have MCMC's usual inputs
+            // (logger, operator, state, ...) -- it holds its own MCMC via an input named "mcmc"
+            // instead of extending MCMC directly. If the target lacks the requested input but has
+            // one named "mcmc", retry against that inner MCMC so <connect targetID='mcmc' .../>
+            // rules written for a plain MCMC still work when such a wrapper is the active runnable.
+            if (!target.getInputs().containsKey(inputName) && target.getInputs().containsKey("mcmc")) {
+                Object inner = target.getInputValue("mcmc");
+                if (inner instanceof BEASTInterface && ((BEASTInterface) inner).getInputs().containsKey(inputName)) {
+                    target = (BEASTInterface) inner;
+                }
             }
             // prevent duplication inserts in list
             Object o = target.getInputValue(inputName);
@@ -2856,7 +2851,9 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
     public BEASTInterface getUnlinkCandidate(Input<?> input, BEASTInterface parent) {
         PartitionContext oldContext = getContextFor((BEASTInterface)input.get());
         PartitionContext newContext = getContextFor(parent);
-        BEASTInterface beastObject = deepCopyPlugin((BEASTInterface) input.get(), parent, (MCMC) mcmc.get(), oldContext, newContext, this, null);
+        // getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+        // ClassCastException on a plain (MCMC) mcmc.get() cast.
+        BEASTInterface beastObject = deepCopyPlugin((BEASTInterface) input.get(), parent, getMCMC(), oldContext, newContext, this, null);
         return beastObject;
     }
 
@@ -2971,7 +2968,9 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 t.initAndValidate();
                 operator.initByName("taxonset", t, "weight", 1.0, "tree", tree, "windowSize", 1.0);
                 operator.setID("TipDatesRandomWalker." + t.getID());
-                MCMC mcmc = (MCMC) this.mcmc.get();
+                // getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+                // ClassCastException on a plain (MCMC) mcmc.get() cast.
+                MCMC mcmc = getMCMC();
                 mcmc.operatorsInput.setValue(operator, mcmc);
             }
             // set up date trait

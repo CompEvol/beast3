@@ -1,18 +1,16 @@
 package beastfx.app.inputeditor;
 
 
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.evolution.tree.TreeInterface;
 import beast.base.inference.CompoundDistribution;
-import beast.base.inference.MCMC;
 import beast.base.parser.PartitionContext;
+import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.spec.evolution.sitemodel.SiteModel;
 import beastfx.app.beauti.ClonePartitionPanel;
 import beastfx.app.inputeditor.BeautiPanelConfig.Partition;
 import beastfx.app.inputeditor.InputEditor.ExpandOption;
@@ -425,8 +423,10 @@ public class BeautiPanel extends Tab implements ChangeListener, BeautiDocProvide
 			SiteModelInterface siteModelSource = likelihoodSource.siteModelInput.get();
 			SiteModelInterface  siteModel = null;
 			try {
+				// doc.getMCMC() (not a plain (MCMC) doc.mcmc.get() cast) so this doesn't
+				// throw ClassCastException when a wrapper Runnable like PathSampler is active.
 				siteModel = (SiteModel.Base) BeautiDoc.deepCopyPlugin((BEASTInterface) siteModelSource,
-					likelihood, (MCMC) doc.mcmc.get(), oldContext, newContext, doc, null);
+					likelihood, doc.getMCMC(), oldContext, newContext, doc, null);
 			} catch (RuntimeException e) {
 				Alert.showMessageDialog(this.getContent() instanceof Pane ? ((Pane)this.getContent()) : null, 
 						"Could not clone " + sourceID + " to " + targetID + " " + e.getMessage());
@@ -439,7 +439,7 @@ public class BeautiPanel extends Tab implements ChangeListener, BeautiDocProvide
     		BranchRateModel clockModel = null;
 			try {
 				clockModel = (BranchRateModel) BeautiDoc.deepCopyPlugin((BEASTInterface) clockModelSource,
-						likelihood, (MCMC) doc.mcmc.get(), oldContext, newContext, doc, null);
+						likelihood, doc.getMCMC(), oldContext, newContext, doc, null);
 			} catch (Exception e) {
 				Alert.showMessageDialog(this.getContent() instanceof Pane ? ((Pane)this.getContent()) : null, 
 						"Could not clone " + sourceID + " to " + targetID + " " + e.getMessage());
@@ -472,7 +472,7 @@ public class BeautiPanel extends Tab implements ChangeListener, BeautiDocProvide
 			TreeInterface treeSource = likelihoodSource.treeInput.get();
 			try {
 			tree = (TreeInterface) BeautiDoc.deepCopyPlugin((BEASTInterface) treeSource, likelihood,
-							(MCMC) doc.mcmc.get(), oldContext, newContext, doc, null);
+							doc.getMCMC(), oldContext, newContext, doc, null);
 				} catch (Exception e) {
 					Alert.showMessageDialog(((Pane)this.getContent()), "Could not clone " + sourceID + " to " + targetID + " " + e.getMessage());
 					return;
