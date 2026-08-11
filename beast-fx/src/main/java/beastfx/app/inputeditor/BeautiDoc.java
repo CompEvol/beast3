@@ -1857,6 +1857,27 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
     }
 
 
+    /**
+     * A wrapper Runnable such as a path-sampling/stepping-stone driver (see
+     * modelselection.inference.PathSampler) does not itself have MCMC's usual inputs
+     * (logger, operator, state, ...) -- it holds its own MCMC via an input named "mcmc"
+     * instead of extending MCMC directly. If the target lacks the requested input but has
+     * one named "mcmc", redirect to that inner MCMC so <connect targetID='mcmc' .../> rules
+     * written for a plain MCMC still work when such a wrapper is the active runnable.
+     * Must be used by both connect() and disconnect(), otherwise objects can be connected
+     * to the inner MCMC but never removed from it again.
+     */
+    private BEASTInterface redirectToInnerMCMC(BEASTInterface target, String inputName) {
+        if (target != null && !target.getInputs().containsKey(inputName) && target.getInputs().containsKey("mcmc")) {
+            Object inner = target.getInputValue("mcmc");
+            if (inner instanceof BEASTInterface && ((BEASTInterface) inner).getInputs().containsKey(inputName)) {
+                return (BEASTInterface) inner;
+            }
+        }
+        return target;
+    }
+
+
     public void connect(BEASTInterface srcBEASTObject, String targetID, String inputName) {
         try {
             BEASTInterface target = pluginmap.get(targetID);
@@ -1864,18 +1885,7 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                 Log.trace.println("BeautiDoc: Could not find object " + targetID);
                 return;
             }
-            // A wrapper Runnable such as a path-sampling/stepping-stone driver (see
-            // modelselection.inference.PathSampler) does not itself have MCMC's usual inputs
-            // (logger, operator, state, ...) -- it holds its own MCMC via an input named "mcmc"
-            // instead of extending MCMC directly. If the target lacks the requested input but has
-            // one named "mcmc", retry against that inner MCMC so <connect targetID='mcmc' .../>
-            // rules written for a plain MCMC still work when such a wrapper is the active runnable.
-            if (!target.getInputs().containsKey(inputName) && target.getInputs().containsKey("mcmc")) {
-                Object inner = target.getInputValue("mcmc");
-                if (inner instanceof BEASTInterface && ((BEASTInterface) inner).getInputs().containsKey(inputName)) {
-                    target = (BEASTInterface) inner;
-                }
-            }
+            target = redirectToInnerMCMC(target, inputName);
             // prevent duplication inserts in list
             Object o = target.getInputValue(inputName);
             if (o instanceof List) {
@@ -1901,6 +1911,11 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         }
         BEASTInterface srcBEASTObject = pluginmap.get(translatePartitionNames(connector.sourceID, context));
         String targetID = translatePartitionNames(connector.targetID, context);
+        // same targetID translation as connect(BeautiConnector, PartitionContext) does, so that
+        // <connect targetID='mcmc' .../> resolves for a runnable whose ID is not literally "mcmc"
+    	if (targetID.equals("mcmc")) {
+    		targetID = mcmc.get().getID();
+    	}
         disconnect(srcBEASTObject, targetID, connector.targetInput);
     }
 
@@ -1910,6 +1925,7 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
             if (target == null) {
                 return;
             }
+            target = redirectToInnerMCMC(target, inputName);
             final Input<?> input = target.getInput(inputName);
             Object o = input.get();
             if (o instanceof List) {
