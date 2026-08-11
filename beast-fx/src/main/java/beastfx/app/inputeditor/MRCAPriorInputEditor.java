@@ -32,6 +32,7 @@ import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
+import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.parser.PartitionContext;
@@ -325,8 +326,14 @@ public class MRCAPriorInputEditor extends InputEditor.Base implements HasExpandB
     		operator.initByName("tree", prior.treeInput.get(), "taxonset", taxonset, "windowSize", 1.0, "weight", 1.0);
     	}
    		operator.setID("tipDatesSampler." + taxonset.getID());
-   	    	
-    	doc.mcmc.get().setInputValue("operator", operator);
+
+   		// the operator list lives on the MCMC, which for a wrapper Runnable like PathSampler is
+   		// the inner one -- doc.mcmc.get() itself has no "operator" input, and setInputValue()
+   		// would throw IllegalArgumentException
+   		MCMC mcmc = doc.getMCMC();
+   		if (mcmc != null) {
+   			mcmc.setInputValue("operator", operator);
+   		}
 	}
 
     // remove TipDatesRandomWalker from list of operators
@@ -350,8 +357,12 @@ public class MRCAPriorInputEditor extends InputEditor.Base implements HasExpandB
     		return;
     	}
     	
-    	// remove from list of operators
-    	Object o = doc.mcmc.get().getInput("operator");
+    	// remove from list of operators -- see enableTipSampling() on why this goes via getMCMC()
+    	MCMC mcmc = doc.getMCMC();
+    	if (mcmc == null) {
+    		return;
+    	}
+    	Object o = mcmc.getInput("operator");
     	if (o instanceof Input<?>) {
     		Input<List<Operator>> operatorInput = (Input<List<Operator>>) o;
     		List<Operator> operators = operatorInput.get();
