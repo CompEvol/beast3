@@ -96,11 +96,14 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
      *  this doc's own mcmc input -- e.g. a freshly parsed XML file (parser.parseFile(...) also
      *  returns a plain Runnable, not necessarily an MCMC). */
     public static MCMC getMCMC(beast.base.inference.Runnable runnable) {
-        if (runnable instanceof MCMC) {
-            return (MCMC) runnable;
+        if (runnable instanceof MCMC mcmc) {
+            return mcmc;
         }
-        Object inner = runnable == null ? null : runnable.getInputValue("mcmc");
-        return (inner instanceof MCMC) ? (MCMC) inner : null;
+        // getInputValue("mcmc") would throw IllegalArgumentException if "mcmc" is not a
+        // registered input name, so check containsKey first rather than relying on a catch.
+        Object inner = (runnable != null && runnable.getInputs().containsKey("mcmc"))
+                ? runnable.getInputValue("mcmc") : null;
+        return (inner instanceof MCMC mcmc) ? mcmc : null;
     }
 
     public List<BranchRateModel> clockModels;
