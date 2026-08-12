@@ -33,7 +33,7 @@ import beast.base.core.Input.Validate;
 import beast.base.core.Loggable;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
 import beast.base.spec.type.RealVector;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 
 @Description("A statistic that tracks the mean, variance and coefficent of variation of rates. " +
         "It has three dimensions, one for each statistic.")
-public class RateStatistic extends BEASTObject implements Loggable, RealVector<PositiveReal> {
+public class RateStatistic extends BEASTObject implements Loggable, RealVector<NonNegativeReal> {
 	
     final public Input<GenericTreeLikelihood> likelihoodInput = new Input<>("treeLikelihood", "TreeLikelihood containing branch rate model that provides rates for a tree");
     final public Input<Base> branchRateModelInput = new Input<>("branchratemodel", "model that provides rates for a tree", Validate.XOR, likelihoodInput);
@@ -180,9 +180,16 @@ public class RateStatistic extends BEASTObject implements Loggable, RealVector<P
         return Arrays.stream(calcValues()).boxed().collect(Collectors.toList());
     }
 
+    /**
+     * Non-negative rather than positive: the variance and the coefficient of
+     * variation are exactly 0 whenever every branch carries the same rate, which
+     * is the normal state of affairs under a strict clock. {@code PositiveReal}
+     * excludes 0 ({@code lowerInclusive()} is false), so declaring it here makes
+     * {@link #isValid()} report false for a perfectly ordinary analysis.
+     */
     @Override
-    public PositiveReal getDomain() {
-        return PositiveReal.INSTANCE;
+    public NonNegativeReal getDomain() {
+        return NonNegativeReal.INSTANCE;
     }
 
     /**
