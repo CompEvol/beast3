@@ -218,37 +218,21 @@ public class UpDownOperator extends KernelOperator {
 	}
 
 
+	/**
+	 * Interval-scale the tree, the same dilation {@link Tree#scale(double)} applies.
+	 * <p>
+	 * Delegates to {@link Node#intervalScale(double)} rather than repeating the
+	 * recursion: a private copy here silently lost the sampled-ancestor ceiling
+	 * check and let this operator lift a node through its pinned sampled ancestor.
+	 *
+	 * @throws IllegalArgumentException if the move breaches a sampled-ancestor
+	 *         ceiling; {@code proposal()} catches this and rejects
+	 */
 	private double scaleTree(TreeInterface tree, double scale) {
-		int dim = resampleNodeHeight(tree.getRoot(), scale);
+		int dim = tree.getRoot().intervalScale(scale);
 		return dim * Math.log(scale);
 	}
 
-	private int resampleNodeHeight(Node node, double scaler) {
-		if (node.isLeaf()) {
-			return 0;
-		}
-		
-		if (node.isFake()) {
-			if (node.getLeft().isDirectAncestor()) {
-				return resampleNodeHeight(node.getRight(), scaler);
-			} else {
-				return resampleNodeHeight(node.getLeft(), scaler);
-			}
-		}
-		
-		double oldHeights = node.getHeight() - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		int scaledNodeCount = 1;
-		scaledNodeCount += resampleNodeHeight(node.getLeft(), scaler);
-		scaledNodeCount += resampleNodeHeight(node.getRight(), scaler);
-
-		// resample the height
-		double minHeight = Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		double newHeight = oldHeights * scaler;
-		node.setHeight(newHeight + minHeight);
-		
-		return scaledNodeCount;
-	}
-	
     private boolean outsideBounds(final Scalable node) {
         if (node instanceof RealScalarParam<?> p) {
             if (!p.withinBounds(p.get())) {

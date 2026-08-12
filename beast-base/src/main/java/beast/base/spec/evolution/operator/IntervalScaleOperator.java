@@ -66,55 +66,33 @@ public class IntervalScaleOperator extends TreeOperator {
 
 	@Override
 	public double proposal() {
-		
-		final Tree tree = (Tree) InputUtil.get(treeInput, this);
+		try {
+			final Tree tree = (Tree) InputUtil.get(treeInput, this);
 
-		double scaler = getScaler();
-		double lengthBefore = getTreeLength(tree);
-		int numbers = resampleNodeHeight(tree.getRoot(), scaler);
-		double lengthAfter = getTreeLength(tree);
-		double actualScaler = lengthAfter / lengthBefore;
-		
-		double logHR = Math.log(scaler) * (numbers);
+			double scaler = getScaler();
+			double lengthBefore = getTreeLength(tree);
+			int numbers = tree.getRoot().intervalScale(scaler);
+			double lengthAfter = getTreeLength(tree);
+			double actualScaler = lengthAfter / lengthBefore;
 
-		// scale returns log Jacobian = dim * log(factor)
-		for (Scalable down : downInput.get()) {
-			logHR += down.scale(1.0/actualScaler);
-		}
-		for (Scalable up : upInput.get()) {
-			logHR += up.scale(actualScaler);
-		}
-		return logHR;
-	}
+			double logHR = Math.log(scaler) * (numbers);
 
-	private int resampleNodeHeight(Node node, double scaler) {
-		if (node.isLeaf()) {
-			return 0;
-		}
-		
-		// deal with sampled ancestors
-		if (node.isFake()) {
-			if (node.getLeft().isDirectAncestor()) {
-				return resampleNodeHeight(node.getRight(), scaler);
-			} else {
-				// node.getRight() must be direct ancestor
-				return resampleNodeHeight(node.getLeft(), scaler);
+			// scale returns log Jacobian = dim * log(factor)
+			for (Scalable down : downInput.get()) {
+				logHR += down.scale(1.0/actualScaler);
 			}
-		}
-		
-		double oldHeights = node.getHeight() - Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		int scaledNodeCount = 1;
-		scaledNodeCount += resampleNodeHeight(node.getLeft(), scaler);
-		scaledNodeCount += resampleNodeHeight(node.getRight(), scaler);
+			for (Scalable up : upInput.get()) {
+				logHR += up.scale(actualScaler);
+			}
+			return logHR;
 
-		// resample the height
-		double minHeight = Math.max(node.getLeft().getHeight(), node.getRight().getHeight());
-		double newHeight = oldHeights * scaler;
-		node.setHeight(newHeight + minHeight);
-		
-		return scaledNodeCount;
+		} catch (IllegalArgumentException e) {
+			// a Scalable rejected the move (e.g. a sampled-ancestor ceiling was
+			// hit); per the Scalable contract that is a rejection signal
+			return Double.NEGATIVE_INFINITY;
+		}
 	}
-	
+
 	private double getTreeLength(Tree tree) {
 		double length = 0;
 		for (Node node : tree.getNodesAsArray()) {

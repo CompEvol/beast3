@@ -845,16 +845,26 @@ public class Node extends BEASTObject {
     /**
      * Interval scaling: multiply this node's "margin" (height above its taller
      * child) by {@code scale}, recursively. Tip heights are preserved by
-     * construction, so the resulting tree is always valid for any positive
-     * scale factor.
+     * construction, so on a tree without sampled ancestors the result is valid
+     * for any positive scale factor.
      * <p>
      * Used by {@link Tree#scale(double)} as the contract-bound dilation
      * operation. Each margin is independently multiplied by {@code scale}, so
      * the tree's sum of margins (= {@link Tree#getScalableValue()}) is
      * exactly multiplied by {@code scale}.
+     * <p>
+     * A fake (sampled-ancestor) node keeps its own height &mdash; it is pinned
+     * to its direct-ancestor leaf's sampling time &mdash; while the subtree
+     * below it scales, so it caps how far that subtree can rise. Reaching the
+     * cap throws {@link IllegalArgumentException}, which callers treat as a
+     * rejection (see {@link Tree#scale(double)}). The check costs nothing on a
+     * tree with no fake nodes, so it stays on this single traversal rather than
+     * in a separate validation pass.
      *
      * @param scale positive scale factor
      * @return number of intervals (margins) scaled, for HR calculations
+     * @throws IllegalArgumentException if a fake node's child reaches or passes
+     *         the fake node's pinned height
      */
     public int intervalScale(final double scale) {
         if (isLeaf()) {
@@ -862,11 +872,20 @@ public class Node extends BEASTObject {
         }
         // sampled-ancestor fake nodes: skip, recurse into the non-direct-ancestor child
         if (isFake()) {
-            if (getLeft().isDirectAncestor()) {
-                return getRight().intervalScale(scale);
-            } else {
-                return getLeft().intervalScale(scale);
+            final Node child = getLeft().isDirectAncestor() ? getRight() : getLeft();
+            final int dof = child.intervalScale(scale);
+            // Only a child that moved can breach the ceiling. A leaf child sits at a
+            // fixed sampling time, so if it were already at or above this node the
+            // tree was malformed before the move -- rejecting every proposal over it
+            // would stall the chain rather than reject a bad move.
+            if (!child.isLeaf() && child.getHeight() >= height) {
+                throw new IllegalArgumentException(
+                        "Interval scaling by " + scale + " lifted node " + child.getNr()
+                        + " to height " + child.getHeight()
+                        + ", at or above the sampled ancestor at height " + height
+                        + " that must remain its ancestor.");
             }
+            return dof;
         }
         startEditing();
         final double oldMargin = height - Math.max(getLeft().getHeight(), getRight().getHeight());
