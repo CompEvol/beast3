@@ -2363,9 +2363,21 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                     if (input.get() != null) {
                         if (input.get() instanceof List) {
                             // handle lists
-                            //((List)copy.getInput(input.getName())).clear();
-                            for (Object o : (List<?>) input.get()) {
-                                if (o instanceof BEASTInterface) {
+                            List<?> sourceList = (List<?>) input.get();
+                            boolean isPrimitiveList = sourceList.isEmpty() || !(sourceList.get(0) instanceof BEASTInterface);
+                            if (isPrimitiveList) {
+                                // list of primitive values (e.g. Parameter "value" input): replace the
+                                // copy's list wholesale instead of appending per source element, since
+                                // Input.setValue(List, ...) appends *all* elements of the given list --
+                                // iterating per element here would append the whole source list once
+                                // per element, e.g. turning a dimension-4 freqParameter into 16.
+                                Object dest = copy.getInput(input.getName()).get();
+                                if (dest instanceof List) {
+                                    ((List<?>) dest).clear();
+                                }
+                                copy.setInputValue(input.getName(), input.get());
+                            } else {
+                                for (Object o : sourceList) {
                                     BEASTInterface value = getCopyValue((BEASTInterface) o, copySet, oldContext, newContext, doc);
                                     // make sure it is not already in the list
                                     Object o2 = copy.getInput(input.getName()).get();
@@ -2383,14 +2395,6 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                                         // add to the list
                                         copy.setInputValue(input.getName(), value);
                                     }
-                                } else {
-                                    // it is a primitive value
-                                    if (copy instanceof Parameter.Base && input.getName().equals("value")) {
-                                        //	// prevent appending to parameter values
-                                        Parameter.Base<?> p = ((Parameter.Base<?>) copy);
-                                        ((List<?>) p.valuesInput.get()).clear();
-                                    }
-                                    copy.setInputValue(input.getName(), input.get());
                                 }
                             }
                         } else if (input.get() instanceof BEASTInterface) {
