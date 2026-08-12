@@ -1,4 +1,4 @@
-<beast version='2.0'
+<beast version='2.8'
        namespace='beastfx.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.inference.distribution'>
 
 
@@ -201,14 +201,14 @@
         </subtemplate>
 
         <!-- Dirichlet -->
-        <subtemplate id='Dirichlet' class='beast.base.inference.distribution.Dirichlet' mainid='[top]'
+        <subtemplate id='Dirichlet' class='beast.base.spec.inference.distribution.Dirichlet' mainid='[top]'
             hmc='
             Dirichlet/alpha/=ParametricDistributions/Dirichlet/mean/,
             Dirichlet/offset/=ParametricDistributions/Dirichlet/offset/'>
             <![CDATA[
-			<distr spec="beast.base.inference.distribution.Dirichlet">
-                <parameter spec="parameter.RealParameter" estimate="false" name="alpha">1.0</parameter>
-            </distr> 
+			<distr spec="beast.base.spec.inference.distribution.Dirichlet">
+                <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" estimate="false">1.0</alpha>
+            </distr>
 ]]>
         </subtemplate>
 
