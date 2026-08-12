@@ -663,10 +663,30 @@ public class Tree extends StateNode implements TreeInterface, Function, Scalable
      * Equivalent to interval scaling: see {@link #getScalableValue()} for the
      * summary that scales by exactly {@code scale} under this operation.
      * <p>
-     * Always succeeds for any positive {@code scale} (no leaf can violate a
-     * branch-length constraint, because each margin remains positive).
+     * On a tree without sampled ancestors this always succeeds for any positive
+     * {@code scale}: leaf heights are fixed and each margin stays positive, so
+     * no branch-length constraint can be violated.
+     * <p>
+     * A sampled-ancestor tree is different. A fake node's height is pinned to
+     * its direct-ancestor leaf's sampling time, so it cannot move, and it acts
+     * as a fixed <em>ceiling</em> on the subtree hanging below it. The vertical
+     * room between that ceiling and the fixed leaves underneath is finite, so a
+     * large enough {@code scale > 1} lifts the fake node's child through it.
+     * Such a move has no valid state to land in and is rejected by throwing
+     * {@link IllegalArgumentException}, per the {@link Scalable} contract.
+     * <p>
+     * The breach is detected as the scale walks the tree, so a rejected move can
+     * leave heights below the offending fake node already scaled. That is the
+     * rejection path every scale operator already takes: the throw becomes a
+     * {@code NEGATIVE_INFINITY} proposal and {@code MCMC} restores the state.
+     * Callers driving {@code scale} outside an MCMC step need to restore state
+     * themselves. Detecting the breach up front would mean a second full
+     * traversal on every proposal, including the trees with no sampled ancestors
+     * where it can never fire &mdash; not worth paying on the common path.
      *
      * @return log Jacobian determinant of the move ({@code dof × log(scale)})
+     * @throws IllegalArgumentException if the move lifts a fake node's child to
+     *         or above the fake node's pinned height
      */
     @Override
     public double scale(final double scale) {
