@@ -1,11 +1,10 @@
 package test.beastfx.app.beauti;
 
 
-
-
-
-import java.io.File;
-
+import beastfx.app.beauti.BeautiTabPane;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +12,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import beastfx.app.beauti.BeautiTabPane;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
-import javafx.stage.Stage;
+import java.io.File;
 
 @ExtendWith(ApplicationExtension.class)
 public class CloneTest extends BeautiBase {
@@ -35,7 +31,6 @@ public class CloneTest extends BeautiBase {
 	}
 
 
- 	@Disabled("SimplexParam validation fails when freqParameter is cloned across partitions (dimension mismatch)")
  	@Test
  	public void simpleSiteModelCloneTest(FxRobot robot) throws Exception {
         warning("0. Load primate-mtDNA.nex");
