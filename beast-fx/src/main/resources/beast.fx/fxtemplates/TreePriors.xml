@@ -1,4 +1,4 @@
-<beast version='2.0'
+<beast version='2.8'
        namespace='beastfx.app.beauti:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.evolution.branchratemodel:beast.base.evolution.speciation:beast.base.evolution.tree.coalescent:beast.base.util:beast.base.math:beast.evolution.nuc:beast.base.evolution.operator:beast.base.inference.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.likelihood:beast.evolution:beast.base.inference.distribution'>
 
 
@@ -468,8 +468,8 @@ EBSPLogger/mode/
 
             <prior id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.Prior">
                 <scalar arg="@indicators.alltrees" id="indsSun.alltrees" spec="beast.base.spec.evolution.Sum"/>
-                <distr spec="Poisson"  id='Poisson.EBSP'>
-                    <parameter name="lambda" value="0.69314718056" estimate='false'/>
+                <distr spec="beast.base.spec.inference.distribution.Poisson"  id='Poisson.EBSP'>
+                    <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
                 </distr>
             </prior>
 

@@ -127,6 +127,7 @@ public class CloneTest extends BeautiBase {
         makeSureXMLParses();       
 	}
 
+    // https://github.com/CompEvol/beast3/issues/136
 	@Disabled("Relaxed clock subtemplates not yet ported to BEAST 3 ClockModels.xml")
 	@Test
 	public void simpleClockModelCloneTest(FxRobot robot) throws Exception {
