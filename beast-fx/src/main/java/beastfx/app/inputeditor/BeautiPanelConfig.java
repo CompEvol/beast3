@@ -1,20 +1,13 @@
 package beastfx.app.inputeditor;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import beastfx.app.inputeditor.BEASTObjectPanel;
-import beast.base.core.BEASTInterface;
-import beast.base.core.BEASTObject;
-import beast.base.core.Description;
-import beast.base.core.Input;
-import beast.base.core.Log;
+import beast.base.core.*;
 import beast.base.core.Input.Validate;
 import beast.pkgmgmt.BEASTClassLoader;
 
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 @Description("Defines properties for custom panels in Beauti")
@@ -172,6 +165,19 @@ public class BeautiPanelConfig extends BEASTObject {
                 parentBEASTObjects = new ArrayList<>();
                 parentInputs = new ArrayList<>();
                 for (BEASTInterface beastObject : oldPlugins) {
+                    // A wrapper Runnable such as a path-sampling/stepping-stone driver (see
+                    // modelselection.inference.PathSampler) does not itself have MCMC's usual
+                    // inputs (distribution, operator, tree, siteModel, ...) -- it holds its own
+                    // MCMC via an input named "mcmc" instead of extending MCMC directly. Fall
+                    // back to that inner MCMC so panels configured against a plain MCMC
+                    // (Partitions, Priors, Operators, ...) still resolve when such a wrapper is
+                    // the active runnable, instead of throwing and leaving the panel empty.
+                    if (!beastObject.getInputs().containsKey(pathComponents[i]) && beastObject.getInputs().containsKey("mcmc")) {
+                        Object inner = beastObject.getInputValue("mcmc");
+                        if (inner instanceof BEASTInterface && ((BEASTInterface) inner).getInputs().containsKey(pathComponents[i])) {
+                            beastObject = (BEASTInterface) inner;
+                        }
+                    }
                     final Input<?> namedInput = beastObject.getInput(pathComponents[i]);
                     type = namedInput.getType();
                     if (namedInput.get() instanceof List<?>) {

@@ -20,6 +20,7 @@ import beastfx.app.inputeditor.ListInputEditor;
 import beastfx.app.util.FXUtils;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 
@@ -62,9 +63,15 @@ public class OperatorListInputEditor extends ListInputEditor {
     	m_buttonStatus = ButtonStatus.NONE;
     	super.init(input, beastObject, itemNr, isExpandOption, addButtons);
     	
-    	BEASTObjectInputEditor osEditor = new BEASTObjectInputEditor(doc);
-    	osEditor.init(((BEASTInterface) doc.mcmc.get()).getInput("operatorschedule"), (BEASTInterface) doc.mcmc.get(), -1, isExpandOption, addButtons);
-    	((BorderPane)pane).setBottom(osEditor);
+    	// the operator schedule lives on the MCMC, which for a wrapper Runnable like PathSampler
+    	// is the inner one -- doc.mcmc.get() itself has no "operatorschedule" input, and
+    	// getInput() would throw IllegalArgumentException rather than return null
+    	MCMC mcmc = doc.getMCMC();
+    	if (mcmc != null) {
+    		BEASTObjectInputEditor osEditor = new BEASTObjectInputEditor(doc);
+    		osEditor.init(mcmc.getInput("operatorschedule"), mcmc, -1, isExpandOption, addButtons);
+    		((BorderPane)pane).setBottom(osEditor);
+    	}
     }
     
     @Override

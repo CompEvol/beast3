@@ -1,24 +1,19 @@
 package beastfx.app.inputeditor.spec;
 
 
-
-
-
-
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.inference.*;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.inference.operator.DeltaExchangeOperator;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.Tensor;
 import beastfx.app.inputeditor.*;
@@ -66,7 +61,7 @@ public class SiteModelInputEditor extends BEASTObjectInputEditor {
     	fixMeanRatesCheckBox.setDisable(doc.autoUpdateFixMeanSubstRate);
     	super.init(input, beastObject, itemNr, isExpandOption, addButtons);
 
-		List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+		List<Operator> operators = getOperators();
     	fixMeanRatesCheckBox.setOnAction(e -> {
     			CheckBox averageRatesBox = (CheckBox) e.getSource();
 				doFixMeanRates(averageRatesBox.isSelected());
@@ -125,8 +120,13 @@ public class SiteModelInputEditor extends BEASTObjectInputEditor {
 		setUpOperator();
     }
     
+	private List<Operator> getOperators() {
+		MCMC mcmc = doc.getMCMC();
+		return mcmc == null ? new ArrayList<>() : mcmc.operatorsInput.get();
+	}
+
 	private void doFixMeanRates(boolean averageRates) {
-		List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+		List<Operator> operators = getOperators();
 		if (averageRates) {
 			// connect DeltaExchangeOperator
 			if (!operators.contains(operator)) {

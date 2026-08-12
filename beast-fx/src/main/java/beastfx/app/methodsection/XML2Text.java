@@ -1,17 +1,6 @@
 package beastfx.app.methodsection;
 
 
-
-
-
-
-
-import java.io.File;
-import java.io.PrintStream;
-import java.util.*;
-
-import beastfx.app.util.OutFile;
-import beastfx.app.util.XMLFile;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -26,7 +15,6 @@ import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
-import beast.base.inference.StateNode;
 import beast.base.parser.ClassToPackageMap;
 import beast.base.parser.XMLParser;
 import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
@@ -37,6 +25,12 @@ import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.methodsection.Phrase.PhraseType;
 import beastfx.app.methodsection.implementation.BEASTObjectMethodsText;
 import beastfx.app.tools.Application;
+import beastfx.app.util.OutFile;
+import beastfx.app.util.XMLFile;
+
+import java.io.File;
+import java.io.PrintStream;
+import java.util.*;
 
 
 @Description("Convert MCMC analysis in XML file to a methods section")
@@ -92,16 +86,21 @@ public class XML2Text extends beast.base.inference.Runnable {
 		}
 		
 		XMLParser parser = new XMLParser();
-		MCMC mcmc = (MCMC) parser.parseFile(file);
-		beautiDoc.mcmc.setValue(mcmc, beautiDoc);
+		// keep whatever the file's top-level Runnable actually is (MCMC, or a driver like
+		// PathSampler that wraps one) rather than pre-unwrapping it away; beautiDoc.getMCMC()
+		// below unwraps it on demand instead of hard-casting straight to MCMC.
+		beast.base.inference.Runnable runnable = parser.parseFile(file);
+		beautiDoc.mcmc.setValue(runnable, beautiDoc);
 		for (BEASTInterface o : InputFilter.getDocumentObjects(beautiDoc.mcmc.get())) {
 			beautiDoc.registerPlugin(o);
 		}
 		beautiDoc.determinePartitions();
 		BEASTObjectMethodsText.setBeautiCFG(beautiDoc.beautiConfig);
-		
+
 		MethodsText.initNameMap();
-		initialise((MCMC) beautiDoc.mcmc.get());
+		// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+		initialise(beautiDoc.getMCMC());
 		
 		
 		if (outputInput.get() != null) {

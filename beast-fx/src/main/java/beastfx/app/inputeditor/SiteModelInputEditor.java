@@ -1,16 +1,16 @@
 package beastfx.app.inputeditor;
 
 
-
-
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.likelihood.GenericTreeLikelihood;
 import beast.base.evolution.sitemodel.SiteModel;
 import beast.base.evolution.sitemodel.SiteModelInterface;
-import beast.base.inference.*;
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Distribution;
+import beast.base.inference.MCMC;
+import beast.base.inference.Operator;
 import beast.base.inference.operator.kernel.BactrianDeltaExchangeOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
@@ -58,7 +58,8 @@ public class SiteModelInputEditor extends BEASTObjectInputEditor {
     	fixMeanRatesCheckBox.setDisable(doc.autoUpdateFixMeanSubstRate);
     	super.init(input, beastObject, itemNr, isExpandOption, addButtons);
 
-		List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+		MCMC mcmc = doc.getMCMC();
+		List<Operator> operators = mcmc == null ? new ArrayList<>() : mcmc.operatorsInput.get();
     	fixMeanRatesCheckBox.setOnAction(e -> {
     			CheckBox averageRatesBox = (CheckBox) e.getSource();
 				doFixMeanRates(averageRatesBox.isSelected());
@@ -124,7 +125,8 @@ public class SiteModelInputEditor extends BEASTObjectInputEditor {
 //    }
 
 	private void doFixMeanRates(boolean averageRates) {
-		List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+		MCMC mcmc = doc.getMCMC();
+		List<Operator> operators = mcmc == null ? new ArrayList<>() : mcmc.operatorsInput.get();
 		if (averageRates) {
 			// connect DeltaExchangeOperator
 			if (!operators.contains(operator)) {

@@ -1,58 +1,16 @@
 package beastfx.app.methodsection;
 
 
-
-import static javafx.concurrent.Worker.State.FAILED;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import javafx.application.*;
-import javafx.beans.value.*;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.scene.*;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ChoiceDialog;
-import javafx.scene.control.CustomMenuItem;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.web.*;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-
-import netscape.javascript.JSObject;
-import javafx.concurrent.Worker.State;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
+import beast.base.core.BEASTInterface;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.inference.MCMC;
+import beast.base.parser.XMLParser;
+import beast.base.parser.XMLParserException;
+import beast.base.parser.XMLProducer;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beast.pkgmgmt.Package;
+import beast.pkgmgmt.PackageManager;
 import beastfx.app.beauti.BeautiTabPane;
 import beastfx.app.inputeditor.BeautiAlignmentProvider;
 import beastfx.app.inputeditor.BeautiConfig;
@@ -60,16 +18,46 @@ import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.BeautiDoc.DOC_STATUS;
 import beastfx.app.methodsection.implementation.BEASTObjectMethodsText;
 import beastfx.app.util.Utils;
-import beast.base.core.BEASTInterface;
-import beast.base.inference.MCMC;
-import beast.base.core.Log;
-import beast.base.evolution.alignment.Alignment;
-import beast.base.spec.evolution.tree.MRCAPrior;
-import beast.pkgmgmt.Package;
-import beast.pkgmgmt.PackageManager;
-import beast.base.parser.XMLParser;
-import beast.base.parser.XMLParserException;
-import beast.base.parser.XMLProducer;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Worker.State;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
+import netscape.javascript.JSObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.List;
+
+import static javafx.concurrent.Worker.State.FAILED;
 
 
 public class XML2HTMLPaneFX extends Application {
@@ -95,7 +83,7 @@ public class XML2HTMLPaneFX extends Application {
 	}
 
 	public void processArgs(String [] args) throws Exception {
-		MCMC mcmc = null;
+		beast.base.inference.Runnable runnable = null;
 		if (args.length > 0) {
 			File file = new File(args[0]);
 			beautiDoc.setFileName(file.getAbsolutePath());
@@ -120,13 +108,16 @@ public class XML2HTMLPaneFX extends Application {
 			
 			
 			XMLParser parser = new XMLParser();
-			mcmc = (MCMC) parser.parseFile(file);
+			runnable = parser.parseFile(file);
 			this.file = file;
 		} else {
-			mcmc = (MCMC) beautiDoc.mcmc.get();
+			runnable = beautiDoc.mcmc.get();
 		}
 
-		beautiDoc.mcmc.setValue(mcmc, beautiDoc);
+		// keep whatever the top-level Runnable actually is (MCMC, or a driver like PathSampler
+		// that wraps one) rather than pre-unwrapping it away; beautiDoc.getMCMC() below unwraps
+		// it on demand instead of hard-casting straight to MCMC.
+		beautiDoc.mcmc.setValue(runnable, beautiDoc);
 		for (BEASTInterface o : InputFilter.getDocumentObjects(beautiDoc.mcmc.get())) {
 			if (o != null) {
 				beautiDoc.registerPlugin(o);
@@ -134,9 +125,9 @@ public class XML2HTMLPaneFX extends Application {
 		}
 		beautiDoc.determinePartitions();
 		BEASTObjectMethodsText.setBeautiCFG(beautiDoc.beautiConfig);
-		
+
 		MethodsText.initNameMap();
-		initialise((MCMC) beautiDoc.mcmc.get(), true);		
+		initialise(beautiDoc.getMCMC(), true);
 	}
 	
 		  
@@ -563,7 +554,9 @@ public class XML2HTMLPaneFX extends Application {
 
 		MethodsText.clear();
 		try {
-			initialise((MCMC) beautiDoc.mcmc.get(), false);
+			// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+			// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+			initialise(beautiDoc.getMCMC(), false);
 			load(html);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -642,7 +635,9 @@ public class XML2HTMLPaneFX extends Application {
 	
 	public void initialise(MCMC mcmc, boolean update) throws Exception {		
 		xml2textProducer = new XML2Text(beautiDoc);
-		xml2textProducer.initialise((MCMC) beautiDoc.mcmc.get());
+		// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+		xml2textProducer.initialise(beautiDoc.getMCMC());
 		m = xml2textProducer.getPhrases();
 		
 		html = header + Phrase.toHTML(beautiDoc, m) + footer + "</body>\n</html>";
@@ -740,7 +735,9 @@ public class XML2HTMLPaneFX extends Application {
 	public String getText(CitationPhrase.mode mode) throws Exception {		
 		CitationPhrase.CitationMode = mode;
 		xml2textProducer = new XML2Text(beautiDoc);
-		xml2textProducer.initialise((MCMC) beautiDoc.mcmc.get());
+		// beautiDoc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) beautiDoc.mcmc.get() cast.
+		xml2textProducer.initialise(beautiDoc.getMCMC());
 		m = xml2textProducer.getPhrases();
 		return Phrase.toString(m);
 	}

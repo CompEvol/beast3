@@ -1,18 +1,6 @@
 package beastfx.app.beauti;
 
 
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
-import javafx.scene.layout.HBox;
-import beastfx.app.inputeditor.BeautiDoc;
-import beastfx.app.inputeditor.ListInputEditor;
-import beastfx.app.inputeditor.SmallLabel;
-import beastfx.app.util.FXUtils;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.core.Log;
@@ -23,9 +11,17 @@ import beast.base.inference.Operator;
 import beast.base.inference.operator.DeltaExchangeOperator;
 import beast.base.inference.parameter.IntegerParameter;
 import beast.base.inference.parameter.RealParameter;
+import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.ListInputEditor;
+import beastfx.app.inputeditor.SmallLabel;
+import beastfx.app.util.FXUtils;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.HBox;
 
-
-
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class ClockModelListInputEditor extends ListInputEditor {
@@ -56,18 +52,25 @@ public class ClockModelListInputEditor extends ListInputEditor {
     
     DeltaExchangeOperator operator;
     protected SmallLabel fixMeanRatesValidateLabel;
-    
+
+    private List<Operator> getOperators() {
+        MCMC mcmc = doc.getMCMC();
+        return mcmc == null ? new ArrayList<>() : mcmc.operatorsInput.get();
+    }
+
     @Override
     public void init(Input<?> input, BEASTInterface beastObject, int itemNr, ExpandOption isExpandOption, boolean addButtons) {
     	fixMeanRatesCheckBox = new CheckBox("Fix mean rate of clock models");
     	m_buttonStatus = ButtonStatus.NONE;
     	super.init(input, beastObject, itemNr, isExpandOption, addButtons);
     	
-		List<Operator> operators = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+		// doc.getMCMC() unwraps a wrapper Runnable like PathSampler instead of throwing
+		// ClassCastException on a plain (MCMC) doc.mcmc.get() cast.
+		List<Operator> operators = getOperators();
     	fixMeanRatesCheckBox.setOnAction(e -> {
     		CheckBox averageRatesBox = (CheckBox) e.getSource();
 				boolean averageRates = averageRatesBox.isSelected();
-				List<Operator> operators2 = ((MCMC) doc.mcmc.get()).operatorsInput.get();
+				List<Operator> operators2 = getOperators();
 				if (averageRates) {
 					// connect DeltaExchangeOperator
 					if (!operators2.contains(operator)) {

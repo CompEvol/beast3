@@ -1,14 +1,24 @@
 package beastfx.app.inputeditor;
 
 
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
+import beast.base.core.BEASTInterface;
+import beast.base.core.Input;
+import beast.base.core.Log;
+import beast.base.evolution.alignment.Alignment;
+import beast.base.evolution.alignment.FilteredAlignment;
+import beast.base.evolution.alignment.Taxon;
+import beast.base.evolution.branchratemodel.BranchRateModel;
+import beast.base.evolution.sitemodel.SiteModelInterface;
+import beast.base.evolution.tree.TreeInterface;
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.State;
+import beast.base.inference.StateNode;
+import beast.base.parser.PartitionContext;
+import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
+import beast.base.spec.evolution.sitemodel.SiteModel;
+import beastfx.app.util.Alert;
+import beastfx.app.util.FXUtils;
+import beastfx.app.util.PartitionContextUtil;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -19,20 +29,8 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
+import javafx.scene.control.*;
 import javafx.scene.control.TableColumn.CellEditEvent;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import beastfx.app.util.Alert;
-import beastfx.app.util.FXUtils;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -43,23 +41,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import beastfx.app.util.PartitionContextUtil;
-import beast.base.core.BEASTInterface;
-import beast.base.core.Input;
-import beast.base.core.Log;
-import beast.base.evolution.alignment.Alignment;
-import beast.base.evolution.alignment.FilteredAlignment;
-import beast.base.evolution.alignment.Taxon;
-import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
-import beast.base.spec.evolution.sitemodel.SiteModel;
-import beast.base.evolution.sitemodel.SiteModelInterface;
-import beast.base.evolution.tree.TreeInterface;
-import beast.base.inference.CompoundDistribution;
-import beast.base.inference.MCMC;
-import beast.base.inference.State;
-import beast.base.inference.StateNode;
-import beast.base.parser.PartitionContext;
+
+import java.io.File;
+import java.util.*;
 
 // TODO: add warning if useAmbiguities=false and nr of patterns=1 (happens when all data is ambiguous)
 
@@ -416,8 +400,10 @@ public class AlignmentListInputEditor extends ListInputEditor {
 				if (siteModel != likelihoods[rowNr].siteModelInput.get()) {
 					PartitionContext context = getPartitionContext(rowNr);
 					try {
+					// doc.getMCMC() (not a plain (MCMC) doc.mcmc.get() cast) so this doesn't
+					// throw ClassCastException when a wrapper Runnable like PathSampler is active.
 					siteModel = (SiteModel.Base) BeautiDoc.deepCopyPlugin((BEASTInterface) likelihoods[rowNr].siteModelInput.get(),
-							likelihoods[rowNr], (MCMC) doc.mcmc.get(), oldContext, context, doc, null);
+							likelihoods[rowNr], doc.getMCMC(), oldContext, context, doc, null);
 					} catch (RuntimeException e) {
 						Alert.showMessageDialog(this, "Could not clone site model: " + e.getMessage());
 						return;
@@ -453,7 +439,7 @@ public class AlignmentListInputEditor extends ListInputEditor {
 					PartitionContext context = getPartitionContext(rowNr);
 					try {
 						clockModel = (BranchRateModel) BeautiDoc.deepCopyPlugin(likelihoods[rowNr].branchRateModelInput.get(),
-							likelihoods[rowNr], (MCMC) doc.mcmc.get(), oldContext, context, doc, null);
+							likelihoods[rowNr], doc.getMCMC(), oldContext, context, doc, null);
 					} catch (RuntimeException e) {
 						Alert.showMessageDialog(this, "Could not clone clock model: " + e.getMessage());
 						return;
@@ -492,20 +478,20 @@ public class AlignmentListInputEditor extends ListInputEditor {
 					PartitionContext context = getPartitionContext(rowNr);
 					try {
 						tree = (TreeInterface) BeautiDoc.deepCopyPlugin((BEASTInterface) likelihoods[rowNr].treeInput.get(), likelihoods[rowNr],
-							(MCMC) doc.mcmc.get(), oldContext, context, doc, null);
+							doc.getMCMC(), oldContext, context, doc, null);
 					} catch (RuntimeException e) {
 						Alert.showMessageDialog(this, "Could not clone tree model: " + e.getMessage());
 						return;
 					}
 					
-					State state = ((MCMC) doc.mcmc.get()).startStateInput.get();
+					State state = (doc.getMCMC()).startStateInput.get();
 					List<StateNode> stateNodes = new ArrayList<>();
 					stateNodes.addAll(state.stateNodeInput.get());
 					for (StateNode s : stateNodes) {
 						if (s.getID().endsWith(".t:" + oldContext.tree) && !(s instanceof TreeInterface)) {
 							try {
 								@SuppressWarnings("unused")
-								StateNode copy = (StateNode) BeautiDoc.deepCopyPlugin(s, likelihoods[rowNr], (MCMC) doc.mcmc.get(), oldContext, context, doc, null);
+								StateNode copy = (StateNode) BeautiDoc.deepCopyPlugin(s, likelihoods[rowNr], doc.getMCMC(), oldContext, context, doc, null);
 							} catch (RuntimeException e) {
 								Alert.showMessageDialog(this, "Could not clone tree model: " + e.getMessage());
 								return;
