@@ -5,7 +5,6 @@ import beastfx.app.beauti.BeautiTabPane;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -127,7 +126,6 @@ public class CloneTest extends BeautiBase {
         makeSureXMLParses();       
 	}
 
-	@Disabled("Relaxed clock subtemplates not yet ported to BEAST 3 ClockModels.xml")
 	@Test
 	public void simpleClockModelCloneTest(FxRobot robot) throws Exception {
         warning("0. Load primate-mtDNA.nex");
