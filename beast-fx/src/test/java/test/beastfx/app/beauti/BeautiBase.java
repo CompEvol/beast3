@@ -631,6 +631,19 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 	}
 
     protected void setPartitionTableCell(FxRobot robot, int col, String string) {
+    	setPartitionTableCell(robot, 0, col, string);
+	}
+
+	/**
+	 * Set the combo box of the partition table cell at the given row and column.
+	 * <p>
+	 * AlignmentListInputEditor's cell factory puts the same id and combo box graphic on
+	 * every TableCell it creates, including the recycled cells that back the empty rows
+	 * below the table, and those cells keep a live action handler. Firing an event on such
+	 * a cell would reach AlignmentListInputEditor.action() with a row index of -1, so pick
+	 * the cell by row rather than taking whatever node the lookup happens to return first.
+	 */
+    protected void setPartitionTableCell(FxRobot robot, int row, int col, String string) {
 		String cellId;
 		switch (col) {
 		case 5: cellId = "siteModelCell"; break;
@@ -638,7 +651,23 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 		case 7: cellId = "treeModelCell"; break;
 		default: throw new IllegalArgumentException("Unsupported partition table column: " + col);
 		}
-		TableCell<?, ?> cell = (TableCell<?, ?>) robot.lookup("#" + cellId).query();
+		TableCell<?, ?> cell = null;
+		for (Node node : robot.lookup("#" + cellId).queryAll()) {
+			if (!(node instanceof TableCell)) {
+				continue;
+			}
+			TableCell<?, ?> candidate = (TableCell<?, ?>) node;
+			TableRow<?> tableRow = candidate.getTableRow();
+			if (candidate.isVisible() && !candidate.isEmpty()
+					&& tableRow != null && tableRow.getIndex() == row) {
+				cell = candidate;
+				break;
+			}
+		}
+		if (cell == null) {
+			throw new AssertionError("No visible #" + cellId + " found in row " + row
+					+ " of the partition table");
+		}
 		ComboBox<String> comboBox = (ComboBox<String>) cell.getGraphic();
 		robot.interact(() -> {
 			comboBox.getEditor().setText(string);
