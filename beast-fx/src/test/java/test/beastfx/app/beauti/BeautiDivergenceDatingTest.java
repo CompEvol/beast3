@@ -1,27 +1,19 @@
 package test.beastfx.app.beauti;
 
 
-
+import beastfx.app.beauti.BeautiTabPane;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.service.query.NodeQuery;
-
-import beastfx.app.beauti.BeautiTabPane;
-import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.input.KeyCode;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -566,7 +558,7 @@ public class BeautiDivergenceDatingTest extends BeautiBase {
             
             clickOnNodesWithID(robot, "CalibratedYuleBirthRatePrior.t:tree.editButton");
             robot.doubleClickOn("#alpha").write("0.001");
-            robot.doubleClickOn("#beta").write("1000");
+            robot.doubleClickOn("#theta").write("1000");
             clickOnNodesWithID(robot, "CalibratedYuleBirthRatePrior.t:tree.editButton");
 
     		//clickOnNodesWithID(robot, "clockRate.c:clock.distr");
@@ -574,7 +566,7 @@ public class BeautiDivergenceDatingTest extends BeautiBase {
             //robot.clickOn("Gamma");
             clickOnNodesWithID(robot, "ClockPrior.c:clock.editButton");
             robot.doubleClickOn("#alpha").write("0.001");
-            robot.doubleClickOn("#beta").write("1000");
+            robot.doubleClickOn("#theta").write("1000");
             printBeautiState();
             assertStateEquals("Tree.t:tree", "kappa.s:noncoding", "gammaShape.s:noncoding", "mutationRate.s:noncoding", "kappa.s:1stpos", "gammaShape.s:1stpos", "mutationRate.s:1stpos", "kappa.s:2ndpos", "gammaShape.s:2ndpos", "mutationRate.s:2ndpos", "kappa.s:3rdpos", "gammaShape.s:3rdpos", "mutationRate.s:3rdpos", "birthRateY.t:tree", "clockRate.c:clock");
             assertOperatorsEqual("FixMeanMutationRatesOperator", "gammaShapeScaler.s:noncoding", "KappaScaler.s:noncoding", "gammaShapeScaler.s:1stpos", "KappaScaler.s:1stpos", "gammaShapeScaler.s:2ndpos", "KappaScaler.s:2ndpos", "gammaShapeScaler.s:3rdpos", "KappaScaler.s:3rdpos", "CalibratedYuleModelTreeRootScaler.t:tree", "CalibratedYuleModelUniformOperator.t:tree", "CalibratedYuleModelSubtreeSlide.t:tree", "CalibratedYuleModelNarrow.t:tree", "CalibratedYuleModelWide.t:tree", "CalibratedYuleModelWilsonBalding.t:tree", "CalibratedYuleModelTreeScaler.t:tree", "CalibratedYuleBirthRateScaler.t:tree", "StrictClockRateScaler.c:clock", "strictClockUpDownOperator.c:clock");

@@ -19,6 +19,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -26,7 +27,6 @@ import javafx.scene.Parent;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Window;
@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.service.query.NodeQuery;
+import org.testfx.util.WaitForAsyncUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -630,15 +631,21 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 	}
 
     protected void setPartitionTableCell(FxRobot robot, int col, String string) {
-		TableView<Partition0> table = robot.lookup(".table-view").queryAs(TableView.class);
+		String cellId;
 		switch (col) {
-		case 5:robot.clickOn("#siteModelCell");break;
-		case 6:robot.clickOn("#clockModelCell");break;
-		case 7:robot.clickOn("#treeModelCell");break;
+		case 5: cellId = "siteModelCell"; break;
+		case 6: cellId = "clockModelCell"; break;
+		case 7: cellId = "treeModelCell"; break;
+		default: throw new IllegalArgumentException("Unsupported partition table column: " + col);
 		}
-		robot.eraseText(10);
-		robot.write(string + "\n");
-		robot.press(KeyCode.ENTER);
+		TableCell<?, ?> cell = (TableCell<?, ?>) robot.lookup("#" + cellId).query();
+		ComboBox<String> comboBox = (ComboBox<String>) cell.getGraphic();
+		robot.interact(() -> {
+			comboBox.getEditor().setText(string);
+			comboBox.setValue(string);
+			comboBox.fireEvent(new ActionEvent(comboBox, comboBox));
+		});
+		WaitForAsyncUtils.waitForFxEvents();
 	}
 
 
