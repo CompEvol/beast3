@@ -96,10 +96,7 @@ public class BeautiSimpleTest extends BeautiBase {
 		
 		// rename tree from 'anolis' to 'tree'
 		robot.clickOn("#Partitions");
-		// table = robot.lookup(".table-view").queryAs(TableView.class);
-		robot.clickOn("#treeModelCell");
-		robot.eraseText(10);
-		robot.write("tree\n");
+		setPartitionTableCell(robot, 7, "tree");
 
 		printBeautiState();
 		assertStateEquals("Tree.t:tree", "birthRate.t:tree", "kappa.s:anolis", "gammaShape.s:anolis", "freqParameter.s:anolis");
