@@ -409,6 +409,31 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         fireDocHasChanged();
     }
 
+    /**
+     * Check whether a file is a BEAST analysis XML file as produced by BEAUti, that is,
+     * an XML file with a beautitemplate attribute on its top level element. This is the
+     * same marker {@link #extractSequences(String)} uses to decide which template to load.
+     * Used to tell a complete analysis apart from an alignment file when files are dropped
+     * on BEAUti: analyses are loaded (model and MCMC settings included), anything else is
+     * handed to the alignment importers.
+     */
+    static public boolean isBeautiAnalysisFile(File file) {
+        if (!file.getName().toLowerCase().endsWith(".xml")) {
+            return false;
+        }
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            Document doc = factory.newDocumentBuilder().parse(file);
+            doc.normalize();
+            NodeList nodes = doc.getElementsByTagName("*");
+            Node topNode = nodes.item(0);
+            return topNode != null && XMLParser.getAttribute(topNode, "beautitemplate") != null;
+        } catch (Exception e) {
+            // not XML, or XML that cannot be parsed: leave it to the alignment importers
+            return false;
+        }
+    }
+
     public void loadNewTemplate(String fileName)  {
         templateFileName = fileName;
         newAnalysis();

@@ -143,11 +143,12 @@ public class AlignmentListInputEditor extends ListInputEditor {
         
         table.setOnDragDropped((DragEvent event) -> {
             Dragboard db = event.getDragboard();
+            boolean success = false;
         	if (db.hasFiles()) {
-        		addItem(db.getFiles().toArray(new File[] {}));
-            } else {
-                event.setDropCompleted(false);
+        		handleDroppedFiles(db.getFiles());
+        		success = true;
             }
+            event.setDropCompleted(success);
             event.consume();
         });
         
@@ -1212,6 +1213,18 @@ public class AlignmentListInputEditor extends ListInputEditor {
 	protected void addItem() {
 		addItem(null);
 	} // addItem
+
+	/**
+	 * Deal with files dropped on the partitions table: a BEAST analysis XML file as produced
+	 * by BEAUti is loaded as a complete analysis -- model and MCMC settings included -- just
+	 * like File/Load does, while anything else is imported as an alignment.
+	 */
+	private void handleDroppedFiles(List<File> files) {
+		if (doc.beauti != null && doc.beauti.loadDroppedAnalyses(files)) {
+			return;
+		}
+		addItem(files.toArray(new File[] {}));
+	}
 
 	private void addItem(File[] fileArray) {
 		List<BEASTInterface> beastObjects = doc.beautiConfig.selectAlignments(doc, this, fileArray);
