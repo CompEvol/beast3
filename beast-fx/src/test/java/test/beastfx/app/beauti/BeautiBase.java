@@ -3,12 +3,12 @@ package test.beastfx.app.beauti;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;
-import beast.base.core.Function;
 import beast.base.core.ProgramStatus;
 import beast.base.inference.*;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.Parameter;
 import beast.base.parser.XMLParser;
+import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.pkgmgmt.PackageManager;
 import beastfx.app.beauti.BeautiTabPane;
 import beastfx.app.inputeditor.AlignmentListInputEditor;
@@ -356,15 +356,26 @@ public class BeautiBase extends ApplicationExtension {
 		// count nr of parameters in Prior objects in prior
 		// including those for prior distributions (Normal, etc)
 		// useful to make sure they do (or do not) get linked
-		Set<Function> parameters = new LinkedHashSet<>();
+		Set<BEASTInterface> parameters = new LinkedHashSet<>();
 		CompoundDistribution prior = (CompoundDistribution) doc.pluginmap.get("prior");
 		for (Distribution p : prior.pDistributions.get()) {
 			if (p instanceof Prior) {
 				Prior p2 = (Prior) p;
-				parameters.add(p2.m_x.get());
+				if (p2.m_x.get() instanceof BEASTInterface) {
+					parameters.add((BEASTInterface) p2.m_x.get());
+				}
 				for (BEASTInterface o : p2.distInput.get().listActiveBEASTObjects()) {
 					if (o instanceof Parameter) {
-						parameters.add((Parameter<?>) o);
+						parameters.add(o);
+					}
+				}
+			} else if (p instanceof TensorDistribution) {
+				// new BEAST3 spec distributions (Gamma, Beta, LogNormal, Dirichlet, etc.)
+				// combine the target parameter and the distribution's own hyperparameters
+				// (e.g. alpha/theta, M/S) into a single beastObject
+				for (BEASTInterface o : p.listActiveBEASTObjects()) {
+					if (o instanceof StateNode) {
+						parameters.add(o);
 					}
 				}
 			}
