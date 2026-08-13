@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beast namespace="beast.base.inference" version="2.7">
+    <data id="alignment" spec="Alignment">
+        <sequence taxon="A" value="ACGT"/>
+        <sequence taxon="B" value="ACGA"/>
+    </data>
+</beast>
