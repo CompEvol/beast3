@@ -1,10 +1,24 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: July 2026
+Last updated: August 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-beta8 August 2026
+	o Fix flaky/broken BEAUti tests: partition-table cell edits made deterministic instead of simulated keystrokes, stale field ids and class names updated for the beast3 migration, and BEAUti's CLI batch mode no longer double-launches the JavaFX toolkit #143
+	o Load the whole analysis, not just the alignment, when a BEAST XML file is dropped onto BEAUti #141
+	o Update BEAUti fxtemplates (ClockModels, ParametricDistributions, Standard, SubstModels, TreePriors) to reference beast.base.spec classes #139 #136
+	o Reject interval scaling that would breach a sampled-ancestor ceiling, fixing an infinite loop/stack overflow on fake-rooted SA trees #78
+	o Fix BEAUti site model cloning inflating freqParameter dimension from N to N-squared #130
+	o Fix ClassCastException in BEAUti when the active analysis Runnable wraps MCMC (e.g. PathSampler), and make connect()/disconnect() symmetric #131
+	o Support MRCAPriors that have no distribution yet, fixing "Could not add entry for distr" in the Priors panel #128
+	o Support single valued distr inputs in ScalarDistributionInputEditor, fixing a BEAUti crash for packages like bModelTest bModelTest#10
+	o Log the exception when BEAUti fails to switch a model bModelTest#9
+	o Stop registering the legacy SiteModelInputEditor alongside the spec one, fixing nondeterministic editor selection
+	o Load BEAUti templates from the class path, not only module layers
+	o Report what a type mismatch expected and what it got in the error message
+
 Version 2.8.0-beta7 July 2026
 	o Fix spec RandomTree silently dropping spec MRCAPrior monophyletic constraints, causing every BEAUti-generated calibrated analysis to fail to initialise #121
 	o Make LoggerTest hermetic against leaked JVM-wide logger state (flaky test fix)
