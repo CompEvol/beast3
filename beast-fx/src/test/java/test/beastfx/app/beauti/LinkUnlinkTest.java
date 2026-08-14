@@ -1,10 +1,10 @@
 package test.beastfx.app.beauti;
 
 
-
-
-import java.io.File;
-
+import beastfx.app.beauti.BeautiTabPane;
+import beastfx.app.util.Utils;
+import javafx.scene.control.TableView;
+import javafx.stage.Stage;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -13,10 +13,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import beastfx.app.beauti.BeautiTabPane;
-import beastfx.app.util.Utils;
-import javafx.scene.control.TableView;
-import javafx.stage.Stage;
+import java.io.File;
 
 @ExtendWith(ApplicationExtension.class)
 public class LinkUnlinkTest extends BeautiBase {
@@ -149,7 +146,6 @@ public class LinkUnlinkTest extends BeautiBase {
 	}
 
 	
-	@Disabled("Partition deletion does not clean up ClockPrior for deleted partition")
 	@Test
 	public void linkTreesAndDeleteTest2a(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex");
@@ -175,7 +171,6 @@ public class LinkUnlinkTest extends BeautiBase {
 		makeSureXMLParses();
 	}
 	
-	@Disabled("Partition deletion does not clean up ClockPrior for deleted partition")
 	@Test
 	public void linkTreesAndDeleteTest2b(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex");
@@ -202,7 +197,6 @@ public class LinkUnlinkTest extends BeautiBase {
 		makeSureXMLParses();
 	}
 	
-	@Disabled("Partition deletion does not clean up ClockPrior for deleted partition")
 	@Test
 	public void linkTreesAndDeleteTest3(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex, 59.nex");
@@ -287,7 +281,6 @@ public class LinkUnlinkTest extends BeautiBase {
 		makeSureXMLParses();
 	}
 
-	@Disabled("assertParameterCountInPriorIs does not handle new spec distributions (Gamma, Beta, etc.) and partition deletion does not clean up priors")
 	@Test
 	public void linkSiteModelsAndDeleteTest(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex, 59.nex");
@@ -301,7 +294,11 @@ public class LinkUnlinkTest extends BeautiBase {
 		assertPriorsEqual("YuleModel.t:26", "YuleBirthRatePrior.t:26", "YuleModel.t:47","YuleBirthRatePrior.t:47", "YuleModel.t:59", "YuleBirthRatePrior.t:59");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.26", "TreeHeight.t:26", "YuleModel.t:26", "birthRate.t:26", "treeLikelihood.47", "TreeHeight.t:47", "YuleModel.t:47", "birthRate.t:47", "treeLikelihood.59", "TreeHeight.t:59", "YuleModel.t:59", "birthRate.t:59");
 
-		assertParameterCountInPriorIs(3);		
+		// BEAST3 spec priors (Gamma, LogNormal, Dirichlet, ...) carry their own
+		// hyperparameters (e.g. alpha/theta) as part of the same beastObject, so
+		// each Yule birth rate prior now counts as 3 (birthRate + alpha + theta)
+		// instead of 1 as it did for the old un-parametrised BEAST2 prior.
+		assertParameterCountInPriorIs(9);
 
 		selectPartitions(robot, 0, 1, 2);
 
@@ -310,16 +307,16 @@ public class LinkUnlinkTest extends BeautiBase {
 		clickOnButtonWithText(robot, "Link Trees");
 		printBeautiState();
 
-		assertParameterCountInPriorIs(3);
-		
+		assertParameterCountInPriorIs(9);
+
 		selectTab(robot, "Site Model");
 		clickOnNodesWithID(robot, "substModelComboBox").clickOn("HKY");
 		//robot.clickOn("#substModel").clickOn("HKY");
         //JComboBoxFixture substModel = beautiFrame.comboBox("substModel");
         //substModel.selectItem("HKY");
 		printBeautiState();
-		assertParameterCountInPriorIs(5+3);		
-		
+		assertParameterCountInPriorIs(14);
+
 		selectTab(robot, "Partitions");
 		warning("Link site models");
 		selectPartitions(robot, 0, 1, 2);
@@ -327,11 +324,11 @@ public class LinkUnlinkTest extends BeautiBase {
 		printBeautiState();
 
 		selectPartitions(robot, 0, 1, 2);
-		assertParameterCountInPriorIs(5+3);		
+		assertParameterCountInPriorIs(14);
 		clickOnButtonWithText(robot, "Unlink Site Models");
 
 		printBeautiState();
-		assertParameterCountInPriorIs(9+9);		
+		assertParameterCountInPriorIs(18);
 
 		warning("Delete second partition");
 		selectTab(robot, "Partitions");
@@ -339,7 +336,7 @@ public class LinkUnlinkTest extends BeautiBase {
 		clickOnButtonWithText(robot, "-");
 		printBeautiState();
 
-		assertParameterCountInPriorIs(6+6);		
+		assertParameterCountInPriorIs(13);
 
 		warning("Delete first partition");
 		selectTab(robot, "Partitions");
@@ -348,8 +345,8 @@ public class LinkUnlinkTest extends BeautiBase {
 		selectPartitions(robot, 0);
 		clickOnButtonWithText(robot, "-");
 		printBeautiState();
-		assertPriorsEqual("YuleModel.t:26", "YuleBirthRatePrior.t:26", "KappaPrior.s:59", "FrequenciesPrior.s:59");		
-		assertParameterCountInPriorIs(3+3);
+		assertPriorsEqual("YuleModel.t:26", "YuleBirthRatePrior.t:26", "KappaPrior.s:59", "FrequenciesPrior.s:59");
+		assertParameterCountInPriorIs(8);
 		
 		makeSureXMLParses();
 	}
@@ -433,7 +430,6 @@ public class LinkUnlinkTest extends BeautiBase {
 		makeSureXMLParses();
 	}
 
-	@Disabled("Partition deletion does not clean up tree priors for deleted partition")
 	@Test
 	public void linkSiteModelsAndDeleteTest2(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex, 59.nex");
@@ -462,7 +458,6 @@ public class LinkUnlinkTest extends BeautiBase {
 		makeSureXMLParses();
 	}
 
-	@Disabled("Partition deletion does not clean up tree priors for deleted partition")
 	@Test
 	public void linkClocksSitesAndDeleteTest(FxRobot robot) throws Exception {
 		warning("Load gopher data 26.nex, 47.nex, 59.nex");

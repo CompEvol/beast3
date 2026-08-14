@@ -3,12 +3,12 @@ package test.beastfx.app.beauti;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;
-import beast.base.core.Function;
 import beast.base.core.ProgramStatus;
 import beast.base.inference.*;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.Parameter;
 import beast.base.parser.XMLParser;
+import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.pkgmgmt.PackageManager;
 import beastfx.app.beauti.BeautiTabPane;
 import beastfx.app.inputeditor.AlignmentListInputEditor;
@@ -19,6 +19,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
@@ -26,7 +27,6 @@ import javafx.scene.Parent;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Window;
@@ -35,6 +35,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.service.query.NodeQuery;
+import org.testfx.util.WaitForAsyncUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -355,15 +356,26 @@ public class BeautiBase extends ApplicationExtension {
 		// count nr of parameters in Prior objects in prior
 		// including those for prior distributions (Normal, etc)
 		// useful to make sure they do (or do not) get linked
-		Set<Function> parameters = new LinkedHashSet<>();
+		Set<BEASTInterface> parameters = new LinkedHashSet<>();
 		CompoundDistribution prior = (CompoundDistribution) doc.pluginmap.get("prior");
 		for (Distribution p : prior.pDistributions.get()) {
 			if (p instanceof Prior) {
 				Prior p2 = (Prior) p;
-				parameters.add(p2.m_x.get());
+				if (p2.m_x.get() instanceof BEASTInterface) {
+					parameters.add((BEASTInterface) p2.m_x.get());
+				}
 				for (BEASTInterface o : p2.distInput.get().listActiveBEASTObjects()) {
 					if (o instanceof Parameter) {
-						parameters.add((Parameter<?>) o);
+						parameters.add(o);
+					}
+				}
+			} else if (p instanceof TensorDistribution) {
+				// new BEAST3 spec distributions (Gamma, Beta, LogNormal, Dirichlet, etc.)
+				// combine the target parameter and the distribution's own hyperparameters
+				// (e.g. alpha/theta, M/S) into a single beastObject
+				for (BEASTInterface o : p.listActiveBEASTObjects()) {
+					if (o instanceof StateNode) {
+						parameters.add(o);
 					}
 				}
 			}
@@ -630,15 +642,50 @@ System.err.println("Trying to load " + dir + " " + files[0]);
 	}
 
     protected void setPartitionTableCell(FxRobot robot, int col, String string) {
-		TableView<Partition0> table = robot.lookup(".table-view").queryAs(TableView.class);
+    	setPartitionTableCell(robot, 0, col, string);
+	}
+
+	/**
+	 * Set the combo box of the partition table cell at the given row and column.
+	 * <p>
+	 * AlignmentListInputEditor's cell factory puts the same id and combo box graphic on
+	 * every TableCell it creates, including the recycled cells that back the empty rows
+	 * below the table, and those cells keep a live action handler. Firing an event on such
+	 * a cell would reach AlignmentListInputEditor.action() with a row index of -1, so pick
+	 * the cell by row rather than taking whatever node the lookup happens to return first.
+	 */
+    protected void setPartitionTableCell(FxRobot robot, int row, int col, String string) {
+		String cellId;
 		switch (col) {
-		case 5:robot.clickOn("#siteModelCell");break;
-		case 6:robot.clickOn("#clockModelCell");break;
-		case 7:robot.clickOn("#treeModelCell");break;
+		case 5: cellId = "siteModelCell"; break;
+		case 6: cellId = "clockModelCell"; break;
+		case 7: cellId = "treeModelCell"; break;
+		default: throw new IllegalArgumentException("Unsupported partition table column: " + col);
 		}
-		robot.eraseText(10);
-		robot.write(string + "\n");
-		robot.press(KeyCode.ENTER);
+		TableCell<?, ?> cell = null;
+		for (Node node : robot.lookup("#" + cellId).queryAll()) {
+			if (!(node instanceof TableCell)) {
+				continue;
+			}
+			TableCell<?, ?> candidate = (TableCell<?, ?>) node;
+			TableRow<?> tableRow = candidate.getTableRow();
+			if (candidate.isVisible() && !candidate.isEmpty()
+					&& tableRow != null && tableRow.getIndex() == row) {
+				cell = candidate;
+				break;
+			}
+		}
+		if (cell == null) {
+			throw new AssertionError("No visible #" + cellId + " found in row " + row
+					+ " of the partition table");
+		}
+		ComboBox<String> comboBox = (ComboBox<String>) cell.getGraphic();
+		robot.interact(() -> {
+			comboBox.getEditor().setText(string);
+			comboBox.setValue(string);
+			comboBox.fireEvent(new ActionEvent(comboBox, comboBox));
+		});
+		WaitForAsyncUtils.waitForFxEvents();
 	}
 
 
