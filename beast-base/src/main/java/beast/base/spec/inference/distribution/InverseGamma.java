@@ -96,6 +96,35 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         return Math.exp(logP);
     }
 
+    /**
+     * {@link #getApacheDistribution()} exposes the internal Gamma(alpha, rate=beta) helper used
+     * for sampling via x = 1/y. That object's own cumulativeProbability/inverseCumulativeProbability
+     * describe Gamma, not InverseGamma, so ScalarDistribution's generic implementations (which just
+     * delegate to getApacheDistribution()) are wrong here and must be overridden with the x = 1/y
+     * change of variables: if Y = 1/X ~ Gamma(alpha, rate=beta), then
+     *   P(X &le; x) = P(Y &ge; 1/x) = 1 - GammaCDF(1/x) = GammaSurvival(1/x).
+     */
+    @Override
+    public double cumulativeProbability(double x) {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return dist.survivalProbability(1.0 / x);
+    }
+
+    /**
+     * Inverse of {@link #cumulativeProbability(double)}: solving GammaSurvival(1/x) = p for x gives
+     * 1/x = GammaInverseSurvival(p), i.e. x = 1 / GammaInverseSurvival(p) = 1 / GammaICDF(1 - p).
+     */
+    @Override
+    public Double inverseCumulativeProbability(double p) {
+        if (p <= 0) {
+            return getLowerBoundOfParameter();
+        } else if (p >= 1) {
+            return getUpperBoundOfParameter();
+        }
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return 1.0 / dist.inverseSurvivalProbability(p);
+    }
+
     @Override
 	public List<Double> sample() {
         if (sampler == null) {
