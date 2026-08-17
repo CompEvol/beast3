@@ -2,9 +2,11 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import org.apache.commons.statistics.distribution.GammaDistribution;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
  * Simple test for inverse gamma distribution.
@@ -108,23 +110,97 @@ public class InverseGammaTest {
 
             double[] cdf = td.getCDF();
             for(int k = 0; k < cdf.length; k += 2) {
-            	// InverseGamma.cumulativeProbability is not implemented yet
- //               assertEquals(d.cumulativeProbability(cdf[k]), cdf[k + 1], 1e-10);
+                assertEquals(d.cumulativeProbability(cdf[k]), cdf[k + 1], 1e-10);
+            }
+        }
+    }
+
+    /**
+     * getApacheDistribution() returns the internal helper GammaDistribution (used to draw
+     * samples via x = 1/y, y ~ Gamma(alpha, rate=beta)). Its own cumulativeProbability describes
+     * Gamma, not InverseGamma, so InverseGamma.cumulativeProbability(x) must apply the x = 1/y
+     * change of variables rather than delegate straight to the Gamma object: if Y = 1/X ~
+     * Gamma(alpha, rate=beta), then P(X &le; x) = P(Y &ge; 1/x) = 1 - GammaCDF(1/x). This checks
+     * that against independently-generated reference values (see the python snippet above) and
+     * against the Gamma distribution directly, and that it is NOT simply the raw Gamma CDF.
+     */
+    @Test
+    public void testCumulativeProbabilityMatchesInverseGammaNotGamma() {
+        for (TestData td : tests) {
+            double alpha = td.getShape();
+            double beta = td.getScale();
+
+            InverseGamma d = new InverseGamma();
+            d.initByName("alpha", new RealScalarParam<>(alpha, PositiveReal.INSTANCE),
+                    "beta", new RealScalarParam<>(beta, PositiveReal.INSTANCE));
+
+            // the Gamma(alpha, scale=1/beta) distribution used internally for sampling
+            GammaDistribution gamma = GammaDistribution.of(alpha, 1.0 / beta);
+
+            double[] cdf = td.getCDF();
+            for (int k = 0; k < cdf.length; k += 2) {
+                double x = cdf[k];
+                double referenceInverseGammaCdf = cdf[k + 1]; // independently generated reference value
+
+                assertEquals(referenceInverseGammaCdf, d.cumulativeProbability(x), 1e-10);
+                assertEquals(gamma.survivalProbability(1.0 / x), d.cumulativeProbability(x), 1e-10);
+
+                // it must no longer be the raw Gamma CDF (the pre-fix bug)
+                assertNotEquals(gamma.cumulativeProbability(x), d.cumulativeProbability(x), 1e-3);
+            }
+        }
+    }
+
+    /**
+     * Mirrors testCumulativeProbabilityMatchesInverseGammaNotGamma() but for the inverse CDF
+     * (quantile function), which is what direct/inverse-transform samplers actually call (see
+     * e.g. RandomTree, CalibratedYuleModel, UCRelaxedClockModel, SampleOffValues, which all call
+     * distribution.inverseCumulativeProbability(p) directly). For an InverseGamma X with
+     * Y = 1/X ~ Gamma(alpha, rate=beta), the correct relationship is
+     *   invGammaICDF(p) = 1 / gammaICDF(1 - p)
+     * because P(X &le; x) = P(Y &ge; 1/x) = 1 - GammaCDF(1/x). This checks that
+     * inverseCumulativeProbability round-trips through cumulativeProbability (both against each
+     * other and against the reference CDF values) and that it is NOT simply the raw Gamma ICDF.
+     */
+    @Test
+    public void testInverseCumulativeProbabilityMatchesInverseGammaNotGamma() {
+        for (TestData td : tests) {
+            double alpha = td.getShape();
+            double beta = td.getScale();
+
+            InverseGamma d = new InverseGamma();
+            d.initByName("alpha", new RealScalarParam<>(alpha, PositiveReal.INSTANCE),
+                    "beta", new RealScalarParam<>(beta, PositiveReal.INSTANCE));
+
+            GammaDistribution gamma = GammaDistribution.of(alpha, 1.0 / beta);
+
+            // round-trip through the reference CDF values themselves
+            double[] cdf = td.getCDF();
+            for (int k = 0; k < cdf.length; k += 2) {
+                double x = cdf[k];
+                double p = cdf[k + 1];
+                assertEquals(x, d.inverseCumulativeProbability(p), 1e-6);
             }
 
-//            int count[] = new int[cdf.length];
-//            final int N = 100000;
-//            for(int k = 0; k < N; ++k) {
-//                double x = d.nextInverseGamma();
-//                for(int l = 0; l < cdf.length; l += 2) {
-//                    if( x < cdf[l] ) {
-//                        count[l / 2] += 1;
-//                    }
-//                }
-//            }
-//            for(int l = 0; l < cdf.length; l += 2) {
-//                assertEquals(count[l / 2] / (double) N, cdf[l + 1], 5e-3);
-//            }
+            for (double p : new double[]{0.1, 0.25, 0.5, 0.75, 0.9}) {
+                double actual = d.inverseCumulativeProbability(p);
+
+                double correctInverseGammaIcdf = 1.0 / gamma.inverseCumulativeProbability(1.0 - p);
+                assertEquals(correctInverseGammaIcdf, actual, 1e-9);
+
+                // it must no longer be the raw Gamma ICDF (the pre-fix bug)
+                assertNotEquals(gamma.inverseCumulativeProbability(p), actual, 1e-6);
+
+                // and it must round-trip through the (now-correct) CDF
+                assertEquals(p, d.cumulativeProbability(actual), 1e-9);
+            }
         }
+
+        // boundary behaviour matches the distribution's support, (0, +Inf)
+        InverseGamma d = new InverseGamma();
+        d.initByName("alpha", new RealScalarParam<>(3.0, PositiveReal.INSTANCE),
+                "beta", new RealScalarParam<>(2.0, PositiveReal.INSTANCE));
+        assertEquals(0.0, d.inverseCumulativeProbability(0.0), 1e-10);
+        assertEquals(Double.POSITIVE_INFINITY, d.inverseCumulativeProbability(1.0));
     }
 }
