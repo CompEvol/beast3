@@ -1,16 +1,20 @@
 package test.beast.beast2vs1.tutorials;
 
 
+import beast.base.trace.Expectation;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import test.beast.beast2vs1.TestFramework;
-import beast.base.trace.Expectation;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @deprecated replaced by test.beastfx.app.beauti.BeautiDivergenceDatingTest
+ */
+@Deprecated
 public class DivergenceDatingTest {
     @Disabled("Missing x.xml tutorial file")
     @Test

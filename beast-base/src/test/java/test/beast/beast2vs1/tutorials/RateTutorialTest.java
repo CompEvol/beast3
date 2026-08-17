@@ -1,12 +1,16 @@
 package test.beast.beast2vs1.tutorials;
 
-import test.beast.beast2vs1.TestFramework;
 import beast.base.trace.Expectation;
+import test.beast.beast2vs1.TestFramework;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @deprecated replaced by test.beastfx.app.beauti.BeautiRateTutorialTest
+ */
+@Deprecated
 public class RateTutorialTest {
 
 //    @Test
