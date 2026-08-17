@@ -1,0 +1,54 @@
+name: Beauti Tests (beast-fx)
+
+# Runs the full BeastFX/Beauti TestFX suite, including the tests tagged
+# "slow" that ci-publish.yml skips on every push/PR (surefire.excludedGroups
+# defaults to "slow" — see root pom.xml). These are headless-JavaFX GUI
+# tests, slower and more flake-prone than the rest of the suite, so they
+# run nightly instead of gating every PR. Headless mode (TestFX + Monocle)
+# is already configured in beast-fx/pom.xml's surefire block, so no Xvfb
+# step is required.
+#
+# Triggers: nightly schedule, and workflow_dispatch for on-demand runs.
+
+on:
+  schedule:
+    # 01:00 NZST (Auckland, UTC+12) in winter, 02:00 NZDT (UTC+13) in summer.
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  beauti-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 25 (Azul Zulu)
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '25'
+          cache: maven
+
+      - name: Run beast-fx Beauti tests (including slow-tagged)
+        # -pl beast-fx -am also builds+runs the test phase for beast-fx's
+        #   reactor dependencies (beast-base, beast-pkgmgmt), so without
+        #   scoping we'd rerun their whole non-Beauti test suites too.
+        # -Dtest='test.beastfx.app.**' restricts execution to the Beauti/
+        #   TestFX package, which only exists in beast-fx.
+        # -Dsurefire.failIfNoSpecifiedTests=false stops surefire from
+        #   failing the build in beast-base/beast-pkgmgmt, where that
+        #   -Dtest pattern matches zero classes ("No tests were executed!"
+        #   is a hard error by default) — we want those modules to just
+        #   build and skip tests, not fail the job.
+        run: mvn -pl beast-fx -am test -Pslow-tests -Dtest='test.beastfx.app.**' -Dsurefire.failIfNoSpecifiedTests=false
+
+      - name: Upload surefire reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: beauti-test-reports
+          path: beast-fx/target/surefire-reports/
+          retention-days: 7
