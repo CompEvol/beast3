@@ -125,6 +125,19 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         return 1.0 / dist.inverseSurvivalProbability(p);
     }
 
+    /**
+     * ScalarDistribution.getMean() delegates to getApacheDistribution().getMean(), i.e. the
+     * internal Gamma(alpha, rate=beta) helper's mean (alpha/beta), not InverseGamma's own mean
+     * of beta/(alpha-1). For alpha &le; 1 the defining integral diverges; since X &gt; 0 always,
+     * that divergence is to +Infinity (never negative or indeterminate), so +Infinity -- not NaN
+     * -- is returned there, consistent with beta/(alpha-1)'s own limit as alpha -&gt; 1+.
+     */
+    @Override
+    public double getMean() {
+        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        return alpha > 1 ? beta / (alpha - 1) : Double.POSITIVE_INFINITY;
+    }
+
     @Override
 	public List<Double> sample() {
         if (sampler == null) {
@@ -136,9 +149,30 @@ public class InverseGamma extends ScalarDistribution<RealScalar<PositiveReal>, D
         return List.of(x);
     }
 
+    /**
+     * Support is (0, +Infinity), same as the internal Gamma helper's [0, +Infinity) -- but
+     * stated explicitly here (rather than relying on ScalarDistribution's default, which reads
+     * it off getApacheDistribution()) so it stays correct independent of what that returns.
+     */
+    @Override
+    public Double getLowerBoundOfParameter() {
+        return 0.0;
+    }
+
+    @Override
+    public Double getUpperBoundOfParameter() {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    /**
+     * The internal Gamma helper only exists to draw samples via x = 1/y; it does not represent
+     * InverseGamma's own density/CDF/mean, all of which are overridden above without consulting
+     * it. Returning null (rather than the Gamma object) means any ScalarDistribution method added
+     * in future that is not also overridden here will fail loudly instead of silently returning a
+     * Gamma-distributed answer dressed up as an InverseGamma one.
+     */
     @Override
 	protected Object getApacheDistribution() {
-        refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
-        return dist;
+        return null;
     }
 } // class InverseGamma
