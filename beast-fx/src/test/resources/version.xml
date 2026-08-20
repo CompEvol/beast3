@@ -1,0 +1,11 @@
+<!--
+  Test-only fixture for InputEditorFactoryPackageDiscoveryTest (see that class for the full
+  explanation). This file makes PackageManager.listServices() able to find
+  PackageProvidedInputEditor, the same way it would find a real external package's editors by
+  reading that package's version.xml.
+-->
+<package name='TestFixturePackage' version='1.0.0'>
+    <service type="beastfx.app.inputeditor.InputEditor">
+        <provider classname="test.beastfx.app.beauti.fixtures.PackageProvidedInputEditor"/>
+    </service>
+</package>

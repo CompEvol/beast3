@@ -1,0 +1,6 @@
+# Test-only fixture for InputEditorFactoryPackageDiscoveryTest (see that class for the full
+# explanation). This is a standard java.util.ServiceLoader registration file: it makes
+# ServiceLoader.load(InputEditor.class) able to find beast.fx's real BEASTObjectInputEditor on
+# the plain classpath, the same way ServiceLoader finds it via module-info's "provides" clause
+# in a real modular BEAUti run.
+beastfx.app.inputeditor.BEASTObjectInputEditor
