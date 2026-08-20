@@ -1,31 +1,24 @@
 package beastfx.app.inputeditor;
 
 
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 import beastfx.app.inputeditor.InputEditor.ButtonStatus;
 import beastfx.app.inputeditor.InputEditor.ExpandOption;
 import beastfx.app.util.Alert;
-import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 
-/** Can create InputEditors for inputs of BEASTObjects 
+/** Can create InputEditors for inputs of BEASTObjects
  * and there are some associated utility methods **/
 public class InputEditorFactory {
     /**
@@ -54,10 +47,19 @@ public class InputEditorFactory {
             registerInputEditors(new String[]{editor.getClass().getName()});
         }
 
-        if (beast.pkgmgmt.Utils6.isJUnitTest() || inputEditorMap.size() == 0) {
-        	Set<String> inputEditors = PackageManager.listServices("beastfx.app.inputeditor.InputEditor");
-            registerInputEditors(inputEditors.toArray(new String[0]));
-        }
+        // ServiceLoader.load() only resolves providers visible from this class's own
+        // module layer/classpath, so it never sees editors contributed by BEAST
+        // *packages* (e.g. starbeast3), which BEASTClassLoader loads into a separate
+        // plugin ModuleLayer at runtime. This is expected JPMS behaviour, not a
+        // ServiceLoader defect -- a plugin layer is intentionally isolated from the
+        // caller's own layer/classpath. PackageManager.listServices() is what actually
+        // finds those (via each package's version.xml), so it must always run -- not
+        // just when the ServiceLoader pass came back empty -- otherwise every
+        // package-provided editor is silently dropped whenever the core beast.fx
+        // editors were already found above. Never treat a non-empty ServiceLoader
+        // result as proof that nothing else is left to find.
+        Set<String> inputEditors = PackageManager.listServices("beastfx.app.inputeditor.InputEditor");
+        registerInputEditors(inputEditors.toArray(new String[0]));
     }
 
     
