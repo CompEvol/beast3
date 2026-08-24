@@ -1632,6 +1632,8 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 
             List<BeautiSubTemplate> templates = new ArrayList<>();
             templates.add(beautiConfig.hyperPriorTemplate);
+            templates.add(beautiConfig.hyperPriorSpecTemplate);
+            templates.add(beautiConfig.hyperPriorSpecPositiveTemplate);
             for (BEASTInterface beastObject : pluginmap.values()) {
                 if (beastObject instanceof StateNode) {
                     if (beastObject.getID() != null && beastObject.getID().startsWith("parameter.")) {

@@ -1,24 +1,21 @@
 package beastfx.app.inputeditor.spec;
 
 
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.core.Log;
 import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.inference.Distribution;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.parser.PartitionContext;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.Scalar;
-import beastfx.app.inputeditor.BEASTObjectDialog;
-import beastfx.app.inputeditor.BEASTObjectInputEditor;
-import beastfx.app.inputeditor.BEASTObjectPanel;
-import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.*;
 import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
 import javafx.geometry.Insets;
@@ -30,9 +27,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
 import java.util.List;
-
-
-
 
 
 public class ScalarInputEditor extends BEASTObjectInputEditor {
@@ -212,7 +206,9 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             //m_bAddButtons = false;
             if (itemNr < 0) {
 	            for (Object beastObject2 : ((BEASTInterface) m_input.get()).getOutputs()) {
-	                if (beastObject2 instanceof RealScalarParam) {
+	                // a distribution whose *own* parameter (mean, sigma, alpha, ...) this is,
+	                // as opposed to a distribution for which this is the target (paramInput)
+	                if (beastObject2 instanceof ScalarDistribution<?,?> sd && sd.paramInput.get() != parameter) {
 	                    m_isEstimatedBox.setVisible(doc.allowLinking);
 	                    m_isEstimatedBox.setVisible(true);
 	                	isParametricDistributionParameter = true;
@@ -259,39 +255,54 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             	}
             	
             	String id = parameter2.getID();
-            	
 
-            	if (id.startsWith("RealParameter")) {
-                	ScalarDistribution<?,?> parent = null; 
+            	// generalises the legacy "RealParameter" prefix check: any parameter that
+            	// hasn't already been given a "parameter.<context>" id (spec params default
+            	// to e.g. "RealScalarParam.N", not "RealParameter.N") needs one, so that
+            	// $(n) substitution below and BeautiDoc's general "parameter.*" sync scan
+            	// (see BeautiDoc.applyBeautiRules) can find it
+            	if (id == null || !id.startsWith("parameter.")) {
+                	ScalarDistribution<?,?> parent = null;
     	            for (Object beastObject2 : parameter2.getOutputs()) {
-    	                if (beastObject2 instanceof ScalarDistribution<?,?>) {
-                    		parent = (ScalarDistribution<?,?>) beastObject2; 
+    	                if (beastObject2 instanceof ScalarDistribution<?,?> sd && sd.paramInput.get() != parameter2) {
+                    		parent = sd;
     	                    break;
     	                }
     	            }
-    	            Distribution grandparent = null; 
-    	            for (Object beastObject2 : parent.getOutputs()) {
-    	                if (beastObject2 instanceof Distribution) {
-                    		grandparent = (Distribution) beastObject2; 
-    	                    break;
-    	                }
-    	            }
-            		id = "parameter.hyper" + parent.getClass().getSimpleName() + "-" + 
-            				m_input.getName() + "-" + grandparent.getID();
+            		if (parent == null) {
+            			Log.err.println("Could not find the distribution owning " + parameter2.getID() + "; not adding a hyperprior");
+            			m_isEstimatedBox.setSelected(false);
+            			parameter2.isEstimatedInput.setValue(false, parameter2);
+            			return;
+            		}
+            		// parent's own id is already partition-specific in the spec framework
+            		// (e.g. "ClockPrior.c:1stpos", connected directly into 'prior') -- there
+            		// is no separate wrapping Prior object to look up any more
+            		id = "parameter.hyper" + parent.getClass().getSimpleName() + "-" +
+            				m_input.getName() + "-" + parent.getID();
             		doc.pluginmap.remove(parameter2.getID());
             		parameter2.setID(id);
             		doc.addPlugin(parameter2);
             	}
-            	
-            	
+
             	PartitionContext context = new PartitionContext(id.substring("parameter.".length()));
             	Log.warning.println(context + " " + id);
-            	doc.beautiConfig.hyperPriorTemplate.createSubNet(context, true);
+
+            	// the default hyperprior distribution must be domain-compatible with the
+            	// parameter it is applied to, or it shows up as a mismatched entry outside
+            	// the compatible-domain dropdown list in the Priors panel (see
+            	// ScalarDistributionInputEditor.isCompatible)
+            	boolean isPositive = parameter2 instanceof RealScalarParam<?> realParam &&
+            			(realParam.getDomain() instanceof PositiveReal || realParam.getDomain() instanceof NonNegativeReal);
+            	BeautiSubTemplate hyperTemplate = isPositive ?
+            			doc.beautiConfig.hyperPriorSpecPositiveTemplate :
+            			doc.beautiConfig.hyperPriorSpecTemplate;
+            	hyperTemplate.createSubNet(context, true);
             }
         	hardSync();
             refreshPanel();
         } catch (Exception ex) {
-            Log.err.println("ParameterInputEditor " + ex.getMessage());
+            Log.err.println("ScalarInputEditor " + ex.getMessage());
         }
     }
     

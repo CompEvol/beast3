@@ -1,25 +1,20 @@
 package beastfx.app.inputeditor;
 
 
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import beastfx.app.util.Alert;
-import beastfx.app.util.FXUtils;
-import javafx.scene.Parent;
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.parser.XMLParser;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beastfx.app.util.Alert;
+import beastfx.app.util.FXUtils;
+import javafx.scene.Parent;
+
+import java.io.File;
+import java.util.*;
 
 @Description("Beauti configuration object, used to find Beauti configuration " +
         "information from Beauti template files.")
@@ -92,7 +87,16 @@ public class BeautiConfig extends BEASTObject {
     public List<BeautiAlignmentProvider> alignmentProvider;
 
     public BeautiSubTemplate hyperPriorTemplate = null;
-    
+    /** hyper prior template for spec-framework (RealScalarParam-based) distribution parameters
+     * whose domain is unbounded Real, e.g. LogNormal's M -- kept separate from hyperPriorTemplate,
+     * which is still used by the legacy ParameterInputEditor for RealParameter-based priors
+     * (e.g. when loading an old analysis) */
+    public BeautiSubTemplate hyperPriorSpecTemplate = null;
+    /** as hyperPriorSpecTemplate, but for PositiveReal/NonNegativeReal-domain parameters, e.g.
+     * LogNormal's S -- a Normal prior would be domain-incompatible with such a parameter (it
+     * would show as an invalid/mismatched entry in the distribution dropdown) */
+    public BeautiSubTemplate hyperPriorSpecPositiveTemplate = null;
+
     @Override
     public void initAndValidate() {
         parseSet(inlineInput.get(), null, inlineBEASTObject);
@@ -123,8 +127,12 @@ public class BeautiConfig extends BEASTObject {
         alignmentProvider = alignmentProviderInput.get();
 
         try {
-            XMLParser parser = new XMLParser();
-        	hyperPriorTemplate = (BeautiSubTemplate) parser.parseBareFragment(HYPER_PRIOR_XML, true);
+        	// a fresh XMLParser per fragment -- the parser keeps mutable DOM state
+        	// internally, and reusing one instance across multiple parseBareFragment()
+        	// calls corrupts the second parse (stray "]]>" CDATA-boundary errors)
+        	hyperPriorTemplate = (BeautiSubTemplate) new XMLParser().parseBareFragment(HYPER_PRIOR_XML, true);
+        	hyperPriorSpecTemplate = (BeautiSubTemplate) new XMLParser().parseBareFragment(HYPER_PRIOR_SPEC_XML, true);
+        	hyperPriorSpecPositiveTemplate = (BeautiSubTemplate) new XMLParser().parseBareFragment(HYPER_PRIOR_SPEC_POSITIVE_XML, true);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -153,7 +161,70 @@ public class BeautiConfig extends BEASTObject {
     		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='HyperPrior.$(n)'           targetID='prior' inputName='distribution' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'>Hyper prior for parameter $(n)</connect>\n" +
     		"    	        </subtemplate>\n" +
     		"    	</beast>\n";
-    
+
+    /**
+     * Hyper prior for a spec-framework distribution's own parameter whose domain is unbounded
+     * Real (e.g. LogNormal's M). Unlike the legacy template above, the distribution is connected
+     * to 'prior' directly (there is no wrapping Prior object any more). A Normal + random walk is
+     * used since the target's domain is not restricted to positive values, unlike the legacy
+     * OneOnX (which has no spec equivalent) + multiplicative ScaleOperator.
+     */
+    final static String HYPER_PRIOR_SPEC_XML =
+    		"    <beast version='2.8'\n" +
+    		"    	       namespace='beastfx.app.beauti:beast.base.core'>\n" +
+    		"    	<!-- Parameter Hyper Prior for spec-framework distribution parameters -->\n" +
+    		"    	        <subtemplate spec='beastfx.app.inputeditor.BeautiSubTemplate' id='HyperPriorSpec' class='beast.base.spec.inference.distribution.Normal' mainid='HyperPriorSpec.$(n)'>\n" +
+    		"    	<![CDATA[\n" +
+    		"    	        <distribution id='HyperPriorSpec.$(n)' spec='beast.base.spec.inference.distribution.Normal' param='@parameter.$(n)'>\n" +
+    		"    	            <sigma spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='10.0' estimate='false'/>\n" +
+    		"    	        </distribution>\n" +
+    		"\n" +
+    		"    	        <operator id='hyperRandomWalk.$(n)' spec='beast.base.spec.inference.operator.RealRandomWalkOperator' scalar='@parameter.$(n)' windowSize='1' weight='0.1'/>\n" +
+    		"    	]]>\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='parameter.$(n)'            targetID='state' inputName='stateNode' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='hyperRandomWalk.$(n)'      targetID='mcmc' inputName='operator' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'>Random walk on hyper parameter $(n)</connect>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='parameter.$(n)'            targetID='tracelog' inputName='log'  if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='HyperPriorSpec.$(n)'       targetID='tracelog' inputName='log'  if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='HyperPriorSpec.$(n)'       targetID='prior' inputName='distribution' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'>Hyper prior for parameter $(n)</connect>\n" +
+    		"    	        </subtemplate>\n" +
+    		"    	</beast>\n";
+
+    /**
+     * As HYPER_PRIOR_SPEC_XML, but for a PositiveReal/NonNegativeReal-domain parameter (e.g.
+     * LogNormal's S, Gamma's alpha/theta). A Normal prior is domain-incompatible with such a
+     * parameter (it would show as a mismatched entry outside the compatible-domain dropdown list
+     * in the Priors panel -- see ScalarDistributionInputEditor.isCompatible), so a Gamma is used
+     * instead, matching the weak/vague-prior convention already used elsewhere in Standard.xml
+     * (e.g. MutationRatePrior, ClockPrior, YuleBirthRatePrior), together with the same
+     * multiplicative ScaleOperator used for other PositiveReal-domain parameters.
+     */
+    final static String HYPER_PRIOR_SPEC_POSITIVE_XML =
+    		"    <beast version='2.8'\n" +
+    		"    	       namespace='beastfx.app.beauti:beast.base.core'>\n" +
+    		"    	<!-- Parameter Hyper Prior for spec-framework PositiveReal/NonNegativeReal-domain distribution parameters -->\n" +
+    		"    	        <subtemplate spec='beastfx.app.inputeditor.BeautiSubTemplate' id='HyperPriorSpecPositive' class='beast.base.spec.inference.distribution.Gamma' mainid='HyperPriorSpecPositive.$(n)'>\n" +
+    		"    	<![CDATA[\n" +
+    		"    	        <distribution id='HyperPriorSpecPositive.$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@parameter.$(n)'>\n" +
+    		"    	            <alpha spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='0.001' estimate='false'/>\n" +
+    		"    	            <theta spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='1000.0' estimate='false'/>\n" +
+    		"    	        </distribution>\n" +
+    		"\n" +
+    		"    	        <operator id='hyperScaler.$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor='0.5' weight='0.1' parameter='@parameter.$(n)'/>\n" +
+    		"    	]]>\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='parameter.$(n)'              targetID='state' inputName='stateNode' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='hyperScaler.$(n)'            targetID='mcmc' inputName='operator' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'>Scale hyper parameter $(n)</connect>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='parameter.$(n)'              targetID='tracelog' inputName='log'  if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='HyperPriorSpecPositive.$(n)' targetID='tracelog' inputName='log'  if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
+    		"\n" +
+    		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='HyperPriorSpecPositive.$(n)' targetID='prior' inputName='distribution' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'>Hyper prior for parameter $(n)</connect>\n" +
+    		"    	        </subtemplate>\n" +
+    		"    	</beast>\n";
+
     public void setDoc(BeautiDoc doc) {
         partitionTemplate.get().setDoc(doc);
         for (BeautiSubTemplate sub : subTemplates) {
@@ -161,6 +232,8 @@ public class BeautiConfig extends BEASTObject {
         }
         doc.setExpertMode(isExpertInput.get());
         hyperPriorTemplate.doc = doc;
+        hyperPriorSpecTemplate.doc = doc;
+        hyperPriorSpecPositiveTemplate.doc = doc;
     }
 
     public void clear() {

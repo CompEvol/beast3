@@ -33,12 +33,12 @@
 ]]>
         </subtemplate>
 
-        <!-- OneOnX -->
-        <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
-            <![CDATA[        
-            <distr spec="beast.base.inference.distribution.OneOnX"/>
-]]>
-        </subtemplate>
+        <!-- OneOnX removed in beast3 -->
+<!--        <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>-->
+<!--            <![CDATA[        -->
+<!--            <distr spec="beast.base.inference.distribution.OneOnX"/>-->
+<!--]]>-->
+<!--        </subtemplate>-->
 
         <!-- lognormal -->
         <subtemplate id='LogNormal' class='beast.base.spec.inference.distribution.LogNormal' mainid='[top]'
