@@ -210,11 +210,13 @@
 
         <!-- Dirichlet -->
         <subtemplate id='Dirichlet' class='beast.base.spec.inference.distribution.Dirichlet' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Dirichlet.param'
             hmc='
             Dirichlet/alpha/=ParametricDistributions/Dirichlet/mean/,
             Dirichlet/offset/=ParametricDistributions/Dirichlet/offset/'>
             <![CDATA[
 			<distr spec="beast.base.spec.inference.distribution.Dirichlet">
+                <param spec="beast.base.spec.inference.parameter.SimplexParam" dimension="1" value="1.0" estimate="false"/>
                 <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" estimate="false">1.0</alpha>
             </distr>
 ]]>
