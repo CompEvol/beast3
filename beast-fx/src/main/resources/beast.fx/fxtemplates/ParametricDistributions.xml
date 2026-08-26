@@ -181,8 +181,8 @@
 ]]>
         </subtemplate>
 
-        <!-- OneOnX (improper 1/x prior) removed in beast3; use LogUniform instead, -->
-        <!-- a proper, scale-invariant replacement bounded on [lower, upper]. -->
+        <!-- OneOnX (improper 1/x prior) is removed from the BEAUti distribution list; -->
+        <!-- use LogUniform as a replacement to a PositiveReal-domain param bounded on [lower, upper]. -->
         <subtemplate id='LogUniform' class='beast.base.spec.inference.distribution.LogUniform' mainid='[top]'
                      suppressInputs='beast.base.spec.inference.distribution.LogUniform.param'
                      hmc='
