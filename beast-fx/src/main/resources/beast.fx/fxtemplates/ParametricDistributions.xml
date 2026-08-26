@@ -33,13 +33,6 @@
 ]]>
         </subtemplate>
 
-        <!-- OneOnX -->
-        <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
-            <![CDATA[        
-            <distr spec="beast.base.inference.distribution.OneOnX"/>
-]]>
-        </subtemplate>
-
         <!-- lognormal -->
         <subtemplate id='LogNormal' class='beast.base.spec.inference.distribution.LogNormal' mainid='[top]'
         	suppressInputs='beast.base.spec.inference.distribution.LogNormal.param'
@@ -184,6 +177,21 @@
         <distr spec="beast.base.spec.inference.distribution.InverseGamma">
                 <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
                 <beta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
+        <!-- OneOnX (improper 1/x prior) removed in beast3; use LogUniform instead, -->
+        <!-- a proper, scale-invariant replacement bounded on [lower, upper]. -->
+        <subtemplate id='LogUniform' class='beast.base.spec.inference.distribution.LogUniform' mainid='[top]'
+                     suppressInputs='beast.base.spec.inference.distribution.LogUniform.param'
+                     hmc='
+			LogUniform/lower/=ParametricDistributions/LogUniform/lower/,
+			LogUniform/upper/=ParametricDistributions/LogUniform/upper/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.LogUniform">
+                <lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0E-8" estimate="false"/>
+                <upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0E8" estimate="false"/>
         </distr>
 ]]>
         </subtemplate>
