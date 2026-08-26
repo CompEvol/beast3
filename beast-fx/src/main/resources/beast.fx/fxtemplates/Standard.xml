@@ -126,6 +126,18 @@
             beast.base.spec.inference.parameter.IntScalarParam.domain,
             beast.base.spec.inference.parameter.RealVectorParam.domain,
             beast.base.spec.inference.parameter.IntVectorParam.domain,
+            beast.base.spec.inference.parameter.RealVectorParam.shape,
+            beast.base.spec.inference.parameter.RealVectorParam.keys,
+            beast.base.spec.inference.parameter.IntVectorParam.shape,
+            beast.base.spec.inference.parameter.IntVectorParam.keys,
+            beast.base.spec.inference.parameter.BoolVectorParam.shape,
+            beast.base.spec.inference.parameter.BoolVectorParam.keys,
+            beast.base.spec.inference.parameter.SimplexParam.domain,
+            beast.base.spec.inference.parameter.SimplexParam.shape,
+            beast.base.spec.inference.parameter.SimplexParam.keys,
+            beast.base.spec.inference.parameter.IntSimplexParam.domain,
+            beast.base.spec.inference.parameter.IntSimplexParam.shape,
+            beast.base.spec.inference.parameter.IntSimplexParam.keys,
             beast.base.spec.inference.distribution.IID.param,
             beast.base.spec.inference.distribution.MarkovChainDistribution.param
             '
