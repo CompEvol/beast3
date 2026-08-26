@@ -1,36 +1,16 @@
 package beastfx.app.inputeditor;
 
 
-
-
-
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
-import beast.base.spec.domain.Int;
-import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.Real;
+import beast.base.spec.domain.*;
 import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.parameter.BoolScalarParam;
-import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
-import beast.base.spec.type.IntScalar;
+import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.IntVector;
-import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Scalar;
 import beastfx.app.util.FXUtils;
@@ -42,6 +22,10 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class IIDInputEditor extends ScalarDistributionInputEditor {
 
@@ -118,7 +102,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, RealScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     ((BEASTInterface)p1).initAndValidate();
@@ -139,7 +123,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, IntScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     p1.initAndValidate();

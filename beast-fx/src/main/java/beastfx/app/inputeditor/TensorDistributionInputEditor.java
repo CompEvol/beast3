@@ -9,7 +9,9 @@ import beast.base.spec.domain.*;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.base.spec.inference.parameter.*;
-import beast.base.spec.type.*;
+import beast.base.spec.type.IntVector;
+import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Scalar;
 import beastfx.app.util.FXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -98,7 +100,7 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, RealScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     ((BEASTInterface)p1).initAndValidate();
@@ -119,7 +121,7 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, IntScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     p1.initAndValidate();
