@@ -12,6 +12,7 @@ import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Simplex;
 import beastfx.app.util.FXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -255,9 +256,10 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
         Object param = distr.paramInput.get();
         Class<?> domain = getParameterDomain(param);
         for (BeautiSubTemplate template : tensorTemplates) {
-        	if (isCompatible(domain, templateDomains.get(k++))) {
+        	if (isCompatible(domain, templateDomains.get(k), hasSimplexParam(param, templateInstances.get(k)))) {
         		comboBox.getItems().add(template);
         	}
+        	k++;
         }
         
         if (comboBox.getItems().size() == 0) {
@@ -336,12 +338,27 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 	
     
-	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain) {
+	/**
+	 * Domain range checks in isCompatible() can't see the "elements sum to 1" structural
+	 * constraint of a Simplex, so a Simplex-only template must line up with a
+	 * Simplex-valued param, and a non-Simplex template must not be offered for one.
+	 */
+	private boolean hasSimplexParam(Object param, TensorDistribution<?,?> templateInstance) {
+		Object templateParam = templateInstance == null ? null : templateInstance.getInput("param").get();
+		boolean paramIsSimplex = param instanceof Simplex;
+		boolean templateIsSimplex = templateParam instanceof Simplex;
+		return paramIsSimplex == templateIsSimplex;
+	}
+
+	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain, boolean hasSimplexParam) {
     	if (templateDomain == null) {
     		// the "no prior" and ScalarDistribution templates should be rejected
     		return false;
     	}
-    	
+    	if (!hasSimplexParam) {
+    		return false;
+    	}
+
 		if (Real.class.isAssignableFrom(paramDomain)) {
     		// check type first
     		if (!(Real.class.isAssignableFrom(templateDomain))) {
