@@ -209,6 +209,9 @@
         </subtemplate>
 
         <!-- Dirichlet -->
+        <!-- The "param" below is hidden from the user (see suppressInputs) and its value is never used. -->
+        <!-- BEAUti still needs it to recognize Dirichlet as a valid prior for simplex parameters; -->
+        <!-- without it, Dirichlet would disappear from the prior dropdown. -->
         <subtemplate id='Dirichlet' class='beast.base.spec.inference.distribution.Dirichlet' mainid='[top]'
         	suppressInputs='beast.base.spec.inference.distribution.Dirichlet.param'
             hmc='
