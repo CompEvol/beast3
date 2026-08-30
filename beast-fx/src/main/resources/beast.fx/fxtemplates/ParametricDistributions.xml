@@ -33,13 +33,6 @@
 ]]>
         </subtemplate>
 
-        <!-- OneOnX -->
-        <subtemplate id='1/X' class='beast.base.inference.distribution.OneOnX' mainid='[top]'>
-            <![CDATA[        
-            <distr spec="beast.base.inference.distribution.OneOnX"/>
-]]>
-        </subtemplate>
-
         <!-- lognormal -->
         <subtemplate id='LogNormal' class='beast.base.spec.inference.distribution.LogNormal' mainid='[top]'
         	suppressInputs='beast.base.spec.inference.distribution.LogNormal.param'
@@ -188,6 +181,21 @@
 ]]>
         </subtemplate>
 
+        <!-- OneOnX (improper 1/x prior) is removed from the BEAUti distribution list; -->
+        <!-- use LogUniform as a replacement to a PositiveReal-domain param bounded on [lower, upper]. -->
+        <subtemplate id='LogUniform' class='beast.base.spec.inference.distribution.LogUniform' mainid='[top]'
+                     suppressInputs='beast.base.spec.inference.distribution.LogUniform.param'
+                     hmc='
+			LogUniform/lower/=ParametricDistributions/LogUniform/lower/,
+			LogUniform/upper/=ParametricDistributions/LogUniform/upper/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.LogUniform">
+                <lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0E-8" estimate="false"/>
+                <upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0E8" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
         <!-- Poisson -->
         <subtemplate id='Poisson' class='beast.base.spec.inference.distribution.Poisson' mainid='[top]'
         	suppressInputs='beast.base.spec.inference.distribution.Poisson.param'
@@ -201,12 +209,17 @@
         </subtemplate>
 
         <!-- Dirichlet -->
+        <!-- The "param" below is hidden from the user (see suppressInputs) and its value is never used. -->
+        <!-- BEAUti still needs it to recognize Dirichlet as a valid prior for simplex parameters; -->
+        <!-- without it, Dirichlet would disappear from the prior dropdown. -->
         <subtemplate id='Dirichlet' class='beast.base.spec.inference.distribution.Dirichlet' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Dirichlet.param'
             hmc='
             Dirichlet/alpha/=ParametricDistributions/Dirichlet/mean/,
             Dirichlet/offset/=ParametricDistributions/Dirichlet/offset/'>
             <![CDATA[
 			<distr spec="beast.base.spec.inference.distribution.Dirichlet">
+                <param spec="beast.base.spec.inference.parameter.SimplexParam" dimension="1" value="1.0" estimate="false"/>
                 <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" estimate="false">1.0</alpha>
             </distr>
 ]]>

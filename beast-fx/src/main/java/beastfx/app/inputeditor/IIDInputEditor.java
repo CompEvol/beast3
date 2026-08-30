@@ -1,38 +1,19 @@
 package beastfx.app.inputeditor;
 
 
-
-
-
-
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
-import beast.base.spec.domain.Int;
-import beast.base.spec.domain.NonNegativeInt;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.PositiveInt;
-import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.Real;
+import beast.base.spec.domain.*;
 import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.parameter.BoolScalarParam;
-import beast.base.spec.inference.parameter.IntScalarParam;
-import beast.base.spec.inference.parameter.IntVectorParam;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.inference.parameter.RealVectorParam;
-import beast.base.spec.type.IntScalar;
+import beast.base.spec.inference.parameter.*;
 import beast.base.spec.type.IntVector;
-import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Scalar;
+import beast.base.spec.type.Simplex;
 import beastfx.app.util.FXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -42,6 +23,10 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class IIDInputEditor extends ScalarDistributionInputEditor {
 
@@ -118,7 +103,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, RealScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     ((BEASTInterface)p1).initAndValidate();
@@ -139,7 +124,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 List<?> list = (List<?>) m_input.get();
                 TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
                 BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, IntScalar.class, doc);
+                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
                 if (dlg.showDialog()) {
                     dlg.accept(p1, doc);
                     p1.initAndValidate();
@@ -273,9 +258,10 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
         Object param = distr.paramInput.get();
         Class<?> domain = getParameterDomain(param);
         for (BeautiSubTemplate template : tensorTemplates) {
-        	if (isCompatible(domain, templateDomains.get(k++))) {
+        	if (isCompatible(domain, templateDomains.get(k), hasSimplexParam(param, templateInstances.get(k)))) {
         		comboBox.getItems().add(template);
         	}
+        	k++;
         }
         
         if (comboBox.getItems().size() == 0) {
@@ -353,12 +339,27 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 	}
 	
     
-	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain) {
+	/**
+	 * Domain range checks in isCompatible() can't see the "elements sum to 1" structural
+	 * constraint of a Simplex, so a Simplex-only template must line up with a
+	 * Simplex-valued param, and a non-Simplex template must not be offered for one.
+	 */
+	private boolean hasSimplexParam(Object param, TensorDistribution<?,?> templateInstance) {
+		Object templateParam = templateInstance == null ? null : templateInstance.getInput("param").get();
+		boolean paramIsSimplex = param instanceof Simplex;
+		boolean templateIsSimplex = templateParam instanceof Simplex;
+		return paramIsSimplex == templateIsSimplex;
+	}
+
+	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain, boolean hasSimplexParam) {
     	if (templateDomain == null) {
     		// the "no prior" and ScalarDistribution templates should be rejected
     		return false;
     	}
-    	
+    	if (!hasSimplexParam) {
+    		return false;
+    	}
+
 		if (Real.class.isAssignableFrom(paramDomain)) {
     		// check type first
     		if (!(Real.class.isAssignableFrom(templateDomain))) {

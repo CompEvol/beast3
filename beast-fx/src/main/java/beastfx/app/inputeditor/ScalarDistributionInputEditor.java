@@ -165,7 +165,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	                	return;
 	                }
 	                BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, RealScalar.class, doc);
+	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
 	                if (dlg.showDialog()) {
 	                    dlg.accept(p1, doc);
 	                    ((BEASTInterface)p1).initAndValidate();
@@ -188,7 +188,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	                	return;
 	                }
 	                BEASTInterface p1 = (BEASTInterface) prior1.paramInput.get();
-	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, IntScalar.class, doc);
+	                BEASTObjectDialog dlg = new BEASTObjectDialog(p1, p1.getClass(), doc);
 	                if (dlg.showDialog()) {
 	                    dlg.accept(p1, doc);
 	                    p1.initAndValidate();
