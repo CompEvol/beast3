@@ -80,8 +80,7 @@ open module beast.fx {
         // SiteModelInputEditor (below) is the BEAUti editor for SiteModelInterface.Base in
         // 2.8. Both declared the same type(), so registering both let ServiceLoader order
         // decide the winner, and the legacy one could win and emit legacy operators (e.g.
-        // BactrianDeltaExchangeOperator instead of the spec DeltaExchangeOperator). The
-        // class remains for LegacyStandard.xml's connect-method references.
+        // BactrianDeltaExchangeOperator instead of the spec DeltaExchangeOperator).
         beastfx.app.inputeditor.StringInputEditor,
         beastfx.app.inputeditor.TreeFileInputEditor,
         beastfx.app.inputeditor.TreeFileListInputEditor,
