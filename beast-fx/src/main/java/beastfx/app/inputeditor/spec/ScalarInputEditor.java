@@ -210,13 +210,16 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             //m_editPluginButton.setVisible(false);
             //m_bAddButtons = false;
             if (itemNr < 0) {
-	            for (Object beastObject2 : ((BEASTInterface) m_input.get()).getOutputs()) {
-	                if (beastObject2 instanceof ScalarDistribution) {
-	                    m_isEstimatedBox.setVisible(doc.allowLinking);
-	                    m_isEstimatedBox.setVisible(true);
-	                	isParametricDistributionParameter = true;
-	                    break;
-	                }
+	            // reveal the checkbox (and allow a hyperprior) only for a distribution's
+	            // own hyperparameters (e.g. Normal's mean/sigma), not its bound value
+	            // ("param", e.g. mutationRate) -- see #157
+	            // this stops estimate in the Site Model panel from triggering a hyperprior
+	            boolean isHyperparameter = beastObject instanceof ScalarDistribution
+	                    && !"param".equals(input.getName());
+	            if (isHyperparameter) {
+	                m_isEstimatedBox.setVisible(doc.allowLinking);
+	                m_isEstimatedBox.setVisible(true);
+	            	isParametricDistributionParameter = true;
 	            }
 	            for (Object beastObject2 : ((BEASTInterface) m_input.get()).getOutputs()) {
 	                if (beastObject2 instanceof Operator) {
