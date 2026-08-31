@@ -74,7 +74,7 @@ open module beast.fx {
         beastfx.app.inputeditor.LongInputEditor,
         beastfx.app.inputeditor.OutFileInputEditor,
         beastfx.app.inputeditor.OutFileListInputEditor,
-        beastfx.app.inputeditor.ParameterInputEditor,
+        // ScalarInputEditor and VectorInputEditor replace ParameterInputEditor
         beastfx.app.inputeditor.ParametricDistributionInputEditor,
         // The legacy SiteModelInputEditor is intentionally NOT provided: the spec
         // SiteModelInputEditor (below) is the BEAUti editor for SiteModelInterface.Base in

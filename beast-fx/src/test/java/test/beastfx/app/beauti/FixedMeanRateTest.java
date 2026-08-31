@@ -1,20 +1,21 @@
 package test.beastfx.app.beauti;
 
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.io.File;
-import java.util.List;
-
+import beast.base.spec.inference.operator.DeltaExchangeOperator;
+import beastfx.app.beauti.BeautiTabPane;
+import javafx.scene.control.CheckBox;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import beast.base.spec.inference.operator.DeltaExchangeOperator;
-import beastfx.app.beauti.BeautiTabPane;
-import javafx.stage.Stage;
+import java.io.File;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** test how the FixedMeanRate flag interact with link/unlink **/
 @ExtendWith(ApplicationExtension.class)
@@ -53,6 +54,10 @@ public class FixedMeanRateTest extends BeautiBase {
 		clickOnButtonWithText(robot, "Link Site Models");
 		clickOnButtonWithText(robot, "Unlink Site Models");
 
+		selectTab(robot, "Site Model");
+		CheckBox fixMeanCheckBox = robot.lookup("#FixMeanMutationRate").queryAs(CheckBox.class);
+		assertTrue(fixMeanCheckBox.isSelected(), "Fix mean substitution rate checkbox should still be checked after link/unlink");
+
 		//saveFile("/Users/remcobouckaert/tmp", "x.xml");
 		makeSureXMLParses();
 		
@@ -80,7 +85,11 @@ public class FixedMeanRateTest extends BeautiBase {
 		selectPartitions(robot, 0, 1, 2);
 		clickOnButtonWithText(robot, "Link Site Models");
 		clickOnButtonWithText(robot, "Unlink Site Models");
-		
+
+		selectTab(robot, "Site Model");
+		CheckBox fixMeanCheckBox = robot.lookup("#FixMeanMutationRate").queryAs(CheckBox.class);
+		assertTrue(fixMeanCheckBox.isSelected(), "Fix mean substitution rate checkbox should be checked after link/unlink");
+
 		DeltaExchangeOperator operator = (DeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
 		int nrOfParameters = operator.parameterInput.get().size();
 		if (nrOfParameters != 3) {
@@ -96,6 +105,11 @@ public class FixedMeanRateTest extends BeautiBase {
 		selectPartitions(robot, 0, 2);
 		// beautiFrame.table().selectCells(TableCell.row(0).column(1), TableCell.row(2).column(1));
 		clickOnButtonWithText(robot, "Link Site Models");
+
+		selectTab(robot, "Site Model");
+		fixMeanCheckBox = robot.lookup("#FixMeanMutationRate").queryAs(CheckBox.class);
+		assertTrue(fixMeanCheckBox.isSelected(), "Fix mean substitution rate checkbox should still be checked after second link");
+
 		operator = (DeltaExchangeOperator) doc.pluginmap.get("FixMeanMutationRatesOperator");
 		nrOfParameters = operator.parameterInput.get().size();
 		
