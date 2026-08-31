@@ -5,7 +5,6 @@ package beastfx.app.inputeditor.spec;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.evolution.branchratemodel.BranchRateModel;
 import beast.base.inference.Distribution;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
@@ -189,8 +188,8 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
 
             boolean isClockRate = false;
             for (Object output : ((BEASTInterface)parameter).getOutputs()) {
-                if (output instanceof BranchRateModel.Base) {
-                    isClockRate |= ((BranchRateModel.Base) output).meanRateInput.get() == parameter;
+                if (output instanceof beast.base.spec.evolution.branchratemodel.Base branchRateModel) {
+                    isClockRate |= branchRateModel.meanRateInput.get() == parameter;
                 }
             }
             m_isEstimatedBox.setDisable(!(!isClockRate || !getDoc().autoSetClockRate));
@@ -212,7 +211,7 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             //m_bAddButtons = false;
             if (itemNr < 0) {
 	            for (Object beastObject2 : ((BEASTInterface) m_input.get()).getOutputs()) {
-	                if (beastObject2 instanceof RealScalarParam) {
+	                if (beastObject2 instanceof ScalarDistribution) {
 	                    m_isEstimatedBox.setVisible(doc.allowLinking);
 	                    m_isEstimatedBox.setVisible(true);
 	                	isParametricDistributionParameter = true;
