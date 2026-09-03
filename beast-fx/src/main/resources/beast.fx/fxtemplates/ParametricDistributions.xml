@@ -238,7 +238,7 @@
 		        	<lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="-1e307" estimate="false"/>
 		        	<upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1e307" estimate="false"/>
         		</distr>
-            </distr> 
+            </distr>
 ]]>
         </subtemplate>
 

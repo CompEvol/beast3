@@ -460,21 +460,19 @@ EBSPLogger/mode/
                 <itree idref="treeIntervals.t:$(n)"/>
 			</population>
 
-
+<!-- Equivalent to a hyperprior on the mean of the Exponential prior on popSizePrior.alltrees below -->
             <distribution id='populationMeanPrior.alltrees' spec='beast.base.spec.inference.distribution.Gamma' param='@populationMean.alltrees' >
                 <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
                 <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
             </distribution>
 
-            <prior id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.Prior">
-                <scalar arg="@indicators.alltrees" id="indsSun.alltrees" spec="beast.base.spec.evolution.Sum"/>
-                <distr spec="beast.base.spec.inference.distribution.Poisson"  id='Poisson.EBSP'>
-                    <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
-                </distr>
-            </prior>
+            <distribution id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.Poisson">
+                <param id="indsSum.alltrees" spec="beast.base.spec.evolution.IntSum" arg="@indicators.alltrees"/>
+                <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
+            </distribution>
 
             <distribution id='popSizePrior.alltrees' spec='beast.base.spec.inference.distribution.IID' param='@popSizes.alltrees' >
-               <distr id='popPriorDist.EBSP' spec='beast.base.spec.inference.distribution.Exponential' param='@populationMean.alltrees' >
+               <distr id='popPriorDist.EBSP' spec='beast.base.spec.inference.distribution.Exponential'>
                   <mean idref="populationMean.alltrees"/>
                </distr>
             </distribution>

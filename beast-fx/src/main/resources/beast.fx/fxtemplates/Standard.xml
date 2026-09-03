@@ -428,7 +428,7 @@ ClusterTree/clusterType/,
 			<connect method="beastfx.app.inputeditor.spec.SiteModelInputEditor.customConnector"/>
 			
 			<!-- for deciding whether to connect the mean clock rate to the AVMN operator -->
-			<connect method="beastfx.app.inputeditor.SiteModelInputEditor.avmnConnector"/>
+			<connect method="beastfx.app.inputeditor.spec.SiteModelInputEditor.avmnConnector"/>
 
             <connect srcID='treelog.t:$(n)'                 targetID='mcmc' inputName='logger' if='inposterior(Tree.t:$(n)) and Tree.t:$(n)/estimate=true'/>
             <connect srcID='RandomTree.t:$(n)'                targetID='mcmc' inputName='init'   if='isInitializing'/>
