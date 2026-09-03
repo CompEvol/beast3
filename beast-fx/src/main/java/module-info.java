@@ -111,7 +111,8 @@ open module beast.fx {
         beastfx.app.inputeditor.spec.VectorInputEditor,
         beastfx.app.inputeditor.ScalarDistributionInputEditor,
         beastfx.app.inputeditor.TensorDistributionInputEditor,
-        beastfx.app.inputeditor.IIDInputEditor;
+        beastfx.app.inputeditor.IIDInputEditor,
+        beastfx.app.inputeditor.MarkovChainDistributionInputEditor;
 
     provides beastfx.app.inputeditor.AlignmentImporter with
         beastfx.app.inputeditor.NexusImporter,

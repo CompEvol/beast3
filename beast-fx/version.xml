@@ -94,6 +94,7 @@
                 <provider classname="beastfx.app.inputeditor.ScalarDistributionInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.TensorDistributionInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.IIDInputEditor"/>
+                <provider classname="beastfx.app.inputeditor.MarkovChainDistributionInputEditor"/>
 
             </service>
 

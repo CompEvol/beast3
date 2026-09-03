@@ -5,15 +5,12 @@ import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
-import beast.base.spec.domain.*;
+import beast.base.spec.domain.Bool;
 import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.base.spec.inference.parameter.*;
-import beast.base.spec.type.IntVector;
-import beast.base.spec.type.RealVector;
-import beast.base.spec.type.Scalar;
-import beast.base.spec.type.Simplex;
+import beast.base.spec.type.*;
 import beastfx.app.util.FXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -175,19 +172,50 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 	}
 	
 	
+    /**
+     * The per-element domain of a vector-valued {@code param} (e.g. {@code Real},
+     * {@code PositiveReal}, {@code UnitInterval}), used by {@link #isCompatible} to
+     * decide whether a prior template's declared domain covers it. This is only the
+     * numeric range each element must fall in -- it says nothing about structural
+     * constraints across elements (e.g. a Simplex's "elements sum to 1"), which
+     * {@link #hasSimplexParam} checks separately and independently.
+     * <p>
+     * {@code IIDInputEditor} is the dedicated editor registered for {@code IID.class},
+     * so this only ever runs for IID rows. Every other {@link TensorDistribution} row
+     * with no dedicated editor of its own (currently just Dirichlet) instead goes through
+     * {@link TensorDistributionInputEditor}'s identical copy of this method.
+     *
+     * @param param the vector-valued input to a {@link TensorDistribution}, e.g. a
+     *              {@code RealVectorParam} or {@code IntVectorParam}
+     * @return the {@link beast.base.spec.domain.Domain} subclass constraining param's
+     *         elements, or {@code Scalar.class} if param isn't a recognised vector type
+     */
     private Class<?> getParameterDomain(Object param) {
+    	// a real-valued state-node vector (RealVectorParam, SimplexParam, ...) carries its
+    	// own declared domain (e.g. Real, PositiveReal, UnitInterval) as an input
     	if (param instanceof RealVectorParam rvp) {
     		return rvp.domainTypeInput.get().getClass();
     	}
+    	// same, for an int-valued state-node vector (IntVectorParam, IntSimplexParam, ...)
     	if (param instanceof IntVectorParam ivp) {
     		return ivp.domainTypeInput.get().getClass();
     	}
+    	// not a state-node param but still implements RealVector (e.g. a plain value, not
+    	// backed by an Input) -- fall back to reading the domain off the type itself
     	if (param instanceof RealVector rs) {
     		return rs.getDomain().getClass();
     	}
+    	// same fallback for a non-param IntVector
     	if (param instanceof IntVector is) {
     		return is.getDomain().getClass();
     	}
+    	// boolean vectors have only one possible domain (true/false), so there is nothing
+    	// to look up
+    	if (param instanceof BoolVector) {
+    		return Bool.class;
+    	}
+    	// param isn't any recognised vector type -- shouldn't happen for a vector-valued
+    	// prior's "param" input, but don't guess a domain we can't back up
         return Scalar.class;
 	}
 
@@ -351,6 +379,14 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 		return paramIsSimplex == templateIsSimplex;
 	}
 
+	/**
+	 * Compatible when one domain's range of values fully covers the other's: the
+	 * template's domain is broad enough for the param (e.g. IID's "Real" template
+	 * offered for a PositiveReal-domain vector), or narrow enough to stay within it
+	 * (e.g. a PositiveReal-only template offered for a NonNegativeReal param). Checked
+	 * both ways since neither direction alone covers both cases. Unrelated families
+	 * (Real vs. Int vs. Bool) satisfy neither direction and are correctly rejected.
+	 */
 	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain, boolean hasSimplexParam) {
     	if (templateDomain == null) {
     		// the "no prior" and ScalarDistribution templates should be rejected
@@ -360,50 +396,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
     		return false;
     	}
 
-		if (Real.class.isAssignableFrom(paramDomain)) {
-    		// check type first
-    		if (!(Real.class.isAssignableFrom(templateDomain))) {
-    			return false;
-    		}
-    		// more range checks here
-    		if  (paramDomain == Real.class) {
-    			return true;
-    		}
-    		if (templateDomain == paramDomain) {
-    			return true;
-    		}
-    		if (templateDomain == NonNegativeReal.class && paramDomain == PositiveReal.class) {
-    			return true;
-    		}
-    		if (templateDomain == PositiveReal.class && paramDomain == NonNegativeReal.class) {
-    			return true;
-    		}
-    		return false;
-    	}
-    	
-		if (Int.class.isAssignableFrom(paramDomain)) {
-    		// check type first
-    		if (!(Int.class.isAssignableFrom(templateDomain))) {
-    			return false;
-    		}
-    		// more range checks here
-    		if  (paramDomain == Int.class) {
-    			return true;
-    		}
-    		if (templateDomain == paramDomain) {
-    			return true;
-    		}
-    		if (templateDomain == NonNegativeInt.class && paramDomain == PositiveInt.class) {
-    			return true;
-    		}
-    		if (templateDomain == PositiveInt.class && paramDomain == NonNegativeInt.class) {
-    			return true;
-    		}
-    		return false;
-    	}
-    	
-    	// don't know how to handle -- err on the side of caution and accept anything
-		return true;
+		return templateDomain.isAssignableFrom(paramDomain) || paramDomain.isAssignableFrom(templateDomain);
 	}
 
     

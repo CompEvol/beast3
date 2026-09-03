@@ -210,12 +210,19 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             //m_editPluginButton.setVisible(false);
             //m_bAddButtons = false;
             if (itemNr < 0) {
+	            String inputName = input.getName();
+	            // "lower"/"upper" (e.g. Uniform, LogUniform, BoundedReal/BoundedInt) define
+	            // the support of the distribution itself, not a value to be sampled -- there
+	            // is no sensible prior/operator for "the bound of my own bound"
+	            boolean isDistributionBound = beastObject instanceof ScalarDistribution
+	                    && ("lower".equals(inputName) || "upper".equals(inputName));
 	            // reveal the checkbox (and allow a hyperprior) only for a distribution's
 	            // own hyperparameters (e.g. Normal's mean/sigma), not its bound value
 	            // ("param", e.g. mutationRate) -- see #157
 	            // this stops estimate in the Site Model panel from triggering a hyperprior
 	            boolean isHyperparameter = beastObject instanceof ScalarDistribution
-	                    && !"param".equals(input.getName());
+	                    && !"param".equals(inputName)
+	                    && !isDistributionBound;
 	            if (isHyperparameter) {
 	                m_isEstimatedBox.setVisible(doc.allowLinking);
 	                m_isEstimatedBox.setVisible(true);
@@ -227,6 +234,11 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
 	                    //m_editPluginButton.setVisible(true);
 	                    break;
 	                }
+	            }
+	            if (isDistributionBound) {
+	                // never offer to estimate a distribution's own bound, regardless of
+	                // expert mode or an operator that happens to reference it
+	                m_isEstimatedBox.setVisible(false);
 	            }
             } else {
 	            for (Object beastObject2 : ((BEASTInterface) ((List<?>)m_input.get()).get(itemNr)).getOutputs()) {
