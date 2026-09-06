@@ -141,6 +141,7 @@ public interface Parameter<T> extends Function {
      */
     void swap(int i, int j);
 
+    @Deprecated
     @Description("A parameter represents a value in the state space that can be changed by operators.")
     abstract class Base<T> extends StateNode implements Parameter<T> {
 

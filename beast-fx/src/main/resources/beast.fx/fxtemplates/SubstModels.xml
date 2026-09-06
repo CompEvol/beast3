@@ -82,7 +82,7 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
             </operator>
             ]]>
 
-                        <connect method="beastfx.app.inputeditor.SiteModelInputEditor.customConnector"/>
+                        <connect method="beastfx.app.inputeditor.spec.SiteModelInputEditor.customConnector"/>
 
 <!-- when FixMeanMutationRatesOperator, the prior is uniform due to the operator -->
             <connect srcID='MutationRatePrior.s:$(n)'         targetID='prior' inputName='distribution' if='nooperator(FixMeanMutationRatesOperator) and inlikelihood(mutationRate.s:$(n)) and mutationRate.s:$(n)/estimate=true'/>

@@ -24,9 +24,11 @@ import javafx.scene.layout.Pane;
 import java.util.List;
 
 
-
-
-
+/**
+ * @deprecated replaced by {@link beastfx.app.inputeditor.spec.ScalarInputEditor}
+ * or {@link beastfx.app.inputeditor.spec.VectorInputEditor}
+ */
+@Deprecated
 public class ParameterInputEditor extends BEASTObjectInputEditor {
 	boolean isParametricDistributionParameter = false;
 	

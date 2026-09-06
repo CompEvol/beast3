@@ -26,6 +26,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @deprecated replaced by {@link beastfx.app.inputeditor.spec.SiteModelInputEditor}
+ */
+@Deprecated
 public class SiteModelInputEditor extends BEASTObjectInputEditor {
 
     IntegerInputEditor categoryCountEditor;

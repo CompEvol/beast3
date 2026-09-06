@@ -1,15 +1,14 @@
 package test.beastfx.app.beauti;
 
-import java.io.File;
-
+import beastfx.app.beauti.BeautiTabPane;
+import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import beastfx.app.beauti.BeautiTabPane;
-import javafx.stage.Stage;
+import java.io.File;
 
 @ExtendWith(ApplicationExtension.class)
 public class SimpleTreePriorTest extends BeautiBase {
@@ -57,7 +56,15 @@ public class SimpleTreePriorTest extends BeautiBase {
 		assertOperatorsEqual("BayesianSkylineTreeRootScaler.t:anolis", "BayesianSkylineUniformOperator.t:anolis", "BayesianSkylineSubtreeSlide.t:anolis", "BayesianSkylineNarrow.t:anolis", "BayesianSkylineWide.t:anolis", "BayesianSkylineWilsonBalding.t:anolis", "BayesianSkylineTreeScaler.t:anolis", "popSizesScaler.t:anolis", "groupSizesDelta.t:anolis");
 		assertPriorsEqual("BayesianSkyline.t:anolis", "MarkovChainedPopSizes.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "BayesianSkyline.t:anolis", "bPopSizes.t:anolis", "bGroupSizes.t:anolis");
-		
+
+		warning("Change to Coalescent - Extended BSP");
+		robot.clickOn("#TreeDistribution").clickOn("Coalescent Extended Bayesian Skyline");
+		printBeautiState();
+		assertStateEquals("Tree.t:anolis", "indicators.alltrees", "populationMean.alltrees", "popSizes.alltrees");
+		assertOperatorsEqual("ExtendedBayesianSkylineTreeScaler.t:anolis", "ExtendedBayesianSkylineTreeRootScaler.t:anolis", "ExtendedBayesianSkylineUniformOperator.t:anolis", "ExtendedBayesianSkylineSubtreeSlide.t:anolis", "ExtendedBayesianSkylineNarrow.t:anolis", "ExtendedBayesianSkylineWide.t:anolis", "ExtendedBayesianSkylineWilsonBalding.t:anolis", "bitflip.alltrees", "indicatorSampler.alltrees", "indicatorScaler.alltrees", "EBSPupDownOperator.alltrees");
+		assertPriorsEqual("ExtendedBayesianSkyline.t:anolis", "populationMeanPrior.alltrees", "indicatorsPrior.alltrees", "popSizePrior.alltrees");
+		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "ExtendedBayesianSkyline.t:anolis", "indicators.alltrees", "populationMean.alltrees", "popSizes.alltrees", "sumIndicators");
+
 		warning("Change to Yule");
 		robot.clickOn("#TreeDistribution").clickOn("Yule Model");
 		printBeautiState();

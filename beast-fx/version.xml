@@ -55,7 +55,7 @@
                 <provider classname="beastfx.app.inputeditor.LongInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.OutFileInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.OutFileListInputEditor"/>
-                <provider classname="beastfx.app.inputeditor.ParameterInputEditor"/>
+                <!-- ScalarInputEditor and VectorInputEditor replace ParameterInputEditor. -->
                 <provider classname="beastfx.app.inputeditor.ParametricDistributionInputEditor"/>
                 <!-- Legacy SiteModelInputEditor intentionally not registered: the spec
                      SiteModelInputEditor is the BEAUti editor for SiteModelInterface.Base
@@ -90,9 +90,11 @@
 
                 <provider classname="beastfx.app.inputeditor.spec.SiteModelInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.spec.ScalarInputEditor"/>
+                <provider classname="beastfx.app.inputeditor.spec.VectorInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.ScalarDistributionInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.TensorDistributionInputEditor"/>
                 <provider classname="beastfx.app.inputeditor.IIDInputEditor"/>
+                <provider classname="beastfx.app.inputeditor.MarkovChainDistributionInputEditor"/>
 
             </service>
 

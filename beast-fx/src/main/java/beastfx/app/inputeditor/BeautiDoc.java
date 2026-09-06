@@ -33,6 +33,7 @@ import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 import beast.pkgmgmt.launcher.BeastLauncher;
 import beastfx.app.beauti.BeautiTabPane;
+import beastfx.app.inputeditor.spec.SiteModelInputEditor;
 import beastfx.app.util.Alert;
 import beastfx.app.util.FXUtils;
 import beastfx.app.util.PartitionContextUtil;
