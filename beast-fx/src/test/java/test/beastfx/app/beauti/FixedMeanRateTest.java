@@ -37,15 +37,21 @@ public class FixedMeanRateTest extends BeautiBase {
 	public void testFixedMeanRate(FxRobot robot) throws Exception {		
 		importAlignment(NEXUS_DIR, new File("26.nex"), new File("29.nex"));
 		
-		robot.clickOn("#Mode").clickOn("#autoUpdateFixMeanSubstRate");
+		// "Mode" sits in the menu bar at the top of the window, but the window itself
+		// is cascaded further down/right with every BEAUti instance opened in this JVM
+		// fork (BeautiTabPane.BEAUtiIntances), so route through the same on-screen guard
+		// as every other click below instead of a bare robot.clickOn("#Mode") -- see
+		// BeautiBase.moveOnScreen().
+		clickOnNodesWithID(robot, "Mode");
+		robot.clickOn("#autoUpdateFixMeanSubstRate");
 		// beautiFrame.menuItemWithPath("Mode", "Automatic set fix mean substitution rate flag").click();
 
-		
+
 		warning("Setting fixed mean rates");
 		//JTabbedPaneFixture f = beautiFrame.tabbedPane();
-		selectTab(robot, "Site Model");		
+		selectTab(robot, "Site Model");
         clickOnNodesWithID(robot, "mutationRate.isEstimated");
-		robot.clickOn("#FixMeanMutationRate");
+		clickOnNodesWithID(robot, "FixMeanMutationRate");
 
 		warning("link/unlink site models");
 		// f.selectTab("Partitions");
