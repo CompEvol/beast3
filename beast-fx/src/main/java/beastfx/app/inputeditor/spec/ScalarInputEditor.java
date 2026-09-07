@@ -5,7 +5,6 @@ package beastfx.app.inputeditor.spec;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.inference.Distribution;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.parser.PartitionContext;
@@ -273,25 +272,50 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             	}
             	
             	String id = parameter2.getID();
-            	
 
-            	if (id.startsWith("RealParameter")) {
-                	ScalarDistribution<?,?> parent = null; 
+            	// Has a hyperprior already been created for this parameter? True if one of
+            	// parameter2's outputs is a ScalarDistribution whose own param is parameter2
+            	// (a hyperprior is always wired that way). Not true for the distribution
+            	// parameter2 is itself a hyperparameter *of* (e.g. Normal, if parameter2 is
+            	// "mean"): that Normal's param points at what IT is a prior for (e.g.
+            	// birthRate), not at parameter2.
+            	boolean hasHyperPrior = false;
+            	for (Object beastObject2 : parameter2.getOutputs()) {
+            		if (beastObject2 instanceof ScalarDistribution<?,?> sd && sd.paramInput.get() == parameter2) {
+            			hasHyperPrior = true;
+            			break;
+            		}
+            	}
+
+            	// First time for this parameter: find the distribution it's a hyperparameter
+            	// of, then rename it so a hyperprior can be created for it and found again
+            	// on every later call (see the rename below).
+            	if (!hasHyperPrior) {
+                	ScalarDistribution<?,?> parent = null;
     	            for (Object beastObject2 : parameter2.getOutputs()) {
-    	                if (beastObject2 instanceof ScalarDistribution<?,?>) {
-                    		parent = (ScalarDistribution<?,?>) beastObject2; 
+    	                // the distribution parameter2 is itself a hyperparameter of (e.g.
+    	                // Normal, if parameter2 is its "mean"). It's the only kind of
+    	                // ScalarDistribution parameter2 can have among its outputs here, since
+    	                // hasHyperPrior above already ruled out one whose "param" is parameter2.
+    	                if (beastObject2 instanceof ScalarDistribution<?,?> sd) {
+                    		parent = sd;
     	                    break;
     	                }
     	            }
-    	            Distribution grandparent = null; 
-    	            for (Object beastObject2 : parent.getOutputs()) {
-    	                if (beastObject2 instanceof Distribution) {
-                    		grandparent = (Distribution) beastObject2; 
-    	                    break;
-    	                }
+    	            if (parent == null) {
+    	            	// shouldn't happen given isParametricDistributionParameter, but defend
+    	            	// against an inconsistent model rather than dereferencing a null parent
+    	            	Log.err.println("Could not find the distribution owning " + parameter2.getID() + "; not adding a hyperprior");
+    	            	m_isEstimatedBox.setSelected(false);
+    	            	parameter2.isEstimatedInput.setValue(false, parameter2);
+    	            	return;
     	            }
-            		id = "parameter.hyper" + parent.getClass().getSimpleName() + "-" + 
-            				m_input.getName() + "-" + grandparent.getID();
+
+    	            // rename from the auto-generated id (e.g. "RealScalarParam.N") to
+    	            // "parameter.<context>", which the $(n) substitution below, and BeautiDoc's
+    	            // general "parameter.*" sync scan (see BeautiDoc.scrubAll), rely on to find it
+            		id = "parameter.hyper" + parent.getClass().getSimpleName() + "-" +
+            				m_input.getName() + "-" + parent.getID();
             		doc.pluginmap.remove(parameter2.getID());
             		parameter2.setID(id);
             		doc.addPlugin(parameter2);
@@ -300,12 +324,17 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             	
             	PartitionContext context = new PartitionContext(id.substring("parameter.".length()));
             	Log.warning.println(context + " " + id);
+            	// ensures the hyperprior's own objects (HyperPrior.$(n), hyperScaler.$(n))
+            	// exist -- a safe no-op if they already do. Connecting/disconnecting them
+            	// (state, operator, tracelog, the priors list) based on the current estimate
+            	// value is done separately, by BeautiDoc's general "parameter.*" sync scan
+            	// (see BeautiDoc.scrubAll), which hardSync()/refreshPanel() below triggers.
             	doc.beautiConfig.hyperPriorTemplate.createSubNet(context, true);
             }
         	hardSync();
             refreshPanel();
         } catch (Exception ex) {
-            Log.err.println("ParameterInputEditor " + ex.getMessage());
+            Log.err.println("ScalarInputEditor " + ex.getMessage());
         }
     }
     
