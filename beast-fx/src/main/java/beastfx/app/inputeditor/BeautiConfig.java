@@ -1,25 +1,20 @@
 package beastfx.app.inputeditor;
 
 
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import beastfx.app.util.Alert;
-import beastfx.app.util.FXUtils;
-import javafx.scene.Parent;
 import beast.base.core.BEASTInterface;
 import beast.base.core.BEASTObject;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.evolution.alignment.Alignment;
-import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.parser.XMLParser;
+import beast.base.spec.evolution.tree.MRCAPrior;
+import beastfx.app.util.Alert;
+import beastfx.app.util.FXUtils;
+import javafx.scene.Parent;
+
+import java.io.File;
+import java.util.*;
 
 @Description("Beauti configuration object, used to find Beauti configuration " +
         "information from Beauti template files.")
@@ -131,17 +126,18 @@ public class BeautiConfig extends BEASTObject {
 		}
     }
 
-	final static String HYPER_PRIOR_XML = 
-    		"    <beast version='2.0'\n" +
-    		"    	       namespace='beastfx.app.beauti:beast.base.core:beast.base.evolution.operators:beast.base.inference.distribution'>\n" +
-    		"    	<!-- Parameter Hyper Prior -->\n" +
-    		"    	        <subtemplate spec='beastfx.app.inputeditor.BeautiSubTemplate' id='HyperPrior' class='beast.base.inference.distribution.Prior' mainid='HyperPrior.$(n)'>\n" +
+	final static String HYPER_PRIOR_XML =
+    		"    <beast version='2.8'\n" +
+    		"    	       namespace='beastfx.app.beauti:beast.base.core:beast.base.spec.inference.distribution:beast.base.spec.inference.parameter:beast.base.spec.inference.operator'>\n" +
+    		"    	<!-- Parameter Hyper Prior: a LogUniform distribution, same as ParametricDistributions.xml uses to replace the old OneOnX. -->\n" +
+    		"    	        <subtemplate spec='beastfx.app.inputeditor.BeautiSubTemplate' id='HyperPrior' class='beast.base.spec.inference.distribution.LogUniform' mainid='HyperPrior.$(n)'>\n" +
     		"    	<![CDATA[\n" +
-    		"    	        <beastObject id='HyperPrior.$(n)' spec='Prior' x='@parameter.$(n)'>\n" +
-    		"    	            <distr spec='OneOnX'/>\n" +
+    		"    	        <beastObject id='HyperPrior.$(n)' spec='beast.base.spec.inference.distribution.LogUniform' param='@parameter.$(n)'>\n" +
+    		"    	            <lower spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='1.0E-8' estimate='false'/>\n" +
+    		"    	            <upper spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='1.0E8' estimate='false'/>\n" +
     		"    			</beastObject>\n" +
     		"\n" +
-    		"    	        <beastObject id='hyperScaler.$(n)' spec='ScaleOperator' scaleFactor='0.5' weight='0.1' parameter='@parameter.$(n)'/>\n" +
+    		"    	        <beastObject id='hyperScaler.$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor='0.5' weight='0.1' parameter='@parameter.$(n)'/>\n" +
     		"    	]]>\n" +
     		"    	            <connect spec='beastfx.app.inputeditor.BeautiConnector' srcID='parameter.$(n)'            targetID='state' inputName='stateNode' if='inposterior(parameter.$(n)) and parameter.$(n)/estimate=true'/>\n" +
     		"\n" +
