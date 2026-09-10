@@ -72,5 +72,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: test-results
-          path: jest-junit.xml
+          name: maven-test-results
+          path: |
+            **/target/surefire-reports/*.xml
+            **/target/failsafe-reports/*.xml
