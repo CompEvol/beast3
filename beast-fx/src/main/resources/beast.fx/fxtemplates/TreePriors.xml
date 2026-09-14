@@ -449,11 +449,11 @@ EBSPLogger/mode/
            <stateNode id="populationMean.alltrees" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0"/>
 	        <stateNode id="popSizes.alltrees" spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" value="1.0"/>
 
-           <factor id="factor" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+           <factor id="factor.t:$(n)" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
 
             <distribution id="ExtendedBayesianSkyline.t:$(n)" spec="Coalescent">
                  <treeIntervals id="treeIntervals.t:$(n)" spec='beast.base.evolution.tree.TreeIntervals' tree="@Tree.t:$(n)"/>
-                 <populationModel id="scaledDemo.t:$(n)" spec="beast.base.spec.evolution.tree.coalescent.ScaledPopulationFunction" factor='@factor' population='@demographic.alltrees'/>
+                 <populationModel id="scaledDemo.t:$(n)" spec="beast.base.spec.evolution.tree.coalescent.ScaledPopulationFunction" factor='@factor.t:$(n)' population='@demographic.alltrees'/>
             </distribution>
 
             <population id="demographic.alltrees" populationIndicators="@indicators.alltrees" populationSizes="@popSizes.alltrees" spec="beast.base.spec.evolution.tree.coalescent.CompoundPopulationFunction" type="linear" useIntervalsMiddle="false">
