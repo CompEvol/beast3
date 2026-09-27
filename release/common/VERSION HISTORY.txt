@@ -1,10 +1,21 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: August 2026
+Last updated: September 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-rc1 September 2026
+	o Resolve BEAUti clone source/target against the list their indices came from, fixing the wrong likelihood being cloned when partitions are linked #171
+	o Fix EBSP (Extended Bayesian Skyline) BEAUti template for multiple partitions #168
+	o Fix "estimate" checkbox and hyper-prior creation in the BEAUti Priors panel #157
+	o Replace legacy ParameterInputEditor with spec ScalarInputEditor/VectorInputEditor; fix MarkovChainDistribution's Prior panel display and hide the estimate checkbox for a bounded distribution's lower/upper #162 #164 #165
+	o Fix several Prior panel bugs: replace OneOnX with a LogUniform template, fix Dirichlet prior display, and fix parameter type passed to BEASTObjectDialog #159 #160
+	o Suppress vector parameter domain, shape and keys from being editable in BEAUti #155
+	o Migrate RateStatistic to beast.base.spec and widen its domain to NonNegativeReal #119
+	o Fix BEAUti silently dropping package-provided InputEditors when core editors are found first #153
+	o Fix InverseGamma (spec) CDF, quantile, mean and support bounds returning the internal Gamma helper's values instead of InverseGamma's own #149
+
 Version 2.8.0-beta8 August 2026
 	o Fix flaky/broken BEAUti tests: partition-table cell edits made deterministic instead of simulated keystrokes, stale field ids and class names updated for the beast3 migration, and BEAUti's CLI batch mode no longer double-launches the JavaFX toolkit #143
 	o Load the whole analysis, not just the alignment, when a BEAST XML file is dropped onto BEAUti #141
