@@ -7,7 +7,6 @@ import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.branchratemodel.BranchRateModel;
 import beast.base.evolution.sitemodel.SiteModelInterface;
 import beast.base.evolution.tree.TreeInterface;
-import beast.base.inference.CompoundDistribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.evolution.likelihood.GenericTreeLikelihood;
 import beast.base.spec.evolution.sitemodel.SiteModel;
@@ -410,10 +409,8 @@ public class BeautiPanel extends Tab implements ChangeListener, BeautiDocProvide
     		throw new RuntimeException("Programmer error: sourceID and targetID should be in list");
     	}
     	
-		CompoundDistribution likelihoods = (CompoundDistribution) doc.pluginmap.get("likelihood");
-		
-		GenericTreeLikelihood likelihoodSource = (GenericTreeLikelihood) likelihoods.pDistributions.get().get(source);
-		GenericTreeLikelihood likelihood = (GenericTreeLikelihood) likelihoods.pDistributions.get().get(target);
+		GenericTreeLikelihood likelihoodSource = (GenericTreeLikelihood) list.get(source);
+		GenericTreeLikelihood likelihood = (GenericTreeLikelihood) list.get(target);
 		PartitionContext oldContext = doc.getContextFor(likelihoodSource);
 		PartitionContext newContext = doc.getContextFor(likelihood);
 		// this ensures the config.sync does not set any input value
@@ -471,11 +468,16 @@ public class BeautiPanel extends Tab implements ChangeListener, BeautiDocProvide
 			TreeInterface tree = null;
 			TreeInterface treeSource = likelihoodSource.treeInput.get();
 			try {
-			tree = (TreeInterface) BeautiDoc.deepCopyPlugin((BEASTInterface) treeSource, likelihood,
-							doc.getMCMC(), oldContext, newContext, doc, null);
-				} catch (Exception e) {
-					Alert.showMessageDialog(((Pane)this.getContent()), "Could not clone " + sourceID + " to " + targetID + " " + e.getMessage());
-					return;
+                tree = (TreeInterface) BeautiDoc.deepCopyPlugin((BEASTInterface) treeSource, likelihood,
+                        doc.getMCMC(), oldContext, newContext, doc, null);
+            } catch (Exception e) {
+                Alert.showMessageDialog(((Pane)this.getContent()), "Could not clone " + sourceID + " to " + targetID + " " + e.getMessage());
+                return;
+			}
+			// deepCopyPlugin returns null instead of throwing when nothing was copied
+			if (tree == null) {
+				Alert.showMessageDialog(((Pane)this.getContent()), "Could not clone " + sourceID + " to " + targetID + ": no copy of " + treeSource.getID() + " was made");
+				return;
 			}
 			// sanity check: make sure taxon sets are compatible
             Taxon.assertSameTaxa(tree.getID(), tree.getTaxonset().getTaxaNames(),
