@@ -276,9 +276,16 @@ public class LogAnalyser {
         for (int i = 0; i < items; i++)
             if (m_ranges[i] != null)
                 if (m_ranges[i].size() == 2 && m_ranges[i].contains("true") && m_ranges[i].contains("false") ||
-                        m_ranges[i].size() == 1 && (m_ranges[i].contains("true") || m_ranges[i].contains("false")))
+                        m_ranges[i].size() == 1 && (m_ranges[i].contains("true") || m_ranges[i].contains("false"))) {
                     m_types[i] = type.BOOL;
-                else
+                    // values were numbered in order of first appearance
+                    // use true = 1 false = 0
+                    for (int j = 0; j < m_fTraces[i].length; j++) {
+                        if (m_fTraces[i][j] != null) {
+                            m_fTraces[i][j] = m_ranges[i].get(m_fTraces[i][j].intValue()).equals("true") ? 1.0 : 0.0;
+                        }
+                    }
+                } else
                     m_types[i] = type.NOMINAL;
 
         fin.close();
