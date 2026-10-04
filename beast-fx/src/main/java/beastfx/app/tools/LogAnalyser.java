@@ -330,8 +330,8 @@ public class LogAnalyser {
 	                m_fStdDev[i] = Double.NaN;
 	            }
 
-	            if (m_types[i] == type.REAL || m_types[i] == type.INTEGER) {
-	                // calc median, and 95% HPD interval
+	            if (m_types[i] == type.REAL || m_types[i] == type.INTEGER || m_types[i] == type.BOOL) {
+	                // calc median, and 95% HPD interval (BOOL traces are true = 1, false = 0)
 	                Double[] sorted = trace.clone();
 	                Arrays.sort(sorted);
 	                m_fMedian[i] = sorted[trace.length / 2];

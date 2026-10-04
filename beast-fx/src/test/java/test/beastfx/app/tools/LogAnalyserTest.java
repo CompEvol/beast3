@@ -66,4 +66,32 @@ public class LogAnalyserTest {
         // y: one false, then eight true
         assertEquals(8.0 / 9.0, analyser.getMean("y"), 1e-12);
     }
+
+    /**
+     * A boolean column gets every statistic, the same as the 1/0 column it stands for:
+     * x is true/false, y the same values as 1/0.
+     */
+    @Test
+    void testBooleanStatsMatchOneZero() throws IOException {
+        String[] rows = new String[200];
+        java.util.Random random = new java.util.Random(1);
+        boolean on = true;
+        for (int k = 0; k < rows.length; k++) {
+            if (random.nextDouble() < 0.2) {
+                on = !on;
+            }
+            rows[k] = (k * 1000) + "\t" + on + "\t" + (on ? 1 : 0) + "\t" + random.nextDouble();
+        }
+        LogAnalyser analyser = new LogAnalyser(log(rows).getPath(), 10, true, true);
+
+        assertEquals(analyser.getMean("y"), analyser.getMean("x"), 1e-12);
+        assertEquals(analyser.getStdError("y"), analyser.getStdError("x"), 1e-12);
+        assertEquals(analyser.getStdDev("y"), analyser.getStdDev("x"), 1e-12);
+        assertEquals(analyser.getMedian("y"), analyser.getMedian("x"), 1e-12);
+        assertEquals(analyser.get95HPDlow("y"), analyser.get95HPDlow("x"), 1e-12);
+        assertEquals(analyser.get95HPDup("y"), analyser.get95HPDup("x"), 1e-12);
+        assertEquals(analyser.getACT("y"), analyser.getACT("x"), 1e-12);
+        assertEquals(analyser.getESS("y"), analyser.getESS("x"), 1e-12);
+        assertEquals(false, Double.isNaN(analyser.getESS("x")));
+    }
 }
