@@ -243,6 +243,8 @@ public class LogAnalyser {
         // grab data from the log, ignoring burn in samples
         m_types = new type[items];
         Arrays.fill(m_types, type.INTEGER);
+        // columns holding at least one true or false
+        boolean[] hasBool = new boolean[items];
         int reported = 0;
         while (fin.ready()) {
             str = fin.readLine();
@@ -250,6 +252,13 @@ public class LogAnalyser {
             if (str.indexOf('#') < 0 && str.matches("[-0-9].*"))
                 if (++data >= 0  && data < m_fTraces[0].length)
                     for (String str2 : str.split("\\s")) {
+                        if (str2.equals("true") || str2.equals("false")) {
+                            // set true = 1 false = 0
+                            m_fTraces[i][data] = str2.equals("true") ? 1.0 : 0.0;
+                            hasBool[i] = true;
+                            i++;
+                            continue;
+                        }
                         try {
                             if (str2.indexOf('.') >= 0) {
                                 m_types[i] = type.REAL;
@@ -275,18 +284,10 @@ public class LogAnalyser {
         // determine types
         for (int i = 0; i < items; i++)
             if (m_ranges[i] != null)
-                if (m_ranges[i].size() == 2 && m_ranges[i].contains("true") && m_ranges[i].contains("false") ||
-                        m_ranges[i].size() == 1 && (m_ranges[i].contains("true") || m_ranges[i].contains("false"))) {
-                    m_types[i] = type.BOOL;
-                    // values were numbered in order of first appearance
-                    // use true = 1 false = 0
-                    for (int j = 0; j < m_fTraces[i].length; j++) {
-                        if (m_fTraces[i][j] != null) {
-                            m_fTraces[i][j] = m_ranges[i].get(m_fTraces[i][j].intValue()).equals("true") ? 1.0 : 0.0;
-                        }
-                    }
-                } else
-                    m_types[i] = type.NOMINAL;
+                m_types[i] = type.NOMINAL;
+            else if (hasBool[i]) {
+                m_types[i] = type.BOOL;
+            }
 
         fin.close();
     } // readLogFile
