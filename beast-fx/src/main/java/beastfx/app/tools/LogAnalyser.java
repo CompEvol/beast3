@@ -252,28 +252,30 @@ public class LogAnalyser {
             if (str.indexOf('#') < 0 && str.matches("[-0-9].*"))
                 if (++data >= 0  && data < m_fTraces[0].length)
                     for (String str2 : str.split("\\s")) {
-                        if (str2.equals("true") || str2.equals("false")) {
+                        if ("true".equalsIgnoreCase(str2) || "false".equalsIgnoreCase(str2)) {
                             // set true = 1 false = 0
+                            m_types[i] = type.BOOL;
                             m_fTraces[i][data] = str2.equals("true") ? 1.0 : 0.0;
                             hasBool[i] = true;
                             i++;
-                            continue;
+                        } else {
+                            try {
+                                if (str2.indexOf('.') >= 0) {
+                                    m_types[i] = type.REAL;
+                                }
+                                m_fTraces[i][data] = Double.parseDouble(str2);
+                            } catch (Exception e) {
+
+                                if (m_ranges[i] == null) {
+                                    m_ranges[i] = new ArrayList<>();
+                                }
+                                if (!m_ranges[i].contains(str2)) {
+                                    m_ranges[i].add(str2);
+                                }
+                                m_fTraces[i][data] = 1.0 * m_ranges[i].indexOf(str2);
+                            }
+                            i++;
                         }
-                        try {
-                            if (str2.indexOf('.') >= 0) {
-                                m_types[i] = type.REAL;
-                            }
-                            m_fTraces[i][data] = Double.parseDouble(str2);
-                        } catch (Exception e) {
-                            if (m_ranges[i] == null) {
-                                m_ranges[i] = new ArrayList<>();
-                            }
-                            if (!m_ranges[i].contains(str2)) {
-                                m_ranges[i].add(str2);
-                            }
-                            m_fTraces[i][data] = 1.0 * m_ranges[i].indexOf(str2);
-                        }
-                        i++;
                     }
 			while (reported < 81 && 1000.0 * reported < 81000.0 * (data + 1)/ total) {
                 log("*");
@@ -283,10 +285,8 @@ public class LogAnalyser {
         logln("");
         // determine types
         for (int i = 0; i < items; i++)
-            if (m_ranges[i] != null)
+            if (m_ranges[i] != null && (! m_types[i].equals(type.BOOL)) ) {
                 m_types[i] = type.NOMINAL;
-            else if (hasBool[i]) {
-                m_types[i] = type.BOOL;
             }
 
         fin.close();

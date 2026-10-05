@@ -1,8 +1,5 @@
 package test.beastfx.app.tools;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,6 +7,8 @@ import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 
 import beastfx.app.tools.LogAnalyser;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LogAnalyserTest {
 
@@ -92,6 +91,6 @@ public class LogAnalyserTest {
         assertEquals(analyser.get95HPDup("y"), analyser.get95HPDup("x"), 1e-12);
         assertEquals(analyser.getACT("y"), analyser.getACT("x"), 1e-12);
         assertEquals(analyser.getESS("y"), analyser.getESS("x"), 1e-12);
-        assertEquals(false, Double.isNaN(analyser.getESS("x")));
+        assertFalse(Double.isNaN(analyser.getESS("x")));
     }
 }
