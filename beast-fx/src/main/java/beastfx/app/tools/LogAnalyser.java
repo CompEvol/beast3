@@ -243,8 +243,6 @@ public class LogAnalyser {
         // grab data from the log, ignoring burn in samples
         m_types = new type[items];
         Arrays.fill(m_types, type.INTEGER);
-        // columns holding at least one true or false
-        boolean[] hasBool = new boolean[items];
         int reported = 0;
         while (fin.ready()) {
             str = fin.readLine();
@@ -256,7 +254,6 @@ public class LogAnalyser {
                             // set true = 1 false = 0
                             m_types[i] = type.BOOL;
                             m_fTraces[i][data] = str2.equals("true") ? 1.0 : 0.0;
-                            hasBool[i] = true;
                             i++;
                         } else {
                             try {
