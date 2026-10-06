@@ -4,12 +4,13 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
 import beast.base.util.Randomizer;
 
 
 /**
- * Random walk operator for integer-valued vector parameters.
+ * Random walk operator for integer-valued scalar or vector parameters.
  * Selects a random dimension and perturbs it by a uniform integer
  * amount within the specified window size.
  */
@@ -19,7 +20,9 @@ public class IntRandomWalkOperator extends Operator {
     final public Input<Integer> windowSizeInput =
             new Input<>("windowSize", "the size of the window both up and down", Validate.REQUIRED);
     final public Input<IntVectorParam<?>> parameterInput =
-            new Input<>("parameter", "the parameter to operate a random walk on.", Validate.REQUIRED);
+            new Input<>("parameter", "the vector parameter to operate a random walk on.");
+    final public Input<IntScalarParam<?>> scalarInput =
+            new Input<>("scalar", "the scalar parameter to operate a random walk on.", Validate.XOR, parameterInput);
 
     int windowSize = 1;
 
@@ -35,22 +38,40 @@ public class IntRandomWalkOperator extends Operator {
     @Override
     public double proposal() {
 
-        final IntVectorParam<?> param = parameterInput.get();
+        if (parameterInput.get() != null) {
+            final IntVectorParam<?> param = parameterInput.get();
 
-        final int i = Randomizer.nextInt(param.size());
-        final int value = param.get(i);
-        final int newValue = value + Randomizer.nextInt(2 * windowSize + 1) - windowSize;
+            final int i = Randomizer.nextInt(param.size());
+            final int value = param.get(i);
+            final int newValue = value + Randomizer.nextInt(2 * windowSize + 1) - windowSize;
 
-        if (newValue < param.getLower() || newValue > param.getUpper()) {
-            // invalid move, can be rejected immediately
-            return Double.NEGATIVE_INFINITY;
+            if (newValue < param.getLower() || newValue > param.getUpper()) {
+                // invalid move, can be rejected immediately
+                return Double.NEGATIVE_INFINITY;
+            }
+            if (newValue == value) {
+                // this saves calculating the posterior
+                return Double.NEGATIVE_INFINITY;
+            }
+
+            param.set(i, newValue);
+        } else {
+            final IntScalarParam<?> param = scalarInput.get();
+
+            final int value = param.get();
+            final int newValue = value + Randomizer.nextInt(2 * windowSize + 1) - windowSize;
+
+            if (newValue < param.getLower() || newValue > param.getUpper()) {
+                // invalid move, can be rejected immediately
+                return Double.NEGATIVE_INFINITY;
+            }
+            if (newValue == value) {
+                // this saves calculating the posterior
+                return Double.NEGATIVE_INFINITY;
+            }
+
+            param.set(newValue);
         }
-        if (newValue == value) {
-            // this saves calculating the posterior
-            return Double.NEGATIVE_INFINITY;
-        }
-
-        param.set(i, newValue);
 
         return 0.0;
     }
