@@ -10,8 +10,8 @@ import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
 
 /**
- * @deprecated replaced by {@link beast.base.spec.inference.operator.uniform.IntUniformOperator},
- * {@link beast.base.spec.inference.operator.uniform.IntervalOperator}
+ * @deprecated replaced by {@link beast.base.spec.inference.operator.uniform.IntUniformOperator} for Int,
+ * {@link beast.base.spec.inference.operator.uniform.IntervalOperator} for Real.
  */
 @Deprecated
 @Description("Assign one or more parameter values to a uniformly selected value in its range.")
