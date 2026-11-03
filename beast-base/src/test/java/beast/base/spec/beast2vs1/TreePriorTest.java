@@ -57,7 +57,6 @@ public class TreePriorTest extends TestFramework {
     public void testBSPNoClock() throws Exception {
         analyse(7);
     }
-// TODO testEBSP() in beast 2.7 v beast 1 also fails, add a test to compare 2.8 to 2.7
     @Test
     public void testEBSP() throws Exception {
         analyse(8);
@@ -183,24 +182,25 @@ public class TreePriorTest extends TestFramework {
                 break;
 
             case 8: // testEBSP.xml
-//        BEAST 1 testEBSP.xml
-                addExpIntoList(expList, "posterior", -1826.2014, 0.1562);
-                addExpIntoList(expList, "prior", -9.4517, 0.1782);
-                addExpIntoList(expList, "tree.height", 6.3528E-2, 7.0709E-5);
-                addExpIntoList(expList, "popSizes.1", 2435.0409, 132.4556);
-                addExpIntoList(expList, "popSizes.2", 2195.7116, 156.2106);
-                addExpIntoList(expList, "popSizes.3", 1065.3511, 119.8768);
-                addExpIntoList(expList, "indicators", 1.3275, 2.1211E-2);
-                addExpIntoList(expList, "indicators", 1.5219, 2.9634E-2);
-                addExpIntoList(expList, "indicators", 2.1505, 3.8185E-2);
-                addExpIntoList(expList, "hky.kappa", 26.4814, 0.2725);
-                addExpIntoList(expList, "hky.frequencies.1", 0.3252, 7.7972E-4);
-                addExpIntoList(expList, "hky.frequencies.2", 0.2581, 5.685E-4);
-                addExpIntoList(expList, "hky.frequencies.3", 0.1553, 4.3071E-4);
-                addExpIntoList(expList, "hky.frequencies.4", 0.2614, 6.1733E-4);
-                addExpIntoList(expList, "treeLikelihood", -1816.7497, 5.4764E-2);
-                // this is clearly bunk (negative value for a positive parameter)
-                addExpIntoList(expList, "populationMean", -3.4472, 0.1802);
+                // BEAST 1.8.4 testEBSP.xml (beast1/testEBSP.xml: 3 loci, gopher data), as in the
+                // BEAST 2.6 version of this test. Only quantities with a well-defined posterior mean
+                // are compared. populationMean has a 1/x prior, so with only popSizes.1 in use
+                // (sum(indicators) ~ 0.5) its posterior is inverse-gamma with shape 1 and has no
+                // finite mean; the same holds for the unused popSizes and for prior and posterior,
+                // which include their densities.
+                addExpIntoList(expList, "tree.26.height", 0.0275, 7.7632E-5);
+                addExpIntoList(expList, "tree.29.height", 0.0231, 6.589E-5);
+                addExpIntoList(expList, "tree.47.height", 0.0263, 6.5618E-5);
+                addExpIntoList(expList, "sum(indicators)", 0.4738, 0.0187);
+                addExpIntoList(expList, "treeLikelihood.26", -1264.9419, 0.0819);
+                addExpIntoList(expList, "treeLikelihood.29", -1246.7234, 0.0754);
+                addExpIntoList(expList, "treeLikelihood.47", -1778.562, 0.0951);
+                addExpIntoList(expList, "coalescent", 220.5613, 0.1462);
+                addExpIntoList(expList, "hky.kappa.26", 4.4946, 0.038);
+                addExpIntoList(expList, "hky.frequencies.26.1", 0.4099, 8.0594E-4);
+                addExpIntoList(expList, "hky.frequencies.26.2", 0.2064, 6.2073E-4);
+                addExpIntoList(expList, "hky.frequencies.26.3", 0.1754, 5.6823E-4);
+                addExpIntoList(expList, "hky.frequencies.26.4", 0.2083, 6.139E-4);
                 break;
 
 
