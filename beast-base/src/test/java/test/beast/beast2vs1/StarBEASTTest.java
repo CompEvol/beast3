@@ -1,14 +1,14 @@
 package test.beast.beast2vs1;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
+import beast.base.trace.Expectation;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import beast.base.trace.Expectation;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Due to different naming, *BEAST 2 speciesCoalescent != *BEAST 1 species.coalescent
@@ -28,6 +28,7 @@ import beast.base.trace.Expectation;
  * @author Walter Xie
  */
 @Tag("slow")
+@Disabled("StarBeast1 not ported to BEAST 3")
 public class StarBEASTTest extends TestFramework {
 
     String[] XML_FILES = new String[]{"testStarBEASTConstant.xml", "testStarBEASTLinear.xml",

@@ -1,16 +1,17 @@
 package test.beast.beast2vs1;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
+import beast.base.trace.Expectation;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import beast.base.trace.Expectation;
+import java.util.ArrayList;
+import java.util.List;
 
 @Tag("slow")
+@Disabled("StarBeast1 not ported to BEAST 3")
 public class TaxonOrderTest extends TestFramework {
 
     private final String[] XML_FILES = new String[]{"testStarBeast2.xml"};
