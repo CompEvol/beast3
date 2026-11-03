@@ -56,10 +56,10 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
                     <!-- frequencies -->
                 </transformations>
                 <transformations id="AVMNLogTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogTransform">
-                    <!-- site and substitution model parameters -->
+                    <!-- site and substitution model parameters; tree via the 'scalable' input -->
                 </transformations>
                 <transformations id="AVMNNoTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$NoTransform">
-                    <!-- tree -->
+                    <!-- location parameters -->
                 </transformations>
             </operator>
 

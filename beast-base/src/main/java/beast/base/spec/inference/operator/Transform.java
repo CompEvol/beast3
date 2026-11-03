@@ -40,6 +40,7 @@ import beast.base.spec.Bounded;
 import beast.base.spec.type.Tensor;
 import beast.base.core.Input;
 import beast.base.core.Log;
+import beast.base.inference.Scalable;
 import beast.base.math.matrixalgebra.Matrix;
 import beast.base.util.Randomizer;
 
@@ -130,6 +131,15 @@ public interface Transform {
     double[] gradientInverse(double[] values, int from, int to);
     
     List<Tensor<?,?>> getF();
+
+    /**
+     * Non-tensor state components (e.g. Trees) moved by this transform. Each
+     * contributes a single dimension: its {@link Scalable#getScalableValue()}.
+     * @return the scalables, after those in {@link #getF()} in dimension order
+     */
+    default List<Scalable> getScalables() {
+        return List.of();
+    }
 
     /**
      * @return the transform's name
@@ -473,7 +483,7 @@ public interface Transform {
 			if (this.parameter == null) {
 				this.parameter = new ArrayList<>();
 			}
-			if (parameter != null) {
+			if (parameters != null) {
 				this.parameter.addAll(parameters);
 			}
 		}
@@ -615,8 +625,10 @@ public interface Transform {
 
     @Description(value="Log transform for univariables")
     public class LogTransform extends UnivariableTransform {
-    	
-    	public LogTransform() {    		
+    	final public Input<List<Scalable>> scalableInput = new Input<>("scalable",
+    			"state components to be moved along their dilation axis, e.g. trees", new ArrayList<>());
+
+    	public LogTransform() {
     		super(new ArrayList<>());
     	}
     	
@@ -642,8 +654,20 @@ public interface Transform {
     				}
     			}
     		}
+    		for (Scalable s : scalableInput.get()) {
+    			if (s.getScalableValue() <= 0) {
+    				Log.warning("\n\nWarning:" + s.getClass().getSimpleName() + " "
+						+ (s instanceof BEASTInterface ? ((BEASTInterface)s).getID() : "") +
+						" has initial scalable value <= 0, which is not appropriate for a LogTransform\n");
+    			}
+    		}
     	}
-    	
+
+    	@Override
+    	public List<Scalable> getScalables() {
+    		return scalableInput.get();
+    	}
+
     	public LogTransform(List<Tensor<?,?>> parameter) {
     		super(parameter);
     	}

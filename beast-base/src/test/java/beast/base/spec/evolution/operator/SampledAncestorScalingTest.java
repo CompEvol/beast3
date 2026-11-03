@@ -4,6 +4,7 @@ import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
 import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.operator.Transform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.util.Randomizer;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,26 @@ public class SampledAncestorScalingTest {
         operator.initByName("weight", "1", "tree", tree,
                 "scaleFactor", 0.5, "optimise", false);
         registerInState(operator, tree);
+
+        assertEveryProposalLeavesTreeValid(operator, tree);
+    }
+
+    @Test
+    public void avmnOperatorNeverLeavesSampledAncestorTreeInvalid() throws Exception {
+        Randomizer.setSeed(127);
+
+        Tree tree = buildSampledAncestorTree();
+        RealScalarParam<PositiveReal> rate =
+                new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+        rate.setID("rate");
+
+        Transform.LogTransform transform = new Transform.LogTransform();
+        transform.initByName("f", rate, "scalable", tree);
+        AdaptableVarianceMultivariateNormalOperator operator =
+                new AdaptableVarianceMultivariateNormalOperator();
+        operator.initByName("weight", "1", "transformations", transform,
+                "beta", 0.05, "optimise", false);
+        registerInState(operator, tree, rate);
 
         assertEveryProposalLeavesTreeValid(operator, tree);
     }

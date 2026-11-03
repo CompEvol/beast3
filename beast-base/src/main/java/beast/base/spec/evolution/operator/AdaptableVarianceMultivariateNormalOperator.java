@@ -40,7 +40,7 @@ import beast.base.internal.json.JSONStringer;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Log;
-import beast.base.evolution.tree.Tree;
+import beast.base.inference.Scalable;
 import beast.base.inference.StateNode;
 import beast.base.inference.operator.kernel.KernelOperator;
 import beast.base.math.matrixalgebra.*;
@@ -126,10 +126,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         	// Skip nonsensical transforms
         	if (this.allowNonsense) {
         		
-        		int fDim = 0;
-        		for (Tensor<?,?> f : t.getF()) {
-        			fDim += f.size();
-        		}
+        		int fDim = transformDimension(t);
         		
         		if (fDim < t.getMinDimensions()) {
         			Log.warning("Warning: removing transform " + t.getClass().toString() + " because it should have at least " + 
@@ -139,9 +136,9 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         		}
         	}
         	
-			for (Tensor<?,?> f : t.getF()) {
-				parameterList.add(f);
-			}
+			// tensors first, then scalables: the per-dimension bookkeeping below relies on this order
+			parameterList.addAll(t.getF());
+			parameterList.addAll(t.getScalables());
         }
         
         
@@ -215,7 +212,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         	if (t instanceof MultivariableTransform) {
         		paramCount++;
         	} else {
-        		paramCount += t.getF().size();
+        		paramCount += t.getF().size() + t.getScalables().size();
         	}
         }
         transformationSizes = new int[paramCount];
@@ -234,11 +231,13 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         		k++;
         	} else {
         		for (Tensor<?,?> p : t.getF()) {
-    				if (p instanceof Tree) {
-    					transformationSizes[k] = 1;
-    				} else {
-        				transformationSizes[k] = p.size();
-        			}
+       				transformationSizes[k] = p.size();
+            		ts[k] = t;
+            		k++;
+        		}
+        		for (int i = 0; i < t.getScalables().size(); i++) {
+        			// a scalable contributes the single dimension getScalableValue()
+       				transformationSizes[k] = 1;
             		ts[k] = t;
             		k++;
         		}
@@ -266,9 +265,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
 			
 			// Include the transform?
 			if (this.allowNonsense) {
-				int fDim = 0;
-				for (Tensor<?,?> f : t.getF()) fDim += f.size();
-				if (fDim < t.getMinDimensions()) continue;
+				if (transformDimension(t) < t.getMinDimensions()) continue;
 			}
 			
 			for (Tensor<?,?> f : t.getF()) {
@@ -276,8 +273,22 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
 					nodes.add((StateNode) f);
 				}
 			}
+			for (Scalable s : t.getScalables()) {
+				if (s instanceof StateNode) {
+					nodes.add((StateNode) s);
+				}
+			}
 		}
 		return nodes;
+	}
+
+	/** number of dimensions moved by transform t: its tensors' sizes plus one per scalable **/
+	private static int transformDimension(Transform t) {
+		int fDim = t.getScalables().size();
+		for (Tensor<?,?> f : t.getF()) {
+			fDim += f.size();
+		}
+		return fDim;
 	}
 
     //act as if population mean is known
@@ -551,8 +562,9 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
                 		logJacobian += transformations[i].getLogJacobian(x, currentIndex, currentIndex + transformationSizes[i]) - transformations[i].getLogJacobian(temp, 0, transformationSizes[i]);
                 	}
                 } else {
-                    int k = parameter.setValue(currentIndex, transformations[i].inverse(transformedX[currentIndex]));
-                    logJacobian += k * (transformations[i].getLogJacobian(x[currentIndex]) - transformations[i].getLogJacobian(parameter.getValue(currentIndex)));
+                    double extraLogJacobian = parameter.setValue(currentIndex, transformations[i].inverse(transformedX[currentIndex]));
+                    logJacobian += transformations[i].getLogJacobian(x[currentIndex]) - transformations[i].getLogJacobian(parameter.getValue(currentIndex))
+                    		+ extraLogJacobian;
                 }
                 if (DEBUG) {
                     System.err.println("Current logJacobian = " + logJacobian);
@@ -562,8 +574,9 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
                     //TODO: figure out if this is really a problem ...
                     throw new RuntimeException("Transformations on more than 1 parameter value should be set quietly");
                 } else {
-                    parameter.setValue(currentIndex, transformations[i].inverse(transformedX[currentIndex]));
-                    logJacobian += transformations[i].getLogJacobian(x[currentIndex]) - transformations[i].getLogJacobian(parameter.getValue(currentIndex));
+                    double extraLogJacobian = parameter.setValue(currentIndex, transformations[i].inverse(transformedX[currentIndex]));
+                    logJacobian += transformations[i].getLogJacobian(x[currentIndex]) - transformations[i].getLogJacobian(parameter.getValue(currentIndex))
+                    		+ extraLogJacobian;
                 }
                 if (DEBUG) {
                     System.err.println("Current logJacobian = " + logJacobian);
@@ -690,7 +703,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
         protected int[] parameterIndex1; // index to select parameter
         protected int[] parameterIndex2; // index to select dimension inside parameter
 
-        /** list of Tensors and Trees **/
+        /** list of Tensors and Scalables **/
         final List<Object> parameterList;
 
         public CompoundParameterHelper(final List<Object> parameterList) {
@@ -705,7 +718,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             for (final Object para : parameterList) {
             	if (para instanceof Tensor t) {
             		dim += t.size();
-            	} else if (para instanceof Tree) {
+            	} else if (para instanceof Scalable) {
             		dim += 1;
             	}
             }
@@ -734,7 +747,14 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             return parameterIndex1.length;
         }
 
-        public int setValue(final int param, final double value) throws Exception {
+        /**
+         * Set dimension param to value.
+         * @return log Jacobian of the move beyond the one-dimensional change of
+         * this dimension, which the transform's own Jacobian already covers:
+         * 0 for parameters, and for a Scalable the remaining dimensions it dilates
+         * along with its scalable value.
+         */
+        public double setValue(final int param, final double value) throws Exception {
         	
         	if (Double.isNaN(value)) {
         		throw new Exception();
@@ -750,7 +770,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	} else {
             		p.set(value);
             	}
-            	return 1;
+            	return 0;
             } else if (para instanceof RealVectorParam p) {
             	if (value > p.getUpper()) {
             		p.set(getX(param), p.getUpper());
@@ -759,7 +779,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	} else {
             		p.set(getX(param), value);
             	}
-            	return 1;
+            	return 0;
             } else if (para instanceof IntScalarParam p) {
             	if (value > p.getUpper()) {
             		p.set(p.getUpper());
@@ -768,7 +788,7 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	} else {
             		p.set((int) value);
             	}
-            	return 1;
+            	return 0;
             } else if (para instanceof IntVectorParam p) {
             	if (value > p.getUpper()) {
             		p.set(getX(param), p.getUpper());
@@ -777,12 +797,15 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	} else {
             		p.set(getX(param), (int) value);
             	}
-            	return 1;
-            } else if (para instanceof Tree tree) {
-            	// Use the Scalable contract: setScalableValue lands the tree's
-            	// dilation-axis summary (sum of intervals) at exactly `value`.
-            	tree.setScalableValue(value);
-            	return tree.getInternalNodeCount();
+            	return 0;
+            } else if (para instanceof Scalable scalable) {
+            	// Must follow the Tensor branches: scalar and vector params are Scalable too.
+            	// setScalableValue lands the dilation-axis summary (for a tree, the sum of
+            	// intervals) at exactly `value` and returns the log Jacobian of the whole
+            	// dilation, dof * log(s); log(s) of it is the dimension AVMN itself moved.
+            	double oldValue = scalable.getScalableValue();
+            	double logJacobian = scalable.setScalableValue(value);
+            	return logJacobian - Math.log(value / oldValue);
             }
             return 0;
         }
@@ -798,9 +821,9 @@ public class AdaptableVarianceMultivariateNormalOperator extends KernelOperator 
             	return p.get();
             } else if (f instanceof IntVectorParam p) {
             	return p.get(getX(param));
-            } else if (f instanceof Tree t) {
-            	// Read the tree's position on its dilation axis (sum of intervals)
-            	return t.getScalableValue();
+            } else if (f instanceof Scalable s) {
+            	// Read the position on the dilation axis (for a tree, the sum of intervals)
+            	return s.getScalableValue();
             }
         	throw new RuntimeException("programmer error: should not get here");
         }
