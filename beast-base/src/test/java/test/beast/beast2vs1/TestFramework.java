@@ -1,11 +1,14 @@
 package test.beast.beast2vs1;
 
 import beagle.BeagleFlag;
+import beast.base.core.BEASTInterface;
 import beast.base.inference.Logger;
 import beast.base.parser.XMLParser;
 import beast.base.trace.Expectation;
 import beast.base.trace.LogAnalyser;
 import beast.base.util.Randomizer;
+import beast.base.spec.beast2vs1.OneOnX;
+import beast.pkgmgmt.BEASTClassLoader;
 
 import java.io.File;
 import java.util.List;
@@ -40,6 +43,9 @@ public abstract class TestFramework  {
         for (int i = 0; i < xmls.length; i++) {
             this.xmls[i] = xmls[i];
         }
+
+        // the beast2vs1 XMLs use the test-only OneOnX
+        BEASTClassLoader.addService(BEASTInterface.class.getName(), OneOnX.class.getName(), "BEAST.base");
     }
 //    protected abstract void analyse() throws Exception;
 
@@ -63,7 +69,10 @@ public abstract class TestFramework  {
 //		   runable.setInputValue("chainLength", 1000);
         runable.run();
 
-        String logFile = logDir + testFile + (useSeed ? SEED : "") + ".log";
+        // $(seed) in the XML is replaced by Randomizer.getSeed(), which is not SEED:
+        // Randomizer.setSeed(n) seeds the generator with n - 1 (4357 for n = 1).
+        final long seed = Randomizer.getSeed();
+        String logFile = logDir + testFile + (useSeed ? seed : "") + ".log";
         System.out.println("\nAnalysing log " + logFile);
         LogAnalyser logAnalyser = new LogAnalyser(logFile, giveExpectations(index_XML)); // burnIn = 0.1 * maxState
 
