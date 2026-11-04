@@ -98,6 +98,7 @@ if [ ! -f "$ENTITLEMENTS" ]; then
     <key>com.apple.security.cs.allow-jit</key><true/>
     <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
     <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+    <key>com.apple.security.cs.disable-library-validation</key><true/>
 </dict>
 </plist>
 PLIST
@@ -193,6 +194,12 @@ echo "==> Step 3: Creating BEAST.app with jpackage..."
 ICON_DIR="$SCRIPT_DIR/../common/icons"
 JAVA_OPTS="-Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8"
 
+# Default BeastMain arguments for a GUI (double-click) launch, as in BEAST 2:
+#   -window   provide a console window
+#   -options  display an options dialog
+#   -working  change working directory to the input file's directory
+# jpackage uses these only when the launcher gets no command-line arguments.
+
 echo "    Creating BEAST.app..."
 jpackage --type app-image \
     --name "BEAST" \
@@ -202,7 +209,7 @@ jpackage --type app-image \
     --main-jar "$MAIN_JAR" \
     --main-class "beast.pkgmgmt.launcher.BeastLauncher" \
     --java-options "$JAVA_OPTS" \
-    --arguments "-window" \
+    --arguments "-window" --arguments "-options" --arguments "-working" \
     --runtime-image "$BUILD_JAVA_HOME" \
     --dest "$OUTPUT"
     
@@ -224,10 +231,18 @@ sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launc
 # JRE+FX. Naming them here resolves them into the boot layer, where the beast.fx
 # plugin module layer reads them. Their transitive requires (javafx.graphics/base/
 # media) come along automatically.
+# java.library.path: where the double-clicked app looks for the BEAGLE library.
+# A Finder launch does not see the shell's BEAGLE_LIB, so the two standard
+# BEAGLE locations are listed (missing folders are simply skipped):
+#   /usr/local/lib     BEAGLE's macOS installer (.pkg), source builds, and
+#                      Homebrew on Intel
+#   /opt/homebrew/lib  Homebrew on Apple Silicon ("brew install beagle")
+# $APPDIR (Contents/app) stays first, as in jpackage's default path. See #181.
 sed -i '' '/^\[JavaOptions\]/a\
 java-options=--module-path=\$APPDIR\
 java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\
-java-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web
+java-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web,beagle\
+java-options=-Djava.library.path=\$APPDIR:/usr/local/lib:/opt/homebrew/lib
 ' "$BEAST_CFG"
 
 # jpackage may strip bin/java from the bundled runtime (it uses its own native
@@ -465,6 +480,8 @@ codesign --force --options runtime --timestamp \
 # Developer ID signature. The JVM entitlements (allow-jit, allow-unsigned-
 # executable-memory, allow-dyld-environment-variables) are required for the
 # HotSpot JIT compiler and dynamic class loading to work under Hardened Runtime.
+# disable-library-validation lets the JVM load third-party JNI libraries signed
+# by another Team ID or ad-hoc (e.g. Homebrew libhmsbeagle-jni.jnilib) — see #181.
 codesign --force --sign "$CODESIGN_IDENTITY" \
          --options runtime --timestamp \
          --entitlements "$ENTITLEMENTS" "$app"

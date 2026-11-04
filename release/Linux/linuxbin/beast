@@ -29,6 +29,7 @@ CPU=$(uname -m)
 
 # use BEAGLE_LIB if the BEAGLE library is not in a standard location
 if [ "$CPU" = 'x86_64' ]; then
+  # -n: true if BEAGLE_LIB is set (not empty)
   if [ -n "$BEAGLE_LIB" ]; then
 	if [ -n "$BEAST_EXTRA_LIBS" ]; then
 		BEAST_EXTRA_LIBS="$BEAST_EXTRA_LIBS:$BEAGLE_LIB:$JAVA_HOME/lib/amd64"
@@ -69,6 +70,6 @@ if [ -n "$BEAST_EXTRA_LIBS" ]; then
 	fi
 fi
 
-exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \
+exec "$JAVA" --module-path "$APP" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web,beagle \
     -Xss256m -Xmx8g -Djava.library.path="$LD_LIBRARY_PATH" -Duser.language=en -Dfile.encoding=UTF-8 \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher "$@"
