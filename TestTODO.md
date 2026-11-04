@@ -557,7 +557,7 @@ These tests target classes that are not deprecated; they are current and require
 | `test.beast.evolution.operator.CompoundParameterHelperTest` | `CompoundParameterHelper` | Not deprecated |
 | `test.beast.evolution.operator.ExchangeOperatorTest` | `Exchange` | Not deprecated |
 | `test.beast.evolution.operator.KernelDistiburionTest` | `KernelDistribution` | Not deprecated; used by new spec operators |
-| `test.beast.evolution.substmodel.ColtEigenSystemBenchmark` | `ColtEigenSystem` | Not deprecated |
+| `test.beast.evolution.substmodel.ColtEigenSystemBenchmarkTest` | `ColtEigenSystem` | Not deprecated |
 | `test.beast.evolution.substmodel.ColtEigenSystemTest` | `ColtEigenSystem` | Not deprecated |
 | `test.beast.evolution.tree.NodeTest` | `Node` | Class not deprecated (only some methods) |
 | `test.beast.evolution.tree.TraitSetTest` | `TraitSet` | Class not deprecated |
