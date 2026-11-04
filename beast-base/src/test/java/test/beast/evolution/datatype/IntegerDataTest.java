@@ -17,7 +17,7 @@ public class IntegerDataTest  {
 		assertEquals("1", datatype.getCharacter(1));
 		assertEquals("10", datatype.getCharacter(10));
 		assertEquals("123", datatype.getCharacter(123));
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 		for (int i = 0; i < 100; i++) {
 			int state = Randomizer.nextInt(100000000);
 			int x = state;

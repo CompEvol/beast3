@@ -17,7 +17,7 @@ public class ExchangeOperatorTest  {
 	public void testNarrowExchange4Taxa() throws Exception {
 		
         int runs = 10000;
-        Randomizer.setSeed(666);
+        Randomizer.setSeedReproducible(666);
         // test that going from source tree to target tree 
         // is as likely as going the other way around
         // taking the HR in account.
@@ -38,7 +38,7 @@ public class ExchangeOperatorTest  {
     @Test
 	public void testNarrowExchange5Taxa() throws Exception {
     	int runs = 10000;
-	    Randomizer.setSeed(666);
+	    Randomizer.setSeedReproducible(666);
         Sequence A = new Sequence("A", "A");
         Sequence B = new Sequence("B", "A");
         Sequence C = new Sequence("C", "A");
@@ -57,7 +57,7 @@ public class ExchangeOperatorTest  {
     @Test
 	public void testNarrowExchange6Taxa() throws Exception {
     	int runs = 10000;
-	    Randomizer.setSeed(666);
+	    Randomizer.setSeedReproducible(666);
         Sequence A = new Sequence("A", "A");
         Sequence B = new Sequence("B", "A");
         Sequence C = new Sequence("C", "A");

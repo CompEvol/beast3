@@ -46,7 +46,7 @@ public abstract class TestFramework  {
     public void analyse(int index_XML) throws Exception {
 //        for (int i = 0; i < xmls.length; i++) {
 //            if (giveExpectations(i).size() > 0) {
-        Randomizer.setSeed(SEED);
+        Randomizer.setSeedReproducible(SEED);
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
         
         long beagleFlags = BeagleFlag.PROCESSOR_CPU.getMask() | BeagleFlag.VECTOR_SSE.getMask();

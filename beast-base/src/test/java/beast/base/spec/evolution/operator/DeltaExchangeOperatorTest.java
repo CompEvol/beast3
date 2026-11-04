@@ -98,7 +98,7 @@ public class DeltaExchangeOperatorTest extends TestOperator {
     private void doMCMCrun(Simplex param, Operator operators) throws IOException, SAXException, ParserConfigurationException {
         // Fix seed: will hopefully ensure success of test unless something
         // goes terribly wrong.
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
 
         Dirichlet prior = new Dirichlet();
         RealVectorParam<PositiveReal> alpha = new RealVectorParam<>(new double[]{4.0, 1.0, 1.0, 1.0}, PositiveReal.INSTANCE);

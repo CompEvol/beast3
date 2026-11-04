@@ -53,7 +53,7 @@ public class GammaTest  {
         double ptotErr = 0; int np = 0;
         double qtotErr = 0;
 
-        Randomizer.setSeed(551);
+        Randomizer.setSeedReproducible(551);
 
         for(int i = 0; i < numberOfTests; i++){
             final double mean = .01 + (3-0.01) * Randomizer.nextDouble();

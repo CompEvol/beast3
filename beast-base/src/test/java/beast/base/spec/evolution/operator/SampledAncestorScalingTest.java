@@ -35,7 +35,7 @@ public class SampledAncestorScalingTest {
 
     @Test
     public void upDownOperatorNeverLeavesSampledAncestorTreeInvalid() throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
 
         Tree tree = buildSampledAncestorTree();
         RealScalarParam<PositiveReal> rate =
@@ -52,7 +52,7 @@ public class SampledAncestorScalingTest {
 
     @Test
     public void intervalScaleOperatorNeverLeavesSampledAncestorTreeInvalid() throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
 
         Tree tree = buildSampledAncestorTree();
         RealScalarParam<PositiveReal> rate =
@@ -69,7 +69,7 @@ public class SampledAncestorScalingTest {
 
     @Test
     public void scaleTreeOperatorNeverLeavesSampledAncestorTreeInvalid() throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
 
         Tree tree = buildSampledAncestorTree();
 
@@ -83,7 +83,7 @@ public class SampledAncestorScalingTest {
 
     @Test
     public void avmnOperatorNeverLeavesSampledAncestorTreeInvalid() throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
 
         Tree tree = buildSampledAncestorTree();
         RealScalarParam<PositiveReal> rate =

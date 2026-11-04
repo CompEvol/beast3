@@ -87,7 +87,7 @@ public class AdaptableVarianceMultivariateNormalOperatorTest {
      * for the log-transformed parameter.
      */
     private void assertLogHastingsRatio(Tree tree, int dof) throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
         RealScalarParam<PositiveReal> param = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
         param.setID("param");
         AdaptableVarianceMultivariateNormalOperator operator = avmn(param, tree);
@@ -123,7 +123,7 @@ public class AdaptableVarianceMultivariateNormalOperatorTest {
     @Test
     @Tag("slow")
     public void samplesSumOfIntervalsFromGammaPrior() throws Exception {
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
 
         Tree tree = ultrametricTree();
         RealScalarParam<PositiveReal> param = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);

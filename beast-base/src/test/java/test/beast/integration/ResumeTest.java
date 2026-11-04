@@ -65,7 +65,7 @@ public class ResumeTest {
 
     @Test
     public void test_ThatXmlExamplesResume() throws Exception {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
         final String stateFile = "tmp.state";
 
         for (String xmlFileName : xmlFiles) {

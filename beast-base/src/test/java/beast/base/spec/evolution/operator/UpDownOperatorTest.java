@@ -75,7 +75,7 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
                            List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
-		Randomizer.setSeed(123);
+		Randomizer.setSeedReproducible(123);
 
         RealScalar<Real> meanInReal = new RealScalarParam<>(1.0, Real.INSTANCE);
         RealScalar<PositiveReal> sd = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);

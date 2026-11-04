@@ -23,7 +23,7 @@ public class NormalTest {
     public void setUp() {
         norm = new Normal();
         norm.initAndValidate();
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
     }
 
     @Test

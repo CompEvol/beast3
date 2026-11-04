@@ -39,7 +39,7 @@ public class ExampleXmlParsingTest  {
     
     public void test_ThatXmlExamplesParse(String dir) {
         try {
-            Randomizer.setSeed(127);
+            Randomizer.setSeedReproducible(127);
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test XML Examples in " + dir);
             File exampleDir = new File(dir);
@@ -99,7 +99,7 @@ public class ExampleXmlParsingTest  {
             List<String> failedFiles = new ArrayList<String>();
             int seed = 127;
             for (String fileName : exampleFiles) {
-                Randomizer.setSeed(seed);
+                Randomizer.setSeedReproducible(seed);
                 seed += 10; // need more than one to prevent trouble with multiMCMC logs
                 System.out.println("Processing " + fileName);
                 XMLParser parser = new XMLParser();
@@ -152,7 +152,7 @@ public class ExampleXmlParsingTest  {
         String dir = XMLPathUtil.resolveExamplesDir() + "/parameterised";
         Logger.FILE_MODE = Logger.LogFileMode.overwrite;
         System.out.println("Test that parameterised XML example runs in " + dir + "/RSV2.xml");
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
         
         // prevent System.exit() having an effect
 		final SecurityManager securityManager = new SecurityManager() {

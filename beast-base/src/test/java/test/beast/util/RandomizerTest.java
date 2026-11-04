@@ -12,7 +12,7 @@ public class RandomizerTest {
     @Test
     public void logNormalTest() {
 
-        Randomizer.setSeed(1);
+        Randomizer.setSeedReproducible(1);
 
         double M1=1, M2=0, S=0.5;
 

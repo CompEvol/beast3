@@ -45,8 +45,8 @@ public class RandomTreeTest {
     @BeforeEach
     void setUp() {
 
-//        Randomizer.setSeed(53); // TODO this seed makes test fail
-        Randomizer.setSeed(666);
+//        Randomizer.setSeedReproducible(53); // TODO this seed makes test fail
+        Randomizer.setSeedReproducible(666);
     }
 
     @Test

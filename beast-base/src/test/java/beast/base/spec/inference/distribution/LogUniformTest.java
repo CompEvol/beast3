@@ -23,7 +23,7 @@ public class LogUniformTest {
 
     @BeforeEach
     public void setUp() {
-        Randomizer.setSeed(42);
+        Randomizer.setSeedReproducible(42);
     }
 
     @Test

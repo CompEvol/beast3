@@ -124,7 +124,7 @@ public class BactrianIntervalOperatorTest extends BactrianRandomWalkOperatorTest
 	private List<double[]> doMCMC(RealParameter param, ParametricDistribution p) throws Exception {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 
 		Prior prior = new Prior();
 		prior.initByName("x", param, "distr", p);

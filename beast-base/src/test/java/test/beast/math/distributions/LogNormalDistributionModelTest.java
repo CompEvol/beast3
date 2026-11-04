@@ -94,7 +94,7 @@ public class LogNormalDistributionModelTest  {
 
         logNormal = new LogNormalDistributionModel();
         logNormal.initByName("M", "1.0", "S", "2.0");
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
     }
 
     public void testPdf() {

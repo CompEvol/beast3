@@ -165,7 +165,7 @@ public class BactrianScaleOperatorTest extends BactrianRandomWalkOperatorTest {
 	void doMCMCrun(RealParameter param, Operator bactrianOperator, Operator optionOperator) throws IOException, SAXException, ParserConfigurationException {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 
 		param.setBounds(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
 

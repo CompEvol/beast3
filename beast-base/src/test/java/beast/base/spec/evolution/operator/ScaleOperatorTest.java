@@ -30,7 +30,7 @@ public class ScaleOperatorTest {//extends RealRandomWalkOperatorTest {
     void setUp() {
         // Fix seed: will hopefully ensure success of test unless something
         // goes terribly wrong.
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
     }
 
 //    @Test
@@ -170,7 +170,7 @@ public class ScaleOperatorTest {//extends RealRandomWalkOperatorTest {
 
         // Fix seed: will hopefully ensure success of test unless something
         // goes terribly wrong.
-//        Randomizer.setSeed(127);
+//        Randomizer.setSeedReproducible(127);
 
 		// Set up state:
 		State state = new State();

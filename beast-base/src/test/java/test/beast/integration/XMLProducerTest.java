@@ -95,7 +95,7 @@ public class XMLProducerTest  {
     /** parse all XML files in the given directory, then produce XML from it, and see if the produced XML still parses **/
     public void test_ThatXmlExamplesProduces(String dir, List<String> exceptions) {
         try {
-            Randomizer.setSeed(127);
+            Randomizer.setSeedReproducible(127);
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test XML Examples in " + dir);
             File exampleDir = new File(dir);
