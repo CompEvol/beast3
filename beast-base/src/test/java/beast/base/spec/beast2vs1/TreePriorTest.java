@@ -67,6 +67,8 @@ public class TreePriorTest extends TestFramework {
         super.setUp(XML_FILES);
     }
 
+    private static final double EBSP_SE = 3.0;
+
     @Override
 	protected List<Expectation> giveExpectations(int index_XML) throws Exception {
         List<Expectation> expList = new ArrayList<Expectation>();
@@ -188,19 +190,22 @@ public class TreePriorTest extends TestFramework {
                 // (sum(indicators) ~ 0.5) its posterior is inverse-gamma with shape 1 and has no
                 // finite mean; the same holds for the unused popSizes and for prior and posterior,
                 // which include their densities.
-                addExpIntoList(expList, "tree.26.height", 0.0275, 7.7632E-5);
-                addExpIntoList(expList, "tree.29.height", 0.0231, 6.589E-5);
-                addExpIntoList(expList, "tree.47.height", 0.0263, 6.5618E-5);
-                addExpIntoList(expList, "sum(indicators)", 0.4738, 0.0187);
-                addExpIntoList(expList, "treeLikelihood.26", -1264.9419, 0.0819);
-                addExpIntoList(expList, "treeLikelihood.29", -1246.7234, 0.0754);
-                addExpIntoList(expList, "treeLikelihood.47", -1778.562, 0.0951);
-                addExpIntoList(expList, "coalescent", 220.5613, 0.1462);
-                addExpIntoList(expList, "hky.kappa.26", 4.4946, 0.038);
-                addExpIntoList(expList, "hky.frequencies.26.1", 0.4099, 8.0594E-4);
-                addExpIntoList(expList, "hky.frequencies.26.2", 0.2064, 6.2073E-4);
-                addExpIntoList(expList, "hky.frequencies.26.3", 0.1754, 5.6823E-4);
-                addExpIntoList(expList, "hky.frequencies.26.4", 0.2083, 6.139E-4);
+                // The default threshold, 2*(se1+se2) (about 2.8 combined SE), failed one of the 13
+                // columns in 4 of 13 healthy BEAST 3 runs (seeds 1-6, factor 2 and 3, plus the test
+                // seed), each on a different column, worst |z| = 3.5. So use 3*(se1+se2), about 4.2 SE.
+                addExpIntoList(expList, "tree.26.height", 0.0275, 7.7632E-5, EBSP_SE);
+                addExpIntoList(expList, "tree.29.height", 0.0231, 6.589E-5, EBSP_SE);
+                addExpIntoList(expList, "tree.47.height", 0.0263, 6.5618E-5, EBSP_SE);
+                addExpIntoList(expList, "sum(indicators)", 0.4738, 0.0187, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.26", -1264.9419, 0.0819, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.29", -1246.7234, 0.0754, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.47", -1778.562, 0.0951, EBSP_SE);
+                addExpIntoList(expList, "coalescent", 220.5613, 0.1462, EBSP_SE);
+                addExpIntoList(expList, "hky.kappa.26", 4.4946, 0.038, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.1", 0.4099, 8.0594E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.2", 0.2064, 6.2073E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.3", 0.1754, 5.6823E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.4", 0.2083, 6.139E-4, EBSP_SE);
                 break;
 
 
