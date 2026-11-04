@@ -30,14 +30,14 @@ public class RealRandomWalkOperatorTest {
 
     @BeforeEach
     public void resetRng() {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
     }
 
 	@Test
 	public void testNormalDistribution() throws Exception {
 
 		// Fix seed: ensures reproducibility at the test's 3-SE tolerance.
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 
 		// Assemble model:
 		RealScalarParam<Real> param = new RealScalarParam<>(0.0, Real.INSTANCE);
@@ -109,7 +109,7 @@ public class RealRandomWalkOperatorTest {
 
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
-//		Randomizer.setSeed(131);
+//		Randomizer.setSeedReproducible(131);
 
 		// Assemble model:
         RealScalar<PositiveReal> param = new RealScalarParam<>(10.0, PositiveReal.INSTANCE);

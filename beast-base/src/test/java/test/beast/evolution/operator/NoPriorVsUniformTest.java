@@ -36,7 +36,7 @@ public class NoPriorVsUniformTest extends BactrianRandomWalkOperatorTest {
     void setUp() {
         // Fix seed: will hopefully ensure success of test unless something
         // goes terribly wrong.
-//        Randomizer.setSeed(127);
+//        Randomizer.setSeedReproducible(127);
     }
 
     @Override

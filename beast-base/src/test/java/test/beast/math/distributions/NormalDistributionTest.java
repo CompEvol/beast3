@@ -18,7 +18,7 @@ public class NormalDistributionTest  {
 
         norm = new Normal();
         norm.initAndValidate();
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
     }
 
 

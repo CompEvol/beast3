@@ -26,7 +26,7 @@ public class LaplaceTest {
     public void setUp() {
         laplace = new Laplace();
         laplace.initAndValidate();
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
     }
 
 

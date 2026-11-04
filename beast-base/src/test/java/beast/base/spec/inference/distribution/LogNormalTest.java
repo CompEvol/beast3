@@ -73,7 +73,7 @@ public class LogNormalTest {
         logNormal = new LogNormal();
         logNormal.initByName("M", new RealScalarParam<>(1.0, Real.INSTANCE),
                 "S", new RealScalarParam<>(2.0, PositiveReal.INSTANCE));
-        Randomizer.setSeed(123);
+        Randomizer.setSeedReproducible(123);
     }
 
     @Test

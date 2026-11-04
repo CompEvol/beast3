@@ -24,7 +24,7 @@ public class BinaryCovarionModelTest  {
 	 */
 	@Test
 	public void testEquilibriumFrequencies() {
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 		doWithTufflySteel();
 
 		for (int i = 0; i < 10; i++) {

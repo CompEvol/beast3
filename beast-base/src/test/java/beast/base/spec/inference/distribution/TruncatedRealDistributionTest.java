@@ -17,7 +17,7 @@ public class TruncatedRealDistributionTest {
 
     @BeforeEach
     public void setUp() {
-        Randomizer.setSeed(42);
+        Randomizer.setSeedReproducible(42);
     }
 
     @Test

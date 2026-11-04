@@ -232,6 +232,15 @@ public class Randomizer {
 
     /**
      * Access a default instance of this class, access is synchronized
+     * <p>
+     * Note: the result is not fully reproducible. Threads that already have a
+     * generator are reseeded with {@code seed + i}, where {@code i} is their
+     * position in the internal map, so the stream a thread gets depends on
+     * which threads used the Randomizer before. A thread without a generator
+     * gets one derived from {@code seed - 1} on its first draw, so even the
+     * calling thread's stream depends on whether it has drawn before. Use
+     * {@link #setSeedReproducible(long)} when a fixed seed must always give the
+     * same sequence, e.g. in tests.
      */
     public static void setSeed(long seed) {
         synchronized (random) {
@@ -240,6 +249,27 @@ public class Randomizer {
             for (MersenneTwisterFast r : randomMap.values()) {
             	r.setSeed(seed + i++);
             }
+        }
+    }
+
+    /**
+     * Set the seed so that the random number sequence is fully reproducible,
+     * independent of which threads have used the Randomizer before.
+     * <p>
+     * {@link #setSeed(long)} reseeds every per-thread generator with
+     * {@code seed + i}, where {@code i} is the thread's position in the
+     * iteration order of the internal map. So the stream a thread gets for a
+     * given seed depends on which other thread names were registered earlier
+     * in the JVM (e.g. by previous tests). This method drops all per-thread
+     * generators first, so each thread gets a fresh generator derived from
+     * {@code seed} the next time it draws a number, exactly as in a fresh JVM.
+     * <p>
+     * Intended for tests and other code that relies on a fixed seed.
+     */
+    public static void setSeedReproducible(long seed) {
+        synchronized (random) {
+            randomMap.clear();
+            setSeed(seed);
         }
     }
 

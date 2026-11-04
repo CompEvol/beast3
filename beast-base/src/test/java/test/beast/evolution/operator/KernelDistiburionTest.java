@@ -12,7 +12,7 @@ public class KernelDistiburionTest  {
 	
 	@Test
 	public void testBactrianKernelDistribution() {
-		Randomizer.setSeed(127);
+		Randomizer.setSeedReproducible(127);
 
 		// testMeanIsZeroSigmaIsOne(new KernelDistribution.Bactrian(mode.cauchy));
 		testMeanIsZeroSigmaIsOne(new KernelDistribution.Bactrian(mode.t4));
@@ -75,7 +75,7 @@ public class KernelDistiburionTest  {
 	@Test
 	public void testMirrorfKernelDistribution() {
 		Log.warning("Testing mirror distribution");
-		Randomizer.setSeed(125);
+		Randomizer.setSeedReproducible(125);
 		
 		KernelDistribution.Mirror distr = new KernelDistribution.Mirror(mode.bactrian_normal);
 
@@ -104,7 +104,7 @@ public class KernelDistiburionTest  {
 	@Test
 	public void testMultiDimensionalMirrorfKernelDistribution() {
 		Log.warning("Testing mirror distribution");
-		Randomizer.setSeed(123);
+		Randomizer.setSeedReproducible(123);
 		
 		KernelDistribution.Mirror distr = new KernelDistribution.Mirror();
 		distr.initByName("mode", mode.bactrian_normal, "onePerDimension", true);
@@ -140,7 +140,7 @@ public class KernelDistiburionTest  {
 	@Test
 	public void testMultiDimensionalMirrorfKernelDistributionScaler() {
 		Log.warning("Testing mirror distribution for scaling");
-		Randomizer.setSeed(123);
+		Randomizer.setSeedReproducible(123);
 		
 		KernelDistribution.Mirror distr = new KernelDistribution.Mirror();
 		distr.initByName("mode", mode.bactrian_normal, "onePerDimension", true);

@@ -304,7 +304,7 @@ public class TreeScalableTest {
     }
 
     private void assertEscapesZeroLength(Tree tree, int nodeNr, String what) {
-        Randomizer.setSeed(127);
+        Randomizer.setSeedReproducible(127);
         beast.base.evolution.operator.Uniform operator =
                 new beast.base.evolution.operator.Uniform();
         try {

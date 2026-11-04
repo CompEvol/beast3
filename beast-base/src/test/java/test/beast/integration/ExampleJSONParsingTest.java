@@ -35,7 +35,7 @@ public class ExampleJSONParsingTest  {
     
     public void test_ThatJSONExamplesParse(String dir) {
         try {
-            Randomizer.setSeed(127);
+            Randomizer.setSeedReproducible(127);
             Logger.FILE_MODE = Logger.LogFileMode.overwrite;
             System.out.println("Test JSON Examples in " + dir);
             File exampleDir = new File(dir);
@@ -95,7 +95,7 @@ public class ExampleJSONParsingTest  {
             List<String> failedFiles = new ArrayList<String>();
             int seed = 127;
             for (String fileName : exampleFiles) {
-                Randomizer.setSeed(seed);
+                Randomizer.setSeedReproducible(seed);
                 seed += 10; // need more than one to prevent trouble with multiMCMC logs
                 System.out.println("Processing " + fileName);
                 JSONParser parser = new JSONParser();
