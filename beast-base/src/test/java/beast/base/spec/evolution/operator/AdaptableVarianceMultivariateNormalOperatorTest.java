@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -49,6 +50,21 @@ public class AdaptableVarianceMultivariateNormalOperatorTest {
         List<StateNode> nodes = operator.listStateNodes();
         assertTrue(nodes.contains(param));
         assertTrue(nodes.contains(tree));
+    }
+
+    /**
+     * Parameters are Scalable too, but AVMN counts each scalable as one dimension,
+     * so a vector parameter passed as a scalable would corrupt its indexing.
+     */
+    @Test
+    public void logTransformRejectsParameterAsScalable() {
+        RealVectorParam<PositiveReal> param =
+                new RealVectorParam<>(new double[]{1.0, 2.0}, PositiveReal.INSTANCE);
+        param.setID("param");
+        LogTransform transform = new LogTransform();
+        // initByName wraps the IllegalArgumentException from initAndValidate
+        RuntimeException e = assertThrows(RuntimeException.class, () -> transform.initByName("scalable", param));
+        assertTrue(e.getMessage().contains("not 'scalable'"), e.getMessage());
     }
 
     /** Every interval of a tree without sampled ancestors moves: dof = internal node count. */

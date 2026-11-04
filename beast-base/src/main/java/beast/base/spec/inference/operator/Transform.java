@@ -655,6 +655,11 @@ public interface Transform {
     			}
     		}
     		for (Scalable s : scalableInput.get()) {
+    			if (s instanceof Tensor) {
+    				throw new IllegalArgumentException("LogTransform: " + s.getClass().getSimpleName() + " "
+    						+ (s instanceof BEASTInterface ? ((BEASTInterface)s).getID() : "")
+    						+ " is a parameter; pass it through 'f', not 'scalable'");
+    			}
     			if (s.getScalableValue() <= 0) {
     				Log.warning("\n\nWarning:" + s.getClass().getSimpleName() + " "
 						+ (s instanceof BEASTInterface ? ((BEASTInterface)s).getID() : "") +
