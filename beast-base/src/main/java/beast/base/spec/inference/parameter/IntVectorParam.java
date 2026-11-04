@@ -234,14 +234,22 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         return values.length;
     }
 
+    /**
+     * The effective lower bound: the tighter of the bound set by {@link #setLower(Integer)}
+     * and the domain bound, as tightened by attached priors ({@link IntVector#getLower()}).
+     */
     @Override
     public Integer getLower() {
-        return lower;
+        return Math.max(lower, IntVector.super.getLower());
     }
 
+    /**
+     * The effective upper bound: the tighter of the bound set by {@link #setUpper(Integer)}
+     * and the domain bound, as tightened by attached priors ({@link IntVector#getUpper()}).
+     */
     @Override
     public Integer getUpper() {
-        return upper;
+        return Math.min(upper, IntVector.super.getUpper());
     }
 
     /**
