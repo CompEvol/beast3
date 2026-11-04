@@ -137,7 +137,13 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     	if (dist == null) { // assuming bounds are not estimated during MCMC
     		refresh();
     	}
-		return addOffset(dist.getLowerBoundOfParameter());
+		int lower = dist.getLowerBoundOfParameter();
+		// Integer.MIN_VALUE means "no lower limit" (like -Infinity in OffsetReal), so keep it unbounded
+		if (lower == Integer.MIN_VALUE) {
+			return lower;
+		}
+		// saturate at Integer.MIN_VALUE instead of wrapping around, as BoundUtils does with Math.max
+		return (int) Math.max(Integer.MIN_VALUE, (long) lower + offset.get());
 	}
 
 	@Override
@@ -145,19 +151,13 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     	if (dist == null) {
     		refresh();
     	}
-        return addOffset(dist.getUpperBoundOfParameter());
+		int upper = dist.getUpperBoundOfParameter();
+		// Integer.MAX_VALUE means "no upper limit" (e.g. Poisson; like +Infinity in OffsetReal), so keep it unbounded
+		if (upper == Integer.MAX_VALUE) {
+			return upper;
+		}
+		// saturate at Integer.MAX_VALUE instead of wrapping around, as BoundUtils does with Math.min
+		return (int) Math.min(Integer.MAX_VALUE, (long) upper + offset.get());
 	}
-
-    /**
-     * Returns bound + offset.
-     * A distribution with no upper limit, such as Poisson, uses Integer.MAX_VALUE as its upper bound.
-     * Adding a positive offset to it in int arithmetic would wrap around to a large negative number, e.g. Integer.MAX_VALUE + 14 = -2147483635,
-     * and then every value of the parameter would be rejected as above the upper bound.
-     * So the sum is computed as a long and capped at Integer.MAX_VALUE (or Integer.MIN_VALUE for a negative offset on a lower bound).
-     */
-    private int addOffset(int bound) {
-        long shifted = (long) bound + offset.get();
-        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, shifted));
-    }
 
 } // class OffsetInt
