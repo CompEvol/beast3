@@ -237,7 +237,8 @@
                                     <itree id="TreeIntervals$(n)" spec="beast.base.evolution.tree.TreeIntervals" tree="@tree$(n)"/>
                                 </plate>
                             </population>
-                            <factor value="3" spec="RealScalarParam" domain="PositiveReal"/>
+                            <!-- ploidy: matches ploidy="2.0" in beast1/testEBSP.xml (see beast2#999) -->
+                            <factor value="2" spec="RealScalarParam" domain="PositiveReal"/>
                         </populationModel>
                     </distribution>
 
