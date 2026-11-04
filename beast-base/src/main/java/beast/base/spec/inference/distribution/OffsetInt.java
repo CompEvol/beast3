@@ -73,7 +73,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double calculateLogP() {
-        logP = logDensity(param.get() - offset.get()); // no unboxing needed, faster
+        logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
@@ -137,7 +137,13 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     	if (dist == null) { // assuming bounds are not estimated during MCMC
     		refresh();
     	}
-		return dist.getLowerBoundOfParameter() + offset.get();
+		int lower = dist.getLowerBoundOfParameter();
+		// Integer.MIN_VALUE means "no lower limit" (like -Infinity in OffsetReal), so keep it unbounded
+		if (lower == Integer.MIN_VALUE) {
+			return lower;
+		}
+		// saturate at Integer.MIN_VALUE instead of wrapping around, as BoundUtils does with Math.max
+		return (int) Math.max(Integer.MIN_VALUE, (long) lower + offset.get());
 	}
 
 	@Override
@@ -145,7 +151,13 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     	if (dist == null) {
     		refresh();
     	}
-		return dist.getUpperBoundOfParameter() + offset.get();
+		int upper = dist.getUpperBoundOfParameter();
+		// Integer.MAX_VALUE means "no upper limit" (e.g. Poisson; like +Infinity in OffsetReal), so keep it unbounded
+		if (upper == Integer.MAX_VALUE) {
+			return upper;
+		}
+		// saturate at Integer.MAX_VALUE instead of wrapping around, as BoundUtils does with Math.min
+		return (int) Math.min(Integer.MAX_VALUE, (long) upper + offset.get());
 	}
 
 } // class OffsetInt
