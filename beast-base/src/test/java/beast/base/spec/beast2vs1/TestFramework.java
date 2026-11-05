@@ -138,8 +138,13 @@ public abstract class TestFramework {
 
         @Override
         public boolean assertExpectation(TraceStatistics trace, boolean displayStatistics) {
-            super.assertExpectation(trace, displayStatistics);
+            passed = super.assertExpectation(trace, displayStatistics);
+            valid = super.isValid();
             this.trace = trace;
+            if (standErrorOfMean.get() == 0) {
+                // a fixed value: keep the base check (mean must equal it) and skip the ESS check
+                return passed;
+            }
             double delta = Math.abs(trace.getMean() - expValue.get());
             passed = delta <= multiplier * (trace.getStdErrorOfMean() + standErrorOfMean.get());
             valid = trace.getESS() > 100;
