@@ -1,12 +1,17 @@
 package test.beast.evolution.operator;
 
+import beast.base.spec.evolution.operator.LogNormalSampleCheck;
+
 
 import beast.base.core.Function;
 import beast.base.evolution.operator.kernel.BactrianScaleOperator;
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Distribution;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
+import beast.base.inference.distribution.Exponential;
 import beast.base.inference.distribution.LogNormalDistributionModel;
 import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.distribution.Prior;
@@ -14,7 +19,6 @@ import beast.base.inference.operator.kernel.BactrianUpDownOperator;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.inference.util.RPNcalculator;
 import beast.base.util.Randomizer;
-import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
@@ -68,7 +72,17 @@ public class BactrianUpDownOperatorTest extends BactrianRandomWalkOperatorTest {
 		operators.add(scaleOperator1);
 		operators.add(scaleOperator2);
 		
-		doMCMCrun(calculator, operators);
+		// param1 and param2 have no prior of their own, so with only the LogNormal prior on
+		// x = param1 - param2 the posterior is improper: both drift upwards together (to about
+		// 50-185 in 5M steps), mixing of x degrades, and its upper tail is under-sampled.
+		// An Exponential(1) prior on param2 makes it proper; x and param2 are then independent,
+		// so x is still exactly LogNormal.
+		Exponential exp = new Exponential();
+		exp.initByName("mean", "1.0");
+		Prior param2Prior = new Prior();
+		param2Prior.initByName("x", param2, "distr", exp);
+
+		doMCMCrun(calculator, param2Prior, operators);
 	}
 	
 
@@ -76,7 +90,7 @@ public class BactrianUpDownOperatorTest extends BactrianRandomWalkOperatorTest {
 	
 
 	
-	void doMCMCrun(Function param, List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
+	void doMCMCrun(Function param, Distribution param2Prior, List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
 		Randomizer.setSeedReproducible(127);
@@ -84,8 +98,10 @@ public class BactrianUpDownOperatorTest extends BactrianRandomWalkOperatorTest {
 
 		ParametricDistribution p = new LogNormalDistributionModel();
 		p.initByName("M", "1.0", "S", "1.0", "meanInRealSpace", true);
-		Prior prior = new Prior();
-		prior.initByName("x", param, "distr", p);
+		Prior xPrior = new Prior();
+		xPrior.initByName("x", param, "distr", p);
+		CompoundDistribution prior = new CompoundDistribution();
+		prior.initByName("distribution", xPrior, "distribution", param2Prior);
 
 		
 		// Set up state:
@@ -126,15 +142,6 @@ public class BactrianUpDownOperatorTest extends BactrianRandomWalkOperatorTest {
 		for (int i = 0; i < v.length; i++) {
 			v[i] = values.get(i)[0];
 		}
-		double m = StatUtils.mean(v);
-		double median = StatUtils.percentile(v, 50);
-		double s = StatUtils.variance(v, 50);
-		assertEquals(1.0, m, 5e-3);
-		assertEquals(Math.exp(-0.5), median, 5e-3);
-		assertEquals(Math.exp(1)-1, s, 1e-1);
-		assertEquals(0.0854, StatUtils.percentile(v, 2.5), 5e-3);
-		assertEquals(0.117, StatUtils.percentile(v, 5), 5e-2);
-		assertEquals(3.14, StatUtils.percentile(v, 95), 1e-1);
-		assertEquals(4.31, StatUtils.percentile(v, 97.5), 1e-1);
+		LogNormalSampleCheck.assertMean1Sigma1(v);
 	}
 }
