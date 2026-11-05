@@ -16,10 +16,10 @@ once a spec equivalent exists and provides equivalent coverage.
 
 | Module | Total files | Spec (new) | No migration required | Old: deprecated — covered ✅+⚠️ | Old: deprecated — ❌ missing | Old: deprecated — 💤 disabled |
 |---|---|---|---|---|---|---|
-| beast-base | 147 | 70 | 35 | 35 | 4 | 3 |
+| beast-base | 142 | 70 | 35 | 30 | 4 | 3 |
 | beast-fx | 16 | — | 16 | — | — | — |
 | beast-pkgmgmt | 9 | — | 9 | — | — | — |
-| **Total** | **172** | **70** | **60** | **35** | **4** | **3** |
+| **Total** | **167** | **70** | **60** | **30** | **4** | **3** |
 
 - **Spec (new):** `beast.base.spec.*` test files — all freshly written, no migration needed.
 - **No migration required:** tests in old package that need no action — either the subject class is not deprecated, or the test already uses the spec API directly (already migrated).
@@ -58,17 +58,12 @@ The old test targets a deprecated class (e.g. `BactrianXxx`); the spec replaceme
 | `test.beast.evolution.operator.BactrianUpDownOperatorTest` | `BactrianUpDownOperator` (@Deprecated) | `beast.base.spec.evolution.operator.UpDownOperatorTest` |
 | `test.beast.evolution.operator.NoPriorVsUniformTest` | `BactrianRandomWalkOperator`, `BactrianScaleOperator`, `RealRandomWalkOperator` (all @Deprecated) | `beast.base.spec.evolution.operator.RandomVsBactrianTest` |
 
-#### ✅ Direct spec replacement exists — 28 tests, safe to delete
+#### ✅ Direct spec replacement exists — 23 tests, safe to delete
 
 Spec replacement has the same class name and tests the same logic. Delete the old test once the spec is confirmed passing in CI.
 
 | Old test class | Deprecated class under test | Spec replacement |
 |---|---|---|
-| `test.beast.beast2vs1.ClockModelTest` | `test.beast.beast2vs1.TestFramework` (@Deprecated) | `beast.base.spec.beast2vs1.ClockModelTest` |
-| `test.beast.beast2vs1.SubstitutionModelTest` | `test.beast.beast2vs1.TestFramework` (@Deprecated) | `beast.base.spec.beast2vs1.SubstitutionModelTest` |
-| `test.beast.beast2vs1.TipTimeTest` | `test.beast.beast2vs1.TestFramework` (@Deprecated) | `beast.base.spec.beast2vs1.TipTimeTest` |
-| `test.beast.beast2vs1.TreePriorTest` | `test.beast.beast2vs1.TestFramework` (@Deprecated) | `beast.base.spec.beast2vs1.TreePriorTest` |
-| `test.beast.beast2vs1.TreeTest` | `test.beast.beast2vs1.TestFramework` (@Deprecated) | `beast.base.spec.beast2vs1.TreeTest` |
 | `test.beast.evolution.inference.DirichletTest` | `Dirichlet` (@Deprecated) | `beast.base.spec.inference.distribution.DirichletTest` |
 | `test.beast.evolution.likelihood.BeagleTreeLikelihoodTest` | `BeagleTreeLikelihood` (@Deprecated) | `beast.base.spec.evolution.likelihood.BeagleTreeLikelihoodTest` |
 | `test.beast.evolution.likelihood.TreeLikelihoodTest` | `TreeLikelihood` (@Deprecated) | `beast.base.spec.evolution.likelihood.TreeLikelihoodTest` |
@@ -172,46 +167,6 @@ Migrated `ScalarTest`, `TensorUtilsTest`, and `TypeUtilsTest` from JUnit 4 (`org
 All classes in this package extend the deprecated `test.beast.beast2vs1.TestFramework`, which uses
 `System.getProperty("user.dir")` to locate XMLs. The replacement base class is
 `beast.base.spec.beast2vs1.TestFramework`, which uses `getResource()` (classpath-safe).
-
----
-
-#### `test.beast.beast2vs1.ClockModelTest` ✅
-- **Tested class:** XML-driven MCMC runs via deprecated `TestFramework`; exercises `StrictClockModel`, `RandomLocalClockModel`, `UCRelaxedClockModel`
-- **XML files:** `testStrictClock.xml`, `testStrictClock2.xml`, `testRandomLocalClock.xml`, `testUCRelaxedClockLogNormal.xml`
-- **Spec replacement:** `beast.base.spec.beast2vs1.ClockModelTest` — same XML files, same expectations, uses `readTestXML()` via `getResource()`
-- **Action:** Delete old test once spec is confirmed passing in CI
-
----
-
-#### `test.beast.beast2vs1.SubstitutionModelTest` ✅
-- **Tested class:** XML-driven MCMC runs; exercises `HKY`, `SiteModel` (both deprecated)
-- **XML files:** `testHKY.xml`, `testSiteModelAlpha.xml`, `testMultiSubstModel.xml`, `testSRD06CP12_3.xml`
-- **Spec replacement:** `beast.base.spec.beast2vs1.SubstitutionModelTest` — same XML files, `testSRD06CP12_3` commented out in both
-- **Action:** Delete old test once spec is confirmed passing in CI
-
----
-
-#### `test.beast.beast2vs1.TipTimeTest` ✅
-- **Tested class:** Tip-dated coalescent MCMC via deprecated `TestFramework`
-- **XML files:** `testCoalescentTipDates.xml`, `testCoalescentTipDates1.xml`, `testStrictClockTipTime.xml`, `testCoalescentTipDatesSampling.xml`, `testStrictClockTipDatesSampling.xml`
-- **Spec replacement:** `beast.base.spec.beast2vs1.TipTimeTest`
-- **Action:** Delete old test once spec is confirmed passing in CI
-
----
-
-#### `test.beast.beast2vs1.TreePriorTest` ✅
-- **Tested class:** Tree prior MCMC (coalescent, Yule, BD models, all deprecated) via deprecated `TestFramework`
-- **XML files:** `testCoalescentConstant.xml`, `testYuleModel.xml`, `testBirthDeath.xml` etc.
-- **Spec replacement:** `beast.base.spec.beast2vs1.TreePriorTest`
-- **Action:** Delete old test once spec is confirmed passing in CI
-
----
-
-#### `test.beast.beast2vs1.TreeTest` ✅
-- **Tested class:** Calibrated tree prior MCMC via deprecated `TestFramework`
-- **XML files:** `testCalibration.xml`, `testCalibrationMono.xml`
-- **Spec replacement:** `beast.base.spec.beast2vs1.TreeTest`
-- **Action:** Delete old test once spec is confirmed passing in CI
 
 ---
 
