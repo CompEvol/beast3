@@ -43,6 +43,8 @@ public class ClockModelTest extends TestFramework {
         super.setUp(XML_FILES);
     }
 
+    private static final double STRICT_SE = 3.0;
+
     @Override
 	protected List<Expectation> giveExpectations(int index_XML) throws Exception {
         List<Expectation> expList = new ArrayList<Expectation>();
@@ -51,18 +53,22 @@ public class ClockModelTest extends TestFramework {
         switch (index_XML) {
             case 0: // testStrictClock.xml
 //        BEAST 1 testStrictClockNoDate.xml
-                addExpIntoList(expList, "posterior", -1812.939, 0.0581);
-                addExpIntoList(expList, "prior", 3.752, 0.0205);
-                addExpIntoList(expList, "tree.height", 6.32E-02, 6.76E-05);
-                addExpIntoList(expList, "popSize", 9.67E-02, 5.99E-04);
-                addExpIntoList(expList, "hky.kappa", 25.807, 0.1812);
-                addExpIntoList(expList, "hky.frequencies.1", 0.327, 6.15E-04);
-                addExpIntoList(expList, "hky.frequencies.2", 0.258, 6.09E-04);
-                addExpIntoList(expList, "hky.frequencies.3", 0.155, 3.88E-04);
-                addExpIntoList(expList, "hky.frequencies.4", 0.261, 5.17E-04);
-                addExpIntoList(expList, "clockRate", 1.0, 0.0);
-                addExpIntoList(expList, "treeLikelihood", -1816.691, 0.0522);
-                addExpIntoList(expList, "coalescent", 7.24, 9.58E-03);
+                // Same model as testCoalescentNoClock.xml in TreePriorTest (clock rate fixed at 1).
+                // The two BEAST 1 references for it differ, e.g. hky.kappa 25.807 +- 0.18 vs 26.262 +- 0.22.
+                // 8 seeds each of BEAST 3 and BEAST 2.7.7 agree with each other (all |z| < 1.6) but 1 of 8
+                // BEAST 3 seeds and the test seed failed the default 2*(se1+se2). Use 3*(se1+se2).
+                addExpIntoList(expList, "posterior", -1812.939, 0.0581, STRICT_SE);
+                addExpIntoList(expList, "prior", 3.752, 0.0205, STRICT_SE);
+                addExpIntoList(expList, "tree.height", 6.32E-02, 6.76E-05, STRICT_SE);
+                addExpIntoList(expList, "popSize", 9.67E-02, 5.99E-04, STRICT_SE);
+                addExpIntoList(expList, "hky.kappa", 25.807, 0.1812, STRICT_SE);
+                addExpIntoList(expList, "hky.frequencies.1", 0.327, 6.15E-04, STRICT_SE);
+                addExpIntoList(expList, "hky.frequencies.2", 0.258, 6.09E-04, STRICT_SE);
+                addExpIntoList(expList, "hky.frequencies.3", 0.155, 3.88E-04, STRICT_SE);
+                addExpIntoList(expList, "hky.frequencies.4", 0.261, 5.17E-04, STRICT_SE);
+                addExpIntoList(expList, "clockRate", 1.0, 0.0, STRICT_SE);
+                addExpIntoList(expList, "treeLikelihood", -1816.691, 0.0522, STRICT_SE);
+                addExpIntoList(expList, "coalescent", 7.24, 9.58E-03, STRICT_SE);
                 break;
 
             case 1: // testStrictClock2.xml

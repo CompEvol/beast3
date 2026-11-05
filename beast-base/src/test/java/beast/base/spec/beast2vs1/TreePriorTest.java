@@ -57,7 +57,6 @@ public class TreePriorTest extends TestFramework {
     public void testBSPNoClock() throws Exception {
         analyse(7);
     }
-// TODO testEBSP() in beast 2.7 v beast 1 also fails, add a test to compare 2.8 to 2.7
     @Test
     public void testEBSP() throws Exception {
         analyse(8);
@@ -68,6 +67,10 @@ public class TreePriorTest extends TestFramework {
         super.setUp(XML_FILES);
     }
 
+    private static final double EBSP_SE = 3.0;
+
+    private static final double NOCLOCK_SE = 3.0;
+
     @Override
 	protected List<Expectation> giveExpectations(int index_XML) throws Exception {
         List<Expectation> expList = new ArrayList<Expectation>();
@@ -76,17 +79,21 @@ public class TreePriorTest extends TestFramework {
         switch (index_XML) {
             case 0: // testCoalescentNoClock.xml
 //        BEAST 1 testCoalescentNoClock.xml
-                addExpIntoList(expList, "posterior", -1813.059, 0.0569);
-                addExpIntoList(expList, "prior", 3.705, 0.025);
-                addExpIntoList(expList, "tree.height", 0.06318, 6.73E-05);
-                addExpIntoList(expList, "popSize", 0.0979, 6.38E-04);
-                addExpIntoList(expList, "hky.kappa", 26.262, 0.2217);
-                addExpIntoList(expList, "hky.frequencies.1", 0.326, 6.04E-04);
-                addExpIntoList(expList, "hky.frequencies.2", 0.258, 5.23E-04);
-                addExpIntoList(expList, "hky.frequencies.3", 0.155, 4.03E-04);
-                addExpIntoList(expList, "hky.frequencies.4", 0.261, 5.64E-04);
-                addExpIntoList(expList, "treeLikelihood", -1816.764, 0.0556);
-                addExpIntoList(expList, "coalescent", 7.242, 9.94E-03);
+                // Same model as testStrictClock.xml in ClockModelTest (its clock rate is fixed at 1).
+                // The two BEAST 1 references for it differ, e.g. hky.kappa 25.807 +- 0.18 vs 26.262 +- 0.22.
+                // 8 seeds each of BEAST 3 and BEAST 2.7.7 agree with each other (all |z| < 1.6) but 1 of 8
+                // BEAST 3 seeds and the test seed failed the default 2*(se1+se2). Use 3*(se1+se2).
+                addExpIntoList(expList, "posterior", -1813.059, 0.0569, NOCLOCK_SE);
+                addExpIntoList(expList, "prior", 3.705, 0.025, NOCLOCK_SE);
+                addExpIntoList(expList, "tree.height", 0.06318, 6.73E-05, NOCLOCK_SE);
+                addExpIntoList(expList, "popSize", 0.0979, 6.38E-04, NOCLOCK_SE);
+                addExpIntoList(expList, "hky.kappa", 26.262, 0.2217, NOCLOCK_SE);
+                addExpIntoList(expList, "hky.frequencies.1", 0.326, 6.04E-04, NOCLOCK_SE);
+                addExpIntoList(expList, "hky.frequencies.2", 0.258, 5.23E-04, NOCLOCK_SE);
+                addExpIntoList(expList, "hky.frequencies.3", 0.155, 4.03E-04, NOCLOCK_SE);
+                addExpIntoList(expList, "hky.frequencies.4", 0.261, 5.64E-04, NOCLOCK_SE);
+                addExpIntoList(expList, "treeLikelihood", -1816.764, 0.0556, NOCLOCK_SE);
+                addExpIntoList(expList, "coalescent", 7.242, 9.94E-03, NOCLOCK_SE);
                 break;
 
             case 1: // testCoalescentNoClock1.xml
@@ -183,24 +190,28 @@ public class TreePriorTest extends TestFramework {
                 break;
 
             case 8: // testEBSP.xml
-//        BEAST 1 testEBSP.xml
-                addExpIntoList(expList, "posterior", -1826.2014, 0.1562);
-                addExpIntoList(expList, "prior", -9.4517, 0.1782);
-                addExpIntoList(expList, "tree.height", 6.3528E-2, 7.0709E-5);
-                addExpIntoList(expList, "popSizes.1", 2435.0409, 132.4556);
-                addExpIntoList(expList, "popSizes.2", 2195.7116, 156.2106);
-                addExpIntoList(expList, "popSizes.3", 1065.3511, 119.8768);
-                addExpIntoList(expList, "indicators", 1.3275, 2.1211E-2);
-                addExpIntoList(expList, "indicators", 1.5219, 2.9634E-2);
-                addExpIntoList(expList, "indicators", 2.1505, 3.8185E-2);
-                addExpIntoList(expList, "hky.kappa", 26.4814, 0.2725);
-                addExpIntoList(expList, "hky.frequencies.1", 0.3252, 7.7972E-4);
-                addExpIntoList(expList, "hky.frequencies.2", 0.2581, 5.685E-4);
-                addExpIntoList(expList, "hky.frequencies.3", 0.1553, 4.3071E-4);
-                addExpIntoList(expList, "hky.frequencies.4", 0.2614, 6.1733E-4);
-                addExpIntoList(expList, "treeLikelihood", -1816.7497, 5.4764E-2);
-                // this is clearly bunk (negative value for a positive parameter)
-                addExpIntoList(expList, "populationMean", -3.4472, 0.1802);
+                // BEAST 1.8.4 testEBSP.xml (beast1/testEBSP.xml: 3 loci, gopher data), as in the
+                // BEAST 2.6 version of this test. Only quantities with a well-defined posterior mean
+                // are compared. populationMean has a 1/x prior, so with only popSizes.1 in use
+                // (sum(indicators) ~ 0.5) its posterior is inverse-gamma with shape 1 and has no
+                // finite mean; the same holds for the unused popSizes and for prior and posterior,
+                // which include their densities.
+                // The default threshold, 2*(se1+se2) (about 2.8 combined SE), failed one of the 13
+                // columns in 4 of 13 healthy BEAST 3 runs (seeds 1-6, factor 2 and 3, plus the test
+                // seed), each on a different column, worst |z| = 3.5. So use 3*(se1+se2), about 4.2 SE.
+                addExpIntoList(expList, "tree.26.height", 0.0275, 7.7632E-5, EBSP_SE);
+                addExpIntoList(expList, "tree.29.height", 0.0231, 6.589E-5, EBSP_SE);
+                addExpIntoList(expList, "tree.47.height", 0.0263, 6.5618E-5, EBSP_SE);
+                addExpIntoList(expList, "sum(indicators)", 0.4738, 0.0187, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.26", -1264.9419, 0.0819, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.29", -1246.7234, 0.0754, EBSP_SE);
+                addExpIntoList(expList, "treeLikelihood.47", -1778.562, 0.0951, EBSP_SE);
+                addExpIntoList(expList, "coalescent", 220.5613, 0.1462, EBSP_SE);
+                addExpIntoList(expList, "hky.kappa.26", 4.4946, 0.038, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.1", 0.4099, 8.0594E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.2", 0.2064, 6.2073E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.3", 0.1754, 5.6823E-4, EBSP_SE);
+                addExpIntoList(expList, "hky.frequencies.26.4", 0.2083, 6.139E-4, EBSP_SE);
                 break;
 
 

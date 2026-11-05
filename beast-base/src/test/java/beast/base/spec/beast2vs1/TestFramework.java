@@ -6,6 +6,7 @@ import beast.base.inference.Logger;
 import beast.base.parser.XMLParser;
 import beast.base.trace.Expectation;
 import beast.base.trace.LogAnalyser;
+import beast.base.trace.TraceStatistics;
 import beast.base.util.Randomizer;
 import beast.pkgmgmt.BEASTClassLoader;
 
@@ -85,7 +86,7 @@ public abstract class TestFramework {
             assertTrue(expectation.isPassed(),
             		xmls[index_XML] + ": Expected " + expectation.traceName.get() + " delta mean: "
 	                    + expectation.expValue.get() + " - " + expectation.getTraceStatistics().getMean()
-                    + " <= delta stdErr: 2*(" + expectation.getStdError() + " + "
+                    + " <= delta stdErr: " + stdErrMultiplier(expectation) + "*(" + expectation.getStdError() + " + "
                     + expectation.getTraceStatistics().getStdErrorOfMean() + ")");
         	} catch (NullPointerException e) {
         		System.err.println(expectation.traceName.get() + " might be missing from trace log");
@@ -107,6 +108,57 @@ public abstract class TestFramework {
     protected void addExpIntoList(List<Expectation> expList, String traceName, Double expValue, Double stdError) throws Exception {
         Expectation exp = new Expectation(traceName, expValue, stdError);
         expList.add(exp);
+    }
+
+    /**
+     * Like {@link #addExpIntoList(List, String, Double, Double)}, but passes when
+     * |mean - expValue| <= stdErrMultiplier * (stdError + stdErrorOfMean) instead of 2 * (...).
+     * For tests that compare many correlated columns against a single-run reference, where
+     * the default threshold (about 2.8 combined standard errors) fails on a sizeable share of seeds.
+     */
+    protected void addExpIntoList(List<Expectation> expList, String traceName, Double expValue, Double stdError,
+                                  double stdErrMultiplier) throws Exception {
+        expList.add(new ScaledExpectation(traceName, expValue, stdError, stdErrMultiplier));
+    }
+
+    private static double stdErrMultiplier(Expectation expectation) {
+        return expectation instanceof ScaledExpectation s ? s.multiplier : 2.0;
+    }
+
+    private static class ScaledExpectation extends Expectation {
+        final double multiplier;
+        private boolean passed = true;
+        private boolean valid = true;
+        private TraceStatistics trace;
+
+        ScaledExpectation(String traceName, Double expValue, Double stdError, double multiplier) throws Exception {
+            super(traceName, expValue, stdError);
+            this.multiplier = multiplier;
+        }
+
+        @Override
+        public boolean assertExpectation(TraceStatistics trace, boolean displayStatistics) {
+            passed = super.assertExpectation(trace, displayStatistics);
+            valid = super.isValid();
+            this.trace = trace;
+            if (standErrorOfMean.get() == 0) {
+                // a fixed value: keep the base check (mean must equal it) and skip the ESS check
+                return passed;
+            }
+            double delta = Math.abs(trace.getMean() - expValue.get());
+            passed = delta <= multiplier * (trace.getStdErrorOfMean() + standErrorOfMean.get());
+            valid = trace.getESS() > 100;
+            return passed;
+        }
+
+        @Override
+        public boolean isPassed() { return passed; }
+
+        @Override
+        public boolean isValid() { return valid; }
+
+        @Override
+        public TraceStatistics getTraceStatistics() { return trace; }
     }
 
 }
