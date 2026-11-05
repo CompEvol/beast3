@@ -162,7 +162,7 @@
 
         <operator id='treeRootScaler' spec='ScaleTreeOperator' scaleFactor="0.75" weight="3" tree="@tree" rootOnly='true'/>
         <operator spec='beast.base.evolution.operator.Uniform' weight="30" tree="@tree"/>
-        <operator spec='SubtreeSlide' weight="15" gaussian="true" size="3.8" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="15" size="3.8" tree="@tree"/>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="15" tree="@tree"/>
         <operator id='wide' spec='Exchange' isNarrow='false' weight="3" tree="@tree"/>
         <operator spec='WilsonBalding' weight="3" tree="@tree"/>

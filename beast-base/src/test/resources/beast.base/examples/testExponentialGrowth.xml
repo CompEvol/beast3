@@ -176,7 +176,7 @@ newick='            (((((((((((((&apos;20_0.95_2&apos;[&amp;ampstate="2"]:0.0271
         <operator spec='beast.base.evolution.operator.Uniform' weight="10">
             <tree idref="tree"/>
         </operator>
-        <operator spec='SubtreeSlide' weight="5" gaussian="true" size="1.0">
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0">
             <tree idref="tree"/>
         </operator>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="1">

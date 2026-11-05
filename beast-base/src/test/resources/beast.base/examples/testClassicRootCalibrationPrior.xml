@@ -58,7 +58,7 @@
             </distribution>
         </distribution>
 
-        <operator spec="SubtreeSlide" weight="4" gaussian="true" size="2.5" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="4" size="2.5" tree="@tree"/>
         <operator spec="ScaleOperator" weight="1" scaleFactor="0.25" parameter="@birthRate"/>
 
         <logger logEvery="100" fileName="classic_root_prior_oneOnX.$(seed).log">
