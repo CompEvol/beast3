@@ -33,9 +33,9 @@
 					</operator>
     		    </operator>
 
-           <distribution id='ClockPrior.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@clockRate.c:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+           <distribution id='ClockPrior.c:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@clockRate.c:$(n)' meanInRealSpace="false">
+               <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+               <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
            </distribution>
 
 ]]>
@@ -119,9 +119,9 @@
 			</if>
 		</logger>
 
-      <distribution id='MeanRRatePrior.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@meanClockRate.c:$(n)' >
-         <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-         <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+      <distribution id='MeanRRatePrior.c:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@meanClockRate.c:$(n)' meanInRealSpace="false">
+          <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+          <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
       </distribution>
 ]]>
             <connect srcID='Indicators.c:$(n)' targetID='state' inputName='stateNode'
