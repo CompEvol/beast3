@@ -229,10 +229,13 @@ done
 echo ""
 echo "==> Step 5: Patching .cfg files to module-path mode..."
 for cfg in "$BUNDLE/app/"*.cfg; do
+    # Only the beast launcher loads the BEAGLE JNI library.
+    NATIVE_ACCESS="javafx.graphics,javafx.media,javafx.web"
+    [ "$(basename "$cfg")" = "beast.cfg" ] && NATIVE_ACCESS="$NATIVE_ACCESS,beagle"
     sed -i \
         -e '/^app\.classpath/d' \
         -e 's|^app\.mainclass=\(.*\)|app.mainmodule=beast.pkgmgmt/\1|' \
-        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\njava-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web' \
+        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\njava-options=--enable-native-access='"$NATIVE_ACCESS" \
         "$cfg"
 done
 

@@ -28,8 +28,20 @@ export JAVA_HOME="$BEAST_APP/runtime/Contents/Home"
 JAVA="$JAVA_HOME/bin/java"
 CPU=$(uname -m)
 
+# If BEAGLE_LIB is not defined, default it to Homebrew's /opt/homebrew/lib
+# when BEAGLE is installed there ("brew install beagle").
+# BEAGLE's macOS installer (.pkg) uses /usr/local/lib, which is added below.
+# A user-defined BEAGLE_LIB always takes precedence. See #181.
+# -z: true if BEAGLE_LIB is not set (empty)
+if [ -z "$BEAGLE_LIB" ]; then
+  if [ -d /opt/homebrew/lib ] && [ -f /opt/homebrew/lib/libhmsbeagle-jni.jnilib ]; then
+    BEAGLE_LIB=/opt/homebrew/lib
+  fi
+fi
+
 # use BEAGLE_LIB if the BEAGLE library is not in a standard location
 if [ "$CPU" = 'x86_64' ]; then
+  # -n: true if BEAGLE_LIB is set (not empty)
   if [ -n "$BEAGLE_LIB" ]; then
 	if [ -n "$BEAST_EXTRA_LIBS" ]; then
 		BEAST_EXTRA_LIBS="$BEAST_EXTRA_LIBS:$BEAGLE_LIB:$JAVA_HOME/lib/amd64"
@@ -71,6 +83,6 @@ if [ -n "$BEAST_EXTRA_LIBS" ]; then
 fi
 
 "$JAVA" -Dlauncher.wait.for.exit=true \
-    --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \
+    --module-path "$BEAST_APP/app" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web,beagle \
     -Xss256m -Xmx8g -Djava.library.path="$LD_LIBRARY_PATH" -Duser.language=en -Dfile.encoding=UTF-8 \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher "$@"
