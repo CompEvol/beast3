@@ -1,0 +1,72 @@
+<?xml version="1.0" standalone="yes"?>
+<beast version="2.8"
+       namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.speciation:beast.base.spec.evolution.tree:beast.base.spec.evolution.operator:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
+
+    <!-- for Figure 9.1 in BEAST2 book. BEAST 3 conversion of the BEAST 2.7.8 example
+         testConditionalRootCalibrationPrior.xml. As in the original, the birth rate has no prior
+         (the 1/x prior is commented out there), so its prior is flat. -->
+
+    <taxonset spec="TaxonSet" id="taxa">
+        <taxon spec="Taxon" id="1"/>
+        <taxon spec="Taxon" id="2"/>
+        <taxon spec="Taxon" id="3"/>
+        <taxon spec="Taxon" id="4"/>
+    </taxonset>
+
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="1">A</sequence>
+        <sequence taxon="2">A</sequence>
+        <sequence taxon="3">A</sequence>
+        <sequence taxon="4">A</sequence>
+    </data>
+
+    <input spec="CalibratedYuleModel" type="full" id="cyule">
+        <birthRate spec="RealScalarParam" domain="PositiveReal" value="2.0" id="birthRate"/>
+        <tree spec="TreeParser" id="tree" taxa="@alignment" newick="(((1:1.0,2:1.0):1.0,3:2.0):1.0,4:3.0);"/>
+
+        <calibrations spec="CalibrationPoint" id="cal">
+            <taxonset spec="TaxonSet" id="all">
+                <taxon idref="1"/>
+                <taxon idref="2"/>
+                <taxon idref="3"/>
+                <taxon idref="4"/>
+            </taxonset>
+            <distr id="logNormalDistribution" spec="LogNormal">
+                <M spec="RealScalarParam" domain="Real" value="2.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="0.2" estimate="false"/>
+            </distr>
+        </calibrations>
+    </input>
+
+    <run spec="MCMC" id="mcmc" chainLength="1000000">
+
+        <state>
+            <stateNode idref="tree"/>
+            <stateNode idref="birthRate"/>
+        </state>
+
+        <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="yule.prior" idref="cyule"/>
+        </distribution>
+
+        <operator spec="SubtreeSlide" weight="4" gaussian="true" size="2.5" tree="@tree"/>
+        <operator spec="ScaleOperator" weight="1" scaleFactor="0.25" parameter="@birthRate"/>
+
+        <logger logEvery="100" fileName="cond_root_prior.$(seed).log">
+            <model idref="posterior"/>
+            <log idref="posterior"/>
+            <log idref="cyule"/>
+            <log idref="birthRate"/>
+            <log id="TreeHeight" spec="TreeStatLogger" tree="@tree" logLength="false"/>
+        </logger>
+        <logger logEvery="100" fileName="cond_root_prior.$(seed).trees">
+            <log idref="tree"/>
+        </logger>
+        <logger logEvery="100">
+            <model idref="posterior"/>
+            <log idref="cyule"/>
+            <log idref="birthRate"/>
+            <log idref="TreeHeight"/>
+        </logger>
+    </run>
+</beast>

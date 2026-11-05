@@ -1,0 +1,57 @@
+<?xml version="1.0" standalone="yes"?>
+<!-- Test calibration implementation: 5 taxa - prior on 2-taxon clade, uniform prior.
+     BEAST 3 conversion of the BEAST 2.7.8 example testCalYule_5t_2c.xml. -->
+<beast version="2.8"
+       namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.speciation:beast.base.spec.evolution.tree:beast.base.spec.evolution.operator:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
+
+  <taxonset spec="TaxonSet" id="taxa">
+    <taxon spec="Taxon" id="a"/>
+    <taxon spec="Taxon" id="b"/>
+    <taxon spec="Taxon" id="c"/>
+    <taxon spec="Taxon" id="d"/>
+    <taxon spec="Taxon" id="e"/>
+  </taxonset>
+
+  <input spec="CalibratedYuleModel" type="full" id="cyule">
+    <birthRate spec="RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
+    <tree idref="tree"/>
+
+    <calibrations spec="CalibrationPoint" id="cal">
+      <taxonset spec="TaxonSet">
+        <taxon idref="a"/>
+        <taxon idref="b"/>
+      </taxonset>
+      <distr id="Uniform" spec="Uniform">
+        <lower spec="RealScalarParam" domain="Real" value="4.0" estimate="false"/>
+        <upper spec="RealScalarParam" domain="Real" value="7.0" estimate="false"/>
+      </distr>
+    </calibrations>
+  </input>
+
+  <run spec="MCMC" id="mcmc" chainLength="10000">
+    <init spec="beast.base.spec.evolution.speciation.CalibratedYuleInitialTree" id="startTree" initial="@tree" taxonset="@taxa" calibrations="@cal"/>
+
+    <state>
+      <stateNode spec="beast.base.evolution.tree.Tree" id="tree"/>
+    </state>
+
+    <distribution spec="CompoundDistribution" id="posterior">
+      <distribution id="cyule.prior" idref="cyule"/>
+    </distribution>
+
+    <operator spec="SubtreeSlide" weight="15" gaussian="true" size="0.5" tree="@tree"/>
+
+    <logger logEvery="100" fileName="test_5t_2c_i.$(seed).log">
+      <model idref="posterior"/>
+      <log idref="posterior"/>
+      <log idref="cyule"/>
+    </logger>
+    <logger logEvery="100" fileName="test_5t_2c_i.$(seed).trees">
+      <log idref="tree"/>
+    </logger>
+    <logger logEvery="1000">
+      <model idref="posterior"/>
+      <log idref="cyule"/>
+    </logger>
+  </run>
+</beast>
