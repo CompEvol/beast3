@@ -1,10 +1,23 @@
                     BEAST v2.8.0 2026
                  Beast 2 development team 2011-2026
 Version History
-Last updated: September 2026
+Last updated: November 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-rc2 November 2026
+	o Fix BEAGLE loading on macOS in the 2.8 release #181
+	o Let AVMN move trees again through a scalable input on LogTransform (with the full dilation Jacobian), connect the tree to the AVMN log transform in BEAUti, and fix the legacy AVMN Hastings ratio for trees #180 #184
+	o Use spec ScaleTreeOperator for the tree root scaler in BEAUti templates #182
+	o Fix OffsetInt.calculateLogP() double-subtracting offset, and clamp its bounds to avoid int overflow #188
+	o Take IntVectorParam bounds from the domain and priors, not just setLower/setUpper #194
+	o Add scalar support in IntRandomWalkOperator #176
+	o Ensure true=1 false=0 when converting a boolean log column, and compute its statistics as integers instead of NaN #177
+	o Add Randomizer.setSeedReproducible so a fixed seed gives a fixed random stream #186
+	o Fix spec beast2vs1 slow tests: BEAST 1.8.4 EBSP expectations, ploidy 2, and 3-SE tolerances; delete legacy beast2vs1 tests duplicated by spec tests #192 #193
+	o Calibrate LogNormal operator-test tolerances and make the UpDown test model proper #195
+	o Disable starbeast1 slow tests #183
+
 Version 2.8.0-rc1 September 2026
 	o Resolve BEAUti clone source/target against the list their indices came from, fixing the wrong likelihood being cloned when partitions are linked #171
 	o Fix EBSP (Extended Bayesian Skyline) BEAUti template for multiple partitions #168
