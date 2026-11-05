@@ -1,7 +1,6 @@
 package beast.base.spec.beast2vs1;
 
 
-import beast.base.util.Randomizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,6 @@ public class TreePriorTest extends TestFramework {
 
     @Test
     public void testCoalescentNoClock() throws Exception {
-        Randomizer.setSeedReproducible(127);
         analyse(0);
     }
 
