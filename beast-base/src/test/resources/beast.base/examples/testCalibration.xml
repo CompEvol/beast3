@@ -109,7 +109,7 @@
         <operator id="popSizeScaler" spec="ScaleOperator" scaleFactor="0.75" weight="3" parameter="@popSize"/>
         <operator id="treeScaler" spec="ScaleTreeOperator" scaleFactor="0.75" weight="3" tree="@tree"/>
         <operator spec="beast.base.evolution.operator.Uniform" weight="30" tree="@tree"/>
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="15" size="0.026" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="15" size="0.0063" tree="@tree"/>
         <operator id="narrow" spec="Exchange" isNarrow="true" weight="15" tree="@tree"/>
         <operator id="wide" spec="Exchange" isNarrow="false" weight="3" tree="@tree"/>
         <operator spec="WilsonBalding" weight="1" tree="@tree"/>

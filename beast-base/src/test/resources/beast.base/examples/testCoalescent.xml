@@ -89,7 +89,7 @@
         <operator spec='beast.base.evolution.operator.Uniform' weight="10">
             <tree idref="tree"/>
         </operator>
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="0.029">
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="0.0083">
             <tree idref="tree"/>
         </operator>
         <operator id='narrow' spec='Exchange' isNarrow='true' weight="1">
