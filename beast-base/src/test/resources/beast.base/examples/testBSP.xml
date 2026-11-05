@@ -111,6 +111,14 @@
                 <M spec="RealScalarParam" domain="Real" value="1.0" estimate="false"/>
                 <S spec="RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
             </distribution>
+            <!-- The 2.7.8 original has no prior on the gamma shape and the clock rate. Both versions now give the gamma shape Exponential(1) and the clock rate LogNormal(0, 8). -->
+            <distribution id="siteModel.alpha.prior" spec="Exponential" param="@siteModel.alpha">
+                <mean spec="RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            </distribution>
+            <distribution id="clock.rate.prior" spec="LogNormal" param="@clock.rate" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
             <distribution spec="BayesianSkyline" id='skyline'>
                 <popSizes idref="skyline.popSize"/>
                 <groupSizes idref='skyline.groupSize'/>
@@ -118,7 +126,12 @@
                     <tree idref="tree"/>
                 </treeIntervals>
             </distribution>
-            <distribution id='eml1' spec="MarkovChainDistribution" jeffreys="true" param="@skyline.popSize"/>
+            <!-- The 2.7.8 original used jeffreys="true", an improper 1/x prior on the first popSize. Instead the first popSize has an exponential prior whose mean is estimated, with a LogNormal(0, 8) prior on that mean. -->
+            <distribution id='eml1' spec="MarkovChainDistribution" initialMean="@skyline.popSizeInitialMean" param="@skyline.popSize"/>
+            <distribution id="skyline.popSizeInitialMean.prior" spec="LogNormal" param="@skyline.popSizeInitialMean" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
         </distribution>
 		<distribution spec='TreeLikelihood' id="likelihood">
 		    <data idref="alignment"/>
@@ -145,6 +158,7 @@
                  BayesianSkyline; here they are positive integers from the start. -->
             <stateNode id="skyline.popSize" spec="RealVectorParam" domain="PositiveReal" dimension="5" value="380.0"/>
             <stateNode id='skyline.groupSize' spec="IntSimplexParam" domain="PositiveInt" dimension="5" value="1"/>
+            <stateNode id="skyline.popSizeInitialMean" spec="RealScalarParam" domain="PositiveReal" value="380.0"/>
             <stateNode idref="hky.kappa"/>
             <stateNode idref="tree"/>
             <stateNode idref="clock.rate"/>
@@ -158,6 +172,7 @@
         <operator id='clockRateScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@clock.rate"/>
         <operator id='upDown' spec='UpDownOperator' scaleFactor="0.77" weight="3" up="@clock.rate" down='@tree'/>
         <operator id='popSizesScaler' spec='ScaleOperator' scaleFactor="0.75" weight="15" parameter="@skyline.popSize"/>
+        <operator id='popSizeInitialMeanScaler' spec='ScaleOperator' scaleFactor="0.75" weight="3" parameter="@skyline.popSizeInitialMean"/>
         <operator id='groupSizesDelta' spec='DeltaExchangeOperator' delta="1" weight="6" ivparameter="@skyline.groupSize"/>
 
         <operator id='treeRootScaler' spec='ScaleTreeOperator' scaleFactor="0.75" weight="3" tree="@tree" rootOnly='true'/>
@@ -173,6 +188,7 @@
             <log idref="clock.rate"/>
             <log idref="skyline.popSize"/>
             <log idref="skyline.groupSize"/>
+            <log idref="skyline.popSizeInitialMean"/>
             <log idref="hky.kappa"/>
             <log spec='TreeStatLogger' tree='@tree' id='treeModel.rootHeight' logLength="false"/>
             <log idref="likelihood"/>

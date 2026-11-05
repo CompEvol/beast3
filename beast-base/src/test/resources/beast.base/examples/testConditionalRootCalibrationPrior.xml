@@ -3,8 +3,9 @@
        namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.speciation:beast.base.spec.evolution.tree:beast.base.spec.evolution.operator:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
 
     <!-- for Figure 9.1 in BEAST2 book. BEAST 3 conversion of the BEAST 2.7.8 example
-         testConditionalRootCalibrationPrior.xml. As in the original, the birth rate has no prior
-         (the 1/x prior is commented out there), so its prior is flat. -->
+         testConditionalRootCalibrationPrior.xml. In the 2.7.8 original the birth rate has no prior
+         (its 1/x prior is commented out) and there is no data, so the posterior is improper. Both
+         the BEAST 2 example and this conversion now give the birth rate LogNormal(0, 8). -->
 
     <taxonset spec="TaxonSet" id="taxa">
         <taxon spec="Taxon" id="1"/>
@@ -47,6 +48,10 @@
 
         <distribution spec="CompoundDistribution" id="posterior">
             <distribution id="yule.prior" idref="cyule"/>
+            <distribution id="birthRate.prior" spec="LogNormal" param="@birthRate" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
         </distribution>
 
         <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="4" size="0.74" tree="@tree"/>

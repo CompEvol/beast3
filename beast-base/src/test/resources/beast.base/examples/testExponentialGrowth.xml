@@ -1,7 +1,7 @@
 <beast version="2.8"
        namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.tree.coalescent:beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.likelihood:beast.base.spec.evolution.operator:beast.base.spec.evolution.substitutionmodel:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
 
-    <!-- BEAST 3 conversion of the BEAST 2.7.8 example testExponentialGrowth.xml. As in the original, kappa and popSize have no prior (flat), and growthRate has no operator, so it stays at 1.0. -->
+    <!-- BEAST 3 conversion of the BEAST 2.7.8 example testExponentialGrowth.xml. The 2.7.8 original has no prior on kappa and popSize (improper flat priors). Both the BEAST 2 example and this conversion now give kappa LogNormal(1, 1.25) and popSize LogNormal(0, 8). growthRate has no operator, so it stays at 1.0. -->
 
 
     <!-- The sequence alignment (each sequence refers to a taxon above).         -->
@@ -152,6 +152,14 @@ newick='            (((((((((((((&apos;20_0.95_2&apos;[&amp;ampstate="2"]:0.0271
         </state>
 
         <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="hky.kappa.prior" spec="LogNormal" param="@hky.kappa" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
+            </distribution>
+            <distribution id="popSize.prior" spec="LogNormal" param="@popSize" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
             <distribution id="coalescent" spec="Coalescent">
                 <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
                      <tree idref="tree"/>

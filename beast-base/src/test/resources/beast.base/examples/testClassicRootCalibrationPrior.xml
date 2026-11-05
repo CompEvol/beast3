@@ -4,10 +4,7 @@
 
     <!-- for Figure 9.1 in BEAST2 book. BEAST 3 conversion of the BEAST 2.7.8 example
          testClassicRootCalibrationPrior.xml.
-         The original puts an improper OneOnX (1/x) prior on the birth rate. BEAST 3 has no spec
-         OneOnX, so it is replaced by LogUniform on [1e-8, 1e8], whose density is proportional to
-         1/x on that range. The birth-rate posterior is far inside these bounds, so the posterior
-         is the same. -->
+         The 2.7.8 original puts an improper OneOnX (1/x) prior on the birth rate. Both the BEAST 2 example and this conversion now use a proper LogNormal(0, 8) prior (M = 0 in log space, median 1, 95% from 1.6e-7 to 6.4e6). -->
 
     <taxonset spec="TaxonSet" id="taxa">
         <taxon spec="Taxon" id="1"/>
@@ -52,9 +49,9 @@
             <distribution id="yule.prior" idref="yule"/>
             <distribution idref="rootPrior"/>
 
-            <distribution id="birthRate.prior" spec="LogUniform" param="@birthRate">
-                <lower spec="RealScalarParam" domain="PositiveReal" value="1e-8" estimate="false"/>
-                <upper spec="RealScalarParam" domain="PositiveReal" value="1e8" estimate="false"/>
+            <distribution id="birthRate.prior" spec="LogNormal" param="@birthRate" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
         </distribution>
 

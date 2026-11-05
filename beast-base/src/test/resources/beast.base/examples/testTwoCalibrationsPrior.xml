@@ -3,7 +3,8 @@
        namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.speciation:beast.base.spec.evolution.tree:beast.base.spec.evolution.operator:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
 
     <!-- for Figure 9.1 in BEAST2 book. BEAST 3 conversion of the BEAST 2.7.8 example
-         testTwoCalibrationsPrior.xml. As in the original, the birth rate has no prior. -->
+         testTwoCalibrationsPrior.xml. The 2.7.8 original has no prior on the birth rate (an improper
+         flat prior). Both the BEAST 2 example and this conversion now use LogNormal(0, 8). -->
 
     <taxonset spec="TaxonSet" id="taxa">
         <taxon spec="Taxon" id="1"/>
@@ -61,6 +62,10 @@
             <distribution id="yule.prior" idref="yule"/>
             <distribution idref="mrcaPrior1"/>
             <distribution idref="mrcaPrior2"/>
+            <distribution id="birthRate.prior" spec="LogNormal" param="@birthRate" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
         </distribution>
 
         <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="4" size="2.2" tree="@tree"/>

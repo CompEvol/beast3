@@ -366,14 +366,10 @@
 
     <distribution id="posterior" spec="CompoundDistribution">
         <distribution id="prior" spec="CompoundDistribution">
-            <!-- The original puts an improper OneOnX (1/x) prior on populationMean. BEAST 3 has no
-                 spec OneOnX, so it is replaced by LogUniform on [1e-8, 1e8], whose density is
-                 proportional to 1/x on that range. The populationMean posterior is far inside these
-                 bounds, so the posterior is the same; the prior and posterior columns are lower by
-                 the constant ln(ln(1e16)) = 3.607. -->
-            <distribution id="populationMean.prior" spec="LogUniform" param="@populationMean">
-                <lower spec="RealScalarParam" domain="PositiveReal" value="1e-8" estimate="false"/>
-                <upper spec="RealScalarParam" domain="PositiveReal" value="1e8" estimate="false"/>
+            <!-- The 2.7.8 original puts an improper OneOnX (1/x) prior on populationMean. Both the BEAST 2 example and this conversion now use a proper LogNormal(0, 8) prior (M = 0 in log space, median 1, 95% from 1.6e-7 to 6.4e6). -->
+            <distribution id="populationMean.prior" spec="LogNormal" param="@populationMean" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
             <distribution spec="Poisson">
                 <lambda spec="RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>

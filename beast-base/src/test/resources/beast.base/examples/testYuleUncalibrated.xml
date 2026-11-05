@@ -2,8 +2,8 @@
 <!-- BEAST 3 conversion of the BEAST 2.7.8 example testYuleUncalibrated.xml:
      HKY with estimated frequencies, strict clock, Yule tree prior, and a log-normal
      calibration on the monophyletic {bonobo, chimp, human} clade.
-     The improper Uniform(0, Infinity) prior on the clock rate in the original has log density 0,
-     so it is omitted here; the PositiveReal domain keeps the rate positive. -->
+     The 2.7.8 original puts improper Uniform(0, Infinity) priors on the clock rate and the birth
+     rate. Both the BEAST 2 example and this conversion now use LogNormal(0, 8) for both. -->
 <beast version="2.8"
        namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.tree.coalescent:beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.likelihood:beast.base.spec.evolution.operator:beast.base.spec.evolution.substitutionmodel:beast.base.spec.evolution.branchratemodel:beast.base.spec.evolution.speciation:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
 
@@ -19,7 +19,14 @@
     <distribution id="posterior" spec="CompoundDistribution">
         <distribution id="prior" spec="CompoundDistribution">
             <distribution id="YuleModel.t:alignment" spec="YuleModel" birthDiffRate="@birthRate.t:alignment" conditionalOnRoot="false" tree="@Tree.t:alignment"/>
-            <!-- the original's Uniform(0, Infinity) prior on birthRate has log density 0 and is omitted -->
+            <distribution id="YuleBirthRatePrior.t:alignment" spec="LogNormal" param="@birthRate.t:alignment" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
+            <distribution id="ClockPrior.c:alignment" spec="LogNormal" param="@clockRate.c:alignment" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
             <distribution id="KappaPrior.s:alignment" spec="LogNormal" param="@kappa.s:alignment" meanInRealSpace="true">
                 <M spec="RealScalarParam" domain="Real" value="1.0" estimate="false"/>
                 <S spec="RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
