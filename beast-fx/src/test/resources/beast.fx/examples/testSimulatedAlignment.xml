@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beast version="2.8"
+       namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
+
+    <!-- Converted to BEAST 3 from beast.base/examples/legacy/testSimulatedAlignment.xml.
+         Differences from the original:
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent).
+    -->
+
+
+    <!-- The simulated sequence alignment. -->
+    <data spec="beastfx.app.seqgen.SimulatedAlignment" id="alignment" sequencelength="2000" outputFileName="simulated_alignment.xml">
+
+      <!-- The true tree down which sequences are simulated. -->
+      <tree spec="beast.base.evolution.tree.TreeParser" newick="((((human:0.021044961362048316,(chimp:0.01010430475937982,bonobo:0.01010430475937982):0.010940656602668497):0.012937366252643932,gorilla:0.03398232761469225):0.019356330316295488,orangutan:0.053338657930987736):0.011836836575646971,siamang:0.0651754945066347):0.0" IsLabelledNewick="true"/>
+
+      <data spec="Alignment" id="input_alignment" dataType="nucleotide">
+        <sequence spec="Sequence" taxon="human" value="?"/>
+        <sequence spec="Sequence" taxon="chimp" value="?"/>
+        <sequence spec="Sequence" taxon="bonobo" value="?"/>
+        <sequence spec="Sequence" taxon="gorilla" value="?"/>
+        <sequence spec="Sequence" taxon="orangutan" value="?"/>
+        <sequence spec="Sequence" taxon="siamang" value="?"/>
+      </data>
+
+      <siteModel spec="beast.base.spec.evolution.sitemodel.SiteModel" id="trueSiteModel" mutationRate="0.005">
+	<substModel spec="beast.base.spec.evolution.substitutionmodel.JukesCantor"/>
+      </siteModel>
+      
+    </data>
+
+    <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
+    <input spec="beast.base.spec.evolution.substitutionmodel.HKY" id="hky">
+        <parameter name="kappa" idref="hky.kappa"/>
+        <input id="freqs" name="frequencies" spec="beast.base.spec.evolution.substitutionmodel.Frequencies">
+            <input name="data" idref="alignment"/>
+        </input>
+    </input>
+
+    <!-- site model                                                              -->
+    <input spec="beast.base.spec.evolution.sitemodel.SiteModel" id="siteModel">
+        <!--<parameter name='mutationRate'>1.0</parameter>-->
+        <input name="substModel" idref="hky"/>
+    </input>
+
+    <input spec="beast.base.spec.evolution.likelihood.TreeLikelihood" id="treeLikelihood">
+        <input name="data" idref="alignment"/>
+        <input name="tree" idref="tree"/>
+        <input name="siteModel" idref="siteModel"/>
+    </input>
+
+    <input spec="beast.base.spec.evolution.tree.ClusterTree" id="tree" clusterType="upgma">
+        <input name="taxa" idref="alignment"/>
+    </input>
+
+    <input id="hky.kappa" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal">1.0</input>
+
+    <input id="popSize" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal">1.0</input>
+
+    <run spec="MCMC" id="mcmc" chainLength="1000000"> <!--autoOptimize="true"-->
+        <state>
+            <input name="stateNode" idref="hky.kappa"/>
+            <input name="stateNode" idref="popSize"/>
+            <input name="stateNode" idref="tree"/>
+        </state>
+
+        <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="coalescent" spec="Coalescent">
+                <treeIntervals spec="beast.base.evolution.tree.TreeIntervals" id="TreeIntervals">
+                     <tree idref="tree"/>
+                </treeIntervals>
+                <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation" id="ConstantPopulation">
+                    <parameter name="popSize" idref="popSize"/>
+                </populationModel>
+            </distribution>
+            <distribution id="likelihood" idref="treeLikelihood"/>
+        </distribution>
+
+        <operator id="kappaScaler" spec="beast.base.spec.inference.operator.ScaleOperator" scaleFactor="0.5" weight="1">
+            <parameter idref="hky.kappa"/>
+        </operator>
+        <operator id="popSizeScaler" spec="beast.base.spec.inference.operator.ScaleOperator" scaleFactor="0.5" weight="1">
+            <parameter idref="popSize"/>
+        </operator>
+        <operator id="treeScaler" spec="beast.base.spec.evolution.operator.ScaleTreeOperator" scaleFactor="0.5" weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec="beast.base.evolution.operator.Uniform" weight="10">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0">
+            <tree idref="tree"/>
+        </operator>
+        <operator id="narrow" spec="Exchange" isNarrow="true" weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator id="wide" spec="Exchange" isNarrow="false" weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec="WilsonBalding" weight="1">
+            <tree idref="tree"/>
+        </operator>
+
+        <logger logEvery="10000" fileName="test.$(seed).log">
+   	        <model idref="posterior"/>
+            <log idref="coalescent"/>
+            <log idref="likelihood"/>
+            <!--parameter idref="treeModel.rootHeight"/-->
+            <log idref="popSize"/>
+            <log idref="hky.kappa"/>
+            <log idref="posterior"/>
+        </logger>
+        <logger logEvery="10000" fileName="test.$(seed).trees">
+            <log idref="tree"/>
+        </logger>
+        <logger logEvery="10000">
+	        <model idref="posterior"/>
+            <log idref="coalescent"/>
+            <log idref="likelihood"/>
+            <!--parameter idref="treeModel.rootHeight"/-->
+            <log idref="popSize"/>
+            <log idref="hky.kappa"/>
+            <log idref="posterior"/>
+        </logger>
+    </run>
+
+</beast>

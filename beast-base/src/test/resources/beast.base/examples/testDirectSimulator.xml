@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beast version="2.8"
+       namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
+
+    <!-- Converted to BEAST 3 from beast.base/examples/legacy/testDirectSimulator.xml.
+         Differences from the original:
+           - No model differences.
+    -->
+
+
+    <run spec="DirectSimulator" nSamples="2">
+
+        <distribution spec="CompoundDistribution" id="fullModel">
+            <distribution spec="beast.base.spec.evolution.speciation.YuleModel" id="yuleModel">
+                <tree spec="Tree" id="tree">
+                    <taxonset spec="TaxonSet">
+                        <taxon spec="Taxon" id="t1"/>
+                        <taxon spec="Taxon" id="t2"/>
+                        <taxon spec="Taxon" id="t3"/>
+                        <taxon spec="Taxon" id="t4"/>
+                        <taxon spec="Taxon" id="t5"/>
+                    </taxonset>
+                </tree>
+                <birthDiffRate id="birthDiffRateParam" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
+            </distribution>
+
+            <distribution id="xExpParamDist" spec="beast.base.spec.inference.distribution.Exponential" mean="1" param="@birthDiffRateParam"/>
+
+        </distribution>
+
+        <logger logEvery="1" fileName="$(filebase).trees">
+            <log idref="tree"/>
+        </logger>
+    </run>
+</beast>

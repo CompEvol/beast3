@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beast version="2.8"
+       namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
+
+    <!-- Converted to BEAST 3 from beast.base/examples/legacy/testDirectSimulatorHierarchical.xml.
+         Differences from the original:
+           - No model differences.
+    -->
+
+
+    <parameter id="meanParam" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
+
+    <run spec="DirectSimulator" nSamples="1">
+
+        <distribution spec="CompoundDistribution">
+
+            <distribution id="meanExpParamDist" spec="beast.base.spec.inference.distribution.Exponential" mean="@meanParam">
+                <param id="x" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="NonNegativeReal" value="1.0"/>
+            </distribution>
+
+            <distribution id="xExpParamDist" spec="beast.base.spec.inference.distribution.Exponential" mean="1" param="@meanParam"/>
+
+        </distribution>
+
+        <logger logEvery="1" fileName="$(filebase).log">
+            <log idref="x"/>
+            <log idref="meanParam"/>
+        </logger>
+    </run>
+</beast>

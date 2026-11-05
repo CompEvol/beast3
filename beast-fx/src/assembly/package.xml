@@ -5,6 +5,7 @@
            version.xml          (the BEAST.app package descriptor)
            BEAST.app.src.jar    the package sources, at the zip root (BEAST2 convention)
            lib/beast-fx.jar
+           examples/beastfx/    example XML that needs beast-fx classes
          Only beast-fx.jar is bundled. Its dependencies are provided at runtime:
          beast-base (the BEAST.base package), beast-pkgmgmt (the bootstrap), and
          JavaFX + jdk.jsobject (the bundled JRE+FX, resolved into the boot layer).
@@ -37,6 +38,20 @@
             <destName>BEAST.app.src.jar</destName>
         </file>
     </files>
+
+    <!-- Example XML that needs beast-fx classes (e.g. beastfx.app.seqgen), so it
+         cannot live in the BEAST.base package. Shipped as examples/beastfx/ so the
+         release scripts can extract it next to the BEAST.base examples, giving
+         <bundle>/examples/beastfx/ in every installer. -->
+    <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/test/resources/beast.fx/examples</directory>
+            <outputDirectory>examples/beastfx</outputDirectory>
+            <includes>
+                <include>*.xml</include>
+            </includes>
+        </fileSet>
+    </fileSets>
 
     <dependencySets>
         <dependencySet>
