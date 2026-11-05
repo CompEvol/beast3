@@ -1,5 +1,7 @@
 package test.beast.evolution.operator;
 
+import beast.base.spec.evolution.operator.LogNormalSampleCheck;
+
 
 import beast.base.evolution.operator.kernel.BactrianScaleOperator;
 import beast.base.evolution.tree.Node;
@@ -12,7 +14,6 @@ import beast.base.inference.distribution.ParametricDistribution;
 import beast.base.inference.distribution.Prior;
 import beast.base.inference.parameter.RealParameter;
 import beast.base.util.Randomizer;
-import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
@@ -219,16 +220,7 @@ public class BactrianScaleOperatorTest extends BactrianRandomWalkOperatorTest {
 			for (int i = 0; i < v.length; i++) {
 				v[i] = values.get(i)[k];
 			}
-			double m = StatUtils.mean(v);
-			double median = StatUtils.percentile(v, 50);
-			double s = StatUtils.variance(v, 50);
-			assertEquals(1.0, m, 9e-3);
-			assertEquals(Math.exp(-0.5), median, 9e-3);
-			assertEquals(Math.exp(1)-1, s, 1e-1);
-			assertEquals(0.0854, StatUtils.percentile(v, 2.5), 5e-3);
-			assertEquals(0.117, StatUtils.percentile(v, 5), 5e-3);
-			assertEquals(3.14, StatUtils.percentile(v, 95), 1e-1);
-			assertEquals(4.31, StatUtils.percentile(v, 97.5), 1e-1);
+			LogNormalSampleCheck.assertMean1Sigma1(v);
 		}
 	}
 }

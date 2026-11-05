@@ -2,12 +2,15 @@ package beast.base.spec.evolution.operator;
 
 
 import beast.base.core.Loggable;
+import beast.base.inference.CompoundDistribution;
+import beast.base.inference.Distribution;
 import beast.base.inference.MCMC;
 import beast.base.inference.Operator;
 import beast.base.inference.State;
 import beast.base.inference.StateNode;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.Exponential;
 import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.operator.ScaleOperator;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -15,7 +18,6 @@ import beast.base.spec.inference.util.AsRealScalar;
 import beast.base.spec.inference.util.RPNcalculator;
 import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
-import org.apache.commons.math4.legacy.stat.StatUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
@@ -67,19 +69,29 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
         AsRealScalar asRealScalar = new AsRealScalar();
         asRealScalar.initByName("arg", calculator, "domain", PositiveReal.INSTANCE);
 
-		doMCMCrun(asRealScalar, param1, param2, operators);
+		// param1 and param2 have no prior of their own, so with only the LogNormal prior on
+		// x = param1 - param2 the posterior is improper: both drift upwards together (to about
+		// 50-185 in 5M steps), mixing of x degrades, and its upper tail is under-sampled.
+		// An Exponential(1) prior on param2 makes it proper; x and param2 are then independent,
+		// so x is still exactly LogNormal.
+		Exponential param2Prior = new Exponential();
+		param2Prior.initByName("param", param2, "mean", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+
+		doMCMCrun(asRealScalar, param1, param2, param2Prior, operators);
 	}
 
     // param must be RealScalar<PositiveReal> as required by LogNormal
 	private void doMCMCrun(RealScalar<PositiveReal> param, Loggable param1, Loggable param2,
-                           List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
+                           Distribution param2Prior, List<Operator> operators) throws IOException, SAXException, ParserConfigurationException {
 		// Fix seed: will hopefully ensure success of test unless something
 		// goes terribly wrong.
 		Randomizer.setSeedReproducible(123);
 
         RealScalar<Real> meanInReal = new RealScalarParam<>(1.0, Real.INSTANCE);
         RealScalar<PositiveReal> sd = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
-        LogNormal prior = new LogNormal(param, meanInReal, sd, true);
+        LogNormal xPrior = new LogNormal(param, meanInReal, sd, true);
+        CompoundDistribution prior = new CompoundDistribution();
+        prior.initByName("distribution", xPrior, "distribution", param2Prior);
 
         // Set up state:
 		State state = new State();
@@ -121,18 +133,6 @@ public class UpDownOperatorTest {//extends RealRandomWalkOperatorTest {
 		for (int i = 0; i < v.length; i++) {
 			v[i] = values.get(i);
 		}
-		double m = StatUtils.mean(v);
-		double median = StatUtils.percentile(v, 50);
-		double s = StatUtils.variance(v, 50);
-		// 3 SE for sample mean of ~498k LogNormal(M=1, S=1) draws (ESS ~ N
-		// for parameter-only chain): SE = sqrt((exp(1)-1) / 498000) ~= 1.86e-3,
-		// 3 SE ~= 5.6e-3. Expected failure rate at this tolerance: 0.27%.
-		assertEquals(1.0, m, 6e-3);
-		assertEquals(Math.exp(-0.5), median, 5e-3);
-		assertEquals(Math.exp(1)-1, s, 1e-1);
-		assertEquals(0.0854, StatUtils.percentile(v, 2.5), 5e-3);
-		assertEquals(0.117, StatUtils.percentile(v, 5), 5e-2);
-		assertEquals(3.14, StatUtils.percentile(v, 95), 1e-1);
-		assertEquals(4.31, StatUtils.percentile(v, 97.5), 1e-1);
+		LogNormalSampleCheck.assertMean1Sigma1(v);
 	}
 }
