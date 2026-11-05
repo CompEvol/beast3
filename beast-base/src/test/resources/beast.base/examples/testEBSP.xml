@@ -479,25 +479,25 @@
     <operator parameter="@hky003.kappa" scaleFactor="0.5" spec="ScaleOperator" weight="2.0"/>
     <operator id="treeModel000(uniform)" spec="beast.base.evolution.operator.Uniform" tree="@treeModel000" weight="10.0"/>
     <operator id="treeModel000(scaleOperator)" scaleFactor="0.5" spec="ScaleTreeOperator" tree="@treeModel000" weight="5.0"/>
-    <operator id="treeModel000(subtreeSlide)" size="1.0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel000" weight="5.0"/>
+    <operator id="treeModel000(subtreeSlide)" size="2.5" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel000" weight="5.0"/>
     <operator id="treeModel000(narrow)" isNarrow="true" spec="Exchange" tree="@treeModel000" weight="1.0"/>
     <operator id="treeModel000(wide)" isNarrow="false" spec="Exchange" tree="@treeModel000" weight="1.0"/>
     <operator id="treeModel000(wilsonBalding)" spec="WilsonBalding" tree="@treeModel000" weight="1.0"/>
     <operator id="treeModel001(uniform)" spec="beast.base.evolution.operator.Uniform" tree="@treeModel001" weight="10.0"/>
     <operator id="treeModel001(scaleOperator)" scaleFactor="0.5" spec="ScaleTreeOperator" tree="@treeModel001" weight="5.0"/>
-    <operator id="treeModel001(subtreeSlide)" size="1.0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel001" weight="5.0"/>
+    <operator id="treeModel001(subtreeSlide)" size="2.1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel001" weight="5.0"/>
     <operator id="treeModel001(narrow)" isNarrow="true" spec="Exchange" tree="@treeModel001" weight="1.0"/>
     <operator id="treeModel001(wide)" isNarrow="false" spec="Exchange" tree="@treeModel001" weight="1.0"/>
     <operator id="treeModel001(wilsonBalding)" spec="WilsonBalding" tree="@treeModel001" weight="1.0"/>
     <operator id="treeModel002(uniform)" spec="beast.base.evolution.operator.Uniform" tree="@treeModel002" weight="10.0"/>
     <operator id="treeModel002(scaleOperator)" scaleFactor="0.5" spec="ScaleTreeOperator" tree="@treeModel002" weight="5.0"/>
-    <operator id="treeModel002(subtreeSlide)" size="1.0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel002" weight="5.0"/>
+    <operator id="treeModel002(subtreeSlide)" size="2.1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel002" weight="5.0"/>
     <operator id="treeModel002(narrow)" isNarrow="true" spec="Exchange" tree="@treeModel002" weight="1.0"/>
     <operator id="treeModel002(wide)" isNarrow="false" spec="Exchange" tree="@treeModel002" weight="1.0"/>
     <operator id="treeModel002(wilsonBalding)" spec="WilsonBalding" tree="@treeModel002" weight="1.0"/>
     <operator id="treeModel003(uniform)" spec="beast.base.evolution.operator.Uniform" tree="@treeModel003" weight="10.0"/>
     <operator id="treeModel003(scaleOperator)" scaleFactor="0.5" spec="ScaleTreeOperator" tree="@treeModel003" weight="5.0"/>
-    <operator id="treeModel003(subtreeSlide)" size="1.0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel003" weight="5.0"/>
+    <operator id="treeModel003(subtreeSlide)" size="0.65" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@treeModel003" weight="5.0"/>
     <operator id="treeModel003(narrow)" isNarrow="true" spec="Exchange" tree="@treeModel003" weight="1.0"/>
     <operator id="treeModel003(wide)" isNarrow="false" spec="Exchange" tree="@treeModel003" weight="1.0"/>
     <operator id="treeModel003(wilsonBalding)" spec="WilsonBalding" tree="@treeModel003" weight="1.0"/>

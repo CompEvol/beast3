@@ -49,7 +49,7 @@
             <distribution id="yule.prior" idref="cyule"/>
         </distribution>
 
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="4" size="2.5" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="4" size="0.74" tree="@tree"/>
         <operator spec="ScaleOperator" weight="1" scaleFactor="0.25" parameter="@birthRate"/>
 
         <logger logEvery="100" fileName="cond_root_prior.$(seed).log">

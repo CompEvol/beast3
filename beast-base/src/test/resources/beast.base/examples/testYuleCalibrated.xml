@@ -78,7 +78,7 @@
         <operator id="treeScaler.t:alignment" spec="ScaleTreeOperator" scaleFactor="0.5" weight="3.0" tree="@Tree.t:alignment"/>
         <operator id="treeRootScaler.t:alignment" spec="ScaleTreeOperator" rootOnly="true" scaleFactor="0.5" weight="3.0" tree="@Tree.t:alignment"/>
         <operator id="UniformOperator.t:alignment" spec="beast.base.evolution.operator.Uniform" weight="30.0" tree="@Tree.t:alignment"/>
-        <operator id="SubtreeSlide.t:alignment" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="1.0" weight="15.0" tree="@Tree.t:alignment"/>
+        <operator id="SubtreeSlide.t:alignment" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="2.0" weight="15.0" tree="@Tree.t:alignment"/>
         <operator id="narrow.t:alignment" spec="Exchange" isNarrow="true" weight="15.0" tree="@Tree.t:alignment"/>
         <operator id="wide.t:alignment" spec="Exchange" isNarrow="false" weight="3.0" tree="@Tree.t:alignment"/>
         <operator id="WilsonBalding.t:alignment" spec="WilsonBalding" weight="3.0" tree="@Tree.t:alignment"/>
