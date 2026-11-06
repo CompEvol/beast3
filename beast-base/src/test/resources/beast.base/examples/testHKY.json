@@ -54,7 +54,7 @@ beast: [
      operator: [
          {id: "kappaScaler", spec: "beast.base.spec.inference.operator.ScaleOperator", parameter: "@hky.kappa", scaleFactor: 0.5, weight: 1.0},
          {id: "treeScaler", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@tree", scaleFactor: 0.5, weight: 1.0},
-         {id: "subtreeSlide", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeSlide", tree: "@tree", weight: 5.0, size: 1.0},
+         {id: "subtreeSlide", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeScale", tree: "@tree", weight: 5.0},
          {id: "uniform", spec: "beast.base.evolution.operator.Uniform", tree: "@tree", weight: 10.0},
          {id: "narrow", spec: "Exchange", isNarrow: true, tree: "@tree", weight: 1.0},
          {id: "wide", spec: "Exchange", isNarrow: false, tree: "@tree", weight: 1.0},

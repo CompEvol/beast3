@@ -93,7 +93,7 @@
 
         <operator id="UniformOperator.t:primate" tree="@Tree.t:primate" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-        <operator id="SubtreeSlide.t:primate" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@Tree.t:primate" weight="15.0"/>
+        <operator id="SubtreeSlide.t:primate" spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" tree="@Tree.t:primate" weight="15.0"/>
 
         <operator id="narrow.t:primate" spec="Exchange" tree="@Tree.t:primate" weight="15.0"/>
 
