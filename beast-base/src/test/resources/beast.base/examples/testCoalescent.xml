@@ -1,0 +1,136 @@
+<beast version="2.8"
+       namespace="beast.base.spec.inference.parameter:beast.base.spec.inference.operator:beast.base.spec.inference.distribution:beast.base.spec.evolution.tree.coalescent:beast.base.spec.evolution.sitemodel:beast.base.spec.evolution.likelihood:beast.base.spec.evolution.operator:beast.base.spec.evolution.substitutionmodel:beast.base.spec.domain:beast.base.evolution.alignment:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.pkgmgmt:beast.base.core:beast.base.inference:beast.base.inference.operator:beast.base.evolution.operator">
+
+    <!-- BEAST 3 conversion of the BEAST 2.7.8 example testCoalescent.xml. The 2.7.8 original has no prior on kappa and popSize (improper flat priors). Both the BEAST 2 example and this conversion now give kappa LogNormal(1, 1.25) and popSize LogNormal(0, 8). -->
+
+
+    <!-- The sequence alignment (each sequence refers to a taxon above).         -->
+    <!-- ntax=6 nchar=768                                                        -->
+    <!-- npatterns=69                                                            -->
+    <data id="alignment" dataType="nucleotide">
+        <sequence taxon="human">
+            AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGGAGCTTAAACCCCCTTATTTCTACTAGGACTATGAGAATCGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCGTACTAAGAAATTTAGGTTAAATACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTG-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGACCAATGGGACTTAAACCCACAAACACTTAGTTAACAGCTAAGCACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCGGAGCTTGGTAAAAAGAGGCCTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGGCCTCCATGACTTTTTCAAAAGGTATTAGAAAAACCATTTCATAACTTTGTCAAAGTTAAATTATAGGCT-AAATCCTATATATCTTA-CACTGTAAAGCTAACTTAGCATTAACCTTTTAAGTTAAAGATTAAGAGAACCAACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="chimp">
+            AGAAATATGTCTGATAAAAGAATTACTTTGATAGAGTAAATAATAGGAGTTCAAATCCCCTTATTTCTACTAGGACTATAAGAATCGAACTCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTAAGCACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTTA-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATTAATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAATCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAA-TCACCTCAGAGCTTGGTAAAAAGAGGCTTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCTAAAGCTGGTTTCAAGCCAACCCCATGACCTCCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATTACAGGTT-AACCCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGATTAAGAGGACCGACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="bonobo">
+            AGAAATATGTCTGATAAAAGAATTACTTTGATAGAGTAAATAATAGGAGTTTAAATCCCCTTATTTCTACTAGGACTATGAGAGTCGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCGTACTAAGAAATTTAGGTTAAACACAGACCAAGAGCCTTCAAAGCTCTCAGTAAGTTA-CAATACTTAATTTCTGTAAGGACTGCAAAACCCCACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATTAATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAATCAGC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTTGAATTTGCAATTCAATATGAAAA-TCACCTCAGAGCTTGGTAAAAAGAGGCTTAACCCCTGTCTTTAGATTTACAGTCCAATGCTTCA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCTAAAGCTGGTTTCAAGCCAACCCCATGACCCCCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATTACAGGTT-AAACCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGATTAAGAGGACCAACACCTCTTTACAGTGA
+        </sequence>
+        <sequence taxon="gorilla">
+            AGAAATATGTCTGATAAAAGAGTTACTTTGATAGAGTAAATAATAGAGGTTTAAACCCCCTTATTTCTACTAGGACTATGAGAATTGAACCCATCCCTGAGAATCCAAAATTCTCCGTGCCACCTGTCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTCACATCCTTCCCGTACTAAGAAATTTAGGTTAAACATAGACCAAGAGCCTTCAAAGCCCTTAGTAAGTTA-CAACACTTAATTTCTGTAAGGACTGCAAAACCCTACTCTGCATCAACTGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCAATGGGACTCAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAC-TGGCTTCAATCTAAAGCCCCGGCAGG-TTTGAAGCTGCTTCTTCGAATTTGCAATTCAATATGAAAT-TCACCTCGGAGCTTGGTAAAAAGAGGCCCAGCCTCTGTCTTTAGATTTACAGTCCAATGCCTTA-CTCAGCCATTTTACCACAAAAAAGGAAGGAATCGAACCCCCCAAAGCTGGTTTCAAGCCAACCCCATGACCTTCATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAGGTTAAATTACGGGTT-AAACCCCGTATATCTTA-CACTGTAAAGCTAACCTAGCGTTAACCTTTTAAGTTAAAGATTAAGAGTATCGGCACCTCTTTGCAGTGA
+        </sequence>
+        <sequence taxon="orangutan">
+            AGAAATATGTCTGACAAAAGAGTTACTTTGATAGAGTAAAAAATAGAGGTCTAAATCCCCTTATTTCTACTAGGACTATGGGAATTGAACCCACCCCTGAGAATCCAAAATTCTCCGTGCCACCCATCACACCCCATCCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTACACCCTTCCCGTACTAAGAAATTTAGGTTA--CACAGACCAAGAGCCTTCAAAGCCCTCAGCAAGTCA-CAGCACTTAATTTCTGTAAGGACTGCAAAACCCCACTTTGCATCAACTGAGCGCAAATCAGCCACTTTAATTAAGCTAAGCCCTCCTAGACCGATGGGACTTAAACCCACAAACATTTAGTTAACAGCTAAACACCCTAGTCAAT-TGGCTTCAGTCCAAAGCCCCGGCAGGCCTTAAAGCTGCTCCTTCGAATTTGCAATTCAACATGACAA-TCACCTCAGGGCTTGGTAAAAAGAGGTCTGACCCCTGTTCTTAGATTTACAGCCTAATGCCTTAACTCGGCCATTTTACCGCAAAAAAGGAAGGAATCGAACCTCCTAAAGCTGGTTTCAAGCCAACCCCATAACCCCCATGACTTTTTCAAAAGGTACTAGAAAAACCATTTCGTAACTTTGTCAAAGTTAAATTACAGGTC-AGACCCTGTGTATCTTA-CATTGCAAAGCTAACCTAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACCAGCCTCTCTTTGCAATGA
+        </sequence>
+        <sequence taxon="siamang">
+            AGAAATACGTCTGACGAAAGAGTTACTTTGATAGAGTAAATAACAGGGGTTTAAATCCCCTTATTTCTACTAGAACCATAGGAGTCGAACCCATCCTTGAGAATCCAAAACTCTCCGTGCCACCCGTCGCACCCTGTTCTAAGTAAGGTCAGCTAAATAAGCTATCGGGCCCATACCCCGAAAATGTTGGTTATACCCTTCCCATACTAAGAAATTTAGGTTAAACACAGACCAAGAGCCTTCAAAGCCCTCAGTAAGTTAACAAAACTTAATTTCTGCAAGGGCTGCAAAACCCTACTTTGCATCAACCGAACGCAAATCAGCCACTTTAATTAAGCTAAGCCCTTCTAGATCGATGGGACTTAAACCCATAAAAATTTAGTTAACAGCTAAACACCCTAAACAACCTGGCTTCAATCTAAAGCCCCGGCAGA-GTTGAAGCTGCTTCTTTGAACTTGCAATTCAACGTGAAAAATCACTTCGGAGCTTGGCAAAAAGAGGTTTCACCTCTGTCCTTAGATTTACAGTCTAATGCTTTA-CTCAGCCACTTTACCACAAAAAAGGAAGGAATCGAACCCTCTAAAACCGGTTTCAAGCCAGCCCCATAACCTTTATGACTTTTTCAAAAGATATTAGAAAAACTATTTCATAACTTTGTCAAAGTTAAATCACAGGTCCAAACCCCGTATATCTTATCACTGTAGAGCTAGACCAGCATTAACCTTTTAAGTTAAAGACTAAGAGAACTACCGCCTCTTTACAGTGA
+        </sequence>
+    </data>
+
+    <!-- The HKY substitution model (Hasegawa, Kishino & Yano, 1985)             -->
+    <input spec='HKY' id="hky">
+        <parameter name='kappa' idref='hky.kappa'/>
+        <input id='freqs' name='frequencies' spec='Frequencies'>
+            <input name='data' idref='alignment'/>
+        </input>
+    </input>
+
+    <!-- site model                                                              -->
+    <input spec='SiteModel' id="siteModel">
+        <!--<parameter name='mutationRate'>1.0</parameter>-->
+        <input name='substModel' idref='hky'/>
+    </input>
+
+    <input spec='TreeLikelihood' id="treeLikelihood">
+        <input name='data' idref="alignment"/>
+        <input name='tree' idref="tree"/>
+        <input name='siteModel' idref="siteModel"/>
+    </input>
+
+
+    <input spec='beast.base.spec.evolution.tree.ClusterTree' id='tree' clusterType='upgma'>
+        <input name='taxa' idref='alignment'/>
+    </input>
+
+    <parameter spec="RealScalarParam" domain="PositiveReal" id="hky.kappa" value="1.0"/>
+
+    <parameter spec="RealScalarParam" domain="PositiveReal" id="popSize" value="1.0"/>
+
+
+    <run spec="MCMC" id="mcmc" chainLength="1000000"> <!--autoOptimize="true"-->
+        <state>
+            <input name='stateNode' idref='hky.kappa'/>
+            <input name='stateNode' idref='popSize'/>
+            <input name='stateNode' idref='tree'/>
+        </state>
+
+        <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="hky.kappa.prior" spec="LogNormal" param="@hky.kappa" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
+            </distribution>
+            <distribution id="popSize.prior" spec="LogNormal" param="@popSize" meanInRealSpace="false">
+                <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
+            <distribution id="coalescent" spec="Coalescent">
+                <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='TreeIntervals'>
+                     <tree idref="tree"/>
+                </treeIntervals>
+                <populationModel spec="ConstantPopulation" id='ConstantPopulation'>
+                    <parameter name="popSize" idref="popSize"/>
+                </populationModel>
+            </distribution>
+            <distribution id='likelihood' idref="treeLikelihood"/>
+        </distribution>
+
+        <operator id='kappaScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1">
+            <parameter idref="hky.kappa"/>
+        </operator>
+        <operator id='popSizeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1">
+            <parameter idref="popSize"/>
+        </operator>
+        <operator id='treeScaler' spec='ScaleTreeOperator' scaleFactor="0.5" weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec='beast.base.evolution.operator.Uniform' weight="10">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="0.0083">
+            <tree idref="tree"/>
+        </operator>
+        <operator id='narrow' spec='Exchange' isNarrow='true' weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator id='wide' spec='Exchange' isNarrow='false' weight="1">
+            <tree idref="tree"/>
+        </operator>
+        <operator spec='WilsonBalding' weight="1">
+            <tree idref="tree"/>
+        </operator>
+
+        <logger logEvery="10000" fileName="test.$(seed).log">
+   	        <model idref='posterior'/>
+            <log idref="coalescent"/>
+            <log idref="likelihood"/>
+            <!--parameter idref="treeModel.rootHeight"/-->
+            <log idref="popSize"/>
+            <log idref="hky.kappa"/>
+            <log idref="posterior"/>
+        </logger>
+        <logger logEvery="10000" fileName="test.$(seed).trees">
+            <log idref="tree"/>
+        </logger>
+        <logger logEvery="10000">
+	        <model idref='posterior'/>
+            <log idref="coalescent"/>
+            <log idref="likelihood"/>
+            <!--parameter idref="treeModel.rootHeight"/-->
+            <log idref="popSize"/>
+            <log idref="hky.kappa"/>
+            <log idref="posterior"/>
+        </logger>
+    </run>
+
+</beast>
