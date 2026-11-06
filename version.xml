@@ -63,6 +63,7 @@
                 <provider classname="beast.base.evolution.operator.kernel.BactrianNodeOperator"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianOperatorSchedule"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianScaleOperator"/>
+                <provider classname="beast.base.evolution.operator.kernel.BactrianSubtreeScale"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianSubtreeSlide"/>
                 <provider classname="beast.base.evolution.operator.kernel.BactrianTipDatesRandomWalker"/>
 
