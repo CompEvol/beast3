@@ -45,6 +45,9 @@
             <outputDirectory>examples</outputDirectory>
             <includes>
                 <include>*.xml</include>
+                <!-- JSON-format examples -->
+                <include>testHKY.json</include>
+                <include>testUCLNclock.json</include>
                 <include>fasta/**</include>
                 <include>nexus/**</include>
             </includes>

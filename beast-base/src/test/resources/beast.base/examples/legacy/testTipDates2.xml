@@ -30,8 +30,9 @@
                 <distr id="Uniform0" lower="0.0" offset="0.0" spec="beast.base.inference.distribution.Uniform" upper="1.0"/>
             </distribution>
 
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="kappa.prior" spec="beast.base.inference.distribution.Prior" x="@hky.kappa">
-                <distr id="OneOnX0" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
+                <distr id="LogNormal.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
         </distribution>
         <distribution id="likelihood" spec="CompoundDistribution">

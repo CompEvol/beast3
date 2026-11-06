@@ -1,0 +1,135 @@
+{version: "2.8",
+namespace: "beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt",
+
+// Converted to BEAST 3 from beast.base/examples/legacy/testUCLNclock.json.
+// Proper priors (the same change is made in the BEAST 2 source):
+//  - birthRate.t:dna: Uniform(0, Infinity) -> LogNormal(M=0, S=8) in log space
+// Changes made by the conversion:
+//  - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.019.
+//    BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
+
+beast: [
+	{id: "dna",
+	 spec: "Alignment",
+	 sequence: [
+		 {spec: "Sequence", taxon: "Carp",    totalcount: 4, value: "ATGGCACACCCAACGCAACTAGGTTTCAAGGACGCGGCCATACCCGTTATAGAGGAACTTCTTCACTTCCACGACCACGCATTAATAATTGTGCTCCTAATTAGCACTTTAGTTTTATATATTATTACTGCAATGGTATCAACTAAACTTACTAATAAATATATTCTAGACTCCCAAGAAATCGAAATCGTATGAACCATTCTACCAGCCGTCATTTTAGTACTAATCGCCCTGCCCTCCCTACGCATCCTGTACCTTATAGACGAAATTAACGACCCTCACCTGACAATTAAAGCAATAGGACACCAATGATACTGAAGTTACGAGTATACAGACTATGAAAATCTAGGATTCGACTCCTATATAGTACCAACCCAAGACCTTGCCCCCGGACAATTCCGACTTCTGGAAACAGACCACCGAATAGTTGTTCCAATAGAATCCCCAGTCCGTGTCCTAGTATCTGCTGAAGACGTGCTACATTCTTGAGCTGTTCCATCCCTTGGCGTAAAAATGGACGCAGTCCCAGGACGACTAAATCAAGCCGCCTTTATTGCCTCACGCCCAGGGGTCTTTTACGGACAATGCTCTGAAATTTGTGGAGCTAATCACAGCTTTATACCAATTGTAGTTGAAGCAGTACCTCTCGAACACTTCGAAAACTGATCCTCATTAATACTAGAAGACGCCTCGCTAGGAAGCTAA"},
+		 {spec: "Sequence", taxon: "Chicken", totalcount: 4, value: "ATGGCCAACCACTCCCAACTAGGCTTTCAAGACGCCTCATCCCCCATCATAGAAGAGCTCGTTGAATTCCACGACCACGCCCTGATAGTCGCACTAGCAATTTGCAGCTTAGTACTCTACCTTCTAACTCTTATACTTATAGAAAAACTATCA---TCAAACACCGTAGATGCCCAAGAAGTTGAACTAATCTGAACCATCCTACCCGCTATTGTCCTAGTCCTGCTTGCCCTCCCCTCCCTCCAAATCCTCTACATAATAGACGAAATCGACGAACCTGATCTCACCCTAAAAGCCATCGGACACCAATGATACTGAACCTATGAATACACAGACTTCAAGGACCTCTCATTTGACTCCTACATAACCCCAACAACAGACCTCCCCCTAGGCCACTTCCGCCTACTAGAAGTCGACCATCGCATTGTAATCCCCATAGAATCCCCCATTCGAGTAATCATCACCGCTGATGACGTCCTCCACTCATGAGCCGTACCCGCCCTCGGGGTAAAAACAGACGCAATCCCTGGACGACTAAATCAAACCTCCTTCATCACCACTCGACCAGGAGTGTTTTACGGACAATGCTCAGAAATCTGCGGAGCTAACCACAGCTACATACCCATTGTAGTAGAGTCTACCCCCCTAAAACACTTTGAAGCCTGATCCTCACTA------------------CTGTCATCTTAA"},
+		 {spec: "Sequence", taxon: "Cow",     totalcount: 4, value: "ATGGCATATCCCATACAACTAGGATTCCAAGATGCAACATCACCAATCATAGAAGAACTACTTCACTTTCATGACCACACGCTAATAATTGTCTTCTTAATTAGCTCATTAGTACTTTACATTATTTCACTAATACTAACGACAAAGCTGACCCATACAAGCACGATAGATGCACAAGAAGTAGAGACAATCTGAACCATTCTGCCCGCCATCATCTTAATTCTAATTGCTCTTCCTTCTTTACGAATTCTATACATAATAGATGAAATCAATAACCCATCTCTTACAGTAAAAACCATAGGACATCAGTGATACTGAAGCTATGAGTATACAGATTATGAGGACTTAAGCTTCGACTCCTACATAATTCCAACATCAGAATTAAAGCCAGGGGAGCTACGACTATTAGAAGTCGATAATCGAGTTGTACTACCAATAGAAATAACAATCCGAATGTTAGTCTCCTCTGAAGACGTATTACACTCATGAGCTGTGCCCTCTCTAGGACTAAAAACAGACGCAATCCCAGGCCGTCTAAACCAAACAACCCTTATATCGTCCCGTCCAGGCTTATATTACGGTCAATGCTCAGAAATTTGCGGGTCAAACCACAGTTTCATACCCATTGTCCTTGAGTTAGTCCCACTAAAGTACTTTGAAAAATGATCTGCGTCAATATTA---------------------TAA"},
+		 {spec: "Sequence", taxon: "Frog",    totalcount: 4, value: "ATGGCACACCCATCACAATTAGGTTTTCAAGACGCAGCCTCTCCAATTATAGAAGAATTACTTCACTTCCACGACCATACCCTCATAGCCGTTTTTCTTATTAGTACGCTAGTTCTTTACATTATTACTATTATAATAACTACTAAACTAACTAATACAAACCTAATGGACGCACAAGAGATCGAAATAGTGTGAACTATTATACCAGCTATTAGCCTCATCATAATTGCCCTTCCATCCCTTCGTATCCTATATTTAATAGATGAAGTTAATGATCCACACTTAACAATTAAAGCAATCGGCCACCAATGATACTGAAGCTACGAATATACTAACTATGAGGATCTCTCATTTGACTCTTATATAATTCCAACTAATGACCTTACCCCTGGACAATTCCGGCTGCTAGAAGTTGATAATCGAATAGTAGTCCCAATAGAATCTCCAACCCGACTTTTAGTTACAGCCGAAGACGTCCTCCACTCGTGAGCTGTACCCTCCTTGGGTGTCAAAACAGATGCAATCCCAGGACGACTTCATCAAACATCATTTATTGCTACTCGTCCGGGAGTATTTTACGGACAATGTTCAGAAATTTGCGGAGCAAACCACAGCTTTATACCAATTGTAGTTGAAGCAGTACCGCTAACCGACTTTGAAAACTGATCTTCATCAATACTA---GAAGCATCACTA------AGA"},
+		 {spec: "Sequence", taxon: "Human",   totalcount: 4, value: "ATGGCACATGCAGCGCAAGTAGGTCTACAAGACGCTACTTCCCCTATCATAGAAGAGCTTATCACCTTTCATGATCACGCCCTCATAATCATTTTCCTTATCTGCTTCCTAGTCCTGTATGCCCTTTTCCTAACACTCACAACAAAACTAACTAATACTAACATCTCAGACGCTCAGGAAATAGAAACCGTCTGAACTATCCTGCCCGCCATCATCCTAGTCCTCATCGCCCTCCCATCCCTACGCATCCTTTACATAACAGACGAGGTCAACGATCCCTCCCTTACCATCAAATCAATTGGCCACCAATGGTACTGAACCTACGAGTACACCGACTACGGCGGACTAATCTTCAACTCCTACATACTTCCCCCATTATTCCTAGAACCAGGCGACCTGCGACTCCTTGACGTTGACAATCGAGTAGTACTCCCGATTGAAGCCCCCATTCGTATAATAATTACATCACAAGACGTCTTGCACTCATGAGCTGTCCCCACATTAGGCTTAAAAACAGATGCAATTCCCGGACGTCTAAACCAAACCACTTTCACCGCTACACGACCGGGGGTATACTACGGTCAATGCTCTGAAATCTGTGGAGCAAACCACAGTTTCATGCCCATCGTCCTAGAATTAATTCCCCTAAAAATCTTTGAAATA---------------------GGGCCCGTATTTACCCTATAG"},
+		 {spec: "Sequence", taxon: "Loach",   totalcount: 4, value: "ATGGCACATCCCACACAATTAGGATTCCAAGACGCGGCCTCACCCGTAATAGAAGAACTTCTTCACTTCCATGACCATGCCCTAATAATTGTATTTTTGATTAGCGCCCTAGTACTTTATGTTATTATTACAACCGTCTCAACAAAACTCACTAACATATATATTTTGGACTCACAAGAAATTGAAATCGTATGAACTGTGCTCCCTGCCCTAATCCTCATTTTAATCGCCCTCCCCTCACTACGAATTCTATATCTTATAGACGAGATTAATGACCCCCACCTAACAATTAAGGCCATGGGGCACCAATGATACTGAAGCTACGAGTATACTGATTATGAAAACTTAAGTTTTGACTCCTACATAATCCCCACCCAGGACCTAACCCCTGGACAATTCCGGCTACTAGAGACAGACCACCGAATGGTTGTTCCCATAGAATCCCCTATTCGCATTCTTGTTTCCGCCGAAGATGTACTACACTCCTGGGCCCTTCCAGCCATGGGGGTAAAGATAGACGCGGTCCCAGGACGCCTTAACCAAACCGCCTTTATTGCCTCCCGCCCCGGGGTATTCTATGGGCAATGCTCAGAAATCTGTGGAGCAAACCACAGCTTTATACCCATCGTAGTAGAAGCGGTCCCACTATCTCACTTCGAAAACTGGTCCACCCTTATACTAAAAGACGCCTCACTAGGAAGCTAA"},
+		 {spec: "Sequence", taxon: "Mouse",   totalcount: 4, value: "ATGGCCTACCCATTCCAACTTGGTCTACAAGACGCCACATCCCCTATTATAGAAGAGCTAATAAATTTCCATGATCACACACTAATAATTGTTTTCCTAATTAGCTCCTTAGTCCTCTATATCATCTCGCTAATATTAACAACAAAACTAACACATACAAGCACAATAGATGCACAAGAAGTTGAAACCATTTGAACTATTCTACCAGCTGTAATCCTTATCATAATTGCTCTCCCCTCTCTACGCATTCTATATATAATAGACGAAATCAACAACCCCGTATTAACCGTTAAAACCATAGGGCACCAATGATACTGAAGCTACGAATATACTGACTATGAAGACCTATGCTTTGATTCATATATAATCCCAACAAACGACCTAAAACCTGGTGAACTACGACTGCTAGAAGTTGATAACCGAGTCGTTCTGCCAATAGAACTTCCAATCCGTATATTAATTTCATCTGAAGACGTCCTCCACTCATGAGCAGTCCCCTCCCTAGGACTTAAAACTGATGCCATCCCAGGCCGACTAAATCAAGCAACAGTAACATCAAACCGACCAGGGTTATTCTATGGCCAATGCTCTGAAATTTGTGGATCTAACCATAGCTTTATGCCCATTGTCCTAGAAATGGTTCCACTAAAATATTTCGAAAACTGATCTGCTTCAATAATT---------------------TAA"},
+		 {spec: "Sequence", taxon: "Rat",     totalcount: 4, value: "ATGGCTTACCCATTTCAACTTGGCTTACAAGACGCTACATCACCTATCATAGAAGAACTTACAAACTTTCATGACCACACCCTAATAATTGTATTCCTCATCAGCTCCCTAGTACTTTATATTATTTCACTAATACTAACAACAAAACTAACACACACAAGCACAATAGACGCCCAAGAAGTAGAAACAATTTGAACAATTCTCCCAGCTGTCATTCTTATTCTAATTGCCCTTCCCTCCCTACGAATTCTATACATAATAGACGAGATTAATAACCCAGTTCTAACAGTAAAAACTATAGGACACCAATGATACTGAAGCTATGAATATACTGACTATGAAGACCTATGCTTTGACTCCTACATAATCCCAACCAATGACCTAAAACCAGGTGAACTTCGTCTATTAGAAGTTGATAATCGGGTAGTCTTACCAATAGAACTTCCAATTCGTATACTAATCTCATCCGAAGACGTCCTGCACTCATGAGCCATCCCTTCACTAGGGTTAAAAACCGACGCAATCCCCGGCCGCCTAAACCAAGCTACAGTCACATCAAACCGACCAGGTCTATTCTATGGCCAATGCTCTGAAATTTGCGGCTCAAATCACAGCTTCATACCCATTGTACTAGAAATAGTGCCTCTAAAATATTTCGAAAACTGATCAGCTTCTATAATT---------------------TAA"},
+		 {spec: "Sequence", taxon: "Seal",    totalcount: 4, value: "ATGGCATACCCCCTACAAATAGGCCTACAAGATGCAACCTCTCCCATTATAGAGGAGTTACTACACTTCCATGACCACACATTAATAATTGTGTTCCTAATTAGCTCATTAGTACTCTACATTATCTCACTTATACTAACCACGAAACTCACCCACACAAGTACAATAGACGCACAAGAAGTGGAAACGGTGTGAACGATCCTACCCGCTATCATTTTAATTCTCATTGCCCTACCATCATTACGAATCCTCTACATAATGGACGAGATCAATAACCCTTCCTTGACCGTAAAAACTATAGGACATCAGTGATACTGAAGCTATGAGTACACAGACTACGAAGACCTGAACTTTGACTCATATATGATCCCCACACAAGAACTAAAGCCCGGAGAACTACGACTGCTAGAAGTAGACAATCGAGTAGTCCTCCCAATAGAAATAACAATCCGCATACTAATCTCATCAGAAGATGTACTCCACTCATGAGCCGTACCGTCCCTAGGACTAAAAACTGATGCTATCCCAGGACGACTAAACCAAACAACCCTAATAACCATACGACCAGGACTGTACTACGGTCAATGCTCAGAAATCTGTGGTTCAAACCACAGCTTCATACCTATTGTCCTCGAATTGGTCCCACTATCCCACTTCGAGAAATGATCTACCTCAATGCTT---------------------TAA"},
+		 {spec: "Sequence", taxon: "Whale",   totalcount: 4, value: "ATGGCATATCCATTCCAACTAGGTTTCCAAGATGCAGCATCACCCATCATAGAAGAGCTCCTACACTTTCACGATCATACACTAATAATCGTTTTTCTAATTAGCTCTTTAGTTCTCTACATTATTACCCTAATGCTTACAACCAAATTAACACATACTAGTACAATAGACGCCCAAGAAGTAGAAACTGTCTGAACTATCCTCCCAGCCATTATCTTAATTTTAATTGCCTTGCCTTCATTACGGATCCTTTACATAATAGACGAAGTCAATAACCCCTCCCTCACTGTAAAAACAATAGGTCACCAATGATATTGAAGCTATGAGTATACCGACTACGAAGACCTAAGCTTCGACTCCTATATAATCCCAACATCAGACCTAAAGCCAGGAGAACTACGATTATTAGAAGTAGATAACCGAGTTGTCTTACCTATAGAAATAACAATCCGAATATTAGTCTCATCAGAAGACGTACTCCACTCATGGGCCGTACCCTCCTTGGGCCTAAAAACAGATGCAATCCCAGGACGCCTAAACCAAACAACCTTAATATCAACACGACCAGGCCTATTTTATGGACAATGCTCAGAGATCTGCGGCTCAAACCACAGTTTCATACCAATTGTCCTAGAACTAGTACCCCTAGAAGTCTTTGAAAAATGATCTGTATCAATACTA---------------------TAA"}
+	 ]
+	},
+
+	{id: "mcmc",
+	 spec: "MCMC", chainLength: "10000000",
+	 state: {id: "state",
+		 spec: "State", storeEvery: 5000,
+		 stateNode: [
+			{id: "Tree.t:dna",
+			 spec: "beast.base.evolution.tree.Tree",
+				 taxonset: {id: "TaxonSet.dna", spec: "TaxonSet", alignment: "@dna" }
+			},
+			 {id: "birthRate.t:dna", spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "1.0" },
+			 {id: "kappa.s:dna", spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "2.0" },
+			 {id: "ucldStdev.c:dna", spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "0.1" },
+			 {id: "rateCategories.c:dna", spec: "beast.base.spec.inference.parameter.IntVectorParam", domain: "NonNegativeInt", dimension: 18, value: "1" },
+			 {id: "freqParameter.s:dna", spec: "beast.base.spec.inference.parameter.SimplexParam", dimension: 4, value: "0.25" }
+		  ]
+		},
+	 init: [
+		{id: "RandomTree.t:dna",
+		 spec: "beast.base.spec.evolution.tree.coalescent.RandomTree", taxa: "@dna", initial: "@Tree.t:dna", estimate: false,
+			 populationModel: {id: "ConstantPopulation0.t:dna", spec: "beast.base.spec.evolution.tree.coalescent.ConstantPopulation",
+				 popSize: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "1.0"} }
+		}
+	  ],
+	 distribution: {id: "posterior",
+		 spec: "CompoundDistribution",
+		 distribution: [
+			{id: "prior",
+			 spec: "CompoundDistribution",
+			 distribution: [
+				 {id: "YuleModel.t:dna", spec: "beast.base.spec.evolution.speciation.YuleModel", birthDiffRate: "@birthRate.t:dna", tree: "@Tree.t:dna" },
+				 {id: "YuleBirthRatePrior.t:dna", spec: "beast.base.spec.inference.distribution.LogNormal", param: "@birthRate.t:dna", meanInRealSpace: false, M: "0.0", S: "8.0" },
+				 {id: "KappaPrior.s:dna", spec: "beast.base.spec.inference.distribution.LogNormal", param: "@kappa.s:dna", M: "1.0", S: "1.25" },
+				 {id: "ucldStdevPrior.c:dna", spec: "beast.base.spec.inference.distribution.Gamma", param: "@ucldStdev.c:dna", alpha: "0.5396", theta: "0.3819" }
+			  ]
+			},
+			{id: "likelihood",
+			 spec: "CompoundDistribution",
+			 distribution: [
+				{id: "treeLikelihood.dna",
+				 spec: "beast.base.spec.evolution.likelihood.TreeLikelihood", data: "@dna", tree: "@Tree.t:dna",
+				 siteModel: {id: "SiteModel.s:dna",
+					 spec: "beast.base.spec.evolution.sitemodel.SiteModel", mutationRate: "1.0", shape: "1.0", proportionInvariant: "0.0",
+					 substModel: {id: "hky.s:dna",
+						 spec: "beast.base.spec.evolution.substitutionmodel.HKY", kappa: "@kappa.s:dna",
+							 frequencies: {id: "estimatedFreqs.s:dna", spec: "beast.base.spec.evolution.substitutionmodel.Frequencies", frequencies: "@freqParameter.s:dna" }
+						}
+					},
+				 branchRateModel: {id: "RelaxedClock.c:dna",
+					 spec: "beast.base.spec.evolution.branchratemodel.UCRelaxedClockModel", rateCategories: "@rateCategories.c:dna", tree: "@Tree.t:dna", clock.rate: "1.0",
+						 distr: {id: "LogNormalDistributionModel.c:dna", spec: "beast.base.spec.inference.distribution.LogNormal", M: "1.0", S: "@ucldStdev.c:dna", meanInRealSpace: true }
+					}
+				}
+			  ]
+			}
+		  ]
+		},
+	 operator: [
+		 {id: "YuleBirthRateScaler.t:dna", spec: "beast.base.spec.inference.operator.ScaleOperator", parameter: "@birthRate.t:dna", weight: 3.0 },
+		 {id: "YuleModelTreeScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, weight: 3.0 },
+		 {id: "YuleModelTreeRootScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, rootOnly: true, weight: 3.0 },
+		 {id: "YuleModelUniformOperator.t:dna", spec: "beast.base.evolution.operator.Uniform", tree: "@Tree.t:dna", weight: 30.0 },
+		 {id: "YuleModelSubtreeSlide.t:dna", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeSlide", tree: "@Tree.t:dna", weight: 15.0, size: 0.019 },
+		 {id: "YuleModelNarrow.t:dna", spec: "Exchange", tree: "@Tree.t:dna", weight: 15.0 },
+		 {id: "YuleModelWide.t:dna", spec: "Exchange", isNarrow: false, tree: "@Tree.t:dna", weight: 3.0 },
+		 {id: "YuleModelWilsonBalding.t:dna", spec: "WilsonBalding", tree: "@Tree.t:dna", weight: 3.0 },
+		 {id: "KappaScaler.s:dna", spec: "beast.base.spec.inference.operator.ScaleOperator", parameter: "@kappa.s:dna", scaleFactor: 0.5, weight: 0.1 },
+		 {id: "ucldStdevScaler.c:dna", spec: "beast.base.spec.inference.operator.ScaleOperator", parameter: "@ucldStdev.c:dna", scaleFactor: 0.5, weight: 3.0 },
+		 {id: "CategoriesRandomWalk.c:dna", spec: "beast.base.spec.inference.operator.IntRandomWalkOperator", windowSize: 1, parameter: "@rateCategories.c:dna", weight: 10.0 },
+		 {id: "CategoriesSwapOperator.c:dna", spec: "beast.base.spec.inference.operator.SwapOperator", intparameter: "@rateCategories.c:dna", weight: 10.0 },
+		 {id: "CategoriesUniform.c:dna", spec: "beast.base.spec.inference.operator.uniform.IntUniformOperator", parameter: "@rateCategories.c:dna", weight: 10.0 },
+		 {id: "FrequenciesExchanger.s:dna", spec: "beast.base.spec.inference.operator.DeltaExchangeOperator", delta: 0.01, weight: 0.1, parameter: "@freqParameter.s:dna" }
+	  ],
+	 logger: [
+		{id: "tracelog",
+		 spec: "Logger", fileName: "dna.log", logEvery: 1000, model: "@posterior", sort: "smart", sanitiseHeaders: true,
+		 log: [
+			 {idref: "posterior" },
+			 {idref: "likelihood" },
+			 {idref: "prior" },
+			 {idref: "treeLikelihood.dna" },
+			 {id: "TreeHeight.t:dna", spec: "beast.base.evolution.tree.TreeStatLogger", tree: "@Tree.t:dna" },
+			 {idref: "YuleModel.t:dna" },
+			 {idref: "birthRate.t:dna" },
+			 {idref: "kappa.s:dna" },
+			 {idref: "ucldStdev.c:dna" },
+			 {id: "rate.c:dna", spec: "beast.base.spec.evolution.RateStatistic", branchratemodel: "@RelaxedClock.c:dna", tree: "@Tree.t:dna" },
+			 {idref: "freqParameter.s:dna" }
+		  ]
+		},
+		{id: "screenlog",
+		 spec: "Logger", logEvery: 1000,
+		 log: [
+			 {idref: "posterior" },
+			 {id: "ESS.0", spec: "beast.base.spec.inference.util.ESS", arg: "@posterior" },
+			 {idref: "likelihood" },
+			 {idref: "prior" }
+		  ]
+		},
+		{id: "treelog.t:dna",
+		 spec: "Logger", fileName: "$(tree).trees", logEvery: 1000, mode: "tree",
+		 log: [
+			 {id: "TreeWithMetaDataLogger.t:dna", spec: "beast.base.spec.evolution.TreeWithMetaDataLogger", tree: "@Tree.t:dna", branchratemodel: "@RelaxedClock.c:dna" }
+		  ]
+		}
+	  ]
+	}
+]
+}

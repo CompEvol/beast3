@@ -68,7 +68,7 @@ release/Mac/
 │   │   ├── AppLauncher.app   ← shell-script wrapper
 │   │   ├── DensiTree.app     ← standalone JAR wrapper (if present)
 │   │   ├── bin/              ← command-line launcher scripts
-│   │   ├── examples/         ← beast3 XML files + nexus/ + fasta/
+│   │   ├── examples/         ← beast3 XML files + nexus/ + fasta/ + beastfx/
 │   │   ├── README.txt
 │   │   └── LICENSE.txt
 │   ├── .background/          ← install.png for DMG Finder window
@@ -199,6 +199,8 @@ seal (it lives alongside `.app` bundles, not inside them):
 - `bin/` — copied from `release/Mac/macbin`, made executable.
 - `examples/` — beast3 XML files, `nexus/`, and `fasta/` from
   `beast-base/src/test/resources/beast.base/examples`. `beast2vs1/` and `legacy/` are excluded.
+  XMLs needing beast-fx classes come from `beast-fx/src/test/resources/beast.fx/examples` (via the
+  BEAST.app package zip) and go to `examples/beastfx/`.
 - `README.txt` and `LICENSE.txt` from `release/common/`.
 
 **DMG creation (two-phase):**

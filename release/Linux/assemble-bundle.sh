@@ -152,22 +152,27 @@ else
     echo "    WARNING: DensiTree.jar not found — densitree script will not work"
 fi
 
-# ── Step 6: Extract examples from the BEAST.base package zip ──────────────────
+# ── Step 6: Extract examples from the BEAST.base and BEAST.app package zips ─────
 # The bundle-root examples/ are extracted from the same package zip seeded into
 # the user dir (lib/packages/), so the example set has a single source of truth
 # (beast-base/src/assembly/package.xml) and the bundle-root and packaged copies
-# cannot drift. The bundle-root copy is kept so `beast -validate examples/...`
+# cannot drift. BEAST.app adds examples/beastfx/ (XMLs needing beast-fx classes,
+# from beast-fx/src/assembly/package.xml). The bundle-root copy is kept so `beast -validate examples/...`
 # works from the install dir before first-run seeding.
 echo ""
-echo "==> Step 6: Extracting examples from $(basename "$BASE_PKG_ZIP")..."
+echo "==> Step 6: Extracting examples from $(basename "$BASE_PKG_ZIP") and $(basename "$APP_PKG_ZIP")..."
 # Extract the full zip to a temp dir then copy examples/ — avoids unzip glob
 # portability issues where 'examples/*' may not match subdirs on some platforms.
 # Which subdirs are included/excluded is controlled by the include patterns in
 # beast-base/src/assembly/package.xml (beast2vs1/ and legacy/ are excluded).
-EXAMPLES_TMP=$(mktemp -d)
-unzip -o -q "$BASE_PKG_ZIP" -d "$EXAMPLES_TMP"
-cp -r "$EXAMPLES_TMP/examples/." "$BUNDLE/examples/"
-rm -rf "$EXAMPLES_TMP"
+for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
+    EXAMPLES_TMP=$(mktemp -d)
+    unzip -o -q "$PKG_ZIP" -d "$EXAMPLES_TMP"
+    if [ -d "$EXAMPLES_TMP/examples" ]; then
+        cp -r "$EXAMPLES_TMP/examples/." "$BUNDLE/examples/"
+    fi
+    rm -rf "$EXAMPLES_TMP"
+done
 EXAMPLE_COUNT=$(find "$BUNDLE/examples" -name "*.xml" | wc -l | tr -d ' ')
 echo "    Extracted ${EXAMPLE_COUNT} example XML files"
 
@@ -237,6 +242,11 @@ SPEC_COUNT=$(find "$BUNDLE/examples" -maxdepth 1 -name "*.xml" 2>/dev/null | wc 
 [ "$SPEC_COUNT" -gt 0 ] \
     && _ok "examples/ has ${SPEC_COUNT} beast3 XML files" \
     || _fail "examples/ is empty — no XML files copied"
+
+FX_EXAMPLE_COUNT=$(find "$BUNDLE/examples/beastfx" -maxdepth 1 -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
+[ "$FX_EXAMPLE_COUNT" -gt 0 ] \
+    && _ok "examples/beastfx/ has ${FX_EXAMPLE_COUNT} beast3 XML files" \
+    || _fail "examples/beastfx/ is empty — BEAST.app package zip has no examples"
 
 if [ "$FAIL" -gt 0 ]; then
     echo "==> FAILED: ${FAIL} check(s) failed, ${PASS} passed — aborting."

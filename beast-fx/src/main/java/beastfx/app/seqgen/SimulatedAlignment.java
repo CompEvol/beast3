@@ -28,7 +28,7 @@ public class SimulatedAlignment extends Alignment {
     final public Input<Alignment> m_data = new Input<>("data", "alignment data which specifies datatype and taxa of the beast.tree", Validate.REQUIRED);
     final public Input<Tree> m_treeInput = new Input<>("tree", "phylogenetic beast.tree with sequence data in the leafs", Validate.REQUIRED);
     final public Input<SiteModel> m_pSiteModelInput = new Input<>("siteModel", "site model for leafs in the beast.tree", Validate.REQUIRED);
-    final public Input<BranchRateModel.Base> m_pBranchRateModelInput = new Input<>("branchRateModel",
+    final public Input<BranchRateModel> m_pBranchRateModelInput = new Input<>("branchRateModel",
             "A model describing the rates on the branches of the beast.tree.");
     final public Input<Integer> m_sequenceLengthInput = new Input<>("sequencelength", "nr of samples to generate (default 1000).", 1000);
     final public Input<String> m_outputFileNameInput = new Input<>(
@@ -205,7 +205,6 @@ public class SimulatedAlignment extends Alignment {
      * @param node           reference to the current node, for which we visit all children
      * @param parentSequence randomly generated sequence of the parent node
      * @param category       array of categories for each of the sites
-     * @param alignment
      */
     void traverse(Node node, int[] parentSequence, int[] category) {
         for (int childIndex = 0; childIndex < 2; childIndex++) {
