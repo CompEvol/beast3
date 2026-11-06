@@ -8,6 +8,7 @@ import beast.base.core.Log;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.parser.PartitionContext;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
@@ -329,7 +330,13 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             	// (state, operator, tracelog, the priors list) based on the current estimate
             	// value is done separately, by BeautiDoc's general "parameter.*" sync scan
             	// (see BeautiDoc.scrubAll), which hardSync()/refreshPanel() below triggers.
-            	doc.beautiConfig.hyperPriorTemplate.createSubNet(context, true);
+            	// A non-negative parameter (PositiveReal, NonNegativeReal, UnitInterval) is in
+            	// practice positive, since a continuous parameter is exactly 0 with probability 0:
+            	// it gets a log-normal hyperprior and a scale operator. One that may be negative
+            	// (Real domain, e.g. a LogNormal's M) gets a normal hyperprior and a random-walk
+            	// operator, since a scale operator cannot cross zero.
+            	boolean positive = parameter2 instanceof RealScalarParam<?> rp && rp.getDomain() instanceof NonNegativeReal;
+            	(positive ? doc.beautiConfig.hyperPriorTemplate : doc.beautiConfig.realHyperPriorTemplate).createSubNet(context, true);
             }
         	hardSync();
             refreshPanel();

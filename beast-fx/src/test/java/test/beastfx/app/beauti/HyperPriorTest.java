@@ -4,7 +4,7 @@ package test.beastfx.app.beauti;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.spec.inference.distribution.LogNormal;
-import beast.base.spec.inference.distribution.LogUniform;
+import beast.base.spec.inference.distribution.Normal;
 import beastfx.app.beauti.BeautiTabPane;
 import javafx.scene.control.ComboBox;
 import javafx.stage.Stage;
@@ -26,7 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Checking "estimate" on a LogNormal prior's own parameter (M or S) in the Priors panel is meant
  * to pop up a "Hyper prior" confirmation dialog, and, once confirmed, add a hyper prior (a
- * LogUniform distribution) for that parameter as a new row in the Priors panel. This used to
+ * Normal distribution for a parameter that may be negative, a LogNormal for a non-negative
+ * one) for that parameter as a new row in the Priors panel. This used to
  * silently do nothing in the spec framework, because the parameter's auto-generated id
  * ("RealScalarParam.N") never matched the legacy "RealParameter" prefix check that triggered
  * renaming + hyper prior creation, and the legacy hyper prior object was also incompatible with
@@ -63,7 +64,8 @@ public class HyperPriorTest extends BeautiBase {
 	public void addHyperPriorForLogNormalMAndS(FxRobot robot) throws Exception {
 		switchBirthRatePriorToLogNormal(robot);
 
-		// M is Real-domain, S is PositiveReal-domain: both get a LogUniform hyper prior
+		// M is Real-domain and may be negative, so it gets a Normal hyper prior (with a
+		// random-walk operator); S is PositiveReal-domain, so it gets a LogNormal hyper prior
 		int priorCountBefore = priors().size();
 		clickOnNodesWithID(robot, "M.isEstimated");
 		WaitForAsyncUtils.waitForFxEvents();
@@ -73,7 +75,7 @@ public class HyperPriorTest extends BeautiBase {
 		List<Distribution> priors = priors();
 		assertThat(priors.size()).as("a hyper prior for M should have been added to the Priors panel")
 				.isEqualTo(priorCountBefore + 1);
-		LogUniform hyperPriorForM = (LogUniform) lastPrior(priors);
+		Normal hyperPriorForM = (Normal) lastPrior(priors);
 		assertThat(hyperPriorForM.paramInput.get()).as("the hyper prior must apply to M itself")
 				.isSameAs(findLogNormal(priors).MParameterInput.get());
 
@@ -86,7 +88,7 @@ public class HyperPriorTest extends BeautiBase {
 		priors = priors();
 		assertThat(priors.size()).as("a hyper prior for S should have been added to the Priors panel")
 				.isEqualTo(priorCountBefore + 1);
-		LogUniform hyperPriorForS = (LogUniform) lastPrior(priors);
+		LogNormal hyperPriorForS = (LogNormal) lastPrior(priors);
 		assertThat(hyperPriorForS.paramInput.get()).as("the hyper prior must apply to S itself")
 				.isSameAs(findLogNormal(priors).SParameterInput.get());
 
