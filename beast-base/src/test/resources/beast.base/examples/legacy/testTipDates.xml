@@ -120,6 +120,10 @@
 
     <distribution id="posterior" spec="CompoundDistribution">
         <distribution id="prior" spec="CompoundDistribution">
+            <!-- proper prior, replaces the improper flat prior of the 2.7.8 example -->
+            <distribution id="clockRate.prior" spec="beast.base.inference.distribution.Prior" x="@clockRate">
+                <distr spec="beast.base.inference.distribution.LogNormalDistributionModel" M="0.0" S="8.0" meanInRealSpace="false"/>
+            </distribution>
             <distribution id="coalescent" spec="Coalescent">
                 <populationModel id="ConstantPopulation" spec="ConstantPopulation">
                     <parameter dimension="1" estimate="false" id="popSize" name="popSize" value="1.0"/>
@@ -141,8 +145,9 @@
                 <distr id="Noraml0" offset="0.0" spec="distribution.Normal" mean="1994" sigma="1"/>
             </distribution>
 
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="kappa.prior" spec="distribution.Prior" x="@hky.kappa">
-                <distr id="OneOnX0" offset="0.0" spec="distribution.OneOnX"/>
+                <distr id="LogNormal.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
         </distribution>
         <distribution id="likelihood" spec="CompoundDistribution">

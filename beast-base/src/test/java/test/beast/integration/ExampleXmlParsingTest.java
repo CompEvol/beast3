@@ -131,6 +131,42 @@ public class ExampleXmlParsingTest  {
         }
     } // test_ThatXmlExamplesRun
 
+    /**
+     * The BEAST 2 examples in {@code legacy/} are not converted: they must still parse in BEAST 2.8
+     * (BEAST 3), which keeps the old, partly deprecated, classes for them. Parses every XML and JSON
+     * file directly in {@code legacy/}. Subfolders are not checked: some hold BEAST 1 XML
+     * ({@code benchmark/1}), files that need a removed class ({@code benchmark/II}) or command-line
+     * arguments ({@code parameterised}). The legacy examples that need beast-fx classes are in
+     * {@code beast.fx/examples/legacy}, checked by beast-fx's {@code ExampleXmlParsingTest}.
+     */
+    @Test
+    public void test_ThatLegacyXmlExamplesParse() {
+        File dir = new File(XMLPathUtil.resolveExamplesDir(), "legacy");
+        assertTrue(dir.isDirectory(), "Legacy example directory does not exist: " + dir);
+        String[] files = dir.list((d, name) -> name.endsWith(".xml") || name.endsWith(".json"));
+        assertTrue(files != null && files.length > 0, "No legacy examples found in " + dir);
+        java.util.Arrays.sort(files);
+
+        Logger.FILE_MODE = Logger.LogFileMode.overwrite;
+        List<String> failedFiles = new ArrayList<>();
+        for (String fileName : files) {
+            Randomizer.setSeedReproducible(127);
+            File file = new File(dir, fileName);
+            System.out.println("Processing legacy " + fileName);
+            try {
+                if (fileName.endsWith(".json")) {
+                    new beast.base.parser.JSONParser().parseFile(file);
+                } else {
+                    new XMLParser().parseFile(file);
+                }
+            } catch (Exception e) {
+                System.out.println("ExampleXmlParsing::Failed for legacy " + fileName + ": " + e.getMessage());
+                failedFiles.add(fileName);
+            }
+        }
+        assertTrue(failedFiles.isEmpty(), "Legacy BEAST 2 examples that no longer parse: " + failedFiles);
+    } // test_ThatLegacyXmlExamplesParse
+
     
     protected static class ExitException extends SecurityException 
     {

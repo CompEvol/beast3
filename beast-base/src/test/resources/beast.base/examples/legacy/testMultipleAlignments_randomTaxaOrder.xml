@@ -144,9 +144,10 @@
 				</distribution>
 
 
+				<!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
 				<prior id="ClockPrior.c:gene1" name="distribution"
 						x="@clockRate.c:gene1">
-					<OneOnX id="OneOnX.1" name="distr"/>
+					<distr id="LogNormal.ClockPrior.c:gene1" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="0.0" S="8.0" meanInRealSpace="false"/>
 				</prior>
 				<prior id="GammaShapePrior.s:gene1" name="distribution"
 						x="@gammaShape.s:gene1">
@@ -160,9 +161,10 @@
 						<parameter estimate="false" id="RealParameter.02" name="S">1.25</parameter>
 					</LogNormal>
 				</prior>
+				<!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
 				<prior id="PopSizePrior.t:gene1" name="distribution"
 						x="@popSize.t:gene1">
-					<OneOnX id="OneOnX.0" name="distr"/>
+					<distr id="LogNormal.PopSizePrior.t:gene1" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="0.0" S="8.0" meanInRealSpace="false"/>
 				</prior>
 			</distribution>
 

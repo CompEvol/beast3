@@ -26,11 +26,13 @@
             <distribution id="firstAndSecondSites.coalescent" populationModel="@firstAndSecondSites.ConstantPopulation" spec="Coalescent">
                 <treeIntervals id="treeIntervals" spec="beast.base.evolution.tree.TreeIntervals" tree="@tree"/>
             </distribution>
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="firstAndSecondSites.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@firstAndSecondSites.hky.kappa">
-                <distr id="OneOnX0" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
+                <distr id="LogNormal.firstAndSecondSites.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="thirdSites.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@thirdSites.hky.kappa">
-                <distr id="OneOnX1" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
+                <distr id="LogNormal.thirdSites.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
         </distribution>
 
@@ -77,8 +79,12 @@
         <parameter dimension="4" estimate="true" id="thirdSites.freqParameter" name="stateNode" value="0.25"/>
         <parameter dimension="1" estimate="true" id="thirdSites.hky.kappa" lower="0.0" name="stateNode" value="1.0"/>
         <parameter dimension="1" estimate="true" id="firstAndSecondSites.hky.kappa" lower="0.0" name="stateNode" value="1.0"/>
+        <!-- RealParameter7 and RealParameter6 are commented out: they are in the state but nothing uses them
+             (no likelihood, prior, operator or logger refers to them), so they do not affect the analysis.
+             They are removed in the BEAST 3 version (examples/testSRD06.xml).
         <parameter dimension="1" estimate="true" id="RealParameter7" name="stateNode" value="0.333"/>
         <parameter dimension="1" estimate="true" id="RealParameter6" name="stateNode" value="0.333"/>
+        -->
         <parameter dimension="4" estimate="true" id="firstAndSecondSites.freqParameter" name="stateNode" value="0.25"/>
     </state>
 

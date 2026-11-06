@@ -586,6 +586,13 @@ if [ -n "$BASE_PKG_ZIP" ] && unzip -o -q "$BASE_PKG_ZIP" 'examples/*' -d "$OUTPU
 else
     echo "    WARNING: no examples found in BEAST.base package zip — skipping examples/"
 fi
+# BEAST.app adds examples/beastfx/ (XMLs needing beast-fx classes, e.g. seqgen),
+# defined in beast-fx/src/assembly/package.xml.
+if [ -n "$APP_PKG_ZIP" ] && unzip -o -q "$APP_PKG_ZIP" 'examples/*' -d "$OUTPUT"; then
+    echo "    Extracted examples/beastfx/ from $(basename "$APP_PKG_ZIP")"
+else
+    echo "    WARNING: no examples found in BEAST.app package zip — skipping examples/beastfx/"
+fi
 
 # ── README and LICENSE ─────────────────────────────────────────────────────
 COMMON_DIR="$REPO_ROOT/release/common"
