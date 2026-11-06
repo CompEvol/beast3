@@ -10,7 +10,6 @@ import beast.base.core.Log;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.branchratemodel.BranchRateModel;
-import beast.base.spec.evolution.branchratemodel.Base;
 import beast.base.evolution.datatype.DataType;
 import beast.base.evolution.tree.Node;
 import beast.base.evolution.tree.Tree;
@@ -29,7 +28,7 @@ public class SimulatedAlignment extends Alignment {
     final public Input<Alignment> m_data = new Input<>("data", "alignment data which specifies datatype and taxa of the beast.tree", Validate.REQUIRED);
     final public Input<Tree> m_treeInput = new Input<>("tree", "phylogenetic beast.tree with sequence data in the leafs", Validate.REQUIRED);
     final public Input<SiteModel> m_pSiteModelInput = new Input<>("siteModel", "site model for leafs in the beast.tree", Validate.REQUIRED);
-    final public Input<Base> m_pBranchRateModelInput = new Input<>("branchRateModel",
+    final public Input<BranchRateModel> m_pBranchRateModelInput = new Input<>("branchRateModel",
             "A model describing the rates on the branches of the beast.tree.");
     final public Input<Integer> m_sequenceLengthInput = new Input<>("sequencelength", "nr of samples to generate (default 1000).", 1000);
     final public Input<String> m_outputFileNameInput = new Input<>(

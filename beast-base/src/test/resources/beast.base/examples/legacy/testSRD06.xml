@@ -26,11 +26,13 @@
             <distribution id="firstAndSecondSites.coalescent" populationModel="@firstAndSecondSites.ConstantPopulation" spec="Coalescent">
                 <treeIntervals id="treeIntervals" spec="beast.base.evolution.tree.TreeIntervals" tree="@tree"/>
             </distribution>
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="firstAndSecondSites.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@firstAndSecondSites.hky.kappa">
-                <distr id="OneOnX0" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
+                <distr id="LogNormal.firstAndSecondSites.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
+            <!-- proper prior, replaces the improper OneOnX (1/x) prior of the 2.7.8 example -->
             <distribution id="thirdSites.kappa.prior" spec="beast.base.inference.distribution.Prior" x="@thirdSites.hky.kappa">
-                <distr id="OneOnX1" offset="0.0" spec="beast.base.inference.distribution.OneOnX"/>
+                <distr id="LogNormal.thirdSites.kappa" spec="beast.base.inference.distribution.LogNormalDistributionModel" M="1.0" S="1.25" meanInRealSpace="false"/>
             </distribution>
         </distribution>
 

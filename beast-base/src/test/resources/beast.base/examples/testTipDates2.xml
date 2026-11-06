@@ -3,14 +3,16 @@
        namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
 
     <!-- Converted to BEAST 3 from beast.base/examples/legacy/testTipDates2.xml.
-         Differences from the original:
+         Proper priors (the same change is made in the BEAST 2 source):
+           - hky.kappa: OneOnX (1/x) -> LogNormal(M=1, S=1.25)
+         Changes made by the conversion:
            - offset="0.0" on the tip-date Uniform prior is dropped (an offset of 0 is no shift).
-             If an offset is required, wrap the distribution in OffsetReal, e.g.
-             <distr spec="beast.base.spec.inference.distribution.OffsetReal" offset="...">
-                 <distribution spec="beast.base.spec.inference.distribution.Uniform" lower="..." upper="..."/>
-             </distr>
-           - Improper OneOnX prior on hky.kappa -> LogUniform on [1e-8, 1e8] (density proportional to 1/x on that range). The posterior/prior columns are lower by the constant 1 x log(ln 1e16) = 3.6.
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent).
+               If an offset is required, wrap the distribution in OffsetReal, e.g.
+               <distr spec="beast.base.spec.inference.distribution.OffsetReal" offset="...">
+                   <distribution spec="beast.base.spec.inference.distribution.Uniform" lower="..." upper="..."/>
+               </distr>
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.013.
+               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
     -->
 
 
@@ -44,7 +46,10 @@
                 <distr id="Uniform0" lower="0.0" spec="beast.base.spec.inference.distribution.Uniform" upper="1.0"/>
             </distribution>
 
-            <distribution id="kappa.prior" spec="beast.base.spec.inference.distribution.LogUniform" param="@hky.kappa"><lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E-8"/><upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E8"/></distribution>
+            <distribution id="kappa.prior" spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa" meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
+            </distribution>
         </distribution>
         <distribution id="likelihood" spec="CompoundDistribution">
             <distribution data="@Primates" id="treeLikelihood" spec="beast.base.spec.evolution.likelihood.TreeLikelihood" tree="@tree" useAmbiguities="false">
@@ -91,7 +96,7 @@ M_fascicularis=1
     <operator id="treeScaler" scaleFactor="0.5" tree="@tree" weight="1.0" spec="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
     <operator id="Uniform2" tree="@tree" weight="10.0" spec="beast.base.evolution.operator.Uniform"/>
     <operator degreesOfFreedom="1" id="kappaScaler" parameter="@hky.kappa" scaleAll="false" scaleAllIndependently="false" scaleFactor="0.5" weight="1.0" spec="beast.base.spec.inference.operator.ScaleOperator"/>
-    <operator id="SubtreeSlide0" size="1.0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@tree" weight="5.0"/>
+    <operator id="SubtreeSlide0" size="0.013" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@tree" weight="5.0"/>
     <operator id="wide" isNarrow="false" spec="Exchange" tree="@tree" weight="1.0"/>
     <operator id="WilsonBalding0" spec="WilsonBalding" tree="@tree" weight="1.0"/>
     <operator autoOptimize="true" delta="0.01" id="FrequenciesExchanger" parameter="@freqParameter" spec="beast.base.spec.inference.operator.DeltaExchangeOperator" weight="0.1"/>

@@ -5,9 +5,13 @@
        beautistatus="">
 
     <!-- Converted to BEAST 3 from beast.base/examples/legacy/testMultipleAlignments_randomTaxaOrder.xml.
-         Differences from the original:
-           - Improper OneOnX priors on clockRate.c:gene1 and popSize.t:gene1 -> LogUniform on [1e-8, 1e8] (density proportional to 1/x on that range). The posterior/prior columns are lower by the constant 2 x log(ln 1e16) = 7.2. clockRate.c:gene1 starts at 1e-8, the lower bound.
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent).
+         Proper priors (the same change is made in the BEAST 2 source):
+           - clockRate.c:gene1: OneOnX (1/x) -> LogNormal(M=0, S=8) in log space
+           - popSize.t:gene1: OneOnX (1/x) -> LogNormal(M=0, S=8) in log space
+         Changes made by the conversion:
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned sizes 27000, 25000 and 21000 (genes 1-3; the trees are in years).
+               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
+               From 0.01 (or 1.0) tuning could not reach these sizes within a run (#200).
     -->
 
 
@@ -120,7 +124,10 @@
 					<treeIntervals id="TreeIntervals.t:gene3" spec="beast.base.evolution.tree.TreeIntervals" tree="@Tree.t:gene3"/>
 				</distribution>
 
-				<distribution id="ClockPrior.c:gene1" spec="beast.base.spec.inference.distribution.LogUniform" param="@clockRate.c:gene1"><lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E-8"/><upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E8"/></distribution>
+				<distribution id="ClockPrior.c:gene1" spec="beast.base.spec.inference.distribution.LogNormal" param="@clockRate.c:gene1" meanInRealSpace="false">
+				    <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+				    <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+				</distribution>
 				<distribution id="Exponential.0" spec="beast.base.spec.inference.distribution.Exponential" param="@gammaShape.s:gene1">
 						<parameter id="RealParameter.0" name="mean" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal">1.0</parameter>
 					</distribution>
@@ -128,7 +135,10 @@
 						<parameter estimate="false" id="RealParameter.01" name="M" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real">1.0</parameter>
 						<parameter estimate="false" id="RealParameter.02" name="S" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal">1.25</parameter>
 					</distribution>
-				<distribution id="PopSizePrior.t:gene1" spec="beast.base.spec.inference.distribution.LogUniform" param="@popSize.t:gene1"><lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E-8"/><upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate="false" value="1.0E8"/></distribution>
+				<distribution id="PopSizePrior.t:gene1" spec="beast.base.spec.inference.distribution.LogNormal" param="@popSize.t:gene1" meanInRealSpace="false">
+				    <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+				    <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+				</distribution>
 			</distribution>
 
 			<distribution id="likelihood" spec="CompoundDistribution">
@@ -153,7 +163,7 @@
 
 		<operator id="UniformOperator.t:gene1" tree="@Tree.t:gene1" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@Tree.t:gene1" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="27000.0" tree="@Tree.t:gene1" weight="15.0"/>
 
 		<operator id="narrow.t:gene1" spec="Exchange" tree="@Tree.t:gene1" weight="15.0"/>
 
@@ -166,7 +176,7 @@
 
 		<operator id="UniformOperator.t:gene2" tree="@Tree.t:gene2" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene2" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@Tree.t:gene2" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene2" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="25000.0" tree="@Tree.t:gene2" weight="15.0"/>
 
 		<operator id="narrow.t:gene2" spec="Exchange" tree="@Tree.t:gene2" weight="15.0"/>
 
@@ -179,7 +189,7 @@
 
 		<operator id="UniformOperator.t:gene3" tree="@Tree.t:gene3" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene3" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@Tree.t:gene3" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene3" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="21000.0" tree="@Tree.t:gene3" weight="15.0"/>
 
 		<operator id="narrow.t:gene3" spec="Exchange" tree="@Tree.t:gene3" weight="15.0"/>
 

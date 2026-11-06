@@ -3,8 +3,13 @@
        namespace="beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt">
 
     <!-- Converted to BEAST 3 from beast.base/examples/legacy/testRelaxedClock.xml.
-         Differences from the original:
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent).
+         Proper priors (the same change is made in the BEAST 2 source):
+           - hky.kappa: none (flat) -> LogNormal(M=1, S=1.25)
+           - popSize: none (flat) -> LogNormal(M=0, S=8) in log space
+           - ucld.stdev: none (flat) -> LogNormal(M=0, S=8) in log space
+         Changes made by the conversion:
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.008.
+               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
            - Upper bound 5 on ucld.stdev is not kept; BEAST 3 keeps only positivity.
     -->
 
@@ -85,6 +90,18 @@
         </state>
 
         <distribution spec="CompoundDistribution" id="posterior">
+            <distribution id="hky.kappa.prior" spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa" meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.25" estimate="false"/>
+            </distribution>
+            <distribution id="popSize.prior" spec="beast.base.spec.inference.distribution.LogNormal" param="@popSize" meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
+            <distribution id="ucld.stdev.prior" spec="beast.base.spec.inference.distribution.LogNormal" param="@ucld.stdev" meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
             <distribution id="coalescent" spec="Coalescent">
                 <treeIntervals spec="beast.base.evolution.tree.TreeIntervals" id="TreeIntervals">
                      <tree idref="tree"/>
@@ -114,7 +131,7 @@
         <operator spec="beast.base.evolution.operator.Uniform" weight="10">
             <tree idref="tree"/>
         </operator>
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0">
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="0.008">
             <tree idref="tree"/>
         </operator>
         <operator id="narrow" spec="Exchange" isNarrow="true" weight="1">

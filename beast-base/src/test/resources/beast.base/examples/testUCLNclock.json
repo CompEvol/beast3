@@ -2,9 +2,11 @@
 namespace: "beast.core:beast.core.util:beast.evolution.alignment:beast.evolution.nuc:beast.evolution.operators:beast.evolution.sitemodel:beast.evolution.substitutionmodel:beast.evolution.tree.coalescent:beast.base.core:beast.base.evolution.alignment:beast.base.evolution.likelihood:beast.base.evolution.operator:beast.base.evolution.sitemodel:beast.base.evolution.substitutionmodel:beast.base.evolution.tree:beast.base.evolution.tree.coalescent:beast.base.inference:beast.base.inference.operator:beast.base.inference.util:beast.pkgmgmt",
 
 // Converted to BEAST 3 from beast.base/examples/legacy/testUCLNclock.json.
-// Differences from the original:
-//  - The Uniform(0, Infinity) prior on birthRate.t:dna has log density 0, so it is left out.
-//  - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent).
+// Proper priors (the same change is made in the BEAST 2 source):
+//  - birthRate.t:dna: Uniform(0, Infinity) -> LogNormal(M=0, S=8) in log space
+// Changes made by the conversion:
+//  - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.019.
+//    BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
 
 beast: [
 	{id: "dna",
@@ -53,6 +55,7 @@ beast: [
 			 spec: "CompoundDistribution",
 			 distribution: [
 				 {id: "YuleModel.t:dna", spec: "beast.base.spec.evolution.speciation.YuleModel", birthDiffRate: "@birthRate.t:dna", tree: "@Tree.t:dna" },
+				 {id: "YuleBirthRatePrior.t:dna", spec: "beast.base.spec.inference.distribution.LogNormal", param: "@birthRate.t:dna", meanInRealSpace: false, M: "0.0", S: "8.0" },
 				 {id: "KappaPrior.s:dna", spec: "beast.base.spec.inference.distribution.LogNormal", param: "@kappa.s:dna", M: "1.0", S: "1.25" },
 				 {id: "ucldStdevPrior.c:dna", spec: "beast.base.spec.inference.distribution.Gamma", param: "@ucldStdev.c:dna", alpha: "0.5396", theta: "0.3819" }
 			  ]
@@ -83,7 +86,7 @@ beast: [
 		 {id: "YuleModelTreeScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, weight: 3.0 },
 		 {id: "YuleModelTreeRootScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, rootOnly: true, weight: 3.0 },
 		 {id: "YuleModelUniformOperator.t:dna", spec: "beast.base.evolution.operator.Uniform", tree: "@Tree.t:dna", weight: 30.0 },
-		 {id: "YuleModelSubtreeSlide.t:dna", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeSlide", tree: "@Tree.t:dna", weight: 15.0, size: 1.0 },
+		 {id: "YuleModelSubtreeSlide.t:dna", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeSlide", tree: "@Tree.t:dna", weight: 15.0, size: 0.019 },
 		 {id: "YuleModelNarrow.t:dna", spec: "Exchange", tree: "@Tree.t:dna", weight: 15.0 },
 		 {id: "YuleModelWide.t:dna", spec: "Exchange", isNarrow: false, tree: "@Tree.t:dna", weight: 3.0 },
 		 {id: "YuleModelWilsonBalding.t:dna", spec: "WilsonBalding", tree: "@Tree.t:dna", weight: 3.0 },
