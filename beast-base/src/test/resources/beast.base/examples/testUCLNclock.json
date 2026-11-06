@@ -5,8 +5,7 @@ namespace: "beast.core:beast.core.util:beast.evolution.alignment:beast.evolution
 // Proper priors (the same change is made in the BEAST 2 source):
 //  - birthRate.t:dna: Uniform(0, Infinity) -> LogNormal(M=0, S=8) in log space
 // Changes made by the conversion:
-//  - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.019.
-//    BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
+//  - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeScale (the gaussian flag has no equivalent). It scales the gap above the moved subtree, so it needs no size in tree-height units (#214).
 
 beast: [
 	{id: "dna",
@@ -86,7 +85,7 @@ beast: [
 		 {id: "YuleModelTreeScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, weight: 3.0 },
 		 {id: "YuleModelTreeRootScaler.t:dna", spec: "beast.base.spec.evolution.operator.ScaleTreeOperator", tree: "@Tree.t:dna", scaleFactor: 0.5, rootOnly: true, weight: 3.0 },
 		 {id: "YuleModelUniformOperator.t:dna", spec: "beast.base.evolution.operator.Uniform", tree: "@Tree.t:dna", weight: 30.0 },
-		 {id: "YuleModelSubtreeSlide.t:dna", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeSlide", tree: "@Tree.t:dna", weight: 15.0, size: 0.019 },
+		 {id: "YuleModelSubtreeSlide.t:dna", spec: "beast.base.evolution.operator.kernel.BactrianSubtreeScale", tree: "@Tree.t:dna", weight: 15.0 },
 		 {id: "YuleModelNarrow.t:dna", spec: "Exchange", tree: "@Tree.t:dna", weight: 15.0 },
 		 {id: "YuleModelWide.t:dna", spec: "Exchange", isNarrow: false, tree: "@Tree.t:dna", weight: 3.0 },
 		 {id: "YuleModelWilsonBalding.t:dna", spec: "WilsonBalding", tree: "@Tree.t:dna", weight: 3.0 },

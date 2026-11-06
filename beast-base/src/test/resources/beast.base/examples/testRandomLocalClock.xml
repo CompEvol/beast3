@@ -8,8 +8,7 @@
            - popSize: none (flat) -> LogNormal(M=0, S=8) in log space
            - rates: none (flat) -> LogNormal(M=0, S=8) in log space on each rate (IID)
          Changes made by the conversion:
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.008.
-               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeScale (the gaussian flag has no equivalent). It scales the gap above the moved subtree, so it needs no size in tree-height units (#214).
            - Upper bound 100 on rates is not kept; BEAST 3 keeps only positivity.
     -->
 
@@ -104,7 +103,7 @@
 
         <operator id="treeScaler" scaleFactor="0.5" weight="1" tree="@tree" spec="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
         <operator weight="10" tree="@tree" spec="beast.base.evolution.operator.Uniform"/>
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="0.008" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" weight="5" tree="@tree"/>
         <operator id="narrow" spec="Exchange" isNarrow="true" weight="1" tree="@tree"/>
         <operator id="wide" spec="Exchange" isNarrow="false" weight="1" tree="@tree"/>
         <operator spec="WilsonBalding" weight="1" tree="@tree"/>

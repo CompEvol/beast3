@@ -9,9 +9,7 @@
            - clockRate.c:gene1: OneOnX (1/x) -> LogNormal(M=0, S=8) in log space
            - popSize.t:gene1: OneOnX (1/x) -> LogNormal(M=0, S=8) in log space
          Changes made by the conversion:
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned sizes 27000, 25000 and 21000 (genes 1-3; the trees are in years).
-               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
-               From 0.01 (or 1.0) tuning could not reach these sizes within a run (#200).
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeScale (the gaussian flag has no equivalent). It scales the gap above the moved subtree, so it needs no size in tree-height units (#214).
     -->
 
 
@@ -163,7 +161,7 @@
 
 		<operator id="UniformOperator.t:gene1" tree="@Tree.t:gene1" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="27000.0" tree="@Tree.t:gene1" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene1" spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" tree="@Tree.t:gene1" weight="15.0"/>
 
 		<operator id="narrow.t:gene1" spec="Exchange" tree="@Tree.t:gene1" weight="15.0"/>
 
@@ -176,7 +174,7 @@
 
 		<operator id="UniformOperator.t:gene2" tree="@Tree.t:gene2" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene2" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="25000.0" tree="@Tree.t:gene2" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene2" spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" tree="@Tree.t:gene2" weight="15.0"/>
 
 		<operator id="narrow.t:gene2" spec="Exchange" tree="@Tree.t:gene2" weight="15.0"/>
 
@@ -189,7 +187,7 @@
 
 		<operator id="UniformOperator.t:gene3" tree="@Tree.t:gene3" weight="30.0" spec="beast.base.evolution.operator.Uniform"/>
 
-		<operator id="SubtreeSlide.t:gene3" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" size="21000.0" tree="@Tree.t:gene3" weight="15.0"/>
+		<operator id="SubtreeSlide.t:gene3" spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" tree="@Tree.t:gene3" weight="15.0"/>
 
 		<operator id="narrow.t:gene3" spec="Exchange" tree="@Tree.t:gene3" weight="15.0"/>
 
