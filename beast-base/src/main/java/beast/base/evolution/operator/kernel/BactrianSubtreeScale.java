@@ -1,17 +1,11 @@
 package beast.base.evolution.operator.kernel;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.evolution.operator.TreeOperator;
 import beast.base.evolution.tree.Node;
-import beast.base.evolution.tree.Tree;
 import beast.base.inference.operator.kernel.KernelDistribution;
-import beast.base.inference.util.InputUtil;
-import beast.base.util.Randomizer;
 
 /**
  * Subtree-slide move that proposes the moved node's height by scaling, in log
@@ -41,7 +35,8 @@ import beast.base.util.Randomizer;
  * reattachment, so {@code logHR = log(scale) + combinatorial}, where
  * {@code log(scale) = log(gap'/gap)} is the standard scale-operator Jacobian and the
  * combinatorial term ({@code -log(#sources)} up, {@code +log(#destinations)} down,
- * {@code 0} for a pure node-age move) is identical to {@code BactrianSubtreeSlide}.</p>
+ * {@code 0} for a pure node-age move) is identical to {@code BactrianSubtreeSlide}. Everything but
+ * the height proposal is shared with it, in {@link AbstractSubtreeSlide}.</p>
  *
  * <p>Ported from beast-phylonco (commit 718de3a).</p>
  *
@@ -58,7 +53,7 @@ import beast.base.util.Randomizer;
         + "so the moved node can never be proposed below the carried subtree (removing that flat rejection) "
         + "and the step is scale-invariant w.r.t. branch length, making it easier to auto-optimise than "
         + "an additive subtree slide.")
-public class BactrianSubtreeScale extends TreeOperator {
+public class BactrianSubtreeScale extends AbstractSubtreeSlide {
 
     final public Input<Double> sizeInput = new Input<>("size",
             "scale of the log-space random walk on the gap above the carried subtree, default 0.3", 0.3);
@@ -76,154 +71,29 @@ public class BactrianSubtreeScale extends TreeOperator {
         kernelDistribution = kernelDistributionInput.get();
     }
 
+    /**
+     * Scales the gap between {@code p} and the carried subtree's root {@code i} in log space.
+     */
     @Override
-    public double proposal() {
-        final Tree tree = (Tree) InputUtil.get(treeInput, this);
-
-        // 1. choose a random node avoiding the root; p is the node being slid.
-        final int nodeCount = tree.getNodeCount();
-        Node i;
-        do {
-            i = tree.getNode(Randomizer.nextInt(nodeCount));
-        } while (i.isRoot());
-
-        final Node p = i.getParent();
-        final Node CiP = getOtherChild(p, i);   // sibling that p slides past / into
-        final Node PiP = p.getParent();
-        final boolean markClades = markCladesInput.get();
-
-        // 2. carried subtree (rooted at i) sets the floor; scale the gap above it.
+    protected HeightProposal proposeHeight(final Node i, final Node p) {
+        // the carried subtree (rooted at i) sets the floor; scale the gap above it.
         final double floor = i.getHeight();
-        final double oldHeight = p.getHeight();
-        final double oldGap = oldHeight - floor;
+        final double oldGap = p.getHeight() - floor;
         if (oldGap <= 0.0) {
             // zero-length branch (e.g. sampled ancestor): nothing to scale
-            return Double.NEGATIVE_INFINITY;
+            return null;
         }
 
         final double logScale = kernelDistribution.getRandomDelta(0, Double.NaN, size); // size * mean-0 draw
-        final double scale = Math.exp(logScale);
-        final double newHeight = floor + oldGap * scale;
-
-        // Jacobian of the scale move on the gap.
-        double logq = logScale;
-
-        // 3. if the move is up
-        if (newHeight > oldHeight) {
-
-            // 3.1 if the topology will change
-            if (PiP != null && PiP.getHeight() < newHeight) {
-                // find new parent
-                Node newParent = PiP;
-                Node newChild = p;
-                while (newParent.getHeight() < newHeight) {
-                    newChild = newParent;
-                    if (markClades) newParent.makeDirty(Tree.IS_FILTHY);
-                    newParent = newParent.getParent();
-                    if (newParent == null) break;
-                }
-
-                // 3.1.1 if creating a new root
-                if (newChild.isRoot()) {
-                    replace(p, CiP, newChild);
-                    replace(PiP, p, CiP);
-
-                    p.setParent(null);
-                    tree.setRoot(p);
-                }
-                // 3.1.2 no new root
-                else {
-                    replace(p, CiP, newChild);
-                    replace(PiP, p, CiP);
-                    replace(newParent, newChild, p);
-                }
-
-                p.setHeight(newHeight);
-
-                // 3.1.3 count the hypothetical sources of this destination.
-                final int possibleSources = intersectingEdges(newChild, oldHeight, null);
-                logq -= Math.log(possibleSources);
-
-            } else {
-                // just change the node height
-                p.setHeight(newHeight);
-            }
+        final double newHeight = floor + oldGap * Math.exp(logScale);
+        // Mathematically newHeight > floor, but floor + oldGap * scale can round to exactly floor
+        // when the gap is tiny relative to the floor (e.g. gap 1e-12 at height 1e3). Reject that
+        // rather than create a zero-length branch.
+        if (newHeight <= floor) {
+            return null;
         }
-        // 4. if we are sliding the subtree down
-        else {
-
-            // 4.0 is it a valid move? Mathematically newHeight > floor = i.getHeight(), but
-            // floor + oldGap * scale can round to exactly floor when the gap is tiny relative
-            // to the floor (e.g. gap 1e-12 at height 1e3). Reject that rather than create a
-            // zero-length branch.
-            if (newHeight <= floor) {
-                return Double.NEGATIVE_INFINITY;
-            }
-
-            // 4.1 will the move change the topology
-            if (CiP.getHeight() > newHeight) {
-
-                final List<Node> newChildren = new ArrayList<>();
-                final int possibleDestinations = intersectingEdges(CiP, newHeight, newChildren);
-
-                // if no valid destinations then return a failure (e.g. non-ultrametric leaf ages)
-                if (newChildren.size() == 0) {
-                    return Double.NEGATIVE_INFINITY;
-                }
-
-                // pick a random parent/child destination edge uniformly from options
-                final int childIndex = Randomizer.nextInt(newChildren.size());
-                final Node newChild = newChildren.get(childIndex);
-                final Node newParent = newChild.getParent();
-
-                // 4.1.1 if p was root
-                if (p.isRoot()) {
-                    replace(p, CiP, newChild);
-                    replace(newParent, newChild, p);
-
-                    CiP.setParent(null);
-                    tree.setRoot(CiP);
-
-                } else {
-                    replace(p, CiP, newChild);
-                    replace(PiP, p, CiP);
-                    replace(newParent, newChild, p);
-                }
-
-                p.setHeight(newHeight);
-                if (markClades) {
-                    // make dirty the path from the (down) moved node back up to former parent.
-                    Node n = p;
-                    while (n != CiP) {
-                        n.makeDirty(Tree.IS_FILTHY);
-                        n = n.getParent();
-                    }
-                }
-
-                logq += Math.log(possibleDestinations);
-            } else {
-                p.setHeight(newHeight);
-            }
-        }
-        return logq;
-    }
-
-    protected int intersectingEdges(Node node, double height, List<Node> directChildren) {
-        final Node parent = node.getParent();
-
-        if (parent.getHeight() < height) return 0;
-
-        if (node.getHeight() < height) {
-            if (directChildren != null) directChildren.add(node);
-            return 1;
-        }
-
-        if (node.isLeaf()) {
-            return 0;
-        } else {
-            return intersectingEdges(node.getLeft(), height, directChildren) +
-                    intersectingEdges(node.getRight(), height, directChildren);
-        }
+        // logScale is the Jacobian of the scale move on the gap.
+        return new HeightProposal(newHeight, logScale);
     }
 
     /**
