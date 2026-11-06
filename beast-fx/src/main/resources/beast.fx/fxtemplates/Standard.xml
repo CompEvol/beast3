@@ -304,9 +304,9 @@ ClusterTree/clusterType/,
                 </branchRateModel>
             </plugin>
 
-           <distribution id='ClockPrior.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@clockRate.c:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+           <distribution id='ClockPrior.c:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@clockRate.c:$(n)' meanInRealSpace="false">
+               <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+               <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
            </distribution>
 
             <!-- tree and its properties -->
@@ -338,19 +338,19 @@ ClusterTree/clusterType/,
  		    <operator id="YuleModelTreeScaler.t:$(n)" spec="beast.base.spec.evolution.operator.UpDownOperator" up="@Tree.t:$(n)" weight="4.0" scaleFactor="0.1"/>
             <operator id='YuleModelTreeRootScaler.t:$(n)' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.5" weight="3" tree="@Tree.t:$(n)" rootOnly='true'/>
             <operator id='YuleModelUniformOperator.t:$(n)' spec='kernel.BactrianNodeOperator' weight="30" tree="@Tree.t:$(n)"/>
-            <operator id='YuleModelSubtreeSlide.t:$(n)' spec='kernel.BactrianSubtreeSlide' weight="15" size="1.0" tree="@Tree.t:$(n)"/>
+            <operator id='YuleModelSubtreeSlide.t:$(n)' spec='kernel.BactrianSubtreeSlide' weight="15" size="0.01" tree="@Tree.t:$(n)"/>
             <operator id='YuleModelNarrow.t:$(n)' spec='Exchange' isNarrow='true' weight="15" tree="@Tree.t:$(n)"/>
             <operator id='YuleModelWide.t:$(n)' spec='Exchange' isNarrow='false' weight="3" tree="@Tree.t:$(n)"/>
             <operator id='YuleModelWilsonBalding.t:$(n)' spec='WilsonBalding' weight="3" tree="@Tree.t:$(n)"/>
 
 
-            <distribution id='YuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@birthRate.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='YuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@birthRate.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
-            <distribution id='MutationRatePrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@mutationRate.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='MutationRatePrior.s:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@mutationRate.s:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
             <distribution id='GammaShapePrior.s:$(n)' spec='beast.base.spec.inference.distribution.TruncatedReal' param='@gammaShape.s:$(n)'>
 	            <lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.1" estimate="false"/>

@@ -23,6 +23,7 @@ import beast.base.core.BEASTVersion2;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Alignment;
 import beast.base.inference.parameter.Parameter;
+import beast.base.spec.domain.Domain;
 
 
 
@@ -446,8 +447,17 @@ public class JSONProducer {
                     }
             	}
                 return;
+            } else if (value instanceof Domain<?> domain) {
+            	// Domains are shared singletons, named by their simple class name
+            	// (domain: "PositiveReal"), as XMLProducer writes them. Treating one as a
+            	// BEAST object wrote {spec: "...PositiveReal"} once and "@null" after that,
+            	// which JSONParser cannot read.
+            	if (isShort && !isDomainFixedByClass(beastObject, input, domain)) {
+            		buf.append(" " + input.getName() + ": \"" + domain.getClass().getSimpleName() + "\"");
+            	}
+            	return;
             } else {
-            	if (BEASTObjectStore.isPrimitive(value)) {             	
+            	if (BEASTObjectStore.isPrimitive(value)) {
 	            	if (!value.equals(input.defaultValue)) {
 	            		
 	                    String valueString = value.toString();
@@ -473,6 +483,34 @@ public class JSONProducer {
     } // inputToJSON
 
     
+    /** default-constructed instance per class, used by isDomainFixedByClass (null if none) **/
+    private final Map<Class<?>, Object> defaultInstances = new HashMap<>();
+
+    /**
+     * True if the class sets this domain itself, i.e. a default-constructed instance
+     * already holds it and it differs from the input's declared default (e.g. SimplexParam
+     * fixes UnitInterval). Such a domain must not be written: JSONParser rejects a value
+     * for an input that is no longer at its default ("Multiple entries for non-list input").
+     */
+    private boolean isDomainFixedByClass(Object beastObject, Input<?> input, Domain<?> domain) {
+    	Object fresh = defaultInstances.computeIfAbsent(beastObject.getClass(), c -> {
+    		try {
+    			return c.getDeclaredConstructor().newInstance();
+    		} catch (ReflectiveOperationException | RuntimeException e) {
+    			return null;
+    		}
+    	});
+    	if (!(fresh instanceof BEASTInterface freshObject)) {
+    		return false;
+    	}
+    	try {
+    		Object freshDomain = freshObject.getInput(input.getName()).get();
+    		return freshDomain != input.defaultValue && domain.equals(freshDomain);
+    	} catch (RuntimeException e) {
+    		return false;
+    	}
+    }
+
    /** convert plain text string to JSON string, replacing some entities **/
     private String normalise(Input<?> input, String str) {
     	str = str.replaceAll("\\\\", "\\\\\\\\");

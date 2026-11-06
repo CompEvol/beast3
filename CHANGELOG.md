@@ -43,6 +43,7 @@ Genuinely new components not present in BEAST 2:
 
 ## API Removals & Breaking Changes
 
+- **Deprecated, to be removed in 3.0.0** — the BEAST 2 ("legacy") classes kept in BEAST 3 (about 100, marked `@Deprecated`: the old distributions, substitution models, speciation and coalescent models, operators and `RealParameter`-style parameters), and the `Function` interface. They exist so that BEAST 2 XML and packages keep working in 2.8; 3.0.0 will remove them. Package authors should move to the spec classes during the 2.8 series; [`scripts/migration-guide.md`](scripts/migration-guide.md) gives the class-by-class mappings. See [#211](https://github.com/CompEvol/beast3/issues/211) and [#210](https://github.com/CompEvol/beast3/issues/210).
 - **`StateNode` is no longer a `Function`** — classes that relied on `StateNode` implementing `Function` must either use the typed spec parameter or explicitly implement `Function`.
 - **`StateNode.scale()` removed** — implement the `Scalable` interface instead if your `StateNode` needs to support scaling.
 - **`Evaluator` removed** — `beast.base.inference.Evaluator` is gone; impacts MCMC-derived classes that used it for custom acceptance logic.

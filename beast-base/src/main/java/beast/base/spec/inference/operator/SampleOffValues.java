@@ -45,15 +45,22 @@ public class SampleOffValues extends Operator {
         final int offset = (data.size() - 1) == idim ? 1 : 0;
         assert offset == 1 || data.size() == idim : "" + idim + " (?+1) != " + data.size();
 
+        // Each off value is redrawn from dist, independently of its old value. The
+        // Hastings ratio of such an independence proposal is q(old)/q(new) =
+        // dist(old)/dist(new) for each value redrawn. When dist is the prior on the
+        // values (as in EBSP), this cancels the change in the posterior exactly, so
+        // the move is a Gibbs move and is always accepted.
         double hr = Double.NEGATIVE_INFINITY;
 
         if( scaleAll.get() ) {
-            for (int i = offset; i < idim; ++i) {
-                if( !indicators.get(i-offset) ) {
+            hr = 0;
+            for (int i = 0; i < idim; ++i) {
+                if( !indicators.get(i) ) {
+                    final int index = i + offset;
                     try {
                         final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
-                        hr += distribution.logDensity(data.get(i));
-                        data.set(i, val);
+                        hr += distribution.logDensity(data.get(index)) - distribution.logDensity(val);
+                        data.set(index, val);
                     } catch (Exception e) {
                         // some distributions fail on extreme values - currently gamma
                         return Double.NEGATIVE_INFINITY;
@@ -77,7 +84,7 @@ public class SampleOffValues extends Operator {
                 final int index = loc[Randomizer.nextInt(locIndex)];
                 try {
                     final double val = distribution.inverseCumulativeProbability(Randomizer.nextDouble());
-                    hr = distribution.logDensity(data.get(index));
+                    hr = distribution.logDensity(data.get(index)) - distribution.logDensity(val);
                     data.set(index, val);
                 } catch (Exception e) {
                     // some distributions fail on extreme values - currently gamma

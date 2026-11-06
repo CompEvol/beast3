@@ -18,7 +18,7 @@
 		      <operator id="$(m)TreeScaler.t:$(n)" spec="beast.base.spec.evolution.operator.UpDownOperator" up="@Tree.t:$(n)" weight="4.0" scaleFactor="0.1"/>
             <operator id='$(m)TreeRootScaler.t:$(n)' spec='beast.base.spec.evolution.operator.ScaleTreeOperator' scaleFactor="0.1" weight="3" tree="@Tree.t:$(n)" rootOnly='true'/>
             <operator id='$(m)UniformOperator.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianNodeOperator' weight="30" tree="@Tree.t:$(n)"/>
-            <operator id='$(m)SubtreeSlide.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianSubtreeSlide' weight="15" size="1.0" tree="@Tree.t:$(n)"/>
+            <operator id='$(m)SubtreeSlide.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianSubtreeSlide' weight="15" size="0.01" tree="@Tree.t:$(n)"/>
             <operator id='$(m)Narrow.t:$(n)' spec='Exchange' isNarrow='true' weight="15" tree="@Tree.t:$(n)"/>
             <operator id='$(m)Wide.t:$(n)' spec='Exchange' isNarrow='false' weight="3" tree="@Tree.t:$(n)"/>
             <operator id='$(m)WilsonBalding.t:$(n)' spec='WilsonBalding' weight="3" tree="@Tree.t:$(n)"/>
@@ -55,9 +55,9 @@ YuleBirthRatePrior/index/=Priors/YuleBirthRatePrior/
                 <parameter name='birthDiffRate' spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" id="birthRate.t:$(n)" value='1.0'/>
             </plugin>
 
-            <distribution id='YuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@birthRate.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='YuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@birthRate.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 
   		      <scale id='YuleBirthRateScaler.t:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="3" parameter="@birthRate.t:$(n)"/>
@@ -110,9 +110,9 @@ CalibratedYuleBirthRatePrior/index/=Priors/CalibratedYuleBirthRatePrior/
                 <parameter name='birthRate' spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" id="birthRateY.t:$(n)" value='1.0'/>
             </plugin>
 
-            <distribution id='CalibratedYuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@birthRateY.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='CalibratedYuleBirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@birthRateY.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 
   		    <scale id='CalibratedYuleBirthRateScaler.t:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="3" parameter="@birthRateY.t:$(n)"/>
@@ -167,9 +167,9 @@ DeathRatePrior/index/=Priors/DeathRatePrior/'>
             	<relativeDeathRate spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" id="BDDeathRate.t:$(n)" value='0.5'/>
             </distribution>
 
-            <distribution id='BirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@BDBirthRate.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='BirthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@BDBirthRate.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
             <distribution id='DeathRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Beta' param='@BDDeathRate.t:$(n)' >
                 <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
@@ -244,9 +244,9 @@ PopSizeScaler/index/=Operators/BactrianRateScaler/index/'>
   		    <operator id='PopSizeScaler.t:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' 
   		    	scaleFactor="0.75" weight="3" parameter="@popSize.t:$(n)"/>
   		    	
-            <distribution id='PopSizePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@popSize.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='PopSizePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@popSize.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 ]]>
 			<plate fragment="TreeOperators" var="m" range="CoalescentConstant"/>
@@ -304,9 +304,9 @@ GrowthRateRandomWalk/index/=Operators/BactrianRandomWalk'>
 	        
 	        <operator id="GrowthRateRandomWalk.t:$(n)" spec="beast.base.spec.inference.operator.RealRandomWalkOperator" scaleFactor='0.1' weight="3" scalar="@growthRate.t:$(n)"/>
 
-            <distribution id='ePopSizePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@ePopSize.t:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='ePopSizePrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@ePopSize.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 
             <distribution id='GrowthRatePrior.t:$(n)' spec='beast.base.spec.inference.distribution.Laplace' param='@growthRate.t:$(n)' >
@@ -379,11 +379,19 @@ groupSizesDelta/index/=Operators/BactrianDeltaExchange/index/'>
                 <treeIntervals spec='beast.base.evolution.tree.TreeIntervals' id='BSPTreeIntervals.t:$(n)' tree='@Tree.t:$(n)'/>
             </distribution>
 
-            <distribution id='MarkovChainedPopSizes.t:$(n)' spec="beast.base.spec.inference.distribution.MarkovChainDistribution" 
-				jeffreys="true"
-				param="@bPopSizes.t:$(n)"/>
+            <!-- The first popSize has an exponential prior with an estimated mean, instead of the
+                 improper Jeffreys (1/x) prior; that mean has a proper LogNormal(0, 8) prior. -->
+            <distribution id='MarkovChainedPopSizes.t:$(n)' spec="beast.base.spec.inference.distribution.MarkovChainDistribution"
+				param="@bPopSizes.t:$(n)">
+                <initialMean id='bPopSizesInitialMean.t:$(n)' spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="380.0" estimate='true'/>
+            </distribution>
+            <distribution id='bPopSizesInitialMeanPrior.t:$(n)' spec='beast.base.spec.inference.distribution.LogNormal' param='@bPopSizesInitialMean.t:$(n)' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+            </distribution>
 
 		    <operator id='popSizesScaler.t:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="15" parameter="@bPopSizes.t:$(n)"/>
+		    <operator id='popSizesInitialMeanScaler.t:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.75" weight="3" parameter="@bPopSizesInitialMean.t:$(n)"/>
 		    <operator id='groupSizesDelta.t:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="1" weight="6" integer="true"
 		              ivparameter="@bGroupSizes.t:$(n)"/>
 
@@ -398,10 +406,16 @@ groupSizesDelta/index/=Operators/BactrianDeltaExchange/index/'>
                      if='inposterior(BayesianSkyline.t:$(n)) and inposterior(bPopSizes.t:$(n))'/>
             <connect srcID='bGroupSizes.t:$(n)' targetID='state' inputName='stateNode'
                      if='inposterior(BayesianSkyline.t:$(n)) and inposterior(bGroupSizes.t:$(n))'/>
+            <connect srcID='bPopSizesInitialMean.t:$(n)' targetID='state' inputName='stateNode'
+                     if='inposterior(BayesianSkyline.t:$(n)) and inposterior(bPopSizesInitialMean.t:$(n))'/>
 
             <connect srcID='MarkovChainedPopSizes.t:$(n)' targetID='prior' inputName='distribution'
                      if='inposterior(BayesianSkyline.t:$(n))'>Markov chained prior on population sizes of Bayesian
                 skyline plot
+            </connect>
+            <connect srcID='bPopSizesInitialMeanPrior.t:$(n)' targetID='prior' inputName='distribution'
+                     if='inposterior(BayesianSkyline.t:$(n))'>Prior on the mean of the first population size of
+                the Bayesian skyline plot
             </connect>
 
             <connect srcID='BayesianSkyline.t:$(n)' targetID='tracelog' inputName='log'
@@ -410,12 +424,17 @@ groupSizesDelta/index/=Operators/BactrianDeltaExchange/index/'>
                      if='inposterior(BayesianSkyline.t:$(n))'/>
             <connect srcID='bGroupSizes.t:$(n)' targetID='tracelog' inputName='log'
                      if='inposterior(BayesianSkyline.t:$(n))'/>
+            <connect srcID='bPopSizesInitialMean.t:$(n)' targetID='tracelog' inputName='log'
+                     if='inposterior(BayesianSkyline.t:$(n))'/>
 
             <connect srcID='popSizesScaler.t:$(n)' targetID='mcmc' inputName='operator'
                      if='inposterior(BayesianSkyline.t:$(n))'>Scale population size of Coalscent prior of tree t:$(n)
             </connect>
             <connect srcID='groupSizesDelta.t:$(n)' targetID='mcmc' inputName='operator'
                      if='inposterior(BayesianSkyline.t:$(n))'>Exchange group sizes of Coalscent prior of tree t:$(n)
+            </connect>
+            <connect srcID='popSizesInitialMeanScaler.t:$(n)' targetID='mcmc' inputName='operator'
+                     if='inposterior(BayesianSkyline.t:$(n))'>Scale the mean of the first population size of tree t:$(n)
             </connect>
         </subtemplate>
 
@@ -461,9 +480,9 @@ EBSPLogger/mode/
 			</population>
 
 <!-- Equivalent to a hyperprior on the mean of the Exponential prior on popSizePrior.alltrees below -->
-            <distribution id='populationMeanPrior.alltrees' spec='beast.base.spec.inference.distribution.Gamma' param='@populationMean.alltrees' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.01" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="100.0" estimate="false"/>
+            <distribution id='populationMeanPrior.alltrees' spec='beast.base.spec.inference.distribution.LogNormal' param='@populationMean.alltrees' meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 
             <distribution id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.Poisson">

@@ -63,7 +63,7 @@ public class CalibratedYuleInitialTree extends Tree implements StateNodeInitiali
 
         final List<CalibrationPoint> cals = calibrationsInput.get();
 
-        final beast.base.evolution.speciation.CalibratedYuleModel cym = new beast.base.evolution.speciation.CalibratedYuleModel();
+        final CalibratedYuleModel cym = new CalibratedYuleModel();
         for( final CalibrationPoint cal : cals ) {
           cym.setInputValue("calibrations", cal);
         }
