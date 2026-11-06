@@ -39,7 +39,7 @@
       <distribution id="cyule.prior" idref="cyule"/>
     </distribution>
 
-    <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="15" size="0.44" tree="@tree"/>
+    <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" weight="15" tree="@tree"/>
 
     <logger logEvery="100" fileName="test_5t_2c_i.$(seed).log">
       <model idref="posterior"/>

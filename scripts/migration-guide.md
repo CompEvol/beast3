@@ -398,7 +398,7 @@ Most beast-base classes have spec equivalents. Replace short names or old paths 
 | `operator.kernel.Transform$NoTransform` | `beast.base.spec.inference.operator.Transform$NoTransform` |
 | `beast.base.evolution.Sum` | `beast.base.spec.evolution.Sum` (or `IntSum` for booleans) |
 
-Classes that do NOT have spec equivalents (keep as-is): `MCMC`, `State`, `CompoundDistribution`, `Logger`, `OperatorSchedule`, `Exchange`, `WilsonBalding`, `EpochFlexOperator`, `TreeStretchOperator`, `kernel.BactrianScaleOperator` (tree mode with `rootOnly`), `kernel.BactrianNodeOperator`, `kernel.BactrianSubtreeSlide`.
+Classes that do NOT have spec equivalents (keep as-is): `MCMC`, `State`, `CompoundDistribution`, `Logger`, `OperatorSchedule`, `Exchange`, `WilsonBalding`, `EpochFlexOperator`, `TreeStretchOperator`, `kernel.BactrianScaleOperator` (tree mode with `rootOnly`), `kernel.BactrianNodeOperator`, `kernel.BactrianSubtreeSlide` (BEAUti's set now uses `kernel.BactrianSubtreeScale` instead, with no `size`).
 
 ### Function vs Tensor incompatibility
 
@@ -435,7 +435,7 @@ New set:
 <operator id="$(m)TreeScaler.t:$(n)" spec="beast.base.spec.evolution.operator.UpDownOperator" up="@Tree.t:$(n)" weight="4.0" scaleFactor="0.1"/>
 <operator id='$(m)TreeRootScaler.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianScaleOperator' scaleFactor="0.1" weight="3" tree="@Tree.t:$(n)" rootOnly='true'/>
 <operator id='$(m)UniformOperator.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianNodeOperator' weight="30" tree="@Tree.t:$(n)"/>
-<operator id='$(m)SubtreeSlide.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianSubtreeSlide' weight="15" size="1.0" tree="@Tree.t:$(n)"/>
+<operator id='$(m)SubtreeSlide.t:$(n)' spec='beast.base.evolution.operator.kernel.BactrianSubtreeScale' weight="15" tree="@Tree.t:$(n)"/>
 <operator id='$(m)Narrow.t:$(n)' spec='Exchange' isNarrow='true' weight="15" tree="@Tree.t:$(n)"/>
 <operator id='$(m)Wide.t:$(n)' spec='Exchange' isNarrow='false' weight="3" tree="@Tree.t:$(n)"/>
 <operator id='$(m)WilsonBalding.t:$(n)' spec='WilsonBalding' weight="3" tree="@Tree.t:$(n)"/>
