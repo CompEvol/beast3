@@ -12,10 +12,10 @@ import java.util.Random;
  * Benchmark for ColtEigenSystem eigendecomposition and matrix exponentiation.
  * Tagged as "slow" so it doesn't run in normal CI.
  *
- * Run with: mvn test -pl beast-base -Dtest=test.beast.evolution.substmodel.ColtEigenSystemBenchmark -Dsurefire.excludedGroups=
+ * Run with: mvn test -pl beast-base -Dtest=test.beast.evolution.substmodel.ColtEigenSystemBenchmarkTest -Dsurefire.excludedGroups=
  */
 @Tag("slow")
-public class ColtEigenSystemBenchmark {
+public class ColtEigenSystemBenchmarkTest {
 
     /**
      * Build a random reversible rate matrix of given dimension.

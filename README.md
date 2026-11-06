@@ -52,8 +52,12 @@ mvn compile
 ```bash
 mvn test                    # fast tests only (skips @Tag("slow"))
 mvn test -Pslow-tests       # all tests including slow
-mvn test -Dgroups=slow      # only slow tests
+mvn test -Pslow-tests -Dgroups=slow  # only slow tests
 ```
+
+"Only slow tests" needs both options: `-Dgroups=slow` keeps only slow tests, but slow tests are still excluded by default, so on its own it runs nothing. `-Pslow-tests` removes that default exclusion.
+
+Tests marked `@Disabled` never run with any of these commands; they are reported as skipped.
 
 Several operator and BEAUti tests run MCMC chains of 1M–11M iterations and are tagged `@Tag("slow")`. They are excluded from the default build via the `surefire.excludedGroups` property. Activate the `slow-tests` profile to include them.
 
