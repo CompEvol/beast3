@@ -196,8 +196,12 @@ public class BactrianSubtreeScaleTest {
         assertCoalescentPrior(large, 1e3, "scaled, theta 1e3");
 
         Run addSmall = run(false, 1e-3, 0.3, false, 42), addLarge = run(false, 1e3, 0.3, false, 42);
+        double accAddSmall = acceptance(addSmall), accAddLarge = acceptance(addLarge);
         System.out.printf("additive, size 0.3 at theta 1e-3 vs 1e3: acceptance %.4f vs %.4f%n",
-                acceptance(addSmall), acceptance(addLarge));
+                accAddSmall, accAddLarge);
+        // contrast: the additive slide's fixed size is far too large at theta 1e-3 and far too small at 1e3
+        assertTrue(accAddSmall < 0.05, "additive slide at theta 1e-3 should almost always reject");
+        assertTrue(accAddLarge > 0.9, "additive slide at theta 1e3 should almost always accept");
     }
 
     private static double acceptance(Run r) {

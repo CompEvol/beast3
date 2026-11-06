@@ -48,6 +48,11 @@ import beast.base.util.Randomizer;
  * <p>Rejections from the destination side remain (e.g. in non-ultrametric trees the
  * proposed height can fall below every leaf of the reattachment subtree, leaving no
  * straddling edge); these are inherent to subtree slide and are not affected here.</p>
+ *
+ * <p>Not for sampled-ancestor trees. A zero-length branch above {@code i} is rejected, but if the
+ * sibling {@code CiP} is a zero-length sampled-ancestor tip, {@code p} can still move and turn the
+ * sampled ancestor into an ordinary tip. {@code BactrianSubtreeSlide} behaves the same way; the
+ * core templates never build such trees.</p>
  */
 @Description("Subtree-slide move that scales the branch above the carried subtree in log space, "
         + "so the moved node can never be proposed below the carried subtree (removing that flat rejection) "
@@ -85,6 +90,7 @@ public class BactrianSubtreeScale extends TreeOperator {
         final Node p = i.getParent();
         final Node CiP = getOtherChild(p, i);   // sibling that p slides past / into
         final Node PiP = p.getParent();
+        final boolean markClades = markCladesInput.get();
 
         // 2. carried subtree (rooted at i) sets the floor; scale the gap above it.
         final double floor = i.getHeight();
@@ -112,6 +118,7 @@ public class BactrianSubtreeScale extends TreeOperator {
                 Node newChild = p;
                 while (newParent.getHeight() < newHeight) {
                     newChild = newParent;
+                    if (markClades) newParent.makeDirty(Tree.IS_FILTHY);
                     newParent = newParent.getParent();
                     if (newParent == null) break;
                 }
@@ -145,9 +152,11 @@ public class BactrianSubtreeScale extends TreeOperator {
         // 4. if we are sliding the subtree down
         else {
 
-            // 4.0 is it a valid move? By construction newHeight > floor = i.getHeight(),
-            // so the carried-subtree bound can never be violated. Guard defensively.
-            if (i.getHeight() > newHeight) {
+            // 4.0 is it a valid move? Mathematically newHeight > floor = i.getHeight(), but
+            // floor + oldGap * scale can round to exactly floor when the gap is tiny relative
+            // to the floor (e.g. gap 1e-12 at height 1e3). Reject that rather than create a
+            // zero-length branch.
+            if (newHeight <= floor) {
                 return Double.NEGATIVE_INFINITY;
             }
 
@@ -182,6 +191,14 @@ public class BactrianSubtreeScale extends TreeOperator {
                 }
 
                 p.setHeight(newHeight);
+                if (markClades) {
+                    // make dirty the path from the (down) moved node back up to former parent.
+                    Node n = p;
+                    while (n != CiP) {
+                        n.makeDirty(Tree.IS_FILTHY);
+                        n = n.getParent();
+                    }
+                }
 
                 logq += Math.log(possibleDestinations);
             } else {
