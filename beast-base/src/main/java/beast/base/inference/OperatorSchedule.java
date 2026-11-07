@@ -22,6 +22,12 @@ public class OperatorSchedule extends BEASTObject {
             "transform optimisation schedule (default none) This can be "
                     + Arrays.toString(OptimisationTransform.values()) + " (default 'none')",
             OptimisationTransform.none, OptimisationTransform.values());
+    final public Input<Double> gainExponentInput = new Input<>("gainExponent",
+            "exponent e of the auto-tuning gain 1/n^e after n proposals, with 0 < e <= 1, for operators "
+            + "that don't set their own (see the operator input of the same name). 1 is the classic 1/n, "
+            + "0.5 is the same as transform='sqrt'. If unset (NaN), transform decides. "
+            + "Cannot be combined with a transform other than 'none'.",
+            Double.NaN);
     final public Input<Boolean> autoOptimiseInput = new Input<>("autoOptimize", "whether to automatically optimise operator settings", true);
 
     final public Input<Boolean> detailedRejectionInput = new Input<>("detailedRejection", "true if detailed rejection statistics should be included. (default=false)", false);
@@ -100,14 +106,23 @@ public class OperatorSchedule extends BEASTObject {
     protected int autoOptimizeDelay = 10000;
     protected int autoOptimizeDelayCount = 0;
     OptimisationTransform transform = OptimisationTransform.none;
+    double gainExponent = Double.NaN;
     boolean autoOptimise = true;
     boolean detailedRejection = false;
-    
+
     private boolean reweighted = false;
 
     @Override
     public void initAndValidate() {
         transform = transformInput.get();
+        gainExponent = gainExponentInput.get() == null ? Double.NaN : gainExponentInput.get();
+        if (!Double.isNaN(gainExponent)) {
+            checkGainExponent(gainExponent, "OperatorSchedule " + getID());
+            if (transform != OptimisationTransform.none) {
+                throw new IllegalArgumentException("OperatorSchedule " + getID() + ": set either gainExponent or "
+                        + "transform, not both (gainExponent=" + gainExponent + ", transform=" + transform + ")");
+            }
+        }
         autoOptimise = autoOptimiseInput.get();
         autoOptimizeDelay = autoOptimizeDelayInput.get();
         detailedRejection = detailedRejectionInput.get();
@@ -441,7 +456,16 @@ public class OperatorSchedule extends BEASTObject {
         final double target = operator.getTargetAcceptanceProbability();
 
         double count = (operator.m_nNrRejectedForCorrection + operator.m_nNrAcceptedForCorrection + 1.0);
-        switch (transform) {
+        // gain exponent: the operator's own if it has one, else the schedule's, else the transform
+        double exponent = operator.getGainExponent();
+        if (Double.isNaN(exponent)) {
+            exponent = gainExponent;
+        } else {
+            checkGainExponent(exponent, "Operator " + operator.getID());
+        }
+        if (!Double.isNaN(exponent)) {
+            count = Math.pow(count, exponent);
+        } else switch (transform) {
             case log:
                 count = Math.log(count + 1.0);
                 break;
@@ -460,6 +484,12 @@ public class OperatorSchedule extends BEASTObject {
             return deltaP;
         }
         return 0;
+    }
+
+    private static void checkGainExponent(final double exponent, final String owner) {
+        if (!(exponent > 0 && exponent <= 1)) {
+            throw new IllegalArgumentException(owner + ": gainExponent must satisfy 0 < gainExponent <= 1, got " + exponent);
+        }
     }
 
 
