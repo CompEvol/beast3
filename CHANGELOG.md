@@ -38,8 +38,9 @@ Genuinely new components not present in BEAST 2:
 - `IntervalScaleOperator` — scales intervals between consecutive node heights (preserves topology, changes relative branch lengths)
 - `ScaleTreeOperator` — split from the old `ScaleOperator`; dedicated tree-scaling operator
 - `UpDownOperator` (spec version) — `up`/`down` take `List<Scalable>`; uses Bactrian kernel by default
+- `BactrianSubtreeScale` — subtree slide that scales the gap above the moved subtree in log space instead of adding a step in tree-height units, so its tuning parameter is unitless and one default works for substitution-scale and time-scaled trees ([#214](https://github.com/CompEvol/beast3/pull/214)). Ported from beast-phylonco
 
-**Default tree operator set simplified** — BICEPS `EpochFlexOperator` / `TreeStretchOperator` replaced by spec `UpDownOperator` as the tree scaler. The rest of the set (BactrianNodeOperator, BactrianSubtreeSlide, Exchange, WilsonBalding) is unchanged.
+**Default tree operator set simplified** — BICEPS `EpochFlexOperator` / `TreeStretchOperator` replaced by spec `UpDownOperator` as the tree scaler. `BactrianSubtreeSlide` is replaced by `BactrianSubtreeScale`, with no size. The rest of the set (BactrianNodeOperator, Exchange, WilsonBalding) is unchanged.
 
 ## API Removals & Breaking Changes
 
@@ -85,7 +86,7 @@ Genuinely new components not present in BEAST 2:
 
 ## BEAUti & Templates
 
-- **New default tree operator set** — spec `UpDownOperator` replaces BICEPS epoch operators as the tree scaler in BEAUti-generated XML.
+- **New default tree operator set** — spec `UpDownOperator` replaces BICEPS epoch operators as the tree scaler, and `BactrianSubtreeScale` replaces `BactrianSubtreeSlide`, in BEAUti-generated XML.
 - **fxtemplates namespacing** — `beast-fx` templates moved to `beast.fx/fxtemplates/` (module-unique resource path) to avoid JPMS split-package conflicts. External packages use their own namespace (e.g., `beast.morph.models.fx/fxtemplates/`).
 - **Module resource scanning** — `BeautiDoc.processTemplate()` scans JPMS module resources in addition to filesystem directories, enabling templates to be discovered from JARs on the module path.
 - **"Install from Maven" UI** — new button in the BEAUti package manager dialog for installing packages by Maven coordinates.

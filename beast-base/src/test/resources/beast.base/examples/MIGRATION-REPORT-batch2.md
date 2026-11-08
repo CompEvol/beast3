@@ -89,7 +89,7 @@ listing its own differences.
   and `RandomLocalClockModel` resizes them to one value per branch when the model starts. BEAST3's
   `RandomLocalClockModel` takes them as vectors (`RealVectorParam` / `BoolVectorParam`) and resizes
   them the same way.
-- **`SubtreeSlide` → `kernel.BactrianSubtreeSlide`** (`gaussian` dropped). Each slide starts at the size
+- **`SubtreeSlide` → `kernel.BactrianSubtreeSlide`** (`gaussian` dropped). *Later switched to `kernel.BactrianSubtreeScale` with no size, in #214; the tuned slide sizes below are kept as a record.* Each slide starts at the size
   its auto-tuning converges to in a BEAST 3 run, as in #199, instead of the original's 1.0 (which does not
   tune down within a run on substitution-scale trees, #200). Tuned in BEAST 3 (seed 127, the files' chain
   lengths), starting each slide below its optimum, since tuning grows a size much faster than it shrinks it:

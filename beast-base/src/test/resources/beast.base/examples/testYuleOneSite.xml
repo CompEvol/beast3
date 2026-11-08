@@ -59,7 +59,7 @@
 	        <distribution id="yulelike.prior" idref="yulelike"/>
 	</distribution>
 
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" weight="5" tree="@tree"/>
 <!--
         <operator id='treeScaler' spec='ScaleOperator' scaleFactor="0.5" weight="1" tree="@tree"/>
 -->

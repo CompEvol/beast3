@@ -7,8 +7,7 @@
            - firstAndSecondSites.hky.kappa, thirdSites.hky.kappa: OneOnX (1/x) -> LogNormal(M=1, S=1.25)
          Changes made by the conversion:
            - Unused state nodes RealParameter6 and RealParameter7 removed (nothing refers to them).
-           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeSlide (the gaussian flag has no equivalent), starting at its tuned size 0.013.
-               BEAUti starts the slide at 0.01 (#201) and the class default is 1.0; this example keeps its tuned size, so the slide works well from the first step.
+           - SubtreeSlide is deprecated: replaced by kernel.BactrianSubtreeScale (the gaussian flag has no equivalent). It scales the gap above the moved subtree, so it needs no size in tree-height units (#214).
     -->
 
 <!-- SRD06 model: split sequences in first together with seconds and thirds of all sites -->
@@ -101,7 +100,7 @@
     <operator id="Uniform0" tree="@tree" weight="10.0" spec="beast.base.evolution.operator.Uniform"/>
     <operator id="firstAndSecondSites.narrow" isNarrow="true" spec="Exchange" tree="@tree" weight="1.0"/>
     <operator degreesOfFreedom="1" id="firstAndSecondSites.kappaScaler" parameter="@firstAndSecondSites.hky.kappa" scaleAll="false" scaleAllIndependently="false" scaleFactor="0.5" weight="1.0" spec="beast.base.spec.inference.operator.ScaleOperator"/>
-    <operator id="SubtreeSlide0" size="0.013" spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" tree="@tree" weight="5.0"/>
+    <operator id="SubtreeSlide0" spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" tree="@tree" weight="5.0"/>
 
     <logger fileName="beast_$(seed).log" id="tracelog" logEvery="10000" mode="autodetect" model="@posterior">
         <distribution idref="likelihood" name="log"/>

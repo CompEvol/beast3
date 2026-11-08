@@ -138,6 +138,7 @@ open module beast.base {
         beast.base.evolution.operator.kernel.BactrianNodeOperator,
         beast.base.evolution.operator.kernel.BactrianOperatorSchedule,
         beast.base.evolution.operator.kernel.BactrianScaleOperator,
+        beast.base.evolution.operator.kernel.BactrianSubtreeScale,
         beast.base.evolution.operator.kernel.BactrianSubtreeSlide,
         beast.base.evolution.operator.kernel.BactrianTipDatesRandomWalker,
         beast.base.inference.operator.kernel.Transform.FisherZTransform,

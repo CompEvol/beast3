@@ -59,7 +59,7 @@
 
         <operator id="treeScaler" scaleFactor="0.5" weight="1" tree="@tree" spec="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
 
-        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeSlide" weight="5" size="1.0" tree="@tree"/>
+        <operator spec="beast.base.evolution.operator.kernel.BactrianSubtreeScale" weight="5" tree="@tree"/>
 
         <operator weight="10" tree="@tree" spec="beast.base.evolution.operator.Uniform"/>
         <operator id="narrow" spec="Exchange" isNarrow="true" weight="1" tree="@tree"/>

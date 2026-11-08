@@ -1,5 +1,6 @@
 package test.beastfx.app.beauti;
 
+import beast.base.evolution.operator.kernel.BactrianSubtreeScale;
 import beastfx.app.beauti.BeautiTabPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,9 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 import java.io.File;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(ApplicationExtension.class)
 public class SimpleTreePriorTest extends BeautiBase {
@@ -38,6 +42,7 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "popSize.t:anolis");
 		assertOperatorsEqual("CoalescentConstantTreeRootScaler.t:anolis", "CoalescentConstantUniformOperator.t:anolis", "CoalescentConstantSubtreeSlide.t:anolis", "CoalescentConstantNarrow.t:anolis", "CoalescentConstantWide.t:anolis", "CoalescentConstantWilsonBalding.t:anolis", "CoalescentConstantTreeScaler.t:anolis", "PopSizeScaler.t:anolis");
+		assertSubtreeSlideIsScale("CoalescentConstantSubtreeSlide.t:anolis");
 		assertPriorsEqual("CoalescentConstant.t:anolis", "PopSizePrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "popSize.t:anolis", "CoalescentConstant.t:anolis");
 
@@ -46,6 +51,7 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "ePopSize.t:anolis", "growthRate.t:anolis");
 		assertOperatorsEqual("CoalescentExponentialTreeRootScaler.t:anolis", "CoalescentExponentialUniformOperator.t:anolis", "CoalescentExponentialSubtreeSlide.t:anolis", "CoalescentExponentialNarrow.t:anolis", "CoalescentExponentialWide.t:anolis", "CoalescentExponentialWilsonBalding.t:anolis", "CoalescentExponentialTreeScaler.t:anolis", "ePopSizeScaler.t:anolis", "GrowthRateRandomWalk.t:anolis");
+		assertSubtreeSlideIsScale("CoalescentExponentialSubtreeSlide.t:anolis");
 		assertPriorsEqual("CoalescentExponential.t:anolis", "ePopSizePrior.t:anolis", "GrowthRatePrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "CoalescentExponential.t:anolis", "ePopSize.t:anolis", "growthRate.t:anolis");
 		
@@ -54,6 +60,7 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "bPopSizes.t:anolis", "bGroupSizes.t:anolis", "bPopSizesInitialMean.t:anolis");
 		assertOperatorsEqual("BayesianSkylineTreeRootScaler.t:anolis", "BayesianSkylineUniformOperator.t:anolis", "BayesianSkylineSubtreeSlide.t:anolis", "BayesianSkylineNarrow.t:anolis", "BayesianSkylineWide.t:anolis", "BayesianSkylineWilsonBalding.t:anolis", "BayesianSkylineTreeScaler.t:anolis", "popSizesScaler.t:anolis", "groupSizesDelta.t:anolis", "popSizesInitialMeanScaler.t:anolis");
+		assertSubtreeSlideIsScale("BayesianSkylineSubtreeSlide.t:anolis");
 		assertPriorsEqual("BayesianSkyline.t:anolis", "MarkovChainedPopSizes.t:anolis", "bPopSizesInitialMeanPrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "BayesianSkyline.t:anolis", "bPopSizes.t:anolis", "bGroupSizes.t:anolis", "bPopSizesInitialMean.t:anolis");
 
@@ -62,6 +69,7 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "indicators.alltrees", "populationMean.alltrees", "popSizes.alltrees");
 		assertOperatorsEqual("ExtendedBayesianSkylineTreeScaler.t:anolis", "ExtendedBayesianSkylineTreeRootScaler.t:anolis", "ExtendedBayesianSkylineUniformOperator.t:anolis", "ExtendedBayesianSkylineSubtreeSlide.t:anolis", "ExtendedBayesianSkylineNarrow.t:anolis", "ExtendedBayesianSkylineWide.t:anolis", "ExtendedBayesianSkylineWilsonBalding.t:anolis", "bitflip.alltrees", "indicatorSampler.alltrees", "indicatorScaler.alltrees", "EBSPupDownOperator.alltrees");
+		assertSubtreeSlideIsScale("ExtendedBayesianSkylineSubtreeSlide.t:anolis");
 		assertPriorsEqual("ExtendedBayesianSkyline.t:anolis", "populationMeanPrior.alltrees", "indicatorsPrior.alltrees", "popSizePrior.alltrees");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "ExtendedBayesianSkyline.t:anolis", "indicators.alltrees", "populationMean.alltrees", "popSizes.alltrees", "sumIndicators");
 
@@ -70,6 +78,7 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "birthRate.t:anolis");
 		assertOperatorsEqual("YuleModelTreeRootScaler.t:anolis", "YuleModelUniformOperator.t:anolis", "YuleModelSubtreeSlide.t:anolis", "YuleModelNarrow.t:anolis", "YuleModelWide.t:anolis", "YuleModelWilsonBalding.t:anolis", "YuleModelTreeScaler.t:anolis", "YuleBirthRateScaler.t:anolis");
+		assertSubtreeSlideIsScale("YuleModelSubtreeSlide.t:anolis");
 		assertPriorsEqual("YuleModel.t:anolis", "YuleBirthRatePrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "YuleModel.t:anolis", "birthRate.t:anolis");
 		
@@ -78,10 +87,21 @@ public class SimpleTreePriorTest extends BeautiBase {
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "BDBirthRate.t:anolis", "BDDeathRate.t:anolis");
 		assertOperatorsEqual("BirthDeathTreeRootScaler.t:anolis", "BirthDeathUniformOperator.t:anolis", "BirthDeathSubtreeSlide.t:anolis", "BirthDeathNarrow.t:anolis", "BirthDeathWide.t:anolis", "BirthDeathWilsonBalding.t:anolis", "BirthDeathTreeScaler.t:anolis", "BirthRateScaler.t:anolis", "DeathRateScaler.t:anolis");
+		assertSubtreeSlideIsScale("BirthDeathSubtreeSlide.t:anolis");
 		assertPriorsEqual("BirthDeath.t:anolis", "BirthRatePrior.t:anolis", "DeathRatePrior.t:anolis");
 		assertTraceLogEqual("posterior", "likelihood", "prior", "treeLikelihood.anolis", "TreeHeight.t:anolis", "BirthDeath.t:anolis", "BDBirthRate.t:anolis", "BDDeathRate.t:anolis");
 
 		makeSureXMLParses();
 	}
 
+
+	/**
+	 * The tree priors' subtree slide is the scale-invariant BactrianSubtreeScale at its default size:
+	 * the templates write no size, so it must not depend on the tree's units.
+	 */
+	private void assertSubtreeSlideIsScale(String id) {
+		Object op = doc.pluginmap.get(id);
+		assertTrue(op instanceof BactrianSubtreeScale, id + " is " + (op == null ? "missing" : op.getClass().getName()));
+		assertEquals(0.3, ((BactrianSubtreeScale) op).sizeInput.get(), 0.0, id + " size");
+	}
 }
