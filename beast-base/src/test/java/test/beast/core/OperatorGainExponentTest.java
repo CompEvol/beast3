@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 import beast.base.evolution.operator.ScaleOperator;
+import beast.base.evolution.operator.SubtreeSlide;
 import beast.base.evolution.operator.kernel.BactrianSubtreeSlide;
 import beast.base.evolution.tree.Tree;
 import beast.base.evolution.tree.TreeParser;
@@ -15,7 +16,9 @@ import beast.base.inference.parameter.RealParameter;
 
 /**
  * The auto-tuning gain 1/n^e of OperatorSchedule.calcDelta: the schedule's gainExponent,
- * an operator's own gainExponent (input or default), and the precedence between them.
+ * an operator's own gainExponent (input or default), and the precedence between them:
+ * operator input, then the schedule's gainExponent or transform, then the operator's default,
+ * then the classic 1/n.
  */
 public class OperatorGainExponentTest {
 
@@ -47,9 +50,19 @@ public class OperatorGainExponentTest {
     }
 
     static BactrianSubtreeSlide slide(Object... extra) {
-        Tree tree = new TreeParser("((A:1.0,B:1.0):1.0,(C:1.5,D:1.5):0.5);", false);
         BactrianSubtreeSlide op = new BactrianSubtreeSlide();
         op.setID("slide");
+        return initTreeOperator(op, extra);
+    }
+
+    static SubtreeSlide classicSlide(Object... extra) {
+        SubtreeSlide op = new SubtreeSlide();
+        op.setID("classicSlide");
+        return initTreeOperator(op, extra);
+    }
+
+    static <T extends Operator> T initTreeOperator(T op, Object... extra) {
+        Tree tree = new TreeParser("((A:1.0,B:1.0):1.0,(C:1.5,D:1.5):0.5);", false);
         Object[] all = new Object[extra.length + 4];
         all[0] = "tree";
         all[1] = tree;
@@ -116,11 +129,29 @@ public class OperatorGainExponentTest {
     }
 
     @Test
-    public void subtreeSlideDefaultOverridesScheduleButNotItsInput() {
-        BactrianSubtreeSlide op = slide();
-        assertEquals(expected(op, 0.6), delta(schedule("gainExponent", 1.0), op), 1e-15);
-        BactrianSubtreeSlide classic = slide("gainExponent", 1.0);
-        assertEquals(expected(classic, 1.0), delta(schedule(), classic), 1e-15);
+    public void classicSubtreeSlideDefaultsToSixTenths() {
+        SubtreeSlide op = classicSlide();
+        assertEquals(0.6, op.getGainExponent());
+        assertEquals(expected(op, 0.6), delta(schedule(), op), 1e-15);
+    }
+
+    @Test
+    public void scheduleSettingsOverrideSubtreeSlideDefault() {
+        // an explicit schedule gainExponent or transform wins over the slide's built-in 0.6
+        BactrianSubtreeSlide a = slide();
+        assertEquals(expected(a, 1.0), delta(schedule("gainExponent", 1.0), a), 1e-15);
+        BactrianSubtreeSlide b = slide();
+        assertEquals(expected(b, 0.5), delta(schedule("transform", "sqrt"), b), 1e-15);
+        SubtreeSlide c = classicSlide();
+        assertEquals(expected(c, 1.0), delta(schedule("gainExponent", 1.0), c), 1e-15);
+    }
+
+    @Test
+    public void subtreeSlideInputOverridesSchedule() {
+        BactrianSubtreeSlide op = slide("gainExponent", 1.0);
+        assertEquals(expected(op, 1.0), delta(schedule(), op), 1e-15);
+        BactrianSubtreeSlide op2 = slide("gainExponent", 0.8);
+        assertEquals(expected(op2, 0.8), delta(schedule("gainExponent", 0.6), op2), 1e-15);
     }
 
     @Test
@@ -129,7 +160,24 @@ public class OperatorGainExponentTest {
         assertThrows(RuntimeException.class, () -> schedule("gainExponent", 1.5));
         assertThrows(RuntimeException.class, () -> schedule("gainExponent", 0.0));
         assertThrows(RuntimeException.class, () -> schedule("gainExponent", 0.6, "transform", "sqrt"));
-        ScaleOperator op = scaleOperator("gainExponent", -1.0);
-        assertThrows(IllegalArgumentException.class, () -> delta(schedule(), op));
+        // an operator's bad exponent fails when it is added to a schedule, not mid-run
+        for (double bad : new double[] {-1.0, 0.0, 1.0001}) {
+            ScaleOperator op = scaleOperator("gainExponent", bad);
+            OperatorSchedule schedule = schedule();
+            assertThrows(IllegalArgumentException.class, () -> schedule.addOperator(op));
+        }
+        // ... also with auto-tuning off, where calcDelta never looks at it
+        ScaleOperator op = scaleOperator("gainExponent", 2.0);
+        OperatorSchedule noTuning = schedule("autoOptimize", false);
+        assertThrows(IllegalArgumentException.class, () -> noTuning.addOperator(op));
+    }
+
+    @Test
+    public void operatorBoundaryExponentsAreAccepted() {
+        // 1 and 0.5 are valid (0.5 only warns); tiny exponents are valid too
+        for (double e : new double[] {1.0, 0.5, 1e-6}) {
+            ScaleOperator op = scaleOperator("gainExponent", e);
+            assertEquals(expected(op, e), delta(schedule(), op), 1e-15);
+        }
     }
 }

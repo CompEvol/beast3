@@ -297,6 +297,16 @@ public class SubtreeSlide extends TreeOperator {
         return 0.3;
     }
 
+    /**
+     * As for {@link beast.base.evolution.operator.kernel.BactrianSubtreeSlide}: the size is in
+     * the tree's own units, so with the classic 1/n gain a start that is far off never tunes
+     * (beast3#200). A gain of 1/n^0.6 lets the log size travel as n^0.4.
+     */
+    @Override
+    public double getDefaultGainExponent() {
+        return 0.6;
+    }
+
     @Override
     public String getPerformanceSuggestion() {
         final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);

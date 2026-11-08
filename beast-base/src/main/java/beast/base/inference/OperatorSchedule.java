@@ -23,9 +23,10 @@ public class OperatorSchedule extends BEASTObject {
                     + Arrays.toString(OptimisationTransform.values()) + " (default 'none')",
             OptimisationTransform.none, OptimisationTransform.values());
     final public Input<Double> gainExponentInput = new Input<>("gainExponent",
-            "exponent e of the auto-tuning gain 1/n^e after n proposals, with 0 < e <= 1, for operators "
-            + "that don't set their own (see the operator input of the same name). 1 is the classic 1/n, "
-            + "0.5 is the same as transform='sqrt'. If unset (NaN), transform decides. "
+            "exponent e of the auto-tuning gain 1/n^e after n proposals, with 0 < e <= 1 (below 0.5 the "
+            + "tuned values may not settle). 1 is the classic 1/n, 0.5 is the same as transform='sqrt'. "
+            + "It applies to every operator in this schedule except those with their own gainExponent "
+            + "input, and overrides operators' built-in defaults. If unset (NaN), transform decides. "
             + "Cannot be combined with a transform other than 'none'.",
             Double.NaN);
     final public Input<Boolean> autoOptimiseInput = new Input<>("autoOptimize", "whether to automatically optimise operator settings", true);
@@ -129,6 +130,7 @@ public class OperatorSchedule extends BEASTObject {
         operators.addAll(operatorsInput.get());
         for (Operator o : operators) {
         	o.setOperatorSchedule(this);
+        	checkOperatorGainExponent(o);
         }
         
         // sanity check: make sure weight percentages add to less than 100%
@@ -176,6 +178,7 @@ public class OperatorSchedule extends BEASTObject {
     			return;
     		}
     	}
+        checkOperatorGainExponent(p);
         operators.add(p);
         p.setOperatorSchedule(this);
         reweighted = false;
@@ -197,6 +200,7 @@ public class OperatorSchedule extends BEASTObject {
 		    			return;
 		    		}
 		    	}
+				checkOperatorGainExponent(o);
 				operators.add(o);
                 noMatch = false;
 			}
@@ -456,12 +460,15 @@ public class OperatorSchedule extends BEASTObject {
         final double target = operator.getTargetAcceptanceProbability();
 
         double count = (operator.m_nNrRejectedForCorrection + operator.m_nNrAcceptedForCorrection + 1.0);
-        // gain exponent: the operator's own if it has one, else the schedule's, else the transform
-        double exponent = operator.getGainExponent();
+        // gain exponent, first one set wins: the operator's gainExponent input, the schedule's
+        // gainExponent or transform, the operator's built-in default, the classic 1/n.
+        // Values were checked when the operator was added to the schedule.
+        double exponent = operator.getExplicitGainExponent();
         if (Double.isNaN(exponent)) {
             exponent = gainExponent;
-        } else {
-            checkGainExponent(exponent, "Operator " + operator.getID());
+        }
+        if (Double.isNaN(exponent) && transform == OptimisationTransform.none) {
+            exponent = operator.getDefaultGainExponent();
         }
         if (!Double.isNaN(exponent)) {
             count = Math.pow(count, exponent);
@@ -489,6 +496,25 @@ public class OperatorSchedule extends BEASTObject {
     private static void checkGainExponent(final double exponent, final String owner) {
         if (!(exponent > 0 && exponent <= 1)) {
             throw new IllegalArgumentException(owner + ": gainExponent must satisfy 0 < gainExponent <= 1, got " + exponent);
+        }
+        if (exponent <= 0.5) {
+            // Robbins-Monro: the gains must sum to infinity with a finite sum of squares, i.e. 0.5 < e <= 1
+            Log.warning("WARNING: " + owner + ": gainExponent " + exponent + " <= 0.5, so the tuned value "
+                    + "may not settle (stochastic approximation needs 0.5 < gainExponent <= 1). "
+                    + "The posterior is not affected.");
+        }
+    }
+
+    /** check an operator's own and default gain exponents, so a bad value fails at load time */
+    private static void checkOperatorGainExponent(final Operator operator) {
+        final double explicit = operator.getExplicitGainExponent();
+        if (!Double.isNaN(explicit)) {
+            checkGainExponent(explicit, "Operator " + operator.getID());
+        }
+        final double dflt = operator.getDefaultGainExponent();
+        if (!Double.isNaN(dflt) && !(dflt > 0 && dflt <= 1)) {
+            throw new IllegalArgumentException("Operator " + operator.getID() + " (" + operator.getClass().getName()
+                    + "): default gainExponent must satisfy 0 < gainExponent <= 1, got " + dflt);
         }
     }
 
