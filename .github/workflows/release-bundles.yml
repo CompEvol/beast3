@@ -71,6 +71,7 @@ jobs:
           name: Linux.x86_64
           path: dist/BEAST.v${{ env.VERSION }}.Linux.x86_64.tgz
           archive: false  # Disables the internal zipping architecture entirely
+          retention-days: 14  # download and attach to the GitHub release before then
 
   # ── Linux aarch64 bundle ──────────────────────────────────────────────────────
   # Runs natively on ubuntu-24.04-arm (ARM64). Same two-setup-java pipeline as x86_64:
@@ -120,6 +121,7 @@ jobs:
           name: Linux.aarch64
           path: dist/BEAST.v${{ env.VERSION }}.Linux.aarch64.tgz
           archive: false  # Disables the internal zipping architecture entirely
+          retention-days: 14  # download and attach to the GitHub release before then
 
   # ── Windows x86_64 bundle ─────────────────────────────────────────────────────
   # Runs on windows-latest (x86_64). Same two-setup-java pipeline as Linux: JDK+FX 25
@@ -172,3 +174,4 @@ jobs:
           name: Windows.x86_64
           path: dist/BEAST.v${{ env.VERSION }}.Windows.x86_64.zip
           archive: false  # Disables the internal zipping architecture entirely
+          retention-days: 14  # download and attach to the GitHub release before then

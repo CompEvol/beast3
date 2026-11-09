@@ -7,6 +7,13 @@ on:
   pull_request:
     branches: [ master ]
 
+# A new push to a pull request cancels the run it replaces, so superseded runs
+# leave no artifacts behind. Pushes to master and tags are never cancelled, so a
+# deploy or release is not cut off halfway.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -68,11 +75,13 @@ jobs:
           CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+      # Only needed to debug a failed run, so keep it for a week only
       - name: Upload test results
         uses: actions/upload-artifact@v7
-        if: always()
+        if: failure()
         with:
           name: maven-test-results
+          retention-days: 7
           path: |
             **/target/surefire-reports/*.xml
             **/target/failsafe-reports/*.xml
