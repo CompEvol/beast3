@@ -138,6 +138,18 @@ public class BactrianSubtreeSlide extends AbstractSubtreeSlide {
         return 0.3;
     }
 
+    /**
+     * The slide's size is in the tree's own units, so the right size ranges over many
+     * orders of magnitude between analyses (beast3#200). With the classic 1/n gain the
+     * log size can move only about 0.7 ln(n) in n proposals, so a start that is too large
+     * or too small by more than a few thousand-fold never tunes. A gain of 1/n^0.6 lets
+     * it travel as n^0.4 and still diminishes.
+     */
+    @Override
+    public double getDefaultGainExponent() {
+        return 0.6;
+    }
+
     @Override
     public String getPerformanceSuggestion() {
         final double prob = m_nNrAccepted / (m_nNrAccepted + m_nNrRejected + 0.0);

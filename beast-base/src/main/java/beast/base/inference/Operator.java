@@ -48,6 +48,15 @@ public abstract class Operator extends BEASTObject {
             "target acceptance probability for auto-tuning. If unset (NaN), uses the operator's default.",
             Double.NaN);
 
+    final public Input<Double> gainExponentInput = new Input<>("gainExponent",
+            "exponent e of the auto-tuning gain: after n proposals the tuned value moves by "
+            + "(acceptance - target) / n^e on its tuning scale, with 0 < e <= 1. Smaller values let the "
+            + "tuning travel further, e.g. from a start that is far too small or too large; below 0.5 the tuned "
+            + "value may not settle. Set here, it overrides the operator schedule's gainExponent and transform. "
+            + "If unset (NaN), the schedule's gainExponent or transform is used if set, else the operator's "
+            + "default, else the classic 1/n.",
+            Double.NaN);
+
     private final String STANDARD_OPERATOR_PACKAGE = "beast.base.evolution.operator";
 
     /**
@@ -182,6 +191,38 @@ public abstract class Operator extends BEASTObject {
      */
     public double getDefaultTargetAcceptanceProbability() {
         return 0.234;
+    }
+
+    /**
+     * @return the {@code gainExponent} XML input, or NaN if it is unset. An explicit value
+     *         overrides the operator schedule's settings (see
+     *         {@link OperatorSchedule#calcDelta(Operator, double)}).
+     */
+    public double getExplicitGainExponent() {
+        Double v = gainExponentInput.get();
+        return v == null ? Double.NaN : v;
+    }
+
+    /**
+     * @return exponent of the auto-tuning gain this operator asks for: the
+     *         {@code gainExponent} XML input if set, otherwise
+     *         {@link #getDefaultGainExponent()}. NaN means it has no preference. The
+     *         operator schedule decides how this ranks against its own settings (see
+     *         {@link OperatorSchedule#calcDelta(Operator, double)}).
+     */
+    public double getGainExponent() {
+        double v = getExplicitGainExponent();
+        return Double.isNaN(v) ? getDefaultGainExponent() : v;
+    }
+
+    /**
+     * @return operator-specific default exponent of the auto-tuning gain, or NaN
+     *         (the default) for none. It applies only when neither the operator's input
+     *         nor the operator schedule sets the gain. Override in subclasses whose tuned
+     *         value can need to move a long way within a run.
+     */
+    public double getDefaultGainExponent() {
+        return Double.NaN;
     }
 
     /**
