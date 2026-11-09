@@ -32,8 +32,8 @@ beast: [
          distribution: [
             {spec: "beast.base.spec.inference.distribution.LogNormal",
                  param: {id: "hky.kappa", spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "1.0"},
-                 M: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "Real", value: "1.0"},
-                 S: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "0.5"}
+                 M: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "Real", value: "0.0"},
+                 S: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "8.0"}
             },
             {id: "treeLikelihood",
              spec: "beast.base.spec.evolution.likelihood.TreeLikelihood",

@@ -66,7 +66,7 @@
 
         <init idref="coalescentSimulator"/>
         <distribution spec="CompoundDistribution" id="posterior">
-            <distribution spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa"><M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="1.0"/><S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5"/></distribution>
+            <distribution spec="beast.base.spec.inference.distribution.LogNormal" param="@hky.kappa"><M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0"/><S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0"/></distribution>
             <distribution id="likelihood" idref="treeLikelihood"/>
         </distribution>
 
