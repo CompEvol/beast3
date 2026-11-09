@@ -1,7 +1,9 @@
 package test.beastfx.app.inputeditor;
 
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.lang.reflect.Field;
@@ -22,6 +24,7 @@ import org.testfx.framework.junit5.Start;
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.spec.domain.PositiveReal;
@@ -29,11 +32,13 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
+import beast.base.spec.inference.distribution.LogUniform;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastfx.app.inputeditor.BeautiConfig;
 import beastfx.app.inputeditor.BeautiDoc;
+import beastfx.app.inputeditor.BeautiSubTemplate;
 import beastfx.app.inputeditor.InputEditor;
 import beastfx.app.inputeditor.ScalarDistributionInputEditor;
 import javafx.application.Platform;
@@ -181,6 +186,55 @@ public class ScalarDistributionInputEditorTest {
 		// the editor should offer a way to select a distribution
 		assertNotNull(findComboBox(editor.get().getComponent()),
 				"no combo box to select a distribution from");
+	}
+
+
+	/**
+	 * The prior dropdown for a positive parameter, such as the Yule birth rate, did not
+	 * offer a uniform distribution, because Uniform is typed for a Real-domain parameter
+	 * (issue #217). PositiveUniform and NonNegativeUniform fill that gap.
+	 */
+	@Test
+	public void testUniformOfferedForPositiveParameter() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> offered = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> birthRate = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+			birthRate.setID("birthRate.t:test");
+			LogUniform logUniform = new LogUniform();
+			logUniform.initByName("param", birthRate,
+					"lower", new RealScalarParam<>(1.0E-8, PositiveReal.INSTANCE),
+					"upper", new RealScalarParam<>(1.0E8, PositiveReal.INSTANCE));
+			logUniform.setID("BirthRatePrior.t:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", logUniform);
+			prior.setID("prior");
+			doc.registerPlugin(birthRate);
+			doc.registerPlugin(logUniform);
+			doc.registerPlugin(prior);
+
+			// this is what the priors panel does for its list of distributions
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			ComboBox<?> comboBox = findComboBox(editor.getComponent());
+			assertNotNull(comboBox, "no combo box to select a distribution from");
+			for (Object item : comboBox.getItems()) {
+				offered.add(((BeautiSubTemplate) item).getID());
+			}
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(offered.contains("PositiveUniform"), "PositiveUniform not offered: " + offered);
+		assertTrue(offered.contains("NonNegativeUniform"), "NonNegativeUniform not offered: " + offered);
+		assertTrue(offered.contains("LogUniform"), "LogUniform not offered: " + offered);
+		// Uniform, for a Real-domain parameter, still should not be offered
+		assertFalse(offered.contains("Uniform"), "Uniform should not be offered: " + offered);
 	}
 
 
