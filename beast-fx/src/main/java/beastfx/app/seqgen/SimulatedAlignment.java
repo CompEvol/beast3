@@ -2,6 +2,7 @@ package beastfx.app.seqgen;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.SplittableRandom;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
@@ -74,6 +75,11 @@ public class SimulatedAlignment extends Alignment {
      * an array used to transfer transition probabilities
      */
     protected double[][] m_probabilities;
+
+    /**
+     * private random number generator used when a local seed is given, otherwise null *
+     */
+    private SplittableRandom localRandom;
     
     public SimulatedAlignment() {
         
@@ -94,22 +100,20 @@ public class SimulatedAlignment extends Alignment {
         
         sequenceInput.get().clear();
 
+        // With a local seed, simulate from a private generator so that the global Randomizer stream is
+        // left as it was. Without one, draw from the global stream, which then continues from there.
+        // (Re-seeding the Randomizer with getSeed() would restart the stream instead, so what follows,
+        // e.g. an MCMC, would replay the numbers used for the simulation.)
         Long customSeed = localSeedInput.get();
-        long originalSeed = Randomizer.getSeed();
-        long seedToUse = customSeed != null ? customSeed : originalSeed;
-
         if (customSeed != null) {
             Log.info.println();
             Log.info.println("Random number seed for alignment simulation: " + customSeed);
             Log.info.println();
+            localRandom = new SplittableRandom(customSeed);
+        } else {
+            localRandom = null;
         }
-
-        try {
-            Randomizer.setSeed(seedToUse);
-            simulate();
-        } finally {
-            Randomizer.setSeed(originalSeed);
-        }
+        simulate();
 
         // Write simulated alignment to disk if requested:
         if (m_outputFileName != null) {
@@ -170,6 +174,24 @@ public class SimulatedAlignment extends Alignment {
     } // intArray2Sequence
 
     /**
+     * Sample an index from an unnormalised probability distribution, using the private generator when
+     * there is a local seed, otherwise the global Randomizer (see {@link Randomizer#randomChoicePDF}).
+     */
+    private int randomChoicePDF(double[] pdf) {
+        if (localRandom == null) {
+            return Randomizer.randomChoicePDF(pdf);
+        }
+        double u = localRandom.nextDouble() * Randomizer.getTotal(pdf);
+        for (int i = 0; i < pdf.length; i++) {
+            u -= pdf[i];
+            if (u < 0.0) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("randomChoicePDF falls through -- negative components in input distribution?");
+    }
+
+    /**
      * perform the actual sequence generation
      *
      * @return alignment containing randomly generated sequences for the nodes in the
@@ -182,13 +204,13 @@ public class SimulatedAlignment extends Alignment {
         double[] categoryProbs = m_siteModel.getCategoryProportions(root);
         int[] category = new int[m_sequenceLength];
         for (int i = 0; i < m_sequenceLength; i++) {
-            category[i] = Randomizer.randomChoicePDF(categoryProbs);
+            category[i] = randomChoicePDF(categoryProbs);
         }
 
         double[] frequencies = m_siteModel.getSubstitutionModel().getFrequencies();
         int[] seq = new int[m_sequenceLength];
         for (int i = 0; i < m_sequenceLength; i++) {
-            seq[i] = Randomizer.randomChoicePDF(frequencies);
+            seq[i] = randomChoicePDF(frequencies);
         }
 
 
@@ -217,7 +239,7 @@ public class SimulatedAlignment extends Alignment {
             double[] cProb = new double[m_stateCount];
             for (int i = 0; i < m_sequenceLength; i++) {
                 System.arraycopy(m_probabilities[category[i]], parentSequence[i] * m_stateCount, cProb, 0, m_stateCount);
-                seq[i] = Randomizer.randomChoicePDF(cProb);
+                seq[i] = randomChoicePDF(cProb);
             }
 
             if (child.isLeaf()) {
