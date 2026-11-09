@@ -98,7 +98,7 @@
 		<distribution idref="prior">
 			<if cond='inlikelihood(RandomLocalClock.c:$(n))'>
 				<!-- prior on rates -->
-            <distribution id='RRatesPrior.c:s$(n)' spec='beast.base.spec.inference.distribution.IID' param='@clockrates.c:$(n)' >
+            <distribution id='RRatesPrior.c:$(n)' spec='beast.base.spec.inference.distribution.IID' param='@clockrates.c:$(n)' >
                <distr spec='beast.base.spec.inference.distribution.Gamma'>
                   <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5" estimate="false"/>
                   <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
