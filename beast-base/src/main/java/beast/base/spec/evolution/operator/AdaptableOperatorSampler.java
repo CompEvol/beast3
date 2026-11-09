@@ -25,6 +25,7 @@ import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealScalar;
 import beast.base.spec.type.RealVector;
+import beast.base.spec.type.Simplex;
 import beast.base.spec.type.Tensor;
 import beast.base.core.Log;
 import beast.base.evolution.tree.Tree;
@@ -113,8 +114,17 @@ public class AdaptableOperatorSampler extends Operator {
     // Cumulative mean sum (aka the mean) of each parameter -> for calculating mean
     double[] param_mean_sum = null;
     
-    // Cumulative mean sum of squares of each parameter -> for calculating variance
+    // Cumulative mean sum of squares of each parameter -> for calculating variance.
+    // For a simplex this is the mean of the sum of its squared elements (see isSimplex).
     double[] param_mean_SS = null;
+
+    // Whether parameter p is a simplex. Its elements always sum to 1, so the mean of its
+    // elements is constant and has variance 0 (beast3#179). A simplex is normalised by the
+    // sum of the variances of its elements instead, which needs the mean of each element.
+    boolean[] isSimplex = null;
+
+    // Mean of each element of each simplex parameter (null for other parameters)
+    double[][] param_elem_mean = null;
     
     // Number of times each operator has been called
     int[] numProposals = null;
@@ -230,6 +240,18 @@ public class AdaptableOperatorSampler extends Operator {
 				this.param_mean_sum[p] = 0;
 				this.param_mean_SS[p] = 0;
 			}
+
+			// Simplex parameters: per-element means (the tree heights are never a simplex)
+			this.isSimplex = new boolean[this.numParams];
+			this.param_elem_mean = new double[this.numParams][];
+			if (this.treeMetric == null) {
+				for (int p = 0; p < this.parameters.size(); p ++) {
+					if (this.parameters.get(p) instanceof Simplex simplex) {
+						this.isSimplex[p] = true;
+						this.param_elem_mean[p] = new double[simplex.size()];
+					}
+				}
+			}
 			
 		}
 		
@@ -336,6 +358,19 @@ public class AdaptableOperatorSampler extends Operator {
 
 			// Update the sum and the sum-of-squares each parameter
 			for (int p = 0; p < this.numParams; p ++) {
+
+				if (this.isSimplex[p]) {
+					// Mean of each element, and mean of the sum of squared elements, so that
+					// getZ can use the sum of the element variances
+					double sumSq = 0;
+					for (int j = 0; j < thisState[p].length; j++) {
+						double x = thisState[p][j];
+						this.param_elem_mean[p][j] = (this.param_elem_mean[p][j]*n + x) / (n+1.0);
+						sumSq += x * x;
+					}
+					this.param_mean_SS[p] = (this.param_mean_SS[p]*n + sumSq) / (n+1.0);
+					continue;
+				}
 				
 				// If parameter is multidimensional, take the mean 
 				double val = 0;
@@ -665,7 +700,7 @@ public class AdaptableOperatorSampler extends Operator {
     	double runtime = this.operator_mean_runtimes[opNum];
 
     	// Contribution from the parameter (ie. 1/variance)
-    	double parameterVariance = this.treeMetric != null ? 1 : this.getVar(this.param_mean_sum[paramNum], this.param_mean_SS[paramNum]);
+    	double parameterVariance = this.treeMetric != null ? 1 : this.getParameterVariance(paramNum);
     	
     	// Contribution from average squared-difference of applying this operator to this parameter
     	double opParTerm = this.mean_SS[opNum][paramNum];
@@ -675,6 +710,22 @@ public class AdaptableOperatorSampler extends Operator {
     	
     }
     
+    /**
+     * @return the variance used to normalise squared differences of parameter p: the variance of
+     * the mean of its elements, or for a simplex (whose element mean is constant) the sum of the
+     * variances of its elements
+     */
+    double getParameterVariance(int p) {
+    	if (this.isSimplex != null && this.isSimplex[p]) {
+    		double sumMeanSq = 0;
+    		for (double m : this.param_elem_mean[p]) {
+    			sumMeanSq += m * m;
+    		}
+    		return this.param_mean_SS[p] - sumMeanSq;
+    	}
+    	return this.getVar(this.param_mean_sum[p], this.param_mean_SS[p]);
+    }
+
     @Override
     public void setOperatorSchedule(final OperatorSchedule operatorSchedule) {
     	super.setOperatorSchedule(operatorSchedule);
@@ -756,6 +807,11 @@ public class AdaptableOperatorSampler extends Operator {
 	        // Store parameter sum/SS
 	        json.key("param_mean_sum").value(Arrays.toString(this.param_mean_sum));
 	        json.key("param_mean_SS").value(Arrays.toString(this.param_mean_SS));
+	        for (int p = 0; p < this.numParams; p ++) {
+	        	if (this.isSimplex[p]) {
+	        		json.key("param_elem_mean_" + p).value(Arrays.toString(this.param_elem_mean[p]));
+	        	}
+	        }
 	        
 	        
 	        // Store accepts/rejects/runtime of each operator
@@ -843,6 +899,29 @@ public class AdaptableOperatorSampler extends Operator {
 	        for (int p = 0; p < this.numParams; p++) {
 	        	this.param_mean_sum[p] = Double.parseDouble(param_sum_string[p]);
 	        	this.param_mean_SS[p] = Double.parseDouble(param_SS_string[p]);
+	        }
+	        for (int p = 0; p < this.numParams; p++) {
+	        	if (!this.isSimplex[p]) continue;
+	        	String key = "param_elem_mean_" + p;
+	        	if (o.has(key)) {
+	        		String[] elem_string = o.getString(key).replace("[", "").replace("]", "").split(", ");
+	        		if (elem_string.length != this.param_elem_mean[p].length) {
+	        			throw new IllegalArgumentException("Cannot resume because there are " + elem_string.length + " elements in " + key + " but the parameter has " + this.param_elem_mean[p].length);
+	        		}
+	        		for (int j = 0; j < elem_string.length; j++) {
+	        			this.param_elem_mean[p][j] = Double.parseDouble(elem_string[j]);
+	        		}
+	        	} else {
+	        		// State file from before beast3#179: start the simplex statistics at the current
+	        		// value, so its variance starts at 0 and grows as the run continues
+	        		double[] current = this.getAllParameterValues()[p];
+	        		double sumSq = 0;
+	        		for (int j = 0; j < current.length; j++) {
+	        			this.param_elem_mean[p][j] = current[j];
+	        			sumSq += current[j] * current[j];
+	        		}
+	        		this.param_mean_SS[p] = sumSq;
+	        	}
 	        }
 	        
 	        
