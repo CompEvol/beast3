@@ -303,7 +303,8 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         final BoolVectorParam var = (BoolVectorParam) getCurrent();
         final int values = var.size();
         for (int value = 0; value < values; value++) {
-            out.print(var.get(value) + "\t");
+            // 1/0, not true/false, so Tracer reads it as a number (as BEAST 2's BooleanParameter)
+            out.print((var.get(value) ? '1' : '0') + "\t");
         }
     }
 

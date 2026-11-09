@@ -123,7 +123,8 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
 
     @Override
     public void log(long sample, PrintStream out) {
-        out.print(get() + "\t");
+        // 1/0, not true/false, so Tracer reads it as a number (as BEAST 2's BooleanParameter)
+        out.print((get() ? '1' : '0') + "\t");
     }
 
     @Override
