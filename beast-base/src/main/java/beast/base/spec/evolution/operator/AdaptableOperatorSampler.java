@@ -681,7 +681,8 @@ public class AdaptableOperatorSampler extends Operator {
      * @return the variance
      */
     public double getVar(double mean, double meanSS) {
-    	return meanSS - mean*mean;
+    	// rounding can push this just below 0; clamp, so a degenerate parameter scores 0, not a negative weight
+    	return Math.max(0.0, meanSS - mean*mean);
     }
     
     
@@ -721,7 +722,7 @@ public class AdaptableOperatorSampler extends Operator {
     		for (double m : this.param_elem_mean[p]) {
     			sumMeanSq += m * m;
     		}
-    		return this.param_mean_SS[p] - sumMeanSq;
+    		return Math.max(0.0, this.param_mean_SS[p] - sumMeanSq);
     	}
     	return this.getVar(this.param_mean_sum[p], this.param_mean_SS[p]);
     }
