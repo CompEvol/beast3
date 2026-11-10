@@ -4,7 +4,9 @@ package beastfx.app.inputeditor;
 
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 import beast.base.core.BEASTInterface;
@@ -13,6 +15,9 @@ import beast.base.inference.MCMC;
 import beast.base.parser.XMLProducer;
 import beast.pkgmgmt.BEASTClassLoader;
 import beastfx.app.beauti.ThemeProvider;
+import beastfx.app.util.Alert;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
@@ -37,6 +42,9 @@ public class BEASTObjectDialog extends Dialog {
     public BEASTObjectPanel m_panel;
 
     BeautiDoc doc;
+
+    /** the object being edited (the panel edits a copy of it), null if not known **/
+    private BEASTInterface original;
     
     public BEASTObjectDialog(BEASTObjectPanel panel, BeautiDoc doc) {
         init(panel);
@@ -45,10 +53,12 @@ public class BEASTObjectDialog extends Dialog {
 
     public BEASTObjectDialog(BEASTInterface beastObject, Class<? extends BEASTInterface> aClass, List<BEASTInterface> beastObjects, BeautiDoc doc) {
         this(new BEASTObjectPanel(beastObject, aClass, beastObjects, doc), doc);
+        this.original = beastObject;
     }
 
     public BEASTObjectDialog(BEASTInterface beastObject, Class<?> type, BeautiDoc doc) {
         this(new BEASTObjectPanel(beastObject, type, doc), doc);
+        this.original = beastObject;
     }
 
     final public static String ICONPATH = "/beastfx/app/inputeditor/icon/";
@@ -69,11 +79,79 @@ public class BEASTObjectDialog extends Dialog {
 		
 		dlg.setResizable(true);
     	ThemeProvider.loadStyleSheet(pane.getScene());
+		// Keep the dialog open while the values do not fit the dimension, instead of letting
+		// the parameter silently repeat or extend them (see checkValueAndDimension)
+		pane.lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
+			String message = checkValueAndDimension(m_panel.m_beastObject, original);
+			if (message != null) {
+				e.consume();
+				Alert.showMessageDialog(null, message, "Value does not match dimension", AlertType.WARNING);
+			}
+		});
 		ButtonType result = dlg.showAndWait().get();
 		m_bOK = (result != ButtonType.CANCEL);
         return m_bOK;
     }
     
+    /**
+     * Check that the number of values of a vector parameter fits its dimension.
+     * <p>
+     * A vector parameter fills its dimension by repeating its values, and uses the number of
+     * values as dimension when there are more values than the dimension. This is useful in XML
+     * (value="1.0" dimension="4"), but in the dialog, where both are shown, changing one
+     * silently changes the other: dimension 3 with values "0.1 0.2" becomes [0.1, 0.2, 0.1],
+     * while the Value field still shows "0.1 0.2". So only allow one value (used for every
+     * element) or exactly one value per element.
+     * <p>
+     * Vector parameters are recognised by their "value" (a list) and "dimension" inputs, so
+     * this works for any of them.
+     * <p>
+     * Only edits made in the dialog are checked: if neither Value nor Dimension differs from
+     * original, OK is allowed. A parameter can already be mismatched before the dialog opens,
+     * because setDimension() (used by models that size a parameter in code) updates the
+     * dimension but not the value, and refusing OK then would block the user for something
+     * they did not change.
+     *
+     * @param beastObject the copy being edited in the dialog
+     * @param original the object the dialog was opened for, or null to always check
+     * @return a message saying what to change, or null if the values fit the dimension,
+     * neither was changed, or beastObject is not a vector parameter
+     */
+    public static String checkValueAndDimension(BEASTInterface beastObject, BEASTInterface original) {
+    	if (original != null && Objects.equals(valueAndDimension(beastObject), valueAndDimension(original))) {
+    		return null;
+    	}
+    	return checkValueAndDimension(beastObject);
+    }
+
+    /** the value list and dimension of a vector parameter, or null if beastObject is not one **/
+    private static List<Object> valueAndDimension(BEASTInterface beastObject) {
+    	Input<?> valueInput = beastObject.getInputs().get("value");
+    	Input<?> dimensionInput = beastObject.getInputs().get("dimension");
+    	if (valueInput == null || dimensionInput == null || !(valueInput.get() instanceof List<?> values)) {
+    		return null;
+    	}
+    	return List.of(new ArrayList<>(values), String.valueOf(dimensionInput.get()));
+    }
+
+    /**
+     * As {@link #checkValueAndDimension(BEASTInterface, BEASTInterface)}, but always checks.
+     */
+    public static String checkValueAndDimension(BEASTInterface beastObject) {
+    	Input<?> valueInput = beastObject.getInputs().get("value");
+    	Input<?> dimensionInput = beastObject.getInputs().get("dimension");
+    	if (valueInput == null || dimensionInput == null
+    			|| !(valueInput.get() instanceof List<?> values) || !(dimensionInput.get() instanceof Integer dimension)) {
+    		return null;
+    	}
+    	if (values.size() == 1 || values.size() == dimension) {
+    		return null;
+    	}
+    	return "Value has " + values.size() + " numbers, but Dimension is " + dimension + ".\n"
+    			+ "Enter " + dimension + " numbers, or 1 number to use for all " + dimension
+    			+ " elements, or change Dimension to " + values.size() + ".";
+    }
+
     /* to be called when OK is pressed **/
     public void accept(BEASTInterface beastObject, BeautiDoc doc) {
         try {
