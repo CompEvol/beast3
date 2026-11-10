@@ -20,7 +20,6 @@
     <map name='LogUniform'>beast.base.spec.inference.distribution.LogUniform</map>
     <map name='Normal'>beast.base.spec.inference.distribution.Normal</map>
     <map name='Uniform'>beast.base.spec.inference.distribution.Uniform</map>
-    <map name='PositiveUniform'>beast.base.spec.inference.distribution.PositiveUniform</map>
     <map name='NonNegativeUniform'>beast.base.spec.inference.distribution.NonNegativeUniform</map>
     <map name='Poisson'>beast.base.spec.inference.distribution.Poisson</map>
     <!-- Multivariate distribution   -->

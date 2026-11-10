@@ -276,7 +276,6 @@ open module beast.base {
         beast.base.spec.inference.distribution.Normal,
         beast.base.spec.inference.distribution.Poisson,
         beast.base.spec.inference.distribution.Uniform,
-        beast.base.spec.inference.distribution.PositiveUniform,
         beast.base.spec.inference.distribution.NonNegativeUniform,
         beast.base.spec.inference.distribution.IID,
         beast.base.spec.inference.distribution.OffsetReal,

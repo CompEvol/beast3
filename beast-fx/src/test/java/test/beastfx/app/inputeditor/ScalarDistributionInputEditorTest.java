@@ -192,7 +192,8 @@ public class ScalarDistributionInputEditorTest {
 	/**
 	 * The prior dropdown for a positive parameter, such as the Yule birth rate, did not
 	 * offer a uniform distribution, because Uniform is typed for a Real-domain parameter
-	 * (issue #217). PositiveUniform and NonNegativeUniform fill that gap.
+	 * (issue #217). NonNegativeUniform fills that gap, since BEAUti treats NonNegativeReal
+	 * priors as compatible with PositiveReal parameters.
 	 */
 	@Test
 	public void testUniformOfferedForPositiveParameter() throws Exception {
@@ -230,7 +231,6 @@ public class ScalarDistributionInputEditorTest {
 			error.get().printStackTrace();
 			fail("test could not be run: " + error.get());
 		}
-		assertTrue(offered.contains("PositiveUniform"), "PositiveUniform not offered: " + offered);
 		assertTrue(offered.contains("NonNegativeUniform"), "NonNegativeUniform not offered: " + offered);
 		assertTrue(offered.contains("LogUniform"), "LogUniform not offered: " + offered);
 		// Uniform, for a Real-domain parameter, still should not be offered

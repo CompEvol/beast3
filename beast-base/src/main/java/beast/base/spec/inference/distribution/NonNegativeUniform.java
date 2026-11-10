@@ -13,13 +13,18 @@ import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
 import java.util.List;
 
 /**
- * Uniform distribution on [lower, upper] for a non-negative parameter. {@link Uniform} cannot
- * be used for this, because its parameter is typed {@code RealScalar<Real>}.
+ * Uniform distribution on [lower, upper] for a non-negative or positive parameter, such as a
+ * birth rate. {@link Uniform} cannot be used for this, because its parameter is typed
+ * {@code RealScalar<Real>}.
  * <p>
  * The lower bound must be at least 0, so the whole support is non-negative. Both ends are
- * included. For a parameter that must be strictly positive, use {@link PositiveUniform}.
+ * included. A positive parameter can use it too: the single point 0 has probability zero, and
+ * the parameter's own domain keeps its value above 0.
+ * <p>
+ * lower and upper may be estimated. A state where upper &lt;= lower has log density -infinity,
+ * so MCMC rejects it rather than stopping.
  */
-@Description("Uniform distribution on [lower, upper] for a non-negative parameter (>= 0). " +
+@Description("Uniform distribution on [lower, upper] for a non-negative or positive parameter. " +
         "The lower bound must be at least 0. Both ends are included.")
 public class NonNegativeUniform extends ScalarDistribution<RealScalar<NonNegativeReal>, Double>
         implements Bounded<Double> {
@@ -55,26 +60,30 @@ public class NonNegativeUniform extends ScalarDistribution<RealScalar<NonNegativ
 
     @Override
     public void initAndValidate() {
+        final double lower = getLower();
+        // The lower input is typed NonNegativeReal, but Input does not enforce a tensor's
+        // domain yet (#226), so check the value once, at load. !(x) also rejects NaN.
+        // TODO remove the lower >= 0 check once #226 is fixed
+        if (!(lower >= 0.0)) {
+            throw boundsError(lower, getUpper());
+        }
+        checkInterval();
         refresh();
         super.initAndValidate();
     }
 
     /**
-     * Make sure internal state is up to date. The bounds are checked here, rather than only in
-     * initAndValidate(), because lower and upper may be estimated and change during MCMC.
+     * Rebuilds the distribution when the bounds have changed. Never throws, because wrappers
+     * such as {@link IID} call it during MCMC: if the bounds are invalid, the old distribution
+     * is kept and {@link #calcLogP(Double)} returns -infinity.
      */
     @Override
     public void refresh() {
+        if (!hasValidInterval()) {
+            return;
+        }
         final double lower = getLower();
         final double upper = getUpper();
-
-        // The domains of the lower and upper inputs are not checked when the XML is parsed,
-        // so check the values here. !(x) also rejects NaN.
-        if (!(lower >= 0.0) || !Double.isFinite(upper) || !(upper > lower)) {
-            throw new IllegalArgumentException(getClass().getSimpleName() +
-                    " requires 0 <= lower < upper < infinity, got [" + lower + ", " + upper + "]");
-        }
-
         if (dist == null || isNotEqual(dist.getSupportLowerBound(), lower)
                 || isNotEqual(dist.getSupportUpperBound(), upper)) {
             dist = UniformContinuousDistribution.of(lower, upper);
@@ -82,10 +91,16 @@ public class NonNegativeUniform extends ScalarDistribution<RealScalar<NonNegativ
         }
     }
 
+    /**
+     * Used by {@link #calculateLogP()} and by wrappers such as {@link IID}. Returns -infinity
+     * when an MCMC proposal has moved upper to or below lower, so the proposal is rejected.
+     */
     @Override
-    public double calculateLogP() {
-        logP = getApacheDistribution().logDensity(param.get());
-        return logP;
+    protected double calcLogP(Double value) {
+        if (!hasValidInterval()) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        return getApacheDistribution().logDensity(value);
     }
 
     @Override
@@ -97,8 +112,13 @@ public class NonNegativeUniform extends ScalarDistribution<RealScalar<NonNegativ
         return List.of(sampler.sample());
     }
 
+    /**
+     * @throws IllegalArgumentException if upper &lt;= lower: there is no distribution to
+     *         sample from or evaluate. MCMC uses {@link #calcLogP(Double)}, which does not throw.
+     */
     @Override
     protected UniformContinuousDistribution getApacheDistribution() {
+        checkInterval();
         refresh(); // parameters may have been sampled during MCMC
         return dist;
     }
@@ -121,5 +141,22 @@ public class NonNegativeUniform extends ScalarDistribution<RealScalar<NonNegativ
     @Override
     public boolean upperInclusive() {
         return true;
+    }
+
+    /** true if upper is finite and greater than lower; false if either is NaN */
+    private boolean hasValidInterval() {
+        final double upper = getUpper();
+        return Double.isFinite(upper) && upper > getLower();
+    }
+
+    private void checkInterval() {
+        if (!hasValidInterval()) {
+            throw boundsError(getLower(), getUpper());
+        }
+    }
+
+    private IllegalArgumentException boundsError(double lower, double upper) {
+        return new IllegalArgumentException(getClass().getSimpleName() +
+                " requires 0 <= lower < upper < infinity, got [" + lower + ", " + upper + "]");
     }
 }

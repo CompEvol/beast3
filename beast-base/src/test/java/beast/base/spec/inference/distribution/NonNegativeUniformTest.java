@@ -5,6 +5,8 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.type.RealScalar;
 import beast.base.util.Randomizer;
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.statistics.distribution.UniformContinuousDistribution;
@@ -179,9 +181,62 @@ public class NonNegativeUniformTest {
         lo.set(0.0);
         assertEquals(-Math.log(9.0), d.logDensity(0.0), 1e-12);
 
-        // invalid bounds set during MCMC are reported, not silently used
+        // invalid bounds have no distribution, so evaluating or sampling it directly is an error
         lo.set(10.0);
         assertThrows(IllegalArgumentException.class, () -> d.logDensity(6.0));
+        assertThrows(IllegalArgumentException.class, d::sample);
+    }
+
+    @Test
+    public void testUpperAtOrBelowLowerDuringMCMCIsRejected() {
+        // a proposal that moves upper to or below lower must give -inf, not stop the run
+        RealScalarParam<NonNegativeReal> x = nonNeg(1.5);
+        RealScalarParam<NonNegativeReal> lo = nonNeg(1.0);
+        RealScalarParam<PositiveReal> up = pos(2.0);
+        NonNegativeUniform d = new NonNegativeUniform(x, lo, up);
+        assertEquals(0.0, d.calculateLogP(), 1e-12); // log(1 / (2 - 1))
+
+        up.set(0.5);
+        assertEquals(Double.NEGATIVE_INFINITY, d.calculateLogP(), 0.0);
+        up.set(1.0);
+        assertEquals(Double.NEGATIVE_INFINITY, d.calculateLogP(), 0.0);
+
+        // the proposal is rejected and the old value restored: back to the right density
+        up.set(2.0);
+        assertEquals(0.0, d.calculateLogP(), 1e-12);
+    }
+
+    @Test
+    public void testUpperAtOrBelowLowerInsideIIDIsRejected() {
+        // IID calls refresh() and calcLogP() of the wrapped distribution, not calculateLogP()
+        RealScalarParam<NonNegativeReal> lo = nonNeg(1.0);
+        RealScalarParam<PositiveReal> up = pos(5.0);
+        NonNegativeUniform u = new NonNegativeUniform();
+        u.initByName("lower", lo, "upper", up);
+        IID<RealVectorParam<NonNegativeReal>, RealScalar<NonNegativeReal>, Double> iid = new IID<>();
+        iid.initByName("param", new RealVectorParam<>(new double[]{2.0, 3.0}, NonNegativeReal.INSTANCE),
+                "distr", u);
+        assertEquals(-2 * Math.log(4.0), iid.calculateLogP(), 1e-12);
+
+        up.set(0.5);
+        assertEquals(Double.NEGATIVE_INFINITY, iid.calculateLogP(), 0.0);
+    }
+
+    @Test
+    public void testPositiveParameter() {
+        // a PositiveReal parameter, such as the Yule birth rate, can use this prior (#217)
+        final String xml = "<distribution spec='beast.base.spec.inference.distribution.NonNegativeUniform'>\n" +
+                "  <param spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='2.0'/>\n" +
+                "  <upper spec='beast.base.spec.inference.parameter.RealScalarParam' domain='PositiveReal' value='100'/>\n" +
+                "</distribution>\n";
+        NonNegativeUniform d;
+        try {
+            d = (NonNegativeUniform) new XMLParser().parseBareFragment(xml, true);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+        assertEquals(0.0, d.getLower(), 0.0);
+        assertEquals(-Math.log(100.0), d.calculateLogP(), 1e-12);
     }
 
     @Test
