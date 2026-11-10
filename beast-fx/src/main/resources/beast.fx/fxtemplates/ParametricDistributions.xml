@@ -19,6 +19,21 @@
 ]]>
         </subtemplate>
 
+
+        <!-- NonNegativeUniform: Uniform for a NonNegativeReal- or PositiveReal-domain param; lower must be >= 0 -->
+        <subtemplate id='NonNegativeUniform' class='beast.base.spec.inference.distribution.NonNegativeUniform' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.NonNegativeUniform.param'
+            hmc='
+            NonNegativeUniform/lower/=ParametricDistributions/Uniform/lower/,
+            NonNegativeUniform/upper/=ParametricDistributions/Uniform/upper/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.NonNegativeUniform">
+        	<lower spec="beast.base.spec.inference.parameter.RealScalarParam" domain="NonNegativeReal" value="0.0" estimate="false"/>
+        	<upper spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1000.0" estimate="false"/>
+        </distr>
+]]>
+        </subtemplate>
+
         <!-- Normal -->
         <subtemplate id='Normal' class='beast.base.spec.inference.distribution.Normal' mainid='[top]' 
         	suppressInputs='beast.base.spec.inference.distribution.Normal.tau,beast.base.spec.inference.distribution.Normal.param'
