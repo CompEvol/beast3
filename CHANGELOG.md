@@ -49,6 +49,8 @@ Genuinely new components not present in BEAST 2:
 - **`StateNode.scale()` removed** — implement the `Scalable` interface instead if your `StateNode` needs to support scaling.
 - **`Evaluator` removed** — `beast.base.inference.Evaluator` is gone; impacts MCMC-derived classes that used it for custom acceptance logic.
 - **`AscertainedAlignment` removed** — use the standard `Alignment` class instead.
+- **`SliceOperator` removed** — the univariate slice sampler needed the removed `Evaluator` and evaluated the posterior several times per move. No BEAUti template used it. Use a scale or random-walk operator instead.
+- **Alignment `taxon=sequence` shorthand removed** — `Alignment` is no longer a name/value map (`Map` and `TreeTipData` are gone), so sequences can't be given as one attribute or key per taxon (`Carp="ATGG…"` in XML, `Carp: "ATGG…"` in JSON). List them explicitly: `<sequence taxon="Carp" value="ATGG…"/>` in XML, `sequence: [{spec: "Sequence", taxon: "Carp", value: "ATGG…"}]` in JSON. BEAUti always wrote the explicit form.
 - **Operator input types narrowed** — spec operators accept typed parameters (e.g., `RealVectorParam` instead of `RealParameter`), `Scalable` instead of raw `StateNode`.
 - **`DeltaExchangeOperator`** — adds typed inputs (`rvparameter`, `ivparameter`, `rsparameter`, `isparameter`) alongside the legacy untyped input.
 
