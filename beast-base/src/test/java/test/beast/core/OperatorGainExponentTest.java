@@ -18,7 +18,7 @@ import beast.base.inference.parameter.RealParameter;
  * The auto-tuning gain 1/n^e of OperatorSchedule.calcDelta: the schedule's gainExponent,
  * an operator's own gainExponent (input or default), and the precedence between them:
  * operator input, then the schedule's gainExponent or transform, then the operator's default,
- * then the classic 1/n.
+ * then OperatorSchedule.DEFAULT_GAIN_EXPONENT (0.6).
  */
 public class OperatorGainExponentTest {
 
@@ -87,10 +87,20 @@ public class OperatorGainExponentTest {
     }
 
     @Test
-    public void defaultGainIsOneOverN() {
+    public void defaultGainIsSixTenths() {
         ScaleOperator op = scaleOperator();
         assertEquals(Double.NaN, op.getGainExponent());
-        assertEquals(expected(op, 1.0), delta(schedule(), op), 1e-15);
+        assertEquals(expected(op, OperatorSchedule.DEFAULT_GAIN_EXPONENT), delta(schedule(), op), 1e-15);
+        assertEquals(0.6, OperatorSchedule.DEFAULT_GAIN_EXPONENT);
+    }
+
+    @Test
+    public void transformStillOverridesDefault() {
+        ScaleOperator a = scaleOperator();
+        assertEquals(expected(a, 0.5), delta(schedule("transform", "sqrt"), a), 1e-15);
+        ScaleOperator b = scaleOperator();
+        assertEquals((1.0 - b.getTargetAcceptanceProbability()) / Math.log(COUNT + 1.0),
+                delta(schedule("transform", "log"), b), 1e-15);
     }
 
     @Test
@@ -100,10 +110,9 @@ public class OperatorGainExponentTest {
     }
 
     @Test
-    public void scheduleGainExponentOneMatchesDefault() {
-        ScaleOperator a = scaleOperator();
-        ScaleOperator b = scaleOperator();
-        assertEquals(delta(schedule(), a), delta(schedule("gainExponent", 1.0), b), 1e-15);
+    public void scheduleGainExponentOneGivesClassicOneOverN() {
+        ScaleOperator op = scaleOperator();
+        assertEquals(expected(op, 1.0), delta(schedule("gainExponent", 1.0), op), 1e-15);
     }
 
     @Test

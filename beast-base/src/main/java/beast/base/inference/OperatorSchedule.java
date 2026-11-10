@@ -18,6 +18,14 @@ public class OperatorSchedule extends BEASTObject {
 
     enum OptimisationTransform {none, log, sqrt}
 
+    /**
+     * Exponent of the auto-tuning gain 1/n^e when neither the operator nor the schedule sets
+     * one. With the classic 1/n a tuned value can travel only about ln n on its tuning scale
+     * over a run, so a start that is far off never tunes (beast3#200); 0.6 lets it travel as
+     * n^0.4 and is the usual choice for diminishing adaptation (Andrieu & Thoms 2008).
+     */
+    public static final double DEFAULT_GAIN_EXPONENT = 0.6;
+
     final public Input<OptimisationTransform> transformInput = new Input<>("transform",
             "transform optimisation schedule (default none) This can be "
                     + Arrays.toString(OptimisationTransform.values()) + " (default 'none')",
@@ -26,7 +34,8 @@ public class OperatorSchedule extends BEASTObject {
             "exponent e of the auto-tuning gain 1/n^e after n proposals, with 0 < e <= 1 (below 0.5 the "
             + "tuned values may not settle). 1 is the classic 1/n, 0.5 is the same as transform='sqrt'. "
             + "It applies to every operator in this schedule except those with their own gainExponent "
-            + "input, and overrides operators' built-in defaults. If unset (NaN), transform decides. "
+            + "input, and overrides operators' built-in defaults. If unset (NaN), transform decides; with "
+            + "transform 'none' (the default) the gain is 1/n^" + DEFAULT_GAIN_EXPONENT + ". "
             + "Cannot be combined with a transform other than 'none'.",
             Double.NaN);
     final public Input<Boolean> autoOptimiseInput = new Input<>("autoOptimize", "whether to automatically optimise operator settings", true);
@@ -461,7 +470,7 @@ public class OperatorSchedule extends BEASTObject {
 
         double count = (operator.m_nNrRejectedForCorrection + operator.m_nNrAcceptedForCorrection + 1.0);
         // gain exponent, first one set wins: the operator's gainExponent input, the schedule's
-        // gainExponent or transform, the operator's built-in default, the classic 1/n.
+        // gainExponent or transform, the operator's built-in default, DEFAULT_GAIN_EXPONENT.
         // Values were checked when the operator was added to the schedule.
         double exponent = operator.getExplicitGainExponent();
         if (Double.isNaN(exponent)) {
@@ -469,6 +478,9 @@ public class OperatorSchedule extends BEASTObject {
         }
         if (Double.isNaN(exponent) && transform == OptimisationTransform.none) {
             exponent = operator.getDefaultGainExponent();
+            if (Double.isNaN(exponent)) {
+                exponent = DEFAULT_GAIN_EXPONENT;
+            }
         }
         if (!Double.isNaN(exponent)) {
             count = Math.pow(count, exponent);

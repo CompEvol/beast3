@@ -54,7 +54,7 @@ public abstract class Operator extends BEASTObject {
             + "tuning travel further, e.g. from a start that is far too small or too large; below 0.5 the tuned "
             + "value may not settle. Set here, it overrides the operator schedule's gainExponent and transform. "
             + "If unset (NaN), the schedule's gainExponent or transform is used if set, else the operator's "
-            + "default, else the classic 1/n.",
+            + "default, else 1/n^" + OperatorSchedule.DEFAULT_GAIN_EXPONENT + " (gainExponent=1 gives the classic 1/n).",
             Double.NaN);
 
     private final String STANDARD_OPERATOR_PACKAGE = "beast.base.evolution.operator";
