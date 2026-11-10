@@ -87,7 +87,11 @@
 
         <operator id="IndicatorsBitFlip.c:$(n)" spec="beast.base.spec.inference.operator.BitFlipOperator" weight="15" parameter="@Indicators.c:$(n)"/>
 <!-- this should probably be a DeltaExchange instead of scale operator to keep mean rate to 1 -->
-        <operator id='ClockRateScaler.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleAll='false' scaleFactor="0.1" weight="15" parameter="@clockrates.c:$(n)"/>
+        <!-- scale only the rates of branches with a rate change: the others don't affect the likelihood,
+             and proposals on them would make the scaler tune itself to them -->
+        <operator id='ClockRateScaler.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleAll='false' scaleFactor="0.1" weight="15" parameter="@clockrates.c:$(n)" indicator="@Indicators.c:$(n)"/>
+        <!-- redraw the rates of branches without a rate change from their prior (a Gibbs move) -->
+        <operator id='ClockRatesSampleOff.c:$(n)' spec='beast.base.spec.inference.operator.SampleOffValues' weight="15" values="@clockrates.c:$(n)" indicators="@Indicators.c:$(n)" dist="@RRatesPriorDistr.c:$(n)"/>
 
         <operator id='randomClockScaler.c:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.1" weight="1" parameter="@meanClockRate.c:$(n)"/>
 		<operator id='randomClockUpDownOperator.c:$(n)' spec='beast.base.spec.evolution.operator.UpDownOperator' scaleFactor="0.1" weight="3">
@@ -99,7 +103,7 @@
 			<if cond='inlikelihood(RandomLocalClock.c:$(n))'>
 				<!-- prior on rates -->
             <distribution id='RRatesPrior.c:$(n)' spec='beast.base.spec.inference.distribution.IID' param='@clockrates.c:$(n)' >
-               <distr spec='beast.base.spec.inference.distribution.Gamma'>
+               <distr id='RRatesPriorDistr.c:$(n)' spec='beast.base.spec.inference.distribution.Gamma'>
                   <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.5" estimate="false"/>
                   <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>
                </distr>
@@ -147,6 +151,9 @@
             </connect>
             <connect srcID='ClockRateScaler.c:$(n)' targetID='mcmc' inputName='operator'
                      if='inlikelihood(clockrates.c:$(n))'>Scale random clock rates of partition c:$(n)
+            </connect>
+            <connect srcID='ClockRatesSampleOff.c:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(clockrates.c:$(n))'>Redraw unused random clock rates of partition c:$(n)
             </connect>
             <connect srcID='Tree.t:$(n)' targetID='RandomLocalClock.c:$(n)' inputName='tree' if='inlikelihood(RandomLocalClock.c:$(n))'/>
 
