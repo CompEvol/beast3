@@ -9,7 +9,7 @@ This folder holds two **BEAST 2** example XMLs that use the beast-fx sequence si
 
 They are kept as BEAST 2 XML, so they are not converted to BEAST 3 and not released. They are parsed by
 `testLegacyExamplesParse` in beast-fx's `ExampleXmlParsingTest`. The general rules for legacy examples
-are in `beast-base/src/test/resources/beast.base/examples/legacy/README.md`.
+are in `beast-base/examples/legacy/README.md`.
 
 ## Status
 
