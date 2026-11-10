@@ -91,6 +91,18 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <!-- The BEAUti templates live in beast-fx/fxtemplates so they are easy to find.
+                 They are packaged at the module-namespaced path beast.fx/fxtemplates/,
+                 which is where BEAUti looks for them. -->
+            <resource>
+                <directory>fxtemplates</directory>
+                <targetPath>beast.fx/fxtemplates</targetPath>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

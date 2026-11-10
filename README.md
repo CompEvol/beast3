@@ -31,7 +31,10 @@ beast3/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module — no JavaFX dependency)
 └── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
+    └── fxtemplates/      (BEAUti templates: Standard.xml, TreePriors.xml, ...)
 ```
+
+The BEAUti templates are in `beast-fx/fxtemplates/`. They are packaged in the `beast-fx` JAR under `beast.fx/fxtemplates/`.
 
 Building
 --------
