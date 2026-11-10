@@ -189,6 +189,7 @@ open module beast.base {
         beast.base.evolution.tree.TreeIntervals,
         beast.base.evolution.tree.TreeParser,
         beast.base.evolution.tree.TreeDistribution,
+        beast.base.evolution.tree.TreeHeightLogger,
         beast.base.evolution.tree.TreeStatLogger,
         beast.base.evolution.tree.coalescent.BayesianSkyline,
         beast.base.evolution.tree.coalescent.Coalescent,

@@ -125,6 +125,7 @@
                 <provider classname="beast.base.evolution.tree.TreeDistribution"/>
                 <provider classname="beast.base.evolution.tree.TreeIntervals"/>
                 <provider classname="beast.base.evolution.tree.TreeParser"/>
+                <provider classname="beast.base.evolution.tree.TreeHeightLogger"/>
                 <provider classname="beast.base.evolution.tree.TreeStatLogger"/>
                 <provider classname="beast.base.evolution.tree.coalescent.BayesianSkyline"/>
                 <provider classname="beast.base.evolution.tree.coalescent.Coalescent"/>
