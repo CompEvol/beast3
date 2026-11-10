@@ -17,7 +17,8 @@
 
 
     <run spec="beastfx.app.seqgen.SequenceSimulator" id="seqgen" data='@alignment' tree='@tree' sequencelength='3000'>
-	    <siteModel spec='SiteModel' id="siteModel" gammaCategoryCount='1'>
+	    <!-- Deprecated BEAST 2 SiteModel, by full name: works in BEAST 2.7.9 and, fixed on master, in BEAST 3 (see README.md) -->
+	    <siteModel spec='beast.base.evolution.sitemodel.SiteModel' id="siteModel" gammaCategoryCount='1'>
 <!--
 			<substModel spec='JukesCantor' id='JC69'/>
 -->
