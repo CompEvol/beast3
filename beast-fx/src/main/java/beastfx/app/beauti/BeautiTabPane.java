@@ -326,6 +326,10 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
             a_save.setDisable(false);
             a_saveas.setDisable(false);
             setTitle();
+        } catch (BeautiDoc.Beast2XMLException e) {
+            // a BEAST 2 file: say so plainly, without the generic error prefix
+            Alert.showMessageDialog(null, e.getMessage(), "Can't open a BEAST 2 analysis",
+                    Alert.WARNING_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
             Alert.showMessageDialog(

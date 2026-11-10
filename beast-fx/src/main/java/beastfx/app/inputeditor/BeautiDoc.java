@@ -1218,6 +1218,38 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         return beautiStatus;
     }
 
+    /**
+     * Thrown when a file was written by BEAST 2.7 or earlier. BEAUti 2.8 builds analyses from
+     * BEAST 3 (spec) classes and can't open BEAST 2 analyses, so it refuses them with a message
+     * the user can act on rather than the parser's type errors.
+     */
+    public static class Beast2XMLException extends IllegalArgumentException {
+        private static final long serialVersionUID = 1L;
+
+        public Beast2XMLException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * @param version the version attribute of a beast element, e.g. "2.7"
+     * @return true if it names a version before 2.8. Returns false if it is missing or
+     *         can't be read, so such files are loaded as before.
+     */
+    public static boolean isBeforeVersion2_8(String version) {
+        if (version == null) {
+            return false;
+        }
+        String[] parts = version.trim().split("\\.");
+        try {
+            int major = Integer.parseInt(parts[0]);
+            int minor = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+            return major < 2 || (major == 2 && minor < 8);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     public void extractSequences(String xml) throws XMLParserException, SAXException, IOException, ParserConfigurationException  {
 
         // parse the XML fragment into a DOM document
@@ -1227,6 +1259,14 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         // find top level beast element
         NodeList nodes = doc.getElementsByTagName("*");
         Node topNode = nodes.item(0);
+        String version = XMLParser.getAttribute(topNode, "version");
+        if (isBeforeVersion2_8(version)) {
+            throw new Beast2XMLException("This file was made with BEAST " + version
+                    + ". BEAUti 2.8 can only open analyses made with BEAST 2.8 or later.\n\n"
+                    + "To use this analysis, either run the file with BEAST 2.8, which can run "
+                    + "most XML files made by BEAUti 2.7, or open it in BEAUti 2.7. "
+                    + "To edit it in BEAUti 2.8, build the analysis again there.");
+        }
         String beautiTemplate = XMLParser.getAttribute(topNode, "beautitemplate");
         if (beautiTemplate == null) {
             ButtonType choice = Alert.showConfirmDialog(null /*getFrame()*/, 
