@@ -333,6 +333,7 @@ open module beast.base {
         beast.base.spec.evolution.operator.ScaleTreeOperator,
         beast.base.spec.evolution.operator.AdaptableOperatorSampler,
         beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator,
+        beast.base.spec.evolution.operator.RandomLocalClockFlipOperator,
         beast.base.spec.evolution.operator.UpDownOperator,
         beast.base.spec.evolution.operator.IntervalScaleOperator,
         beast.base.spec.inference.operator.Transform.FisherZTransform,

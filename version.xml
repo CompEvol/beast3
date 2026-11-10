@@ -294,6 +294,7 @@
                 <provider classname="beast.base.spec.evolution.operator.ScaleTreeOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableOperatorSampler"/>
                 <provider classname="beast.base.spec.evolution.operator.AdaptableVarianceMultivariateNormalOperator"/>
+                <provider classname="beast.base.spec.evolution.operator.RandomLocalClockFlipOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.UpDownOperator"/>
                 <provider classname="beast.base.spec.evolution.operator.IntervalScaleOperator"/>
 
