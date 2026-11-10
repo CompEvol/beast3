@@ -140,7 +140,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         	pane = new HBox();
         	addInputLabel();
         }
-        ComboBox<BeautiSubTemplate> distrComboBox = createComboBox(m_beastObject, m_input);
+        distrComboBox = createComboBox(m_beastObject, m_input);
         if (distrComboBox != null) {
         	pane.getChildren().add(distrComboBox);
         }
@@ -174,7 +174,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	                }
 	            });
 	            rangeButton.setPrefWidth(InputEditor.Base.LABEL_SIZE.getWidth());
-	            rangeButton.setTooltip(new Tooltip("Initial value and range of " + ((BEASTInterface)p).getID()));
+	            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
 	            
 	            pane.getChildren().add(rangeButton);
 	        } else if (prior.paramInput.get() instanceof IntScalar p) {
@@ -341,19 +341,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 
 	String paramToString(RealScalar<?> p) {
-        Double lower = p.getLower();
-        Double upper = p.getUpper();
-        return "initial = " + p.get() +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + p.get();
     }
 
     String paramToString(IntScalar<?> p) {
-        Integer lower = p.getLower();
-        Integer upper = p.getUpper();
-        return "initial = " + p.get() +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + p.get();
     }
 
     private void registerAsListener(Node node) {
@@ -683,11 +675,33 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     		}
     		graphPanel.paintComponent();
     	}
+    	// a value in the parameter panel changed, e.g. the lower of a Uniform,
+    	// so the parameters shown in the combo box label are out of date
+    	refreshComboBoxText(distrComboBox, comboBoxParameters());
 		super.validateInput();
     }
 
+
+    /** combo box for selecting the distribution being edited, shown with its parameters **/
+    protected ComboBox<BeautiSubTemplate> distrComboBox;
+
+    /** current values of the parameters of the distribution, as shown in the combo box label **/
+    protected String comboBoxParameters() {
+    	return getParameters();
+    }
+
+    /**
+     * Update the label of a combo box created by createComboBox, which shows the
+     * selected template followed by the current values of its parameters. The label
+     * is otherwise only recalculated when another template is selected.
+     */
+    static void refreshComboBoxText(ComboBox<BeautiSubTemplate> comboBox, String parameters) {
+    	if (comboBox != null && comboBox.getValue() != null && comboBox.getButtonCell() != null) {
+    		comboBox.getButtonCell().setText(comboBox.getValue().toString() + parameters);
+    	}
+    }
+
     
-	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox(BEASTInterface m_beastObject, Input<?> m_input) {
 		if (scalarTemplates == null || templateDomains == null || templateDomains.size() != scalarTemplates.size()) {
@@ -785,6 +799,14 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 		            	input_.setType(ScalarDistribution.class);
 		            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
 		            	newDist.paramInput.setValue(o, newDist);
+		            	// initAndValidate ran inside createSubNet before param was attached, so the
+		            	// cached param (used by getArguments, hence by the effective parameter bounds)
+		            	// is still null; re-initialise now that param is set
+		            	try {
+		            		newDist.initAndValidate();
+		            	} catch (Exception ex) {
+		            		Log.warning("Could not initialise " + newDist.getID() + ": " + ex.getMessage());
+		            	}
 		            	list.set(itemNr, newDist);
 		            	newDist.setID(m_beastObject.getID());
 		            	doc.pluginmap.remove(m_beastObject.getID());
@@ -999,15 +1021,6 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 				ie.addValidationListener(this);
 			}
 		}
-		
-		this.expandBox.visibleProperty().addListener((o, oldVal, newVal) -> {
-			if (comboBox != null) {
-				Pane parent = (Pane) comboBox.getParent();
-				int i = parent.getChildren().indexOf(comboBox);
-				comboBox = createComboBox(m_beastObject, m_input);
-				parent.getChildren().set(i, comboBox);
-			}
-     });
 	}
 
     private void processVbox(List<InputEditor> editors) {

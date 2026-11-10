@@ -3,6 +3,7 @@ package beastfx.app.inputeditor;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.domain.Bool;
@@ -79,9 +80,9 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
         pane = new HBox();
         addInputLabel();
             //super.init(input, beastObject, itemNr, ExpandOption.FALSE, addButtons);
-        ComboBox<?> distributionComboBox = createComboBox();
-        if (distributionComboBox != null) {
-        	pane.getChildren().add(distributionComboBox);
+        distrComboBox = createComboBox();
+        if (distrComboBox != null) {
+        	pane.getChildren().add(distrComboBox);
         }
         FXUtils.createHMCButton(pane, m_beastObject, m_input);
     	pane.setPadding(new Insets(5));
@@ -109,7 +110,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 }
             });
             rangeButton.setPrefWidth(InputEditor.Base.LABEL_SIZE.getWidth());
-            rangeButton.setTooltip(new Tooltip("Initial value and range of " + ((BEASTInterface)p).getID()));
+            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
             
             pane.getChildren().add(rangeButton);
         } else if (prior.paramInput.get() instanceof IntVector p) {
@@ -220,23 +221,15 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 	}
 
 	String paramToString(RealVector<?> p) {
-        Double lower = p.getLower();
-        Double upper = p.getUpper();
         List<Double> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     String paramToString(IntVector<?> p) {
-        Integer lower = p.getLower();
-        Integer upper = p.getUpper();
         List<Integer> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     private void registerAsListener(Node node) {
@@ -273,7 +266,6 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
     
 
     
-	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox() {
 		ComboBox<BeautiSubTemplate> comboBox = new ComboBox<>();
@@ -337,6 +329,14 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
             	input_.setType(TensorDistribution.class);
             	TensorDistribution<?,?> newDist = (TensorDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
             	newDist.paramInput.setValue(o, newDist);
+            	// initAndValidate ran inside createSubNet before param was attached, so the
+            	// cached param (used by getArguments, hence by the effective parameter bounds)
+            	// is still null; re-initialise now that param is set
+            	try {
+            		newDist.initAndValidate();
+            	} catch (Exception ex) {
+            		Log.warning("Could not initialise " + newDist.getID() + ": " + ex.getMessage());
+            	}
             	list.set(itemNr, newDist);
             	newDist.setID(m_beastObject.getID());
             	doc.pluginmap.remove(m_beastObject.getID());
@@ -400,6 +400,12 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 	}
 
     
+	@Override
+	protected String comboBoxParameters() {
+		return getParameters();
+	}
+
+
 	private String getParameters() {
     	StringBuilder b = null;
     	TensorDistribution<?,?> distr = (TensorDistribution<?,?>) m_beastObject;

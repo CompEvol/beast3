@@ -1,6 +1,7 @@
 package test.beastfx.app.inputeditor;
 
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,18 +34,28 @@ import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.LogUniform;
+import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
+import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastfx.app.inputeditor.BeautiConfig;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.BeautiSubTemplate;
 import beastfx.app.inputeditor.InputEditor;
+import beastfx.app.inputeditor.InputEditor.ButtonStatus;
+import beastfx.app.inputeditor.InputEditor.ExpandOption;
 import beastfx.app.inputeditor.ScalarDistributionInputEditor;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
 
@@ -235,6 +246,154 @@ public class ScalarDistributionInputEditorTest {
 		assertTrue(offered.contains("LogUniform"), "LogUniform not offered: " + offered);
 		// Uniform, for a Real-domain parameter, still should not be offered
 		assertFalse(offered.contains("Uniform"), "Uniform should not be offered: " + offered);
+	}
+
+
+	/**
+	 * Selecting another distribution in the priors panel must attach the parameter to
+	 * the new distribution straight away, so that the parameter's effective bounds
+	 * reflect it without first switching panels (issue #230). The initial value
+	 * button shows only the initial value, not bounds.
+	 */
+	@Test
+	public void testSwitchToUniformUpdatesBounds() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<RealScalarParam<Real>> growthRate = new AtomicReference<>();
+		AtomicReference<Object> newPrior = new AtomicReference<>();
+		List<String> buttonTexts = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<Real> rate = new RealScalarParam<>(3.0E-4, Real.INSTANCE);
+			rate.setID("growthRate.t:test");
+			growthRate.set(rate);
+			Normal normal = new Normal();
+			normal.initByName("param", rate,
+					"mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			normal.setID("GrowthRatePrior.t:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", normal);
+			prior.setID("prior");
+			doc.registerPlugin(rate);
+			doc.registerPlugin(normal);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			collectButtonTexts(editor.getComponent(), buttonTexts);
+
+			@SuppressWarnings("unchecked")
+			ComboBox<BeautiSubTemplate> comboBox = (ComboBox<BeautiSubTemplate>) findComboBox(editor.getComponent());
+			assertNotNull(comboBox, "no combo box to select a distribution from");
+			BeautiSubTemplate uniform = comboBox.getItems().stream()
+					.filter(t -> t.getID().equals("Uniform")).findFirst().orElse(null);
+			assertNotNull(uniform, "Uniform not offered for a Real parameter");
+			// select it, then run the combo box's action as selecting it in the GUI does
+			// (setValue alone does not fire it while the combo box is not showing)
+			comboBox.setValue(uniform);
+			comboBox.getOnAction().handle(new ActionEvent(comboBox, comboBox));
+			newPrior.set(prior.pDistributions.get().get(0));
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(newPrior.get() instanceof Uniform, "prior was not replaced by Uniform: " + newPrior.get());
+		assertEquals(0.0, growthRate.get().getLower(), 0.0);
+		assertEquals(1.0, growthRate.get().getUpper(), 0.0);
+		assertTrue(buttonTexts.contains("initial = 3.0E-4"), "initial value button text: " + buttonTexts);
+	}
+
+
+	/**
+	 * Editing a parameter of the selected distribution, e.g. the lower of a Uniform,
+	 * must update the parameters shown in the combo box label straight away, not
+	 * only after switching panels.
+	 */
+	@Test
+	public void testEditingDistributionParameterUpdatesComboBox() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<String> before = new AtomicReference<>();
+		AtomicReference<String> after = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<Real> rate = new RealScalarParam<>(0.7, Real.INSTANCE);
+			rate.setID("growthRate.t:test");
+			Uniform uniform = new Uniform();
+			uniform.initByName("param", rate,
+					"lower", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"upper", new RealScalarParam<>(1.0, Real.INSTANCE));
+			uniform.setID("GrowthRatePrior.t:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", uniform);
+			prior.setID("prior");
+			doc.registerPlugin(rate);
+			doc.registerPlugin(uniform);
+			doc.registerPlugin(prior);
+
+			// expanded, as in the priors panel, so that the parameters of the
+			// distribution can be edited
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, true,
+					ExpandOption.TRUE, ButtonStatus.ALL, null, doc);
+			// the combo box label is only rendered once the editor is in a scene
+			Parent root = editor.getComponent();
+			new Scene(root);
+			root.applyCss();
+			root.layout();
+			ComboBox<?> comboBox = findComboBox(root);
+			assertNotNull(comboBox, "no combo box to select a distribution from");
+			before.set(comboBox.getButtonCell().getText());
+
+			TextField lower = findTextField(editor.getComponent(), "lower");
+			assertNotNull(lower, "no text field for the lower of the Uniform");
+			// typing a value is processed when the key is released
+			lower.setText("0.5");
+			lower.getOnKeyReleased().handle(new KeyEvent(KeyEvent.KEY_RELEASED, "5", "5", KeyCode.DIGIT5,
+					false, false, false, false));
+			after.set(comboBox.getButtonCell().getText());
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertEquals("Uniform[0.0,1.0]", before.get());
+		assertEquals("Uniform[0.5,1.0]", after.get());
+	}
+
+
+	/** text field with the given id in the node tree rooted at node, or null if there is none **/
+	private static TextField findTextField(Node node, String id) {
+		if (node instanceof TextField textField && id.equals(textField.getId())) {
+			return textField;
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				TextField textField = findTextField(child, id);
+				if (textField != null) {
+					return textField;
+				}
+			}
+		}
+		return null;
+	}
+
+
+	private static void collectButtonTexts(Node node, List<String> texts) {
+		if (node instanceof Button button) {
+			texts.add(button.getText());
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				collectButtonTexts(child, texts);
+			}
+		}
 	}
 
 

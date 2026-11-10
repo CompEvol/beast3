@@ -3,6 +3,7 @@ package beastfx.app.inputeditor;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beast.base.core.Log;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.domain.Bool;
@@ -80,9 +81,9 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
         } else {
         	pane = new HBox();
         }
-        ComboBox<?> distributionCombBox = createComboBox();
-        if (distributionCombBox != null) {
-        	pane.getChildren().add(distributionCombBox);
+        distrComboBox = createComboBox();
+        if (distrComboBox != null) {
+        	pane.getChildren().add(distrComboBox);
         }
         
         
@@ -107,7 +108,7 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
                 }
             });
             rangeButton.setPrefWidth(InputEditor.Base.LABEL_SIZE.getWidth());
-            rangeButton.setTooltip(new Tooltip("Initial value and range of " + ((BEASTInterface)p).getID()));
+            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
             
             pane.getChildren().add(rangeButton);
         } else if (prior.paramInput.get() instanceof IntVector p) {
@@ -219,23 +220,15 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 
 	String paramToString(RealVector<?> p) {
-        Double lower = p.getLower();
-        Double upper = p.getUpper();
         List<Double> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     String paramToString(IntVector<?> p) {
-        Integer lower = p.getLower();
-        Integer upper = p.getUpper();
         List<Integer> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     private void registerAsListener(Node node) {
@@ -272,7 +265,6 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
     
 
     
-	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox() {
 		ComboBox<BeautiSubTemplate> comboBox = new ComboBox<>();
@@ -336,6 +328,14 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
             	input_.setType(TensorDistribution.class);
             	TensorDistribution<?,?> newDist = (TensorDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
             	newDist.paramInput.setValue(o, newDist);
+            	// initAndValidate ran inside createSubNet before param was attached, so the
+            	// cached param (used by getArguments, hence by the effective parameter bounds)
+            	// is still null; re-initialise now that param is set
+            	try {
+            		newDist.initAndValidate();
+            	} catch (Exception ex) {
+            		Log.warning("Could not initialise " + newDist.getID() + ": " + ex.getMessage());
+            	}
             	list.set(itemNr, newDist);
             	newDist.setID(m_beastObject.getID());
             	doc.pluginmap.remove(m_beastObject.getID());
@@ -400,6 +400,18 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 
     
+	/** combo box for selecting the distribution being edited, shown with its parameters **/
+	private ComboBox<BeautiSubTemplate> distrComboBox;
+
+	@Override
+	public void validateInput() {
+		// a value in the parameter panel changed, so the parameters shown in the
+		// combo box label are out of date
+		ScalarDistributionInputEditor.refreshComboBoxText(distrComboBox, getParameters());
+		super.validateInput();
+	}
+
+
 	private String getParameters() {
     	StringBuilder b = null;
     	TensorDistribution<?,?> distr = (TensorDistribution<?,?>) m_beastObject;
@@ -462,15 +474,6 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 				ie.addValidationListener(this);
 			}
 		}
-		
-		this.expandBox.visibleProperty().addListener((o, oldVal, newVal) -> {
-			if (comboBox != null) {
-				Pane parent = (Pane) comboBox.getParent();
-				int i = parent.getChildren().indexOf(comboBox);
-				comboBox = createComboBox();
-				parent.getChildren().set(i, comboBox);
-			}
-     });
 	}
 
 	
