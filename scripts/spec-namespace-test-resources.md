@@ -22,7 +22,7 @@ Currently affected directories:
 | Directory      | Appears in                                                         |
 |----------------|--------------------------------------------------------------------|
 | `examples/`    | beast-base, beast-fx (copied from beast-base), and any BEAST package that ships example XMLs |
-| `fxtemplates/` | beast-fx (copied from main resources to test-classes by pom.xml)   |
+| `fxtemplates/` | beast-fx (source in `beast-fx/fxtemplates/`; copied to test-classes by pom.xml) |
 
 ## Convention
 
