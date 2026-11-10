@@ -309,6 +309,120 @@ public class ScalarDistributionInputEditorTest {
 
 
 	/**
+	 * Selecting a prior that does not allow the current initial value (5.0 under
+	 * Uniform[0,1]) must be reported in the panel, not only logged: the initial value
+	 * button turns red and explains the problem in its tooltip, and the editor reports
+	 * itself invalid to its validation listeners.
+	 */
+	@Test
+	public void testInitialValueOutsideNewPriorIsReported() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<Normal> oldPrior = new AtomicReference<>();
+		AtomicReference<RealScalarParam<Real>> growthRate = new AtomicReference<>();
+		AtomicReference<Button> button = new AtomicReference<>();
+		List<InputEditor.ValidationStatus> statuses = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<Real> rate = new RealScalarParam<>(5.0, Real.INSTANCE);
+			rate.setID("growthRate.t:test");
+			growthRate.set(rate);
+			Normal normal = new Normal();
+			normal.initByName("param", rate,
+					"mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			normal.setID("GrowthRatePrior.t:test");
+			oldPrior.set(normal);
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", normal);
+			prior.setID("prior");
+			doc.registerPlugin(rate);
+			doc.registerPlugin(normal);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			@SuppressWarnings("unchecked")
+			ComboBox<BeautiSubTemplate> comboBox = (ComboBox<BeautiSubTemplate>) findComboBox(editor.getComponent());
+			assertNotNull(comboBox, "no combo box to select a distribution from");
+			BeautiSubTemplate uniform = comboBox.getItems().stream()
+					.filter(t -> t.getID().equals("Uniform")).findFirst().orElse(null);
+			assertNotNull(uniform, "Uniform not offered for a Real parameter");
+			comboBox.setValue(uniform);
+			comboBox.getOnAction().handle(new ActionEvent(comboBox, comboBox));
+
+			// BEAUti rebuilds the panel after selecting a prior; build the editor of the
+			// new prior the same way, listening to its validation status
+			InputEditor rebuilt = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			ScalarDistributionInputEditor priorEditor = findEditor(rebuilt.getComponent(), ScalarDistributionInputEditor.class);
+			assertNotNull(priorEditor, "no editor for the new prior");
+			priorEditor.addValidationListener(new InputEditor.Base(doc) {
+				@Override
+				public Class<?> type() {
+					return Object.class;
+				}
+				@Override
+				public void startValidating(InputEditor.ValidationStatus state) {
+					statuses.add(state);
+				}
+			});
+			priorEditor.validateInput();
+			button.set(findButtonStartingWith(rebuilt.getComponent(), "initial = "));
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		// the prior is replaced, and the old one no longer restricts the parameter
+		assertFalse(growthRate.get().getOutputs().contains(oldPrior.get()), "old prior still attached to the parameter");
+		assertFalse(growthRate.get().isValid(), "5.0 should be outside the range of Uniform[0,1]");
+
+		assertNotNull(button.get(), "no initial value button");
+		assertTrue(button.get().getStyle().contains("red"), "initial value button not marked: " + button.get().getStyle());
+		String tooltip = button.get().getTooltip().getText();
+		assertTrue(tooltip.contains("5.0") && tooltip.contains("outside the range"), "tooltip: " + tooltip);
+		assertTrue(statuses.contains(InputEditor.ValidationStatus.IS_INVALID), "validation statuses: " + statuses);
+	}
+
+
+	/** first node of the given class in the node tree rooted at node, or null if there is none **/
+	private static <T> T findEditor(Node node, Class<T> c) {
+		if (c.isInstance(node)) {
+			return c.cast(node);
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				T found = findEditor(child, c);
+				if (found != null) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
+
+
+	/** first button whose text starts with prefix in the node tree rooted at node **/
+	private static Button findButtonStartingWith(Node node, String prefix) {
+		if (node instanceof Button b && b.getText() != null && b.getText().startsWith(prefix)) {
+			return b;
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				Button found = findButtonStartingWith(child, prefix);
+				if (found != null) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
+
+
+	/**
 	 * Editing a parameter of the selected distribution, e.g. the lower of a Uniform,
 	 * must update the parameters shown in the combo box label straight away, not
 	 * only after switching panels.

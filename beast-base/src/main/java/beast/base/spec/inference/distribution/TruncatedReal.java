@@ -141,16 +141,27 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
 
     @Override
     public Double getLowerBoundOfParameter() {
-        if (getInnerDistribution().getLowerBoundOfParameter() == null)
+        // Always refresh() first (getInnerDistribution() only does when dist is null), like
+        // ScalarDistribution's default via getApacheDistribution(), so the bounds follow an inner
+        // distribution or a truncation lower/upper replaced after initialisation (e.g. in BEAUti).
+        refresh();
+        Double innerLower = dist.getLowerBoundOfParameter();
+        if (innerLower == null)
             return lower.get();
-        return Math.max(lower.get(), getInnerDistribution().getLowerBoundOfParameter());
+        return Math.max(lower.get(), innerLower);
     }
 
     @Override
     public Double getUpperBoundOfParameter() {
-        if (getInnerDistribution().getLowerBoundOfParameter() == null)
+        // Always refresh() first (getInnerDistribution() only does when dist is null), like
+        // ScalarDistribution's default via getApacheDistribution(), so the bounds follow an inner
+        // distribution or a truncation lower/upper replaced after initialisation (e.g. in BEAUti).
+        refresh();
+        // check the inner upper bound (this used to check the lower one)
+        Double innerUpper = dist.getUpperBoundOfParameter();
+        if (innerUpper == null)
             return upper.get();
-        return Math.min(upper.get(), getInnerDistribution().getUpperBoundOfParameter());
+        return Math.min(upper.get(), innerUpper);
     }
 
     double getLowerCDF() {

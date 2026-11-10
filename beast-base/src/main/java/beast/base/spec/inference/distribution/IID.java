@@ -64,6 +64,9 @@ public class IID<V extends Vector<?, T>,
 
     @Override
 	public void refresh() {
+        // Reload the base distribution from its input, as OffsetReal and TruncatedReal do, so the
+        // cached `dist` follows a base distribution swapped after initAndValidate() (e.g. in BEAUti).
+        dist = distInput.get();
         dist.refresh();
     }
 
@@ -103,11 +106,17 @@ public class IID<V extends Vector<?, T>,
 
     @Override
     public T getLowerBoundOfParameter() {
+        // refresh() first, like ScalarDistribution's default via getApacheDistribution(), so the
+        // bounds follow a base distribution swapped after initAndValidate() (e.g. Normal -> Uniform)
+        refresh();
         return dist.getLowerBoundOfParameter();
     }
 
     @Override
     public T getUpperBoundOfParameter() {
+        // refresh() first, like ScalarDistribution's default via getApacheDistribution(), so the
+        // bounds follow a base distribution swapped after initAndValidate() (e.g. Normal -> Uniform)
+        refresh();
         return dist.getUpperBoundOfParameter();
     }
 

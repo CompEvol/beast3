@@ -3,7 +3,6 @@ package beastfx.app.inputeditor;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
-import beast.base.core.Log;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.domain.Bool;
@@ -15,7 +14,6 @@ import beastfx.app.util.FXUtils;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -93,6 +91,7 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
         if (prior.paramInput.get() instanceof RealVector p) {
             // add range button for real parameters
             Button rangeButton = new Button(paramToString(p));
+            initialValueButton = rangeButton;
             rangeButton.setOnAction(e -> {
                 Button rangeButton1 = (Button) e.getSource();
 
@@ -112,8 +111,9 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
             
             pane.getChildren().add(rangeButton);
         } else if (prior.paramInput.get() instanceof IntVector p) {
-            // add range button for real parameters
+            // add range button for integer parameters
             Button rangeButton = new Button(paramToString(p));
+            initialValueButton = rangeButton;
             rangeButton.setOnAction(e -> {
                 Button rangeButton1 = (Button) e.getSource();
 
@@ -142,6 +142,9 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 //        pane.getChildren().add(pane1);
 //        getChildren().add(pane);
 
+        // validateInput() may have run before the initial value button existed, so mark
+        // the button now if the initial value is outside the prior's range
+        checkInitialValue();
     } // init
 
 
@@ -288,21 +291,10 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
         }
         	
         comboBox.setId(text+".distr");
-        comboBox.setButtonCell(new ListCell<BeautiSubTemplate>() {
-        	@Override
-        	protected void updateItem(BeautiSubTemplate item, boolean empty) {
-        		super.updateItem(item, empty);
-        		if (!empty && item != null) {
-        			if (expandBox !=null && expandBox.isVisible()) {
-        				setText(item.toString());
-        			} else {
-        				setText(item.toString() + getParameters());
-        			}
-                } else {
-                    setText(null);
-                }
-        	}
-        });
+        // the label is the template name followed by the current parameter values, whether or
+        // not the panel is expanded (as for scalar priors); the same function is used when the
+        // cell is refreshed in validateInput(), so both always agree
+        comboBox.setButtonCell(new PriorEditorUtil.DistrButtonCell(item -> item.toString() + getParameters()));
 
         String id = prior.getID();
 
@@ -321,25 +313,10 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 
             BeautiSubTemplate template = (BeautiSubTemplate) comboBox1.getValue();
             PartitionContext context = doc.getContextFor((BEASTInterface) list.get(itemNr));
-            TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
             try {
-            	Object o = ((TensorDistribution<?,?>) m_beastObject).paramInput.get();
-            	Input<TensorDistribution<?,?>> input_ = new Input<>("param", "dummy input");
-            	input_.setType(TensorDistribution.class);
-            	TensorDistribution<?,?> newDist = (TensorDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
-            	newDist.paramInput.setValue(o, newDist);
-            	// initAndValidate ran inside createSubNet before param was attached, so the
-            	// cached param (used by getArguments, hence by the effective parameter bounds)
-            	// is still null; re-initialise now that param is set
-            	try {
-            		newDist.initAndValidate();
-            	} catch (Exception ex) {
-            		Log.warning("Could not initialise " + newDist.getID() + ": " + ex.getMessage());
-            	}
-            	list.set(itemNr, newDist);
-            	newDist.setID(m_beastObject.getID());
-            	doc.pluginmap.remove(m_beastObject.getID());
-            	doc.registerPlugin(newDist);
+            	// shared with ScalarDistributionInputEditor; also detaches the old prior from the
+            	// parameter, which this handler did not do before
+            	PriorEditorUtil.replacePrior(doc, template, context, list, itemNr);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -403,12 +380,30 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 	/** combo box for selecting the distribution being edited, shown with its parameters **/
 	private ComboBox<BeautiSubTemplate> distrComboBox;
 
+	/** the "initial = ..." button, null if the parameter is neither a real nor an integer vector **/
+	private Button initialValueButton;
+
 	@Override
 	public void validateInput() {
 		// a value in the parameter panel changed, so the parameters shown in the
-		// combo box label are out of date
-		ScalarDistributionInputEditor.refreshComboBoxText(distrComboBox, getParameters());
+		// combo box label are out of date: re-render the cell
+		PriorEditorUtil.refreshLabel(distrComboBox);
+		// A new prior may not allow the current initial value. Report it like other
+		// validation errors instead of leaving an invalid model silently.
+		if (!checkInitialValue()) {
+			repaint();
+			return;
+		}
 		super.validateInput();
+	}
+
+	/** @return true if the initial value of the parameter is within the range allowed by the prior **/
+	private boolean checkInitialValue() {
+		if (!(m_beastObject instanceof TensorDistribution<?,?> prior)) {
+			return true;
+		}
+		String tooltip = prior.paramInput.get() instanceof BEASTInterface p ? "Initial value of " + p.getID() : null;
+		return PriorEditorUtil.checkInitialValue(this, prior, initialValueButton, tooltip);
 	}
 
 
