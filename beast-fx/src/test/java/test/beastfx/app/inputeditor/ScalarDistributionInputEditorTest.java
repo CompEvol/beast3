@@ -360,6 +360,62 @@ public class ScalarDistributionInputEditorTest {
 				"wrapper offered inside Offset: " + insideOffset);
 	}
 
+	/**
+	 * A Normal bounded to [-1, 1] is not a valid prior for a PositiveReal parameter: it gives
+	 * probability to values the parameter cannot take. The priors panel reports it as invalid;
+	 * bounded to [0, 1] it is valid.
+	 */
+	@Test
+	public void testBoundedPriorOutsideDomainIsReported() throws Exception {
+		assertEquals(List.of(InputEditor.ValidationStatus.IS_INVALID), boundedPriorStatus(-1.0));
+		assertFalse(boundedPriorStatus(0.0).contains(InputEditor.ValidationStatus.IS_INVALID));
+	}
+
+	/** validation statuses of the editor of a Normal prior bounded to [lower, 1] on a positive parameter */
+	private List<InputEditor.ValidationStatus> boundedPriorStatus(double lower) throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<InputEditor.ValidationStatus> statuses = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(0.5, PositiveReal.INSTANCE);
+			kappa.setID("kappa.s:test");
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", kappa, "distribution", standardNormal(),
+					"lower", new RealScalarParam<>(lower, Real.INSTANCE),
+					"upper", new RealScalarParam<>(1.0, Real.INSTANCE));
+			bounded.setID("KappaPrior.s:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", bounded);
+			prior.setID("prior");
+			doc.registerPlugin(kappa);
+			doc.registerPlugin(bounded);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			ScalarDistributionInputEditor priorEditor = findEditor(editor.getComponent(), ScalarDistributionInputEditor.class);
+			assertNotNull(priorEditor, "no editor for the prior");
+			priorEditor.addValidationListener(new InputEditor.Base(doc) {
+				@Override
+				public Class<?> type() {
+					return Object.class;
+				}
+				@Override
+				public void startValidating(InputEditor.ValidationStatus state) {
+					statuses.add(state);
+				}
+			});
+			priorEditor.validateInput();
+		}, error);
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		return statuses;
+	}
+
 	private static Normal standardNormal() {
 		Normal normal = new Normal();
 		normal.initByName("mean", new RealScalarParam<>(0.0, Real.INSTANCE),
