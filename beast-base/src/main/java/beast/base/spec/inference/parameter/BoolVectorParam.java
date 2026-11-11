@@ -89,7 +89,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
         for (int i = 0; i < valuesList.size(); i++)
             valuesString[i] = valuesList.get(i);
 
-        int dimension = Math.max(dimensionInput.get(), valuesString.length);
+        int dimension = ParameterUtils.dimensionFor(getID(), valuesString.length, dimensionInput.get());
         dimensionInput.setValue(dimension, this);
 
         values = new boolean[dimension];
@@ -237,6 +237,8 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
             //storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), dimension);
         }
         isDirty = new boolean[dimension];
+        // keep the value input consistent with the new dimension
+        ParameterUtils.updateValuesInput(valuesInput, getElements());
         try {
             dimensionInput.setValue(dimension, this);
         } catch (Exception e) {

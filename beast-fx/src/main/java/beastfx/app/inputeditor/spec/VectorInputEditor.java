@@ -7,6 +7,7 @@ import beast.base.inference.StateNode;
 import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.IntVectorParam;
+import beast.base.spec.inference.parameter.KeyVectorParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.type.Vector;
 import beastfx.app.inputeditor.BEASTObjectInputEditor;
@@ -133,30 +134,11 @@ public class VectorInputEditor extends BEASTObjectInputEditor {
             String text = m_entry.getText().trim();
 
             if (param instanceof RealVectorParam<?> rvp) {
-                String oldValue = valuesToString(rvp);
-                int oldDim = rvp.size();
-                rvp.valuesInput.setValue(text, rvp);
-                rvp.initAndValidate();
-                if (rvp.size() != oldDim) {
-                    rvp.setDimension(oldDim);
-                    rvp.valuesInput.setValue(oldValue, rvp);
-                    rvp.initAndValidate();
-                    throw new IllegalArgumentException("Entry caused change in dimension");
-                }
+                setValues(rvp, rvp.valuesInput, rvp.dimensionInput, text);
             } else if (param instanceof IntVectorParam<?> ivp) {
-                String oldValue = valuesToString(ivp);
-                int oldDim = ivp.size();
-                ivp.valuesInput.setValue(text, ivp);
-                ivp.initAndValidate();
-                if (ivp.size() != oldDim) {
-                    ivp.setDimension(oldDim);
-                    ivp.valuesInput.setValue(oldValue, ivp);
-                    ivp.initAndValidate();
-                    throw new IllegalArgumentException("Entry caused change in dimension");
-                }
+                setValues(ivp, ivp.valuesInput, ivp.dimensionInput, text);
             } else if (param instanceof BoolVectorParam bvp) {
-                bvp.valuesInput.setValue(text, bvp);
-                bvp.initAndValidate();
+                setValues(bvp, bvp.valuesInput, bvp.dimensionInput, text);
             }
 
             validateInput();
@@ -169,6 +151,30 @@ public class VectorInputEditor extends BEASTObjectInputEditor {
                 m_validateLabel.setColor("orange");
             }
             repaint();
+        }
+    }
+
+    /**
+     * Sets the values typed into the field. The parameter checks them itself: it refuses a
+     * number of values that is neither 1 nor its dimension (issue #244). The field cannot
+     * change the dimension either. If the values are refused, the old values are put back,
+     * so the parameter is never left with values it did not accept, and the error is rethrown
+     * to be shown next to the field.
+     */
+    private void setValues(KeyVectorParam<?> param, Input<?> valuesInput, Input<Integer> dimensionInput, String text) {
+        String oldValue = valuesToString(param);
+        int oldDim = param.size();
+        try {
+            valuesInput.setValue(text, param);
+            param.initAndValidate();
+            if (param.size() != oldDim) {
+                throw new IllegalArgumentException("Entry caused change in dimension");
+            }
+        } catch (RuntimeException e) {
+            dimensionInput.setValue(oldDim, param);
+            valuesInput.setValue(oldValue, param);
+            param.initAndValidate();
+            throw e;
         }
     }
 
