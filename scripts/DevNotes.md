@@ -12,13 +12,19 @@ that the code alone does not make obvious. Add new topics as new sections.
 ## Cached fields vs. reading `Input.get()`
 
 BEAST classes often copy their inputs into fields, usually in `initAndValidate()`. This section
-explains when to use the cached field and when to read the input, based on the
-non-deprecated classes in `beast-base` (mostly `beast.base.spec`).
+describes how the non-deprecated classes in `beast-base` (mostly `beast.base.spec`) keep those
+copies valid today, so that new code fits in with them.
 
 > **The rule in one line**
 > The `Input` is the source of truth. A cached field is a fast copy for code that runs on
 > every MCMC step. Any method that can be called outside that loop, or after the model
 > changed, reads the input or calls `refresh()` first.
+
+> **This convention is fragile.** It is correct only if every method remembers to refresh
+> before it uses a cached field, and nothing enforces that. Several bugs came from a method
+> that did not (PR #233). Issue #252 is about replacing it with a design that cannot go
+> stale. Until then, prefer not to cache: a method that reads `Input.get()` cannot be wrong
+> in this way. Cache only what is measurably expensive to recompute.
 
 The model *can* change after `initAndValidate()`. BEAUti, for example, creates a new prior
 from a template (which initialises it) and only then attaches the parameter, and it swaps
@@ -54,8 +60,12 @@ final double r = birthDiffRateParameterInput.get().get();            // can chan
 #### B. Expensive derived objects, rebuilt by `refresh()`
 
 This is the main reason to cache: rebuilding an Apache distribution on every call is slow.
-`refresh()` re-reads the inputs and rebuilds the object only if a value changed. Every
+`refresh()` re-reads the inputs and rebuilds the object if a value changed. Every
 method that needs the object calls `refresh()` first.
+
+The existing distributions compare the old and new values with `isNotEqual`, which treats
+values closer than `EPS = 1e-12` (absolute) as equal. A change smaller than that does not
+rebuild the object.
 
 ```java
 // spec/inference/distribution/Uniform.java
@@ -74,7 +84,7 @@ protected UniformContinuousDistribution getApacheDistribution() {
 }
 ```
 
-16 of the 19 classes that define `getApacheDistribution()` call `refresh()` this way.
+Most classes that define `getApacheDistribution()` call `refresh()` this way.
 `Dirichlet.refresh()` does the same for its `gammas` array.
 
 **Wrapper distributions** (`IID`, `OffsetReal`, `OffsetInt`, `TruncatedReal`, ...) cache the
@@ -165,28 +175,8 @@ public T getLowerBoundOfParameter() {
 
 ---
 
-### Mistakes fixed for issue #230
+### Examples of what goes wrong
 
-These were found while fixing the BEAUti prior refresh bugs (PR #233). In each case, BEAUti
-changed the model after `initAndValidate()` and the parameter's bounds ignored the change.
-
-| Class | Problem | Fix |
-|---|---|---|
-| `TensorDistribution.getArguments()` | read the cached `param`, which is `null` when the param is attached after `initAndValidate()` | read `paramInput.get()` (D) |
-| `IID.refresh()` | called `dist.refresh()` without reloading `dist` from `distInput` | reload `dist = distInput.get()` first (B) |
-| `IID.get*BoundOfParameter()` | used the cached `dist` without refreshing | call `refresh()` first (B) |
-| `OffsetReal` / `OffsetInt` `get*BoundOfParameter()` | called `refresh()` only `if (dist == null)` | always call `refresh()` (B) |
-| `TruncatedReal` / `TruncatedInt` `get*BoundOfParameter()` | used `getInnerDistribution()`, which calls `refresh()` only `if (dist == null)` | always call `refresh()` (B) |
-| `TruncatedInt.getUpperBoundOfParameter()` | returned `Math.max(lower, inner upper)`, ignoring the truncation upper | `Math.min(upper, inner upper)` |
-| `TruncatedReal.getUpperBoundOfParameter()` | checked the inner *lower* bound for `null` | check the inner upper bound |
-
-Tests: `beast-base/src/test/java/beast/base/spec/inference/distribution/BoundsAfterInitTest.java`.
-
-#### Known places that still differ (not changed yet)
-
-- `TruncatedReal` / `TruncatedInt` `getInnerDistribution()` still use the `if (dist == null) refresh()`
-  guard. Their `calculateLogP()` and `calcLogP()` call `refresh()` themselves, so this only matters
-  when `getInnerDistribution()` is called from elsewhere after an input was replaced.
-- `OffsetReal` / `OffsetInt` `getApacheDistribution()` also use that guard, and their `calculateLogP()`
-  and `calcLogP()` do **not** call `refresh()`. They use the cached `dist` and `offset`, so a replaced
-  inner distribution or offset is ignored there until something else calls `refresh()`.
+PR #233 fixed seven cases in the distributions where a cached field was used without being
+brought up to date; `BoundsAfterInitTest` in `beast-base` shows each of them. The places
+that still differ from the checklist above are listed in issue #252.
