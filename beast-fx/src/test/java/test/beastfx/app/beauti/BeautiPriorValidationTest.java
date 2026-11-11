@@ -66,6 +66,10 @@ public class BeautiPriorValidationTest extends BeautiBase {
 		System.err.println("Message shown: " + message);
 		assertTrue(message.contains("kappa.s:anolis"), "the message should name the parameter: " + message);
 		assertTrue(message.contains("[0.0,1.0]"), "the message should give the allowed range: " + message);
+		// issue #253: say why the value is not valid, and give the value once
+		assertTrue(message.contains("It is outside the allowed range [0.0,1.0]"),
+				"the message should say the value is outside the range: " + message);
+		assertEquals(message.indexOf("2.0"), message.lastIndexOf("2.0"), "the value should be given once: " + message);
 		assertFalse(isReported(robot, "FrequenciesPrior.s:anolis"), "the other priors are valid");
 		assertFalse(isReported(robot, "YuleBirthRatePrior.t:anolis"), "the other priors are valid");
 
