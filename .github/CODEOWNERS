@@ -1,0 +1,3 @@
+# A change to the sampler and models needs a review from a core developer.
+# See "Changes to beast-base" in scripts/DevNotes.md.
+/beast-base/src/main/ @alexeid @rbouckaert @walterxie
