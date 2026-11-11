@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,8 +75,8 @@ public class BeautiPriorValidationTest extends BeautiBase {
 		assertFalse(isReported(robot, "YuleBirthRatePrior.t:anolis"), "the other priors are valid");
 
 		// the user fixes it by widening the range
-		clickOnNodesWithID(robot, "KappaPrior.s:anolis.editButton");
-		WaitForAsyncUtils.waitForFxEvents();
+		expand(robot, "KappaPrior.s:anolis", () -> robot.lookup(n -> n instanceof TextField t
+				&& "upper".equals(t.getId()) && "1.0".equals(t.getText())).tryQuery().orElse(null));
 		type(robot, visibleTextField(robot, "upper", "1.0"), "10.0");
 		screenshot("/tmp/priorValidation2.png");
 		assertFalse(isReported(robot, "KappaPrior.s:anolis"), "kappa = 2 is in [0,10], so nothing should be reported");
@@ -108,12 +109,32 @@ public class BeautiPriorValidationTest extends BeautiBase {
 
 		// the error goes away after an edit that makes the prior valid again
 		robot.interact(() -> ((RealVectorParam<?>) prior.alphaInput.get()).setDimension(4));
-		clickOnNodesWithID(robot, "FrequenciesPrior.s:anolis.editButton");
-		WaitForAsyncUtils.waitForFxEvents();
-		TextField alpha = (TextField) robot.lookup(n -> n instanceof TextField && n.isVisible() && "alpha".equals(n.getId())).query();
+		expand(robot, "FrequenciesPrior.s:anolis", () -> robot.lookup(n -> n instanceof TextField
+				&& "alpha".equals(n.getId())).tryQuery().orElse(null));
+		TextField alpha = (TextField) robot.lookup(n -> n instanceof TextField && isShowing(n) && "alpha".equals(n.getId())).query();
 		type(robot, alpha, "2.0 2.0 2.0 2.0");
 		assertFalse(isReported(robot, "FrequenciesPrior.s:anolis"), "alpha has four values again, so nothing should be reported");
 		assertXMLParses();
+	}
+
+	/**
+	 * Expand the editor of a prior. Expanded priors are remembered in a static set, so an
+	 * earlier test in the same JVM may have left this one expanded already; clicking its
+	 * edit button again would collapse it, and the hidden field could not take the focus.
+	 */
+	private void expand(FxRobot robot, String priorID, Supplier<Node> field) {
+		if (!isShowing(field.get())) {
+			clickOnNodesWithID(robot, priorID + ".editButton");
+			WaitForAsyncUtils.waitForFxEvents();
+		}
+		assertTrue(isShowing(field.get()), "the editor of " + priorID + " is not expanded");
+	}
+
+	private static boolean isShowing(Node node) {
+		for (Node n = node; n != null; n = n.getParent()) {
+			if (!n.isVisible()) return false;
+		}
+		return node != null;
 	}
 
 	private Labeled validateLabel(FxRobot robot, String priorID) {
@@ -131,7 +152,7 @@ public class BeautiPriorValidationTest extends BeautiBase {
 	}
 
 	private TextField visibleTextField(FxRobot robot, String id, String text) {
-		for (Node n : robot.lookup(n -> n instanceof TextField && n.isVisible() && id.equals(n.getId())).queryAll()) {
+		for (Node n : robot.lookup(n -> n instanceof TextField && isShowing(n) && id.equals(n.getId())).queryAll()) {
 			if (((TextField) n).getText().equals(text)) {
 				return (TextField) n;
 			}
@@ -141,6 +162,7 @@ public class BeautiPriorValidationTest extends BeautiBase {
 
 	private void type(FxRobot robot, TextField field, String text) {
 		robot.interact(() -> { field.requestFocus(); field.selectAll(); });
+		assertTrue(field.isFocused(), "the field did not get the focus, so the keys would not reach it");
 		robot.write(text);
 		robot.type(KeyCode.ENTER);
 		WaitForAsyncUtils.waitForFxEvents();
