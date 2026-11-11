@@ -100,8 +100,20 @@ public class BeautiVectorValueDimensionTest extends BeautiBase {
 		robot.clickOn("#SiteModel");
 		robot.clickOn("#substModelComboBox").clickOn("HKY");
 		selectTab(robot, "Priors");
-		clickOnNodesWithID(robot, "FrequenciesPrior.s:anolis.editButton");
-		WaitForAsyncUtils.waitForFxEvents();
+		// expanded priors are remembered in a static set, so an earlier test in the same JVM
+		// may have left this one expanded already; clicking again would collapse it
+		if (!isShowing(alphaField(robot))) {
+			clickOnNodesWithID(robot, "FrequenciesPrior.s:anolis.editButton");
+			WaitForAsyncUtils.waitForFxEvents();
+		}
+		assertTrue(isShowing(alphaField(robot)), "the editor of FrequenciesPrior is not expanded");
+	}
+
+	private static boolean isShowing(Node node) {
+		for (Node n = node; n != null; n = n.getParent()) {
+			if (!n.isVisible()) return false;
+		}
+		return node != null;
 	}
 
 	private TextField alphaField(FxRobot robot) {
@@ -143,6 +155,7 @@ public class BeautiVectorValueDimensionTest extends BeautiBase {
 	private void paste(FxRobot robot, TextField field, String text) {
 		assertNotNull(field, "no text field");
 		robot.interact(() -> { field.requestFocus(); field.setText(text); });
+		assertTrue(field.isFocused(), "the field did not get the focus, so Enter would not reach it");
 		robot.type(KeyCode.ENTER);
 		WaitForAsyncUtils.waitForFxEvents();
 	}
