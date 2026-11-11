@@ -1,5 +1,6 @@
 package beast.base.spec.inference.parameter;
 
+import beast.base.core.Input;
 import beast.base.inference.StateNode;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
  * Utility methods for serializing and deserializing parameter values to/from XML.
  * Used by parameter {@link beast.base.inference.StateNode#toString()} and
  * {@link beast.base.inference.StateNode#fromXML(org.w3c.dom.Node)} implementations.
+ * Also the rule, shared by the vector parameters, for how many values fit a dimension.
  */
 public class ParameterUtils {
 
@@ -188,4 +190,46 @@ public class ParameterUtils {
 //        return new Bounded.BoundedInt(lower, upper);
 //    }
 
+    /**
+     * The dimension of a vector parameter given by {@code nrOfValues} values and the
+     * dimension input {@code dimension}. Allowed are:
+     * <ul>
+     * <li>one value, used for every element, e.g. value="1.0" dimension="4";</li>
+     * <li>dimension 1, the default, which takes the number of values as dimension;</li>
+     * <li>as many values as the dimension.</li>
+     * </ul>
+     * Anything else is refused, instead of silently repeating or extending the values:
+     * value="0.1 0.2" dimension="3" used to become [0.1, 0.2, 0.1] (issue #244).
+     *
+     * @param id the ID of the parameter, for the message, or null
+     * @throws IllegalArgumentException if the number of values does not fit the dimension
+     */
+    static int dimensionFor(String id, int nrOfValues, int dimension) {
+        if (nrOfValues == 1 || dimension == 1 || nrOfValues == dimension) {
+            return Math.max(nrOfValues, dimension);
+        }
+        String name = id != null ? "Parameter " + id : "A parameter";
+        throw new IllegalArgumentException(name + " has " + nrOfValues + " values, but dimension "
+                + dimension + ". Give " + dimension + " values, or 1 value to use for all " + dimension
+                + " elements, or set dimension to " + nrOfValues + ".");
+    }
+
+    /**
+     * Keeps the value input of a vector parameter consistent with a new dimension, so that
+     * initAndValidate() gives the same parameter again: setDimension() changes the stored
+     * values, and a value input with neither 1 value nor one per element would otherwise be
+     * refused by {@link #dimensionFor(String, int, int)}. A single value is kept, since it
+     * fills any dimension.
+     *
+     * @param valuesInput the value input of the parameter
+     * @param values the values after the change of dimension
+     */
+    static <T> void updateValuesInput(Input<List<T>> valuesInput, List<T> values) {
+        List<T> current = valuesInput.get();
+        if (current == null || current.size() == 1 || current.size() == values.size()) {
+            return;
+        }
+        current.clear();
+        current.addAll(values);
+    }
 }
