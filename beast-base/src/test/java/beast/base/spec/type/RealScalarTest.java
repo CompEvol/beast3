@@ -1,8 +1,8 @@
 package beast.base.spec.type;
 
 import beast.base.spec.domain.Real;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for the RealScalar interface
