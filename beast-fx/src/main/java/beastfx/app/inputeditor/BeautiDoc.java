@@ -198,6 +198,16 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         return templateName;
     }
 
+    /**
+     * Process the command line arguments of BEAUti.
+     * <p>
+     * An argument that cannot be processed is reported with an exception. This method
+     * does not show a dialog and does not exit: at start up it runs outside the JavaFX
+     * application thread, where a dialog cannot be shown, and the caller knows whether
+     * there is a user to show one to (see {@code Beauti.start}).
+     *
+     * @throws IllegalArgumentException for an unknown argument, or one without its value
+     */
     public ActionOnExit parseArgs(String[] args) throws XMLParserException, SAXException, IOException, ParserConfigurationException  {
         ActionOnExit endState = ActionOnExit.UNKNOWN;
         String outputFileName = "beast.xml";
@@ -206,106 +216,108 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         TraitSet traitset = null;
 
         int i = 0;
-        try {
-            while (i < args.length) {
-                int old = i;
-                if (args[i].equals("")) {
-                    i += 1;
-                } else if (args[i].equals("-capture")) {
-                    // capture stderr and stdout
-                    // already done in beastfx.app.beauti.Beauti
-                    i += 1;
-                } else if (args[i].equals("-xml")) {
-                    String fileName = args[i + 1];
-                    xml = load(fileName);
-                    // XMLParser parser = new XMLParser();
-                    // m_doc.m_mcmc.setValue(parser.parseFile(fileName),
-                    // m_doc);
-                    this.fileName = nameFromFile(fileName);
-                    i += 2;
-                } else if (args[i].equals("-template")) {
-                    String fileName = args[i + 1];
-                    templateXML = processTemplate(fileName);
-                    templateFileName = fileName;
-                    templateName = nameFromFile(fileName);
-                    i += 2;
-                } else if (args[i].equals("-nex")) {
-                    // NB: multiple -nex/-xmldata commands can be processed!
-                    String fileName = args[i + 1];
-                    NexusParser parser = new NexusParser();
-                    parser.parseFile(new File(fileName));
-                    if (parser.filteredAlignments.size() > 0) {
-                        for (Alignment data : parser.filteredAlignments) {
-                            alignments.add(data);
-                        }
-                    } else {
-                        alignments.add(parser.m_alignment);
+        while (i < args.length) {
+            int old = i;
+            if (args[i].equals("")) {
+                i += 1;
+            } else if (args[i].equals("-capture")) {
+                // capture stderr and stdout
+                // already done in beastfx.app.beauti.Beauti
+                i += 1;
+            } else if (args[i].equals("-xml")) {
+                String fileName = value(args, i);
+                xml = load(fileName);
+                // XMLParser parser = new XMLParser();
+                // m_doc.m_mcmc.setValue(parser.parseFile(fileName),
+                // m_doc);
+                this.fileName = nameFromFile(fileName);
+                i += 2;
+            } else if (args[i].equals("-template")) {
+                String fileName = value(args, i);
+                templateXML = processTemplate(fileName);
+                templateFileName = fileName;
+                templateName = nameFromFile(fileName);
+                i += 2;
+            } else if (args[i].equals("-nex")) {
+                // NB: multiple -nex/-xmldata commands can be processed!
+                String fileName = value(args, i);
+                NexusParser parser = new NexusParser();
+                parser.parseFile(new File(fileName));
+                if (parser.filteredAlignments.size() > 0) {
+                    for (Alignment data : parser.filteredAlignments) {
+                        alignments.add(data);
                     }
-                    i += 2;
-                    traitset = parser.traitSet;
-                } else if (args[i].startsWith("-fasta_")) {
-                    FastaImporter fastaImporter = new FastaImporter();
-                    if (args[i].equals("-fasta_nucleotide"))
-                        fastaImporter.datatype = FastaImporter.dtype.nucleotide;
-                    else if (args[i].equals("-fasta_aminoacid"))
-                        fastaImporter.datatype = FastaImporter.dtype.aminoacid;
-                    else
-                        throw new IllegalArgumentException("Unknown command line argument " + args[i]);
-                    String fileName = args[i+1];
-                    List<BEASTInterface> results = fastaImporter.loadFile(new File(fileName));
-    				for (BEASTInterface o : results) {
-    					if (o.getID() != null && o.getID().contains(":")) {
-    						o.setID(o.getID().replaceAll(":", "-"));
-    					}
-    				}
-                    if (results != null && results.size()==1 && results.get(0) instanceof Alignment)
-                        alignments.add((Alignment) results.get(0));
-                    i += 2;
-                } else if (args[i].equals("-xmldata")) {
-                    // NB: multiple -xmldata/-nex commands can be processed!
-                    String fileName = args[i + 1];
-                    Alignment alignment = (Alignment) BeautiAlignmentProvider.getXMLData(new File(fileName));
-                    alignments.add(alignment);
-                    i += 2;
-                } else if (args[i].equals("-exitaction")) {
-                    if (args[i + 1].equals("writexml")) {
-                        endState = ActionOnExit.WRITE_XML;
-                    } else if (args[i + 1].equals("usetemplate")) {
-                        endState = ActionOnExit.SHOW_DETAILS_USE_TEMPLATE;
-                    } else if (args[i + 1].equals("usexml")) {
-                        endState = ActionOnExit.SHOW_DETAILS_USE_XML_SPEC;
-                    } else if (args[i + 1].equals("merge")) {
-                        endState = ActionOnExit.MERGE_AND_WRITE_XML;
-                    } else {
-                        throw new IllegalArgumentException("Expected one of 'writexml','usetemplate' or 'usexml', not " + args[i + 1]);
+                } else {
+                    alignments.add(parser.m_alignment);
+                }
+                i += 2;
+                traitset = parser.traitSet;
+            } else if (args[i].startsWith("-fasta_")) {
+                FastaImporter fastaImporter = new FastaImporter();
+                if (args[i].equals("-fasta_nucleotide"))
+                    fastaImporter.datatype = FastaImporter.dtype.nucleotide;
+                else if (args[i].equals("-fasta_aminoacid"))
+                    fastaImporter.datatype = FastaImporter.dtype.aminoacid;
+                else
+                    throw new IllegalArgumentException("Unknown command line argument " + args[i]);
+                String fileName = value(args, i);
+                List<BEASTInterface> results = fastaImporter.loadFile(new File(fileName));
+				for (BEASTInterface o : results) {
+					if (o.getID() != null && o.getID().contains(":")) {
+						o.setID(o.getID().replaceAll(":", "-"));
+					}
+				}
+                if (results != null && results.size()==1 && results.get(0) instanceof Alignment)
+                    alignments.add((Alignment) results.get(0));
+                i += 2;
+            } else if (args[i].equals("-xmldata")) {
+                // NB: multiple -xmldata/-nex commands can be processed!
+                String fileName = value(args, i);
+                Alignment alignment = (Alignment) BeautiAlignmentProvider.getXMLData(new File(fileName));
+                alignments.add(alignment);
+                i += 2;
+            } else if (args[i].equals("-exitaction")) {
+                if (value(args, i).equals("writexml")) {
+                    endState = ActionOnExit.WRITE_XML;
+                } else if (value(args, i).equals("usetemplate")) {
+                    endState = ActionOnExit.SHOW_DETAILS_USE_TEMPLATE;
+                } else if (value(args, i).equals("usexml")) {
+                    endState = ActionOnExit.SHOW_DETAILS_USE_XML_SPEC;
+                } else if (value(args, i).equals("merge")) {
+                    endState = ActionOnExit.MERGE_AND_WRITE_XML;
+                } else {
+                    throw new IllegalArgumentException("Expected one of 'writexml','usetemplate' or 'usexml', not " + value(args, i));
+                }
+                i += 2;
+            } else if (args[i].equals("-out")) {
+                outputFileName = value(args, i);
+                i += 2;
+            } else if (args[i].equals("-noerr")) {
+                System.setErr(new PrintStream(new OutputStream() {
+                    @Override
+                    public void write(int b) {
                     }
-                    i += 2;
-                } else if (args[i].equals("-out")) {
-                    outputFileName = args[i + 1];
-                    i += 2;
-                } else if (args[i].equals("-noerr")) {
-                    System.setErr(new PrintStream(new OutputStream() {
-                        @Override
-                        public void write(int b) {
-                        }
-                    }));
-                    i += 1;
-                }
-
-                if (i == old) {
-                    throw new IllegalArgumentException("Wrong argument: " + args[i]);
-                }
+                }));
+                i += 1;
             }
-        } catch (Exception e) {
-            Alert.showMessageDialog(null, e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
+
+            if (i == old) {
+                throw new IllegalArgumentException("Wrong argument: " + args[i]);
+            }
         }
 
         initialize(endState, xml, templateXML, outputFileName);
         addTraitSet(traitset);
         return endState;
     } // parseArgs
+
+    /** @return the value of argument i, which is the next argument */
+    private static String value(String[] args, int i) {
+        if (i + 1 >= args.length) {
+            throw new IllegalArgumentException("Argument " + args[i] + " needs a value");
+        }
+        return args[i + 1];
+    }
 
     public String nameFromFile(String fileName) {
         if (fileName.contains("/")) {
@@ -516,8 +528,7 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 //				}
 //			}
 //			save(fileName);
-                System.exit(1);
-                break;
+                throw new IllegalArgumentException("-exitaction merge is not implemented");
             }
             // // load standard template
             // String templateXML =
@@ -1269,12 +1280,19 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         }
         String beautiTemplate = XMLParser.getAttribute(topNode, "beautitemplate");
         if (beautiTemplate == null) {
-            ButtonType choice = Alert.showConfirmDialog(null /*getFrame()*/, 
-            		"This file does not appear to be generated by BEAUti. If you load it, unexpected behaviour may follow",
-            		"Warning",
-            		Alert.OK_CANCEL_OPTION);
-            if (choice != Alert.OK_OPTION) {
-                return;
+            String warning = "This file does not appear to be generated by BEAUti. If you load it, unexpected behaviour may follow";
+            if (javafx.application.Platform.isFxApplicationThread()) {
+                ButtonType choice = Alert.showConfirmDialog(null /*getFrame()*/, 
+                		warning,
+                		"Warning",
+                		Alert.OK_CANCEL_OPTION);
+                if (choice != Alert.OK_OPTION) {
+                    return;
+                }
+            } else {
+                // at start up (-xml on the command line) this runs on the splash screen's thread,
+                // where a dialog cannot be shown: the file was asked for by name, so warn and load it
+                Log.warning.println("Warning: " + warning);
             }
             // load standard template
             if (beautiConfig == null) {

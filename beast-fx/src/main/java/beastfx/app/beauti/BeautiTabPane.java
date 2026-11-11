@@ -1192,6 +1192,14 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
 
    
 
+    /**
+     * Process the command line arguments and set up the document.
+     *
+     * @return the document, or null when the arguments asked for the XML to be
+     *         written (-exitaction writexml) and that was done, so there is nothing to show
+     * @throws RuntimeException if an argument cannot be processed, for example a template
+     *         or alignment file that cannot be read. It is up to the caller to report it.
+     */
     public static BeautiDoc initialise(String[] args) {
     	ProgramStatus.name = "BEAUti";
 
@@ -1282,17 +1290,19 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
 
             // make sure templates know we are in BEAUti while parsing arguments 
             BeautiTabPane.BEAUtiIntances++;
-
-            doc = new BeautiDoc();
-        	if (doc.parseArgs(args) == ActionOnExit.WRITE_XML) {
-			    return null;
-			}
-            // reset instances
-            BeautiTabPane.BEAUtiIntances--;
+            try {
+                doc = new BeautiDoc();
+                if (doc.parseArgs(args) == ActionOnExit.WRITE_XML) {
+                    return null;
+                }
+            } finally {
+                // reset instances
+                BeautiTabPane.BEAUtiIntances--;
+            }
 
         } catch (XMLParserException | SAXException | IOException | ParserConfigurationException e) {
-			e.printStackTrace();
-			return null;
+            // do not return null here: null means "XML written, nothing to show"
+            throw new RuntimeException(e.getMessage(), e);
 		}
 
         return doc;
