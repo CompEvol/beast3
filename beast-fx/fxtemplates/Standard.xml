@@ -379,6 +379,9 @@ ClusterTree/clusterType/,
             	<transformations id="AVMNSumTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform" sum="1.0">
             		<!-- frequencies -->
             	</transformations>
+            	<transformations id="AVMNRatesSumTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform" sum="1.0">
+            	    <!-- GTR rates; a separate transform because the sum constraint is over all parameters of a transform -->
+            	</transformations>
             	<transformations id="AVMNLogTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogTransform">
              		<!-- site and substitution model parameters -->
             	</transformations>
