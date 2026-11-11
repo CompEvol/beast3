@@ -111,6 +111,17 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <!-- The example XML files live in beast-base/examples so they are easy to find.
+                 Tests read them at the module-namespaced path beast.base/examples/. -->
+            <testResource>
+                <directory>examples</directory>
+                <targetPath>beast.base/examples</targetPath>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

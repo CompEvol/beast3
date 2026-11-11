@@ -26,6 +26,7 @@ import beastfx.app.inputeditor.ListInputEditor;
 import beastfx.app.inputeditor.SmallButton;
 import beastfx.app.util.Utils;
 import beast.base.core.BEASTInterface;
+import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.base.core.Input;
 import beast.base.evolution.alignment.Taxon;
 import beast.base.evolution.alignment.TaxonSet;
@@ -200,6 +201,22 @@ public class PriorListInputEditor extends ListInputEditor {
             candidates.add(doc.getTaxon(taxon));
         }
         return candidates;
+    }
+
+    /**
+     * A prior makes its own checks against its parameter in initAndValidate(), for
+     * example that the initial value is in its range, or that a Dirichlet's alpha has
+     * the dimension of the parameter. A prior picked from the list in this panel is
+     * created from its template before it gets the parameter, so those checks have to
+     * be run here for the user to see them. Without this the first sign of a problem
+     * is BEAST refusing to read the XML.
+     */
+    @Override
+    protected void validateItem(BEASTInterface beastObject) {
+        super.validateItem(beastObject);
+        if (beastObject instanceof TensorDistribution<?, ?> prior) {
+            prior.initAndValidate();
+        }
     }
 
     @Override

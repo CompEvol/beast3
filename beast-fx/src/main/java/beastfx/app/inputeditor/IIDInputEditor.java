@@ -16,7 +16,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -79,9 +78,9 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
         pane = new HBox();
         addInputLabel();
             //super.init(input, beastObject, itemNr, ExpandOption.FALSE, addButtons);
-        ComboBox<?> distributionComboBox = createComboBox();
-        if (distributionComboBox != null) {
-        	pane.getChildren().add(distributionComboBox);
+        distrComboBox = createComboBox();
+        if (distrComboBox != null) {
+        	pane.getChildren().add(distrComboBox);
         }
         FXUtils.createHMCButton(pane, m_beastObject, m_input);
     	pane.setPadding(new Insets(5));
@@ -94,6 +93,7 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
         if (prior.paramInput.get() instanceof RealVector p) {
             // add range button for real parameters
             Button rangeButton = new Button(paramToString(p));
+            initialValueButton = rangeButton;
             rangeButton.setOnAction(e -> {
                 Button rangeButton1 = (Button) e.getSource();
 
@@ -109,12 +109,13 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
                 }
             });
             rangeButton.setPrefWidth(InputEditor.Base.LABEL_SIZE.getWidth());
-            rangeButton.setTooltip(new Tooltip("Initial value and range of " + ((BEASTInterface)p).getID()));
+            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
             
             pane.getChildren().add(rangeButton);
         } else if (prior.paramInput.get() instanceof IntVector p) {
-            // add range button for real parameters
+            // add range button for integer parameters
             Button rangeButton = new Button(paramToString(p));
+            initialValueButton = rangeButton;
             rangeButton.setOnAction(e -> {
                 Button rangeButton1 = (Button) e.getSource();
 
@@ -143,6 +144,8 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 //        pane.getChildren().add(pane1);
 //        getChildren().add(pane);
 
+        // mark the initial value button if the value is outside the prior's range
+        checkInitialValue();
     } // init
 
 
@@ -220,23 +223,15 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 	}
 
 	String paramToString(RealVector<?> p) {
-        Double lower = p.getLower();
-        Double upper = p.getUpper();
         List<Double> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     String paramToString(IntVector<?> p) {
-        Integer lower = p.getLower();
-        Integer upper = p.getUpper();
         List<Integer> values = p.getElements();
         Object [] values2 = values.toArray();
-        return "initial = " + Arrays.toString(values2) +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + Arrays.toString(values2);
     }
 
     private void registerAsListener(Node node) {
@@ -273,7 +268,6 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
     
 
     
-	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox() {
 		ComboBox<BeautiSubTemplate> comboBox = new ComboBox<>();
@@ -297,21 +291,10 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
         }
         
         comboBox.setId(text+".distr");
-        comboBox.setButtonCell(new ListCell<BeautiSubTemplate>() {
-        	@Override
-        	protected void updateItem(BeautiSubTemplate item, boolean empty) {
-        		super.updateItem(item, empty);
-        		if (!empty && item != null) {
-        			if (expandBox !=null && expandBox.isVisible()) {
-        				setText(item.toString());
-        			} else {
-        				setText(item.toString() + getParameters());
-        			}
-                } else {
-                    setText(null);
-                }
-        	}
-        });
+        // the label is the template name followed by the current parameter values, whether or
+        // not the panel is expanded (as for scalar priors); the same function is used when the
+        // cell is refreshed in validateInput(), so both always agree
+        comboBox.setButtonCell(new PriorEditorUtil.DistrButtonCell(item -> item.toString() + getParameters()));
 
         String id = prior.getID();
 
@@ -330,17 +313,10 @@ public class IIDInputEditor extends ScalarDistributionInputEditor {
 
             BeautiSubTemplate template = (BeautiSubTemplate) comboBox1.getValue();
             PartitionContext context = doc.getContextFor((BEASTInterface) list.get(itemNr));
-            TensorDistribution<?,?> prior1 = (TensorDistribution<?,?>) list.get(itemNr);
             try {
-            	Object o = ((TensorDistribution<?,?>) m_beastObject).paramInput.get();
-            	Input<TensorDistribution<?,?>> input_ = new Input<>("param", "dummy input");
-            	input_.setType(TensorDistribution.class);
-            	TensorDistribution<?,?> newDist = (TensorDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
-            	newDist.paramInput.setValue(o, newDist);
-            	list.set(itemNr, newDist);
-            	newDist.setID(m_beastObject.getID());
-            	doc.pluginmap.remove(m_beastObject.getID());
-            	doc.registerPlugin(newDist);
+            	// shared with ScalarDistributionInputEditor; also detaches the old prior from the
+            	// parameter, which this handler did not do before
+            	PriorEditorUtil.replacePrior(doc, template, context, list, itemNr);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
