@@ -222,7 +222,9 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
             m_selectBEASTObjectBox.setOnAction(e -> {
 
                 // get a handle of the selected beastObject
-            	BeautiSubTemplate selected = (BeautiSubTemplate) m_selectBEASTObjectBox.getValue();
+                // the value is a template, or the String NO_VALUE ("[none]")
+                Object value = m_selectBEASTObjectBox.getValue();
+                BeautiSubTemplate selected = value instanceof BeautiSubTemplate t ? t : null;
                 BEASTInterface beastObject = (BEASTInterface) m_input.get();
                 String id = beastObject==null ? "no_id" : beastObject.getID();
                 String partition = id.indexOf('.') >= 0 ? 
@@ -231,7 +233,7 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
                 	partition = id.substring(id.indexOf(':') + 1);
                 }
 
-                if (selected == null || selected.equals(NO_VALUE)) {
+                if (selected == null) {
                     beastObject = null;
                 } else {
                     try {
