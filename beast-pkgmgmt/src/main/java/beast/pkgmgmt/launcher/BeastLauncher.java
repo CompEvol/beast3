@@ -226,12 +226,23 @@ public class BeastLauncher {
 	 *         exists (e.g. running from an IDE or a developer build).
 	 */
 	static boolean seedBundledPackage(String packageName) {
-		pathDelimiter = isWindows() ? "\\\\" : "/";
 		try {
 			File bundledZip = findBundledPackageZip(packageName);
 			if (bundledZip == null) {
 				return false;
 			}
+			return seedBundledPackage(packageName, bundledZip);
+		} catch (Exception e) {
+			// never let seeding hold up launch of BEAST & friends
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	/** Seed the package in bundledZip as packageName; see {@link #seedBundledPackage(String)}. */
+	static boolean seedBundledPackage(String packageName, File bundledZip) {
+		pathDelimiter = isWindows() ? "\\\\" : "/";
+		try {
 			double bundledVersion = parseVersion(readVersionFromZip(bundledZip));
 
 			File pkgDir = new File(getPackageUserDir() + pathDelimiter + packageName);
@@ -269,6 +280,9 @@ public class BeastLauncher {
 				return false;
 			}
 			PackageManager.doUnzip(bundledZip.getAbsolutePath(), pkgDir.getAbsolutePath());
+			// the package's jars changed, so the cached class path is out of date; the
+			// package manager does the same when it installs or removes a package
+			Utils6.saveBeautiProperty("package.path", null);
 			if (bundledChecksum == null) {
 				bundledChecksum = checksum(bundledZip);
 			}
@@ -278,6 +292,100 @@ public class BeastLauncher {
 			// never let seeding hold up launch of BEAST & friends
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	/** Name of the file in the user package directory that lists the bundled packages
+	 *  (other than the core packages) that have been seeded there at least once. */
+	static final String SEEDED_BUNDLED_FILE = ".bundled-packages";
+
+	/** The core packages, seeded by name in {@link #getPath}, and always seeded. */
+	private static final Set<String> CORE_PACKAGES = Set.of("BEAST.base", "BEAST.app");
+
+	/**
+	 * Seed every package zip shipped in the application's {@code packages/} directory
+	 * other than the core packages (issue #248: bModelTest, ORC, SA, StarBeast3 and CCD
+	 * for 2.8.0), with the same rules as {@link #seedBundledPackage(String)}: a user
+	 * copy with a newer version is never downgraded, an older one is replaced, and for
+	 * equal versions the checksum of the zip decides.
+	 * <p>
+	 * The package name is read from the zip's {@code version.xml}, not from the file
+	 * name, since package zips are not named consistently ({@code ORC.v1.3.1.zip},
+	 * {@code BEAST.base.package.v2.8.0.zip}).
+	 * <p>
+	 * A bundled package the user has removed is not seeded again: the names of the
+	 * packages seeded so far are kept in {@link #SEEDED_BUNDLED_FILE}, and a package
+	 * on that list whose directory is gone was removed by the user. Reinstalling it
+	 * through the package manager works as for any other package.
+	 * <p>
+	 * The order of seeding does not matter: all packages are extracted before any is
+	 * loaded, and loading resolves the dependencies (StarBeast3 on ORC and SA).
+	 *
+	 * @return the names of the packages seeded or already up to date, for testing
+	 */
+	static Set<String> seedOtherBundledPackages() {
+		Set<String> handled = new java.util.TreeSet<>();
+		try {
+			File packagesDir = findBundledPackagesDir();
+			if (packagesDir == null) {
+				return handled;
+			}
+			File[] zips = packagesDir.listFiles((d, name) -> name.endsWith(".zip"));
+			if (zips == null) {
+				return handled;
+			}
+			java.util.Arrays.sort(zips);
+			File seededFile = new File(getPackageUserDir(), SEEDED_BUNDLED_FILE);
+			Set<String> seededBefore = readNames(seededFile);
+			Set<String> seeded = new java.util.TreeSet<>(seededBefore);
+			for (File zip : zips) {
+				String name = readNameFromZip(zip);
+				if (name == null || CORE_PACKAGES.contains(name)) {
+					continue;
+				}
+				File pkgDir = new File(getPackageUserDir(), name);
+				if (seededBefore.contains(name) && !pkgDir.exists()) {
+					// seeded before and since removed by the user: respect that
+					continue;
+				}
+				if (seedBundledPackage(name, zip)) {
+					handled.add(name);
+					seeded.add(name);
+				}
+			}
+			if (!seeded.equals(seededBefore)) {
+				writeNames(seededFile, seeded);
+			}
+		} catch (Exception e) {
+			// never let seeding hold up launch of BEAST & friends
+			e.printStackTrace();
+		}
+		return handled;
+	}
+
+	/** One name per line; an empty set if the file is absent or unreadable. */
+	private static Set<String> readNames(File f) {
+		Set<String> names = new java.util.TreeSet<>();
+		try {
+			if (f.exists()) {
+				for (String line : Files.readAllLines(f.toPath())) {
+					if (!line.isBlank()) {
+						names.add(line.trim());
+					}
+				}
+			}
+		} catch (IOException e) {
+			// treat as empty: at worst a removed package is seeded again
+		}
+		return names;
+	}
+
+	private static void writeNames(File f, Set<String> names) {
+		try {
+			f.getParentFile().mkdirs();
+			Files.write(f.toPath(), names);
+		} catch (IOException e) {
+			// non-fatal: at worst a removed package is seeded again next launch
 		}
 	}
 
@@ -347,6 +455,51 @@ public class BeastLauncher {
 			dir = dir.getParentFile();
 		}
 		return null;
+	}
+
+	/**
+	 * The {@code packages} directory of the application: the first one found walking up
+	 * from the launcher jar that holds a package zip. Null when none is found
+	 * (developer/IDE runs).
+	 */
+	static private File findBundledPackagesDir() throws UnsupportedEncodingException {
+		BeastLauncher clu = new BeastLauncher();
+		String launcherJar = clu.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		launcherJar = URLDecoder.decode(launcherJar, "UTF-8");
+		File dir = new File(launcherJar).getParentFile();
+		while (dir != null) {
+			File packagesDir = new File(dir, "packages");
+			File[] zips = packagesDir.isDirectory() ? packagesDir.listFiles((d, name) -> name.endsWith(".zip")) : null;
+			if (zips != null && zips.length > 0) {
+				return packagesDir;
+			}
+			dir = dir.getParentFile();
+		}
+		return null;
+	}
+
+	/** The name="..." attribute of the package element in a package zip's version.xml,
+	 *  or null if the zip has no version.xml. */
+	static private String readNameFromZip(File zip) throws IOException {
+		try (ZipFile zf = new ZipFile(zip)) {
+			ZipEntry entry = zf.getEntry("version.xml");
+			if (entry == null) {
+				return null;
+			}
+			try (BufferedReader in = new BufferedReader(new InputStreamReader(zf.getInputStream(entry)))) {
+				StringBuilder buf = new StringBuilder();
+				String line;
+				while ((line = in.readLine()) != null) {
+					buf.append(line).append(' ');
+					java.util.regex.Matcher m = java.util.regex.Pattern
+							.compile("<package\\s[^>]*?\\bname\\s*=\\s*['\"]([^'\"]+)['\"]").matcher(buf);
+					if (m.find()) {
+						return m.group(1);
+					}
+				}
+			}
+			return null;
+		}
 	}
 
 	/** Read the version="x.y.z" attribute from a package zip's version.xml entry. */
@@ -530,6 +683,8 @@ public class BeastLauncher {
 		if (!seedBundledPackage("BEAST.app")) {
 			installBEASTPackage("BEAST.app", false);
 		}
+		// the other packages shipped with the application (#248)
+		seedOtherBundledPackages();
 		PackageManager.initialise();
 
 
