@@ -23,7 +23,7 @@ the check that they still work.
 - A model change made to a BEAST 3 example (for example a proper prior instead of an improper one) is
   made here as well, so that the two versions stay comparable.
 - A file that needs beast-fx classes (for example `beastfx.app.seqgen`) is in
-  `beast-fx/src/test/resources/beast.fx/examples/legacy/`, checked by beast-fx's `ExampleXmlParsingTest`.
+  `beast-fx/examples/legacy/`, checked by beast-fx's `ExampleXmlParsingTest`.
 
 ## Subfolders
 

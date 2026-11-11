@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  * <p><b>Two deployment modes</b> govern how packages are loaded at startup:
  * <ul>
  *   <li><b>Developer mode (Maven)</b> — packages are resolved directly from the Maven build.
- *       Example: {@code mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/examples/testHKY.xml"}.
+ *       Example: {@code mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/examples/testHKY.xml"}.
  *       In this mode the JPMS modules ({@code beast.base}, {@code beast.fx}, etc.) are already
  *       in the boot layer, so no files are copied to disk. {@link #addInstalledPackages}
  *       recognises this and marks {@code BEAST.base} and {@code BEAST.app} as installed

@@ -134,9 +134,9 @@ Or as a workflow step (requires `contents: write` permission):
    resolves `BUNDLE_HOME` symlink-safely, sets `JAVA_HOME=$BUNDLE_HOME/jre`,
    and invokes `jre/bin/java` with `--module-path lib/`.
 8. **Copy examples** — beast3 XML files, `nexus/`, and `fasta/` from
-   `beast-base/src/test/resources/beast.base/examples/` into `examples/`.
+   `beast-base/examples/` into `examples/`.
    `beast2vs1/` and `legacy/` subdirectories are excluded from the release.
-   `beast-fx/src/test/resources/beast.fx/examples/` (XMLs needing beast-fx classes) go to `examples/beastfx/`.
+   `beast-fx/examples/` (XMLs needing beast-fx classes) go to `examples/beastfx/`.
 9. **Copy version.xml and docs** — `version.xml`, `README.txt`, `LICENSE.txt`.
 10. **Verify bundle** — checks required files, JAR count, beast-base/beast-fx
     absent from `lib/`, package ZIPs present in `lib/packages/`, bin/
