@@ -271,7 +271,7 @@ beast.base.spec.evolution.substitutionmodel.GTR.rateGT'
                      hmc='gtr/rates/,
 gtr/frequencies/,
 SubstitutionRatesPrior/index/=Priors/RateGTRPrior/,
-SubstitutionRatesExchanger/index/=Operators/BactrianRateScaler/index/'>
+SubstitutionRatesExchanger/index/=Operators/BactrianDeltaExchange/index/'>
             <![CDATA[
         <plugin spec='beast.base.spec.evolution.substitutionmodel.GTR' id='gtr.s:$(n)'>
             <rates id="gtrRates.s:$(n)" spec="beast.base.spec.inference.parameter.SimplexParam" dimension="6"

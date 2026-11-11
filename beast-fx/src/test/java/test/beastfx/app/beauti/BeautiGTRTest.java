@@ -6,9 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -28,6 +30,9 @@ import javafx.stage.Stage;
 @ExtendWith(ApplicationExtension.class)
 public class BeautiGTRTest extends BeautiBase {
 
+	@TempDir
+	Path tmp;
+
 	@Start
 	public void start(Stage stage) {
 		try {
@@ -44,9 +49,7 @@ public class BeautiGTRTest extends BeautiBase {
 		importAlignment(NEXUS_DIR, new File("anolis.nex"));
 		robot.clickOn("#SiteModel");
 		robot.clickOn("#substModelComboBox").clickOn("GTR");
-		screenshot("/tmp/gtr-sitemodel.png");
 		selectTab(robot, "Priors");
-		screenshot("/tmp/gtr-priors.png");
 
 		printBeautiState();
 		assertStateEquals("Tree.t:anolis", "birthRate.t:anolis", "gtrRates.s:anolis", "freqParameter.s:anolis");
@@ -65,7 +68,7 @@ public class BeautiGTRTest extends BeautiBase {
 		assertEquals("[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]", prior.alphaInput.get().getElements().toString());
 
 		// the XML that BEAUti writes can be read and run
-		File file = new File("/tmp/gtr-beauti.xml");
+		File file = tmp.resolve("gtr-beauti.xml").toFile();
 		doc.save(file);
 		BEASTInterface run = new XMLParser().parseFile(file);
 		assertTrue(run instanceof MCMC);
