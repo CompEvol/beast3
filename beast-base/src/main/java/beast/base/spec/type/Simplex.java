@@ -35,21 +35,23 @@ public interface Simplex extends RealVector<UnitInterval> {
      * @return {@code true} if all elements are valid and their sum equals 1.0
      */
     default boolean isValid() {
-        for (int i = 0; i < size(); i++)
-            if ( !isValid(get(i)))
-                return false;
+        return RealVector.super.isValid() && sumsToOne();
+    }
 
-        double s = sum();
-        if (Math.abs(s - 1.0) > 1e-10)
-            return false;
+    /**
+     * Says why the value is not valid: an element that is not valid, or else the sum.
+     *
+     * @return the reason, or {@code null} if the value is valid
+     */
+    default String whyNotValid() {
+        String why = RealVector.super.whyNotValid();
+        if (why != null)
+            return why;
+        return sumsToOne() ? null : "The values must sum to 1, but they sum to " + sum() + ".";
+    }
 
-        // this is duplicated with Domain validation
-//        for(int i = 0; i < size(); i++) {
-//            double v = get(i);
-//            if (v < 0 || v > 1)
-//                return false;
-//        }
-        return true;
+    private boolean sumsToOne() {
+        return Math.abs(sum() - 1.0) <= 1e-10;
     }
 
 }

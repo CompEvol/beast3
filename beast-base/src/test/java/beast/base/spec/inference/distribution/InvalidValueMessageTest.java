@@ -28,7 +28,8 @@ public class InvalidValueMessageTest {
         String message = assertThrows(IllegalArgumentException.class, uniform::initAndValidate).getMessage();
 
         assertTrue(message.contains("kappa"), message);
-        assertTrue(message.contains("The value 2.0 is outside the allowed range [0.0,1.0]"), message);
+        assertTrue(message.contains("It is outside the allowed range [0.0,1.0]"), message);
+        assertEquals(message.indexOf("2.0"), message.lastIndexOf("2.0"), "the value should be given once: " + message);
     }
 
     @Test
@@ -61,5 +62,11 @@ public class InvalidValueMessageTest {
         String message = assertThrows(IllegalArgumentException.class, iid::initAndValidate).getMessage();
 
         assertTrue(message.contains("Element 2 (1.5) is outside the allowed range [0.0,1.0]"), message);
+    }
+
+    @Test
+    public void testValidValueHasNoReason() {
+        assertNull(new RealScalarParam<>(0.5, Real.INSTANCE).whyNotValid());
+        assertNull(new SimplexParam(new double[] {0.25, 0.25, 0.25, 0.25}).whyNotValid());
     }
 }

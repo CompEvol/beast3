@@ -7,13 +7,10 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.*;
-import beast.base.spec.type.IntSimplex;
 import beast.base.spec.type.Scalar;
-import beast.base.spec.type.Simplex;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
 import beast.base.util.Randomizer;
@@ -55,38 +52,10 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     public void initAndValidate() {
         param = paramInput.get(); // optional
         if (param != null && !param.isValid()) {
-            throw new IllegalArgumentException(whyNotValid(param));
+            String why = param.whyNotValid();
+            throw new IllegalArgumentException("The value of " + param + " is not valid."
+                    + (why == null ? "" : " " + why));
         }
-    }
-
-    /**
-     * Says why the value of a parameter is not valid, for a parameter whose
-     * {@code isValid()} is false. A value outside the allowed range is named with
-     * the range. A simplex can be in range and still not be valid, because its
-     * values do not sum to the right total, so the range is only given when a value
-     * is outside it (issue #253).
-     */
-    static <T> String whyNotValid(Tensor<?, T> param) {
-        String message = "The value of " + param + " is not valid.";
-        for (int i = 0; i < param.size(); i++) {
-            T value = param.get(i);
-            if (!param.isValid(value)) {
-                String element = param.size() > 1
-                        ? "Element " + (i + 1) + " (" + value + ")"
-                        : "The value " + value;
-                if (param instanceof Bounded<?> bounded) {
-                    return message + " " + element + " is outside the allowed range " + bounded.boundsToString() + ".";
-                }
-                return message + " " + element + " is not in its domain " + param.getDomain().getClass().getSimpleName() + ".";
-            }
-        }
-        if (param instanceof Simplex simplex) {
-            return message + " The values must sum to 1, but they sum to " + simplex.sum() + ".";
-        }
-        if (param instanceof IntSimplex<?> simplex) {
-            return message + " The values must sum to " + simplex.expectedSum() + ", but they sum to " + (long) simplex.sum() + ".";
-        }
-        return message;
     }
 
     /**

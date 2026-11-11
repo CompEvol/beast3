@@ -1,5 +1,6 @@
 package beast.base.spec.type;
 
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Domain;
 
 /**
@@ -66,4 +67,26 @@ public interface Tensor<D extends Domain<T>, T> {
 
 
     default boolean isValid(){ return isValid(get()); }
+
+    /**
+     * Says why the value is not valid, for an error message. Call it only after
+     * {@link #isValid()} is false: it is not used on the MCMC path. The default names
+     * the first element that is not valid, with the bounds if the tensor has them.
+     * A type that adds a rule to {@link #isValid()} should override this to explain
+     * that rule (issue #253).
+     *
+     * @return the reason, or {@code null} if no element is found that is not valid
+     */
+    default String whyNotValid() {
+        for (int i = 0; i < size(); i++) {
+            T value = get(i);
+            if (!isValid(value)) {
+                String element = size() > 1 ? "Element " + (i + 1) + " (" + value + ")" : "It";
+                if (this instanceof Bounded<?> bounded)
+                    return element + " is outside the allowed range " + bounded.boundsToString() + ".";
+                return element + " is not in the domain " + getDomain().getClass().getSimpleName() + ".";
+            }
+        }
+        return null;
+    }
 }

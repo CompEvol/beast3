@@ -1,12 +1,12 @@
 package beast.base.spec.type;
 
 import beast.base.spec.domain.NonNegativeInt;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IntSimplexTest {
 
@@ -59,5 +59,22 @@ public class IntSimplexTest {
 
         IntSimplex<NonNegativeInt> invalidSimplex = new TestIntSimplex(Arrays.asList(1, 2, 3), 7);
         assertFalse(invalidSimplex.isValid());
+    }
+
+    @Test
+    public void testElementOutOfDomainIsNotValidEvenIfSumIsRight() {
+        // issue #255: the element check was ignored when the sum was right
+        IntSimplex<NonNegativeInt> simplex = new TestIntSimplex(Arrays.asList(-1, 3, 4), 6);
+        assertFalse(simplex.isValid());
+        String why = simplex.whyNotValid();
+        assertNotNull(why);
+        assertTrue(why.contains("Element 1 (-1)"), why);
+    }
+
+    @Test
+    public void testWhyNotValidGivesSum() {
+        IntSimplex<NonNegativeInt> simplex = new TestIntSimplex(Arrays.asList(1, 2, 3), 7);
+        assertEquals("The values must sum to 7, but they sum to 6.", simplex.whyNotValid());
+        assertNull(new TestIntSimplex(Arrays.asList(1, 2, 3), 6).whyNotValid());
     }
 }
