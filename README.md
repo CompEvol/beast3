@@ -257,6 +257,8 @@ Development
 
 See `scripts/DevGuideIntelliJ.md` for IntelliJ IDEA setup or `scripts/DevGuideEclipse.md` for Eclipse setup, including how to develop an external BEAST package alongside BEAST 3 core in a single IDE session.
 
+For conventions in the code that the code alone does not make obvious, see `scripts/DevNotes.md`.
+
 For guidance on migrating external packages, see `scripts/migration-guide.md` (migrating from BEAST v2.7 to v3).
 
 Development rules and philosophy are discussed at
