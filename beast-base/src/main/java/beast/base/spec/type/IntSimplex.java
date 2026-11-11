@@ -38,7 +38,9 @@ public interface IntSimplex<D extends NonNegativeInt> extends IntVector<D> {
      * @return {@code true} if all elements are valid and their sum matches the expected total
      */
     default boolean isValid() {
-        IntVector.super.isValid();
+        // every element has to be in the domain and within the bounds
+        if (!IntVector.super.isValid())
+            return false;
 
         double s = sum();
         return !(Math.abs(s - expectedSum()) > 1e-10);
