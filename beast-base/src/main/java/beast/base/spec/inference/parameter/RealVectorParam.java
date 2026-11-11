@@ -171,11 +171,11 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
 //            valuesInput.get().add(value);
 //        }
 
-        // Validate against domain and bounds constraints
+        // Validate against domain and bounds constraints, and any rule of the type, such as a simplex sum
         if (! isValid()) {
-            throw new IllegalArgumentException("Initial value of " + this +
-                    " is either not valid for domain " + domain.getClass().getName() +
-                    " or bounds " + boundsToString());
+            String why = whyNotValid();
+            throw new IllegalArgumentException("Initial value of " + this + " is not valid."
+                    + (why == null ? "" : " " + why));
         }
     }
 

@@ -82,6 +82,26 @@ public class InvalidValueMessageTest {
         assertTrue(message.contains("The values must sum to 7, but they sum to 6."), message);
     }
 
+    /** a simplex created with a wrong sum fails in its own initAndValidate(), and that message gives the reason too */
+    @Test
+    public void testSimplexCreatedWithWrongSumGivesSum() {
+        String message = assertThrows(IllegalArgumentException.class,
+                () -> new SimplexParam(new double[] {0.15, 0.25, 0.25, 0.25})).getMessage();
+        assertTrue(message.contains("The values must sum to 1, but they sum to 0.9"), message);
+        assertFalse(message.contains("range"), "every value is in range, so no range should be given: " + message);
+
+        message = assertThrows(IllegalArgumentException.class,
+                () -> new IntSimplexParam<>(new int[] {1, 2, 3}, NonNegativeInt.INSTANCE, 7)).getMessage();
+        assertTrue(message.contains("The values must sum to 7, but they sum to 6."), message);
+    }
+
+    @Test
+    public void testVectorCreatedWithElementOutsideRangeNamesElement() {
+        String message = assertThrows(IllegalArgumentException.class,
+                () -> new RealVectorParam<>(new double[] {0.5, -1.0}, PositiveReal.INSTANCE)).getMessage();
+        assertTrue(message.contains("Element 2 (-1.0) is outside the allowed range"), message);
+    }
+
     @Test
     public void testValidValueHasNoReason() {
         assertNull(new RealScalarParam<>(0.5, Real.INSTANCE).whyNotValid());

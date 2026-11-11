@@ -63,7 +63,7 @@ public class DirichletTest {
                 }
         );
         // assert message
-        assertTrue(exception.getMessage().contains("not valid for domain beast.base.spec.domain.UnitInterval"));
+        assertTrue(exception.getMessage().contains("The values must sum to 1, but they sum to 5.0."), exception.getMessage());
 
         double[] x = new double[]{0.25, 0.25, 0.25, 0.25};
         Simplex param = new SimplexParam(x);
