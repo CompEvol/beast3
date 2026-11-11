@@ -1,7 +1,10 @@
 package beast.base.spec.inference.distribution;
 
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.IntSimplexParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 import beast.base.spec.inference.parameter.SimplexParam;
@@ -65,8 +68,24 @@ public class InvalidValueMessageTest {
     }
 
     @Test
+    public void testIntSimplexWithWrongSumGivesSum() {
+        IntSimplexParam<NonNegativeInt> groupSizes = new IntSimplexParam<>(new int[] {1, 2, 4}, NonNegativeInt.INSTANCE, 7);
+        groupSizes.setID("groupSizes");
+        groupSizes.set(2, 3); // every value still in the domain, but the sum is 6
+        IID<?, ?, ?> iid = new IID<>();
+        iid.paramInput.setValue(groupSizes, iid);
+        iid.distInput.setValue(new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE)), iid);
+
+        String message = assertThrows(IllegalArgumentException.class, iid::initAndValidate).getMessage();
+
+        assertTrue(message.contains("groupSizes"), message);
+        assertTrue(message.contains("The values must sum to 7, but they sum to 6."), message);
+    }
+
+    @Test
     public void testValidValueHasNoReason() {
         assertNull(new RealScalarParam<>(0.5, Real.INSTANCE).whyNotValid());
         assertNull(new SimplexParam(new double[] {0.25, 0.25, 0.25, 0.25}).whyNotValid());
+        assertNull(new IntSimplexParam<>(new int[] {1, 2, 4}, NonNegativeInt.INSTANCE, 7).whyNotValid());
     }
 }

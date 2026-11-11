@@ -46,4 +46,18 @@ public interface IntSimplex<D extends NonNegativeInt> extends IntVector<D> {
         return !(Math.abs(s - expectedSum()) > 1e-10);
     }
 
+    /**
+     * Explains why {@link #isValid()} fails: an element outside the domain or bounds,
+     * or else a sum that is not {@link #expectedSum()}.
+     *
+     * @return {@code null} if the value is valid, otherwise the reason
+     */
+    @Override
+    default String whyNotValid() {
+        String why = IntVector.super.whyNotValid();
+        if (why != null || isValid())
+            return why;
+        return "The values must sum to " + expectedSum() + ", but they sum to " + (long) sum() + ".";
+    }
+
 }
