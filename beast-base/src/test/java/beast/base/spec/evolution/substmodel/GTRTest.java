@@ -10,7 +10,11 @@ import beast.base.spec.inference.parameter.SimplexParam;
 import beast.base.spec.type.Simplex;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test GTR matrix exponentiation
@@ -210,5 +214,45 @@ public class GTRTest  {
                 System.out.println(k + " : " + (mat[k] - result[k]));
             }
         }
+    }
+
+    /**
+     * The same rates given as one vector of proportions give the same transition
+     * probabilities as the six separate rates: only the ratios of the rates matter.
+     */
+    @Test
+    public void testRatesVector() {
+        Instance[] all = {test4, test3, test2, test1, test0};
+        for (Instance test : all) {
+            Frequencies freqs = new Frequencies();
+            freqs.initByName("frequencies", new SimplexParam(test.getPi()), "estimate", false);
+
+            double[] rates = test.getRates();
+            double sum = Arrays.stream(rates).sum();
+            double[] proportions = Arrays.stream(rates).map(r -> r / sum).toArray();
+
+            GTR gtr = new GTR();
+            gtr.initByName("rates", new SimplexParam(proportions), "frequencies", freqs);
+
+            double[] mat = new double[4 * 4];
+            gtr.getTransitionProbabilities(null, test.getDistance(), 0, 1, mat);
+            assertArrayEquals(test.getExpectedResult(), mat, 1e-10);
+        }
+    }
+
+    @Test
+    public void testRatesVectorIsChecked() {
+        Frequencies freqs = new Frequencies();
+        freqs.initByName("frequencies", new SimplexParam(new double[] {0.25, 0.25, 0.25, 0.25}), "estimate", false);
+
+        // six rates are needed
+        assertThrows(RuntimeException.class, () -> new GTR().initByName(
+                "rates", new SimplexParam(new double[] {0.25, 0.25, 0.25, 0.25}), "frequencies", freqs));
+
+        // the vector and the separate rates cannot be combined
+        double sixth = 1.0 / 6;
+        assertThrows(RuntimeException.class, () -> new GTR().initByName(
+                "rates", new SimplexParam(new double[] {sixth, sixth, sixth, sixth, sixth, sixth}),
+                "rateAC", new RealScalarParam<>(2.0, PositiveReal.INSTANCE), "frequencies", freqs));
     }
 }

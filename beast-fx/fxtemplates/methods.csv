@@ -55,7 +55,7 @@ beast.mascot.dynamics.Constant," constant population using population size ",Ne,
 "JC69.s:$(n)","Jukes Cantor"," substitution model"
 "hky.s:$(n)","HKY"," substitution model","cite(hky.s:$(n))"," with kappa @kappa","kappa.s:$(n)"," and ","frequencies"
 "tn93.s:$(n)","TN93"," substitution model","cite(10.1093/oxfordjournals.molbev.a040023)"," with kappa1 @kappa1","kappa1.s:$(n)",", kappa2 @kappa2","kappa2.s:$(n)"," and ","frequencies"
-"gtr.s:$(n)","GTR"," substitution model",cite(10.1007/BF02101990)," with rateAC @rateAC","rateAC.s:$(n)","&comma; rateAG @rateAG","rateAG.s:$(n)","&comma; rateAT @rateAT","rateAT.s:$(n)","&comma; rateCG @rateCG","rateCG.s:$(n)","&comma; rateCT @rateCT","rateCT.s:$(n)",", rateGT @rateGT","rateGT.s:$(n)"," and ","frequencies"
+"gtr.s:$(n)","GTR"," substitution model",cite(10.1007/BF02101990)," with rates @rates","gtrRates.s:$(n)"," and ","frequencies"
 "Blosum62.s:$(n)","Blosum62","cite(Blosum62.s:$(n))"
 "Dayhoff.s:$(n)","Dayhoff","cite(Dayhoff.s:$(n))"
 "JTT.s:$(n)","JTT","cite(JTT.s:$(n))"

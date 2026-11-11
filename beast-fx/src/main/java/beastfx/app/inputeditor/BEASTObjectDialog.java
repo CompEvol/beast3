@@ -11,8 +11,12 @@ import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.MCMC;
 import beast.base.parser.XMLProducer;
+import beast.base.spec.inference.parameter.KeyVectorParam;
 import beast.pkgmgmt.BEASTClassLoader;
 import beastfx.app.beauti.ThemeProvider;
+import beastfx.app.util.Alert;
+import javafx.event.ActionEvent;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
@@ -69,11 +73,40 @@ public class BEASTObjectDialog extends Dialog {
 		
 		dlg.setResizable(true);
     	ThemeProvider.loadStyleSheet(pane.getScene());
+		// keep the dialog open while the edited parameter is not valid, e.g. a Value that does
+		// not fit the Dimension (issue #244)
+		pane.lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
+			String message = validateParameter(m_panel.m_beastObject);
+			if (message != null) {
+				e.consume();
+				Alert.showMessageDialog(null, message, "Value not valid", AlertType.WARNING);
+			}
+		});
 		ButtonType result = dlg.showAndWait().get();
 		m_bOK = (result != ButtonType.CANCEL);
         return m_bOK;
     }
-    
+
+    /**
+     * Checks a vector parameter edited in the dialog with its own initAndValidate(), which
+     * refuses, for example, a number of values that is neither 1 nor the dimension. The rule
+     * is kept in the parameter, so XML, this dialog and the inline field all get the same check.
+     *
+     * @param beastObject the copy being edited in the dialog
+     * @return the message to show, or null if beastObject is valid or not a vector parameter
+     */
+    public static String validateParameter(BEASTInterface beastObject) {
+    	if (!(beastObject instanceof KeyVectorParam<?>)) {
+    		return null;
+    	}
+    	try {
+    		beastObject.initAndValidate();
+    		return null;
+    	} catch (RuntimeException e) {
+    		return e.getMessage();
+    	}
+    }
+
     /* to be called when OK is pressed **/
     public void accept(BEASTInterface beastObject, BeautiDoc doc) {
         try {

@@ -133,7 +133,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         int[] valuesString = valuesInput.get().stream()
                 .mapToInt(Integer::intValue)
                 .toArray();
-        int dimension = Math.max(dimensionInput.get(), valuesString.length);
+        int dimension = ParameterUtils.dimensionFor(getID(), valuesString.length, dimensionInput.get());
         dimensionInput.setValue(dimension, this);
 
         values = new int[dimension];
@@ -335,6 +335,8 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
             //storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), dimension);
         }
         isDirty = new boolean[dimension];
+        // keep the value input consistent with the new dimension
+        ParameterUtils.updateValuesInput(valuesInput, Arrays.stream(values).boxed().toList());
         try {
             dimensionInput.setValue(dimension, this);
         } catch (Exception e) {

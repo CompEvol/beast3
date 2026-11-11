@@ -133,7 +133,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         double[] valuesString = valuesInput.get().stream()
                 .mapToDouble(Double::doubleValue)
                 .toArray();
-        int dimension = Math.max(dimensionInput.get(), valuesString.length);
+        int dimension = ParameterUtils.dimensionFor(getID(), valuesString.length, dimensionInput.get());
         dimensionInput.setValue(dimension, this);
 
         values = new double[dimension];
@@ -330,6 +330,8 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
             //storedValues = (T[]) Array.newInstance(m_fUpper.getClass(), dimension);
         }
         isDirty = new boolean[dimension];
+        // keep the value input consistent with the new dimension
+        ParameterUtils.updateValuesInput(valuesInput, Arrays.stream(values).boxed().toList());
         try {
             dimensionInput.setValue(dimension, this);
         } catch (Exception e) {

@@ -61,20 +61,11 @@ public class IntSimplexTest {
         assertFalse(invalidSimplex.isValid());
     }
 
+    /** the sum is right, but one element is outside the domain (issue #255) */
     @Test
-    public void testElementOutOfDomainIsNotValidEvenIfSumIsRight() {
-        // issue #255: the element check was ignored when the sum was right
-        IntSimplex<NonNegativeInt> simplex = new TestIntSimplex(Arrays.asList(-1, 3, 4), 6);
-        assertFalse(simplex.isValid());
-        String why = simplex.whyNotValid();
-        assertNotNull(why);
-        assertTrue(why.contains("Element 1 (-1)"), why);
-    }
-
-    @Test
-    public void testWhyNotValidGivesSum() {
-        IntSimplex<NonNegativeInt> simplex = new TestIntSimplex(Arrays.asList(1, 2, 3), 7);
-        assertEquals("The values must sum to 7, but they sum to 6.", simplex.whyNotValid());
-        assertNull(new TestIntSimplex(Arrays.asList(1, 2, 3), 6).whyNotValid());
+    public void testIsValidRejectsElementOutsideDomain() {
+        IntSimplex<NonNegativeInt> negativeElement = new TestIntSimplex(Arrays.asList(-1, 3, 4), 6);
+        assertEquals(6, negativeElement.sum(), 1e-10);
+        assertFalse(negativeElement.isValid());
     }
 }

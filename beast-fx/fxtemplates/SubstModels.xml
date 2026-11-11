@@ -55,6 +55,9 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
                 <transformations id="AVMNSumTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform" sum="1.0">
                     <!-- frequencies -->
                 </transformations>
+                <transformations id="AVMNRatesSumTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogConstrainedSumTransform" sum="1.0">
+                    <!-- GTR rates; a separate transform because the sum constraint is over all parameters of a transform -->
+                </transformations>
                 <transformations id="AVMNLogTransform.$(n)" spec="beast.base.spec.inference.operator.Transform$LogTransform">
                     <!-- site and substitution model parameters; tree via the 'scalable' input -->
                 </transformations>
@@ -133,7 +136,7 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
 		    <operator id='KappaScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.1" weight="0.1" parameter="@kappa.s:$(n)"/>
         </operator>
 
-        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
+        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.2">
             <parameter idref="freqParameter.s:$(n)"/>
         	<operator idref="AVMNOperator.$(n)"/>
 	        <operator id='FrequenciesExchangerX.s:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="0.01" weight="0.1" parameter="@freqParameter.s:$(n)"/>
@@ -197,7 +200,7 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
 	        <operator id='kappa2ScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@kappa2.s:$(n)"/>
         </operator>
 
-        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
+        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.2">
             <parameter idref="freqParameter.s:$(n)"/>
         	<operator idref="AVMNOperator.$(n)"/>
             <operator id='FrequenciesExchangerX.s:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="0.01" weight="0.1" parameter="@freqParameter.s:$(n)"/>
@@ -254,202 +257,64 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
         </subtemplate>
 
 
-        <!-- GTR substitution model -->
+        <!-- GTR substitution model.
+             The six rates (AC, AG, AT, CG, CT, GT) are one vector of proportions that sum to 1,
+             with a Dirichlet prior. -->
         <subtemplate id='GTR' class='beast.base.spec.evolution.substitutionmodel.GTR' mainid='gtr.s:$(n)'
-                     suppressInputs='beast.base.spec.evolution.substitutionmodel.GTR.eigenSystem'
-                     hmc='gtr/rateGT/,
+                     suppressInputs='beast.base.spec.evolution.substitutionmodel.GTR.eigenSystem,
+beast.base.spec.evolution.substitutionmodel.GTR.rateAC,
+beast.base.spec.evolution.substitutionmodel.GTR.rateAG,
+beast.base.spec.evolution.substitutionmodel.GTR.rateAT,
+beast.base.spec.evolution.substitutionmodel.GTR.rateCG,
+beast.base.spec.evolution.substitutionmodel.GTR.rateCT,
+beast.base.spec.evolution.substitutionmodel.GTR.rateGT'
+                     hmc='gtr/rates/,
 gtr/frequencies/,
-gtr/rateAT/,
-gtr/rateAC/,
-gtr/rateCG/,
-gtr/rateAG/,
-gtr/rateCT/,
-RateACPrior/index/=Priors/RateGTRPrior/,
-RateAGPrior/index/=Priors/RateGTRPrior/,
-RateATPrior/index/=Priors/RateGTRPrior/,
-RateCGPrior/index/=Priors/RateGTRPrior/,
-RateCTPrior/index/=Priors/RateGTRPrior/,
-RateGTPrior/index/=Priors/RateGTRPrior/,
-            RateACScaler/index/=Operators/BactrianRateScaler/index/,
-            RateAGScaler/index/=Operators/BactrianRateScaler/index/,
-            RateATScaler/index/=Operators/BactrianRateScaler/index/,
-            RateCGScaler/index/=Operators/BactrianRateScaler/index/,
-            RateCTScaler/index/=Operators/BactrianRateScaler/index/,
-            RateGTScaler/index/=Operators/BactrianRateScaler/index/'>
+SubstitutionRatesPrior/index/=Priors/RateGTRPrior/,
+SubstitutionRatesExchanger/index/=Operators/BactrianDeltaExchange/index/'>
             <![CDATA[
         <plugin spec='beast.base.spec.evolution.substitutionmodel.GTR' id='gtr.s:$(n)'>
-            <parameter id="rateAC.s:$(n)" name='rateAC' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='true'/>
-            <parameter id="rateAG.s:$(n)" name='rateAG' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='true'/>
-            <parameter id="rateAT.s:$(n)" name='rateAT' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='true'/>
-            <parameter id="rateCG.s:$(n)" name='rateCG' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='true'/>
-            <parameter id="rateCT.s:$(n)" name='rateCT' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='false'/>
-            <parameter id="rateGT.s:$(n)" name='rateGT' value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" estimate='true'/>
+            <rates id="gtrRates.s:$(n)" spec="beast.base.spec.inference.parameter.SimplexParam" dimension="6"
+                   keys="AC AG AT CG CT GT"
+                   value="0.16666666666666666 0.16666666666666666 0.16666666666666666 0.16666666666666666 0.16666666666666666 0.16666666666666666"/>
             <frequencies id='estimatedFreqs.s:$(n)' spec='beast.base.spec.evolution.substitutionmodel.Frequencies'>
                 <frequencies id='freqParameter.s:$(n)' spec='beast.base.spec.inference.parameter.SimplexParam' dimension='4' value='0.25 0.25 0.25 0.25'/>
             </frequencies>
         </plugin>
 
-        <operator id="RateACScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateAC.s:$(n)"/>
+        <operator id="SubstitutionRatesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="1">
+            <parameter idref="gtrRates.s:$(n)"/>
         	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateACScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateAC.s:$(n)"/>
+            <operator id='SubstitutionRatesExchangerX.s:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="0.01" weight="0.1" parameter="@gtrRates.s:$(n)"/>
         </operator>
 
-        <operator id="RateAGScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateAG.s:$(n)"/>
-        	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateAGScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateAG.s:$(n)"/>
-        </operator>
-
-        <operator id="RateATScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateAT.s:$(n)"/>
-        	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateATScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateAT.s:$(n)"/>
-        </operator>
-
-        <operator id="RateCGScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateCG.s:$(n)"/>
-        	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateCGScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateCG.s:$(n)"/>
-        </operator>
-
-        <operator id="RateCTScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateCT.s:$(n)"/>
-        	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateCTScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateCT.s:$(n)"/>
-        </operator>
-
-        <operator id="RateGTScaler.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
-            <parameter idref="rateGT.s:$(n)"/>
-        	<operator idref="AVMNOperator.$(n)"/>
-	        <operator id='RateGTScalerX.s:$(n)' spec='beast.base.spec.inference.operator.ScaleOperator' scaleFactor="0.5" weight="0.1" parameter="@rateGT.s:$(n)"/>
-        </operator>
-
-        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
+        <operator id="FrequenciesExchanger.s:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.2">
             <parameter idref="freqParameter.s:$(n)"/>
         	<operator idref="AVMNOperator.$(n)"/>
             <operator id='FrequenciesExchangerX.s:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="0.01" weight="0.1" parameter="@freqParameter.s:$(n)"/>
         </operator>
 
-
-        <distribution id='RateACPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateAC.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="10.0" estimate="false"/>
+        <distribution id='SubstitutionRatesPrior.s:$(n)' param='@gtrRates.s:$(n)' spec="beast.base.spec.inference.distribution.Dirichlet">
+            <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" estimate="false">1.0 1.0 1.0 1.0 1.0 1.0</alpha>
         </distribution>
-        <distribution id='RateAGPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateAG.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="20.0" estimate="false"/>
-        </distribution>
-        <distribution id='RateATPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateAT.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="10.0" estimate="false"/>
-        </distribution>
-        <distribution id='RateCGPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateCG.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="10.0" estimate="false"/>
-        </distribution>
-        <distribution id='RateCTPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateCT.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="20.0" estimate="false"/>
-        </distribution>
-        <distribution id='RateGTPrior.s:$(n)' spec='beast.base.spec.inference.distribution.Gamma' param='@rateGT.s:$(n)' >
-                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.05" estimate="false"/>
-                <theta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="10.0" estimate="false"/>
-        </distribution>
-
 
         <distribution id='FrequenciesPrior.s:$(n)' param='@freqParameter.s:$(n)' spec="beast.base.spec.inference.distribution.Dirichlet">
             <alpha spec="beast.base.spec.inference.parameter.RealVectorParam" domain="PositiveReal" estimate="false">4.0 4.0 4.0 4.0</alpha>
         </distribution> 
 ]]>
 
-            <connect srcID='rateAC.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateAC.s:$(n)) and rateAC.s:$(n)/estimate=true'/>
-            <connect srcID='rateAG.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateAG.s:$(n)) and rateAG.s:$(n)/estimate=true'/>
-            <connect srcID='rateAT.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateAT.s:$(n)) and rateAT.s:$(n)/estimate=true'/>
-            <connect srcID='rateCG.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateCG.s:$(n)) and rateCG.s:$(n)/estimate=true'/>
-            <connect srcID='rateCT.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateCT.s:$(n)) and rateCT.s:$(n)/estimate=true'/>
-            <connect srcID='rateGT.s:$(n)' targetID='state' inputName='stateNode'
-                     if='inlikelihood(rateGT.s:$(n)) and rateGT.s:$(n)/estimate=true'/>
-
-            <connect srcID='rateAC.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateAC.s:$(n)) and rateAC.s:$(n)/estimate=true'/>
-            <connect srcID='rateAG.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateAG.s:$(n)) and rateAG.s:$(n)/estimate=true'/>
-            <connect srcID='rateAT.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateAT.s:$(n)) and rateAT.s:$(n)/estimate=true'/>
-            <connect srcID='rateCG.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateCG.s:$(n)) and rateCG.s:$(n)/estimate=true'/>
-            <connect srcID='rateCT.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateCT.s:$(n)) and rateCT.s:$(n)/estimate=true'/>
-            <connect srcID='rateGT.s:$(n)' targetID='AVMNLogTransform.$(n)' inputName='f'
-                     if='inlikelihood(rateGT.s:$(n)) and rateGT.s:$(n)/estimate=true'/>
-
-            <connect srcID='RateACScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateAC.s:$(n)) and rateAC.s:$(n)/estimate=true'>Scale GTR A-C substitution
-                parameter of partition s:$(n)
+            <connect srcID='gtrRates.s:$(n)' targetID='state' inputName='stateNode'
+                     if='inlikelihood(gtrRates.s:$(n)) and gtrRates.s:$(n)/estimate=true'/>
+            <connect srcID='gtrRates.s:$(n)' targetID='AVMNRatesSumTransform.$(n)' inputName='f'
+                     if='inlikelihood(gtrRates.s:$(n)) and gtrRates.s:$(n)/estimate=true'/>
+            <connect srcID='SubstitutionRatesExchanger.s:$(n)' targetID='mcmc' inputName='operator'
+                     if='inlikelihood(gtrRates.s:$(n)) and gtrRates.s:$(n)/estimate=true'>Exchange values of the GTR
+                rates of partition s:$(n)
             </connect>
-            <connect srcID='RateAGScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateAG.s:$(n)) and rateAG.s:$(n)/estimate=true'>Scale GTR A-G substitution
-                parameter of partition s:$(n)
-            </connect>
-            <connect srcID='RateATScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateAT.s:$(n)) and rateAT.s:$(n)/estimate=true'>Scale GTR A-T substitution
-                parameter of partition s:$(n)
-            </connect>
-            <connect srcID='RateCGScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateCG.s:$(n)) and rateCG.s:$(n)/estimate=true'>Scale GTR C-G substitution
-                parameter of partition s:$(n)
-            </connect>
-            <connect srcID='RateCTScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateCT.s:$(n)) and rateCT.s:$(n)/estimate=true'>Scale GTR C-T substitution
-                parameter of partition s:$(n)
-            </connect>
-            <connect srcID='RateGTScaler.s:$(n)' targetID='mcmc' inputName='operator'
-                     if='inlikelihood(rateGT.s:$(n)) and rateGT.s:$(n)/estimate=true'>Scale GTR G-T substitution
-                parameter of partition s:$(n)
-            </connect>
-
-            <connect srcID='rateAC.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateAC.s:$(n)) and rateAC.s:$(n)/estimate=true'/>
-            <connect srcID='rateAG.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateAG.s:$(n)) and rateAG.s:$(n)/estimate=true'/>
-            <connect srcID='rateAT.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateAT.s:$(n)) and rateAT.s:$(n)/estimate=true'/>
-            <connect srcID='rateCG.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateCG.s:$(n)) and rateCG.s:$(n)/estimate=true'/>
-            <connect srcID='rateCT.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateCT.s:$(n)) and rateCT.s:$(n)/estimate=true'/>
-            <connect srcID='rateGT.s:$(n)' targetID='tracelog' inputName='log'
-                     if='inlikelihood(rateGT.s:$(n)) and rateGT.s:$(n)/estimate=true'/>
-
-            <connect srcID='RateACPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateAC.s:$(n)) and rateAC.s:$(n)/estimate=true'>GTR A-C substitution parameter of
-                partition s:$(n)
-            </connect>
-            <connect srcID='RateAGPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateAG.s:$(n)) and rateAG.s:$(n)/estimate=true'>GTR A-G substitution parameter of
-                partition s:$(n)
-            </connect>
-            <connect srcID='RateATPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateAT.s:$(n)) and rateAT.s:$(n)/estimate=true'>GTR A-T substitution parameter of
-                partition s:$(n)
-            </connect>
-            <connect srcID='RateCGPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateCG.s:$(n)) and rateCG.s:$(n)/estimate=true'>GTR C-G substitution parameter of
-                partition s:$(n)
-            </connect>
-            <connect srcID='RateCTPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateCT.s:$(n)) and rateCT.s:$(n)/estimate=true'>GTR C-T substitution parameter of
-                partition s:$(n)
-            </connect>
-            <connect srcID='RateGTPrior.s:$(n)' targetID='prior' inputName='distribution'
-                     if='inlikelihood(rateGT.s:$(n)) and rateGT.s:$(n)/estimate=true'>GTR G-T substitution parameter of
-                partition s:$(n)
+            <connect srcID='gtrRates.s:$(n)' targetID='tracelog' inputName='log'
+                     if='inlikelihood(gtrRates.s:$(n)) and gtrRates.s:$(n)/estimate=true'/>
+            <connect srcID='SubstitutionRatesPrior.s:$(n)' targetID='prior' inputName='distribution'
+                     if='inlikelihood(gtrRates.s:$(n)) and gtrRates.s:$(n)/estimate=true'>GTR rates of partition s:$(n)
             </connect>
         </subtemplate>
 
@@ -504,7 +369,7 @@ RateGTPrior/index/=Priors/RateGTRPrior/,
                 <frequencies id='freqParameter.s:$(n)' spec='beast.base.spec.inference.parameter.SimplexParam' dimension='4' value='0.25 0.25 0.25 0.25'/>
             </frequencies>
 
-	        <operator id="FrequenciesExchanger.c:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.05">
+	        <operator id="FrequenciesExchanger.c:$(n)" spec="beast.base.spec.evolution.operator.AdaptableOperatorSampler" weight="0.2">
                 <parameter idref="freqParameter.s:$(n)"/>
     	        <operator idref="AVMNOperator.$(n)"/>
                 <operator id='FrequenciesExchangerX.s:$(n)' spec='beast.base.spec.inference.operator.DeltaExchangeOperator' delta="0.01" weight="0.1" parameter="@freqParameter.s:$(n)"/>

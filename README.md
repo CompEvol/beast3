@@ -30,11 +30,15 @@ Project Structure
 beast3/            (parent POM)
 ├── beast-pkgmgmt/        (package manager module)
 ├── beast-base/           (core BEAST module — no JavaFX dependency)
+│   └── examples/         (example XML files: testHKY.xml, testRelaxedClock.xml, ...)
 └── beast-fx/             (JavaFX GUI module — BEAUti, BEAST app, tools)
+    ├── examples/         (example XML files that need beast-fx classes)
     └── fxtemplates/      (BEAUti templates: Standard.xml, TreePriors.xml, ...)
 ```
 
 The BEAUti templates are in `beast-fx/fxtemplates/`. They are packaged in the `beast-fx` JAR under `beast.fx/fxtemplates/`.
+
+The example XML files are in `beast-base/examples/`, and those that need beast-fx classes in `beast-fx/examples/`. The XML files directly in these folders are the BEAST 3 examples that are released. The `legacy/` and `beast2vs1/` subfolders hold BEAST 2 XML and comparison runs used by the tests; they are not released. Tests read the examples from the test class path under `beast.base/examples/` and `beast.fx/examples/`.
 
 Building
 --------
@@ -105,7 +109,7 @@ From within the beast3 directory, you can also use the `exec-maven-plugin`:
 mvn install -DskipTests
 
 # Run BEAST on an XML file (paths are relative to the project root)
-mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/src/test/resources/beast.base/examples/testHKY.xml"
+mvn -pl beast-fx exec:exec -Dbeast.args="beast-base/examples/testHKY.xml"
 
 # Run BEAST on an XML file with other args
 # Note: XML <run> tag must have chainLength="$(chainLength=5000000)" to make -D working

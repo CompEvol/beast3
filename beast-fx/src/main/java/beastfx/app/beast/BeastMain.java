@@ -493,10 +493,13 @@ public class BeastMain extends Console {
                 }
                 Log.info.println();
                 Log.info.println("BEAST has terminated with an error. Please select QUIT from the menu.");
+                // keep the console window visible, so the error can be read
             } else {
+            	// the run failed: report it in the exit status, so that scripts
+            	// and cluster jobs do not take a failed run for a finished one
             	rte.printStackTrace();
+            	System.exit(1);
             }
-            // logger.severe will throw a RTE but we want to keep the console visible
         } catch (XMLParserException e) {
             Log.info.println(e.getMessage());
             if (!window) {

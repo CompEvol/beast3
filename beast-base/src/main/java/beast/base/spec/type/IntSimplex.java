@@ -33,29 +33,17 @@ public interface IntSimplex<D extends NonNegativeInt> extends IntVector<D> {
 
     /**
      * Validates that all elements satisfy domain/bound constraints and that
-     * their sum equals {@link #expectedSum()}.
+     * their sum equals {@link #expectedSum()} (within a tolerance of 1e-10).
      *
      * @return {@code true} if all elements are valid and their sum matches the expected total
      */
     default boolean isValid() {
-        return IntVector.super.isValid() && sumIsExpected();
-    }
+        // every element has to be in the domain and within the bounds
+        if (!IntVector.super.isValid())
+            return false;
 
-    /**
-     * Says why the value is not valid: an element that is not valid, or else the sum.
-     *
-     * @return the reason, or {@code null} if the value is valid
-     */
-    default String whyNotValid() {
-        String why = IntVector.super.whyNotValid();
-        if (why != null)
-            return why;
-        return sumIsExpected() ? null
-                : "The values must sum to " + expectedSum() + ", but they sum to " + (long) sum() + ".";
-    }
-
-    private boolean sumIsExpected() {
-        return sum() == expectedSum();
+        double s = sum();
+        return !(Math.abs(s - expectedSum()) > 1e-10);
     }
 
 }
