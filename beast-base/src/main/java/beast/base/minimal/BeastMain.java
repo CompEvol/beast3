@@ -430,8 +430,10 @@ public class BeastMain {
             }
             Log.info.println("Done!");
         } catch (RuntimeException rte) {
+           	// the run failed: report it in the exit status, so that scripts
+           	// and cluster jobs do not take a failed run for a finished one
            	rte.printStackTrace();
-           	// logger.severe will throw a RTE but we want to keep the console visible
+           	System.exit(1);
         } catch (XMLParserException e) {
             Log.info.println(e.getMessage());
            	System.exit(1);
