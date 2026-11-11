@@ -198,6 +198,16 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         return templateName;
     }
 
+    /**
+     * Process the command line arguments of BEAUti.
+     * <p>
+     * An argument that cannot be processed is reported with an exception. This method
+     * does not show a dialog and does not exit: at start up it runs outside the JavaFX
+     * application thread, where a dialog cannot be shown, and the caller knows whether
+     * there is a user to show one to (see {@code Beauti.start}).
+     *
+     * @throws IllegalArgumentException for an unknown argument, or one without its value
+     */
     public ActionOnExit parseArgs(String[] args) throws XMLParserException, SAXException, IOException, ParserConfigurationException  {
         ActionOnExit endState = ActionOnExit.UNKNOWN;
         String outputFileName = "beast.xml";
@@ -296,10 +306,8 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                     throw new IllegalArgumentException("Wrong argument: " + args[i]);
                 }
             }
-        } catch (Exception e) {
-            Alert.showMessageDialog(null, e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("Argument " + args[i] + " needs a value", e);
         }
 
         initialize(endState, xml, templateXML, outputFileName);

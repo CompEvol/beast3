@@ -129,7 +129,14 @@ public class Beauti extends Application {
     	progressText.textProperty().bind(FXUtils.startSplashScreen());
     	
         task.stateProperty().addListener((observableValue, oldState, newState) -> {
-            if (newState == Worker.State.SUCCEEDED) {
+            if (newState == Worker.State.SUCCEEDED && task.getValue() == null) {
+                // the arguments asked for the XML to be written (-exitaction writexml),
+                // and that is done: there is no document to show
+                initStage.hide();
+                System.exit(0);
+            } else if (newState == Worker.State.FAILED || newState == Worker.State.CANCELLED) {
+                startUpFailed(initStage, task.getException());
+            } else if (newState == Worker.State.SUCCEEDED) {
                 initStage.toFront();
                 FadeTransition fadeSplash = new FadeTransition(Duration.seconds(1.234), splashLayout);
                 fadeSplash.setFromValue(1.0);
@@ -138,7 +145,7 @@ public class Beauti extends Application {
                 fadeSplash.play();
 
                 initCompletionHandler.complete();
-            } // todo add code to gracefully handle other task states.
+            }
         });
 
         Scene splashScene = new Scene(splashLayout, Color.TRANSPARENT);
@@ -149,6 +156,43 @@ public class Beauti extends Application {
         initStage.initStyle(StageStyle.TRANSPARENT);
         initStage.setAlwaysOnTop(true);
         initStage.show();
+    }
+
+    /**
+     * BEAUti could not start, for example because a file named on the command line
+     * cannot be read. Report the problem and exit with a non-zero status. Without this
+     * the splash screen stays on top of the screen for ever.
+     * Called on the JavaFX application thread.
+     */
+    private void startUpFailed(Stage initStage, Throwable problem) {
+        // the splash is always on top: remove it before anything else is shown
+        initStage.hide();
+        String message = "BEAUti could not start";
+        if (problem != null) {
+            problem.printStackTrace();
+            message += ": " + (problem.getMessage() != null ? problem.getMessage() : problem.toString());
+        }
+        System.err.println(message);
+        if (!isBatchRun() && !java.awt.GraphicsEnvironment.isHeadless()) {
+            // somebody is looking at the screen
+            try {
+                javafx.scene.control.Alert alert = new javafx.scene.control.Alert(
+                        javafx.scene.control.Alert.AlertType.ERROR, message, ButtonType.OK);
+                alert.setHeaderText("BEAUti could not start");
+                alert.setResizable(true);
+                alert.showAndWait();
+            } catch (RuntimeException e) {
+                // the message is on the console already
+            }
+        }
+        System.exit(1);
+    }
+
+    /** @return true when the arguments ask for the XML to be written without showing BEAUti */
+    private boolean isBatchRun() {
+        java.util.List<String> args = getParameters().getRaw();
+        int i = args.indexOf("-exitaction");
+        return i >= 0 && i + 1 < args.size() && args.get(i + 1).equals("writexml");
     }
 
     public interface InitCompletionHandler {
