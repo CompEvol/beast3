@@ -103,6 +103,17 @@
                 <targetPath>beast.fx/fxtemplates</targetPath>
             </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+            <!-- The example XML files that need beast-fx classes live in beast-fx/examples.
+                 Tests read them at the module-namespaced path beast.fx/examples/. -->
+            <testResource>
+                <directory>examples</directory>
+                <targetPath>beast.fx/examples</targetPath>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -200,10 +211,8 @@
                             <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.basedir}/../beast-base/src/test/resources</directory>
-                                    <includes>
-                                        <include>beast.base/examples/**</include>
-                                    </includes>
+                                    <directory>${project.basedir}/../beast-base/examples</directory>
+                                    <targetPath>beast.base/examples</targetPath>
                                 </resource>
                             </resources>
                         </configuration>

@@ -12,7 +12,6 @@ import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.IID;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -140,7 +139,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         	pane = new HBox();
         	addInputLabel();
         }
-        ComboBox<BeautiSubTemplate> distrComboBox = createComboBox(m_beastObject, m_input);
+        distrComboBox = createComboBox(m_beastObject, m_input);
         if (distrComboBox != null) {
         	pane.getChildren().add(distrComboBox);
         }
@@ -157,6 +156,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	        	if (prior.paramInput.get() instanceof RealScalar p) {
 	            // add range button for real parameters
 	            Button rangeButton = new Button(paramToString(p));
+	            initialValueButton = rangeButton;
 	            rangeButton.setOnAction(e -> {
 	                Button rangeButton1 = (Button) e.getSource();
 
@@ -174,12 +174,14 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	                }
 	            });
 	            rangeButton.setPrefWidth(InputEditor.Base.LABEL_SIZE.getWidth());
-	            rangeButton.setTooltip(new Tooltip("Initial value and range of " + ((BEASTInterface)p).getID()));
+	            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
 	            
 	            pane.getChildren().add(rangeButton);
 	        } else if (prior.paramInput.get() instanceof IntScalar p) {
-	            // add range button for real parameters
+	            // add range button for integer parameters
 	            Button rangeButton = new Button(paramToString(p));
+	            initialValueButton = rangeButton;
+	            rangeButton.setTooltip(new Tooltip("Initial value of " + ((BEASTInterface)p).getID()));
 	            rangeButton.setOnAction(e -> {
 	                Button rangeButton1 = (Button) e.getSource();
 
@@ -215,6 +217,9 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         	getChildren().add(pane);
         }
 
+        // validateInput() already ran inside super.init(), before the initial value button
+        // existed, so mark the button now if the initial value is outside the prior's range
+        checkInitialValue();
     } // init
 
 
@@ -341,19 +346,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 
 	String paramToString(RealScalar<?> p) {
-        Double lower = p.getLower();
-        Double upper = p.getUpper();
-        return "initial = " + p.get() +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + p.get();
     }
 
     String paramToString(IntScalar<?> p) {
-        Integer lower = p.getLower();
-        Integer upper = p.getUpper();
-        return "initial = " + p.get() +
-                " [" + (lower == null ? "-\u221E" : lower + "") +
-                "," + (upper == null ? "\u221E" : upper + "") + "]";
+        return "initial = " + p.get();
     }
 
     private void registerAsListener(Node node) {
@@ -674,20 +671,48 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     @Override
     public void validateInput() {
     	if (graphPanel != null) {
-    		if (m_beastObject instanceof TruncatedReal trd) {
-    			trd.distributionInput.get().refresh();
-    		} else if (m_beastObject.getClass().getName().endsWith("TruncatedIntDistribution")) {
-    			((ScalarDistribution)m_beastObject.getInput("distribution").get()).refresh();
-    		} else if (m_beastObject.getClass().getName().endsWith("OffsetRealDistribution")) {
-    			((ScalarDistribution)m_beastObject.getInput("distribution").get()).refresh();
+    		// Bring the distribution up to date before redrawing its graph. Every distribution
+    		// re-reads its inputs in refresh(), and a wrapper's refresh() also reloads and refreshes
+    		// the distribution it wraps, so no case is needed per class. (The class-name checks used
+    		// here before broke the beast-fx rule against naming beast-base classes, and two of them
+    		// could never match, as they used names no class has.)
+    		if (m_beastObject instanceof TensorDistribution<?,?> td) {
+    			td.refresh();
     		}
     		graphPanel.paintComponent();
+    	}
+    	// a value in the parameter panel changed, e.g. a bound of the distribution, so the
+    	// parameters shown in the combo box label are out of date: re-render the cell
+    	PriorEditorUtil.refreshLabel(distrComboBox);
+    	// A new prior may not allow the current initial value (e.g. 5.0 under a prior on [0,1]).
+    	// Report it like other validation errors instead of leaving an invalid model silently.
+    	if (!checkInitialValue()) {
+    		repaint();
+    		return;
     	}
 		super.validateInput();
     }
 
+    /** combo box for selecting the distribution being edited, shown with its parameters **/
+    protected ComboBox<BeautiSubTemplate> distrComboBox;
+
+    /** the "initial = ..." button, null if the distribution has no parameter shown here **/
+    protected Button initialValueButton;
+
+    /**
+     * Check the initial value of the parameter against the range allowed by its prior,
+     * and show an error in this editor if it is outside.
+     * @return true if the initial value is valid
+     */
+    protected boolean checkInitialValue() {
+    	if (!(m_beastObject instanceof TensorDistribution<?,?> prior)) {
+    		return true;
+    	}
+    	String tooltip = prior.paramInput.get() instanceof BEASTInterface p ? "Initial value of " + p.getID() : null;
+    	return PriorEditorUtil.checkInitialValue(this, prior, initialValueButton, tooltip);
+    }
+
     
-	private ComboBox<BeautiSubTemplate> comboBox;
 
 	protected ComboBox<BeautiSubTemplate> createComboBox(BEASTInterface m_beastObject, Input<?> m_input) {
 		if (scalarTemplates == null || templateDomains == null || templateDomains.size() != scalarTemplates.size()) {
@@ -735,21 +760,9 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 
         
         comboBox.setId(text+".distr");
-        comboBox.setButtonCell(new ListCell<BeautiSubTemplate>() {
-        	@Override
-        	protected void updateItem(BeautiSubTemplate item, boolean empty) {
-        		super.updateItem(item, empty);
-        		if (!empty && item != null) {
-        			if (expandBox !=null && expandBox.isVisible()) {
-        				setText(item.toString() + getParameters());
-        			} else {
-        				setText(item.toString() + getParameters());
-        			}
-                } else {
-                    setText(null);
-                }
-        	}
-        });
+        // the label is the template name followed by the current parameter values;
+        // the same function is used when the cell is refreshed in validateInput()
+        comboBox.setButtonCell(new PriorEditorUtil.DistrButtonCell(item -> item.toString() + getParameters()));
 
         String id = prior != null ? prior.getID() : null;
 
@@ -777,19 +790,12 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 		            
 		            Object item = list.get(itemNr);
 		            if (item instanceof ScalarDistribution<?,?>) {
-			            ScalarDistribution<?,?> prior1 = null;
-		            	prior1 = (ScalarDistribution<?,?>) list.get(itemNr);
-		            	Object o = ((ScalarDistribution<?,?>) m_beastObject).paramInput.get();
-		            	((BEASTInterface) o).getOutputs().remove(prior1);
-		            	Input<ScalarDistribution<?,?>> input_ = new Input<>("param", "dummy input");
-		            	input_.setType(ScalarDistribution.class);
-		            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, prior1, input_, true);
-		            	newDist.paramInput.setValue(o, newDist);
-		            	list.set(itemNr, newDist);
-		            	newDist.setID(m_beastObject.getID());
-		            	doc.pluginmap.remove(m_beastObject.getID());
-		            	doc.registerPlugin(newDist);
+		            	// shared with IIDInputEditor and TensorDistributionInputEditor
+		            	PriorEditorUtil.replacePrior(doc, template, context, list, itemNr);
 		            } else {
+		            	// item wraps a ScalarDistribution in its distr input: replace that inner
+		            	// distribution. The wrapper's bound getters call refresh(), which reloads its
+		            	// distr input, so the parameter bounds follow without anything else to update.
 		            	ScalarDistribution<?,?> newDist = (ScalarDistribution<?,?>) template.createSubNet(context, m_beastObject, m_beastObject.getInput("distr"), true);
 		            }
 	            } else {
@@ -999,15 +1005,6 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 				ie.addValidationListener(this);
 			}
 		}
-		
-		this.expandBox.visibleProperty().addListener((o, oldVal, newVal) -> {
-			if (comboBox != null) {
-				Pane parent = (Pane) comboBox.getParent();
-				int i = parent.getChildren().indexOf(comboBox);
-				comboBox = createComboBox(m_beastObject, m_input);
-				parent.getChildren().set(i, comboBox);
-			}
-     });
 	}
 
     private void processVbox(List<InputEditor> editors) {

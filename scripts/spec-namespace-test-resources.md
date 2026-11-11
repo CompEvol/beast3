@@ -21,7 +21,7 @@ Currently affected directories:
 
 | Directory      | Appears in                                                         |
 |----------------|--------------------------------------------------------------------|
-| `examples/`    | beast-base, beast-fx (copied from beast-base), and any BEAST package that ships example XMLs |
+| `examples/`    | beast-base and beast-fx (source in `beast-base/examples/` and `beast-fx/examples/`; mapped to `beast.base/examples/` and `beast.fx/examples/` by pom.xml), and any BEAST package that ships example XMLs |
 | `fxtemplates/` | beast-fx (source in `beast-fx/fxtemplates/`; copied to test-classes by pom.xml) |
 
 ## Convention

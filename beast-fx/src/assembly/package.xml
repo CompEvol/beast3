@@ -45,7 +45,7 @@
          <bundle>/examples/beastfx/ in every installer. -->
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/test/resources/beast.fx/examples</directory>
+            <directory>${project.basedir}/examples</directory>
             <outputDirectory>examples/beastfx</outputDirectory>
             <includes>
                 <include>*.xml</include>

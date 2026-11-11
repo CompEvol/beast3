@@ -135,17 +135,19 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
 	@Override
 	public Double getLowerBoundOfParameter() {
-    	if (dist == null) {
-    		refresh();
-    	}
+		// Always refresh() (not only when dist is null), like ScalarDistribution's default via
+		// getApacheDistribution(), so the bounds follow an inner distribution or offset replaced
+		// after initialisation.
+		refresh();
 		return dist.getLowerBoundOfParameter() + offset.get();
 	}
 
 	@Override
 	public Double getUpperBoundOfParameter() {
-    	if (dist == null) {
-    		refresh();
-    	}
+		// Always refresh() (not only when dist is null), like ScalarDistribution's default via
+		// getApacheDistribution(), so the bounds follow an inner distribution or offset replaced
+		// after initialisation.
+		refresh();
 		return dist.getUpperBoundOfParameter() + offset.get();
 	}
 

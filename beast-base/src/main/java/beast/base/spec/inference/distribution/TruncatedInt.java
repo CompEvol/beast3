@@ -133,12 +133,22 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public Integer getLowerBoundOfParameter() {
-        return Math.max(lower.get(), getInnerDistribution().getLowerBoundOfParameter());
+        // Always refresh() first (getInnerDistribution() only does when dist is null), like
+        // ScalarDistribution's default via getApacheDistribution(), so the bounds follow an inner
+        // distribution or a truncation lower/upper replaced after initialisation (e.g. in BEAUti).
+        refresh();
+        return Math.max(lower.get(), dist.getLowerBoundOfParameter());
     }
 
     @Override
     public Integer getUpperBoundOfParameter() {
-        return Math.max(lower.get(), getInnerDistribution().getUpperBoundOfParameter());
+        // Always refresh() first (getInnerDistribution() only does when dist is null), like
+        // ScalarDistribution's default via getApacheDistribution(), so the bounds follow an inner
+        // distribution or a truncation lower/upper replaced after initialisation (e.g. in BEAUti).
+        refresh();
+        // the smaller of the truncation upper and the inner upper bound
+        // (this used to return Math.max(lower, inner upper), ignoring the truncation upper)
+        return Math.min(upper.get(), dist.getUpperBoundOfParameter());
     }
 
     double getLowerCDF() {
