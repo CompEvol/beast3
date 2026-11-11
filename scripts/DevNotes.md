@@ -23,8 +23,14 @@ copies valid today, so that new code fits in with them.
 > **This convention is fragile.** It is correct only if every method remembers to refresh
 > before it uses a cached field, and nothing enforces that. Several bugs came from a method
 > that did not (PR #233). Issue #252 is about replacing it with a design that cannot go
-> stale. Until then, prefer not to cache: a method that reads `Input.get()` cannot be wrong
-> in this way. Cache only what is measurably expensive to recompute.
+> stale.
+
+> **MCMC speed comes first.** Code in `beast-base` that runs on every MCMC step must not be
+> made slower to suit BEAUti. Where BEAUti changes a model after `initAndValidate()`, it is
+> BEAUti's job to bring the object up to date (for example by calling `initAndValidate()`
+> again), not the job of the hot path to re-read its inputs. Outside the hot path, prefer
+> reading `Input.get()` to caching: a method that reads its inputs cannot go stale. A change
+> to a method that runs on every step needs a timing check.
 
 The model *can* change after `initAndValidate()`. BEAUti, for example, creates a new prior
 from a template (which initialises it) and only then attaches the parameter, and it swaps
