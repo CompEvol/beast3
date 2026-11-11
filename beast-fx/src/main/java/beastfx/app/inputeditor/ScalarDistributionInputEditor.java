@@ -10,8 +10,12 @@ import beast.base.spec.Bounded;
 import beast.base.spec.domain.*;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.OffsetInt;
+import beast.base.spec.inference.distribution.OffsetReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
+import beast.base.spec.inference.distribution.TruncatedInt;
+import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -737,20 +741,34 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         		null;
         Class<?> domain = getParameterDomain(param);
         boolean isReal = Real.class.isAssignableFrom(domain);
+        // Is this the inner distribution of a wrapper (issue #232)?
+        // - inside Bounded (TruncatedReal/Int) the distribution is cut to [lower, upper], so any
+        //   distribution of the same kind (real or integer) can go there, whatever the domain of
+        //   the parameter, and Offset can too; Bounded inside Bounded is not offered.
+        // - inside Offset the distribution is that of the parameter minus the offset; it is
+        //   filtered on the parameter's domain as before, and no wrapper is offered.
+        BEASTInterface wrapper = wrapperOf(m_input);
+        boolean insideBounded = wrapper instanceof TruncatedReal || wrapper instanceof TruncatedInt;
+        boolean insideOffset = wrapper instanceof OffsetReal || wrapper instanceof OffsetInt;
         for (BeautiSubTemplate template : scalarTemplates) {
-        	if (isCompatible(domain, templateDomains.get(k++)) || 
-        		(//param != null && 
-        			(template.getID().equals("BoundedReal") && isReal  ||
-        			 template.getID().equals("BoundedInt")  && !isReal ||
-        			 template.getID().equals("OffsetReal")  && isReal  || 
-        			 template.getID().equals("OffsetInt")   && !isReal))) {
-//        		if (!(template.getID().equals("BoundedReal") && isReal   || 
-//        			  template.getID().equals("BoundedInt")  && !isReal  || 
-//        			  template.getID().equals("OffsetReal")  && isReal   || 
-//        			  template.getID().equals("OffsetInt")   && !isReal) || 
-//        				param != null) {
-        			comboBox.getItems().add(template);
-//        		}
+        	Class<?> templateDomain = templateDomains.get(k++);
+        	String templateID = template.getID();
+        	boolean isBounded = templateID.equals("BoundedReal") || templateID.equals("BoundedInt");
+        	boolean isOffset = templateID.equals("OffsetReal") || templateID.equals("OffsetInt");
+        	boolean rightKind = isReal ? templateID.equals("BoundedReal") || templateID.equals("OffsetReal")
+        			: templateID.equals("BoundedInt") || templateID.equals("OffsetInt");
+        	boolean add;
+        	if (insideBounded) {
+        		add = isOffset ? rightKind
+        				: !isBounded && templateDomain != null
+        				  && (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain);
+        	} else if (insideOffset) {
+        		add = !isBounded && !isOffset && isCompatible(domain, templateDomain);
+        	} else {
+        		add = isCompatible(domain, templateDomain) || ((isBounded || isOffset) && rightKind);
+        	}
+        	if (add) {
+        		comboBox.getItems().add(template);
         	}
         }
         
@@ -767,7 +785,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         String id = prior != null ? prior.getID() : null;
 
         id = prior != null ? prior.getClass().getName() : "[[none]]";
-        if (prior != null && !(prior instanceof ScalarDistribution<?,?>)) {
+        if (wrapper != null && m_input.get() != null) {
+        	// the box chooses the wrapper's inner distribution: show that one
+        	id = m_input.get().getClass().getName();
+        } else if (prior != null && !(prior instanceof ScalarDistribution<?,?>)) {
         	id = ((BEASTInterface)prior.getInput("distr").get()).getClass().getName();
         }
         		        		// id.substring(0, id.indexOf('.'));
@@ -834,6 +855,22 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	}
 	
     
+	/**
+	 * @return the Bounded (TruncatedReal/Int) or Offset (OffsetReal/Int) distribution whose
+	 *         "distribution" input is the given input, or null if the input is not the inner
+	 *         distribution of such a wrapper
+	 */
+	private BEASTInterface wrapperOf(Input<?> input) {
+		for (BEASTInterface candidate : new BEASTInterface[] {inputOwner, m_beastObject}) {
+			if ((candidate instanceof TruncatedReal || candidate instanceof TruncatedInt
+					|| candidate instanceof OffsetReal || candidate instanceof OffsetInt)
+					&& input != null && candidate.getInput("distribution") == input) {
+				return candidate;
+			}
+		}
+		return null;
+	}
+
 	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain) {
     	if (templateDomain == null) {
     		// the "no prior" template should now be rejected
