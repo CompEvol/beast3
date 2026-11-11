@@ -1309,11 +1309,15 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
             beautiStatus = "";
         }
         autoSetClockRate = !beautiStatus.contains("noAutoSetClockRate");
-        beauti.autoSetClockRate(autoSetClockRate);
         allowLinking = beautiStatus.contains("allowLinking");
-        beauti.allowLinking(allowLinking);
         autoUpdateFixMeanSubstRate = !beautiStatus.contains("noAutoUpdateFixMeanSubstRate");
-        beauti.autoUpdateFixMeanSubstRate(autoUpdateFixMeanSubstRate);
+        // At start up (-xml on the command line) the window does not exist yet; its menu
+        // items are set from these fields when it is created (#271)
+        if (beauti != null) {
+            beauti.autoSetClockRate(autoSetClockRate);
+            beauti.allowLinking(allowLinking);
+            beauti.autoUpdateFixMeanSubstRate(autoUpdateFixMeanSubstRate);
+        }
 
         // parse file
         XMLParser parser = new XMLParser();

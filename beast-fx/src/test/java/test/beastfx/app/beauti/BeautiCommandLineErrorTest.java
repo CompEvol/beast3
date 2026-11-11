@@ -118,6 +118,19 @@ public class BeautiCommandLineErrorTest extends BeautiBase {
         }
     }
 
+    /** -xml with an XML that BEAUti wrote, as at start up: the document is loaded (issue #271) */
+    @Test
+    public void xmlWrittenByBeautiCanBeOpenedFromTheCommandLine() throws Exception {
+        assertNull(assertTimeoutPreemptively(LIMIT, () -> BeautiTabPane.initialise(new String[] {
+                "-template", TEMPLATE_DIR + "/Standard.xml", "-nex", NEXUS_DIR + "dna.nex",
+                "-out", out(), "-exitaction", "writexml"})));
+        assertTrue(new File(out()).length() > 0, "no XML written");
+        beastfx.app.inputeditor.BeautiDoc doc = assertTimeoutPreemptively(LIMIT,
+                () -> BeautiTabPane.initialise(new String[] {"-xml", out(), "-exitaction", "usexml"}));
+        assertTrue(doc != null && doc.alignments.size() == 1, "the alignment of the XML is not loaded");
+        assertTrue(doc.pluginmap.containsKey("Tree.t:dna"), "the tree of the XML is not loaded");
+    }
+
     @Test
     public void validArgumentsWriteTheXML() {
         // null means: the XML was written, there is no document to show
