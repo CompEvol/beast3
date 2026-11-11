@@ -156,11 +156,15 @@ public class TreePriorTest extends TestFramework {
                 addExpIntoList(expList, "skyline.popSize.3", 31.9271, 0.3819);
                 addExpIntoList(expList, "skyline.popSize.4", 41.6596, 0.3976);
                 addExpIntoList(expList, "skyline.popSize.5", 33.5967, 0.3554);
-                addExpIntoList(expList, "skyline.groupSize.1", 2.4686, 4.0465E-2); 
-                addExpIntoList(expList, "skyline.groupSize.2", 3.3671, 3.9454E-2); 
-                addExpIntoList(expList, "skyline.groupSize.3", 3.181, 3.3807E-2); // TODO diff bigger than 2*delta
-                addExpIntoList(expList, "skyline.groupSize.4", 3.723, 5.0187E-2);
-                addExpIntoList(expList, "skyline.groupSize.5", 3.2603, 5.9824E-2);
+                // Group sizes: BEAST X v10.5.0 on beast1/testBSP1.xml (upper bounds of 100 and 38000
+                // removed, which BEAST X needs for its scale operators), 4 seeds x 20M steps, 10% burn-in;
+                // mean and standard error over the seeds. The values of the 2011 BEAST 1 run were off
+                // for group size 3 (3.181, against 3.28 in BEAST X and 3.29-3.31 in BEAST 3).
+                addExpIntoList(expList, "skyline.groupSize.1", 2.494, 1.1E-2);
+                addExpIntoList(expList, "skyline.groupSize.2", 3.366, 2.1E-2);
+                addExpIntoList(expList, "skyline.groupSize.3", 3.282, 1.3E-2);
+                addExpIntoList(expList, "skyline.groupSize.4", 3.652, 1.0E-2);
+                addExpIntoList(expList, "skyline.groupSize.5", 3.206, 2.2E-2);
                 addExpIntoList(expList, "hky.kappa", 21.6911, 5.2142E-2);
                 addExpIntoList(expList, "tree.height", 70.3393, 0.1057);
                 addExpIntoList(expList, "likelihood", -3773.1854, 3.9474E-2);
