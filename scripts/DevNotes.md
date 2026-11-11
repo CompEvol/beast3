@@ -5,7 +5,32 @@ that the code alone does not make obvious. Add new topics as new sections.
 
 ## Contents
 
-1. [Cached fields vs. reading `Input.get()`](#cached-fields-vs-reading-inputget)
+1. [Changes to `beast-base`](#changes-to-beast-base)
+2. [Cached fields vs. reading `Input.get()`](#cached-fields-vs-reading-inputget)
+
+---
+
+## Changes to `beast-base`
+
+`beast-base` is the sampler and the models. Every analysis runs it and every package builds
+on it, so a change there has to clear a higher bar than a change to `beast-fx` or to a package.
+
+A pull request that changes anything under `beast-base/src/main` must answer three questions
+in its description:
+
+1. **Why can it not be done in `beast-fx` or in a package?** If the change is there to suit
+   BEAUti, say so, and say why BEAUti cannot do the work itself.
+2. **Does it touch code that runs on every MCMC step?** That means likelihoods, priors,
+   operators, state nodes, `store()`/`restore()`, `requiresRecalculation()` and anything they
+   call. If it does, give a timing before and after.
+3. **Does it change XML or an API that packages extend?** That means input names, defaults,
+   class names, and public or protected methods. If it does, say what happens to existing
+   XML files and existing packages.
+
+The pull request template asks these questions. `.github/CODEOWNERS` makes a core developer
+a required reviewer for `beast-base/src/main`.
+
+Changes to tests, examples and documentation under `beast-base` are not covered by this rule.
 
 ---
 
