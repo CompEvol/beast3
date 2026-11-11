@@ -196,8 +196,13 @@ public class ListInputEditor extends InputEditor.Base {
         itemBox.getChildren().add(editButton);
 
         InputEditor editor = addPluginItem(itemBox, beastObject);
+        if (editor != this) {
+            // an edit inside the item can make it valid or invalid, so check the items again after one
+            editor.addValidationListener(this);
+        }
 
         SmallLabel validateLabel = new SmallLabel("x", "red");
+        validateLabel.setId(beastObject.getID() + ".validateLabel");
         itemBox.getChildren().add(validateLabel);
         validateLabel.setVisible(true);
         m_validateLabels.add(validateLabel);
@@ -507,11 +512,21 @@ System.err.println("BEASTObjectPanel.countInputs(beastObject, doc) = 0");
         }
     } // pluginSelector
 
+    /**
+     * Checks one item of the list. The message of the exception is shown to the user
+     * next to the item.
+     *
+     * @throws RuntimeException if the item is not valid
+     */
+    protected void validateItem(BEASTInterface beastObject) {
+        beastObject.validateInputs();
+    }
+
     protected void updateState() {
         for (int i = 0; i < ((List<?>) m_input.get()).size(); i++) {
             try {
                 BEASTInterface beastObject = (BEASTInterface) ((List<?>) m_input.get()).get(i);
-                beastObject.validateInputs();
+                validateItem(beastObject);
                 m_validateLabels.get(i).setVisible(false);
             } catch (IndexOutOfBoundsException e) {
             	// happens when m_validateLabels is not large enough, so there is nothing to show 
