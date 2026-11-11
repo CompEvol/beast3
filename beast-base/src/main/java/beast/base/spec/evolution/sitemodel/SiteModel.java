@@ -85,11 +85,11 @@ public class SiteModel extends SiteModelInterface.Base {
 //            if (shapeParameter instanceof RealScalarParam<PositiveReal> shape) {
 //            	shape.setBounds(Math.max(shape.getLower(), 1.0E-3), Math.min(shape.getUpper(), 1.0E3));
 //            }
-            if (shapeParameter instanceof RealScalarParam<PositiveReal> shape) {
-                if (shape.getLower() < 1.0E-3)
-                    Log.warning("The quantile calculator in SiteModel fails when the shape parameter goes much below 1.0E-3.\n" +
-                            "A TruncatedDistribution may be used to enforce this constraint.\n" +
-                            "Lower = " + shape.getLower());
+            // getLower() is on the RealScalar interface, so this holds for any shape, not only a RealScalarParam
+            if (shapeParameter.getLower() < 1.0E-3) {
+                Log.warning("The quantile calculator in SiteModel fails when the shape parameter goes much below 1.0E-3.\n" +
+                        "A TruncatedDistribution may be used to enforce this constraint.\n" +
+                        "Lower = " + shapeParameter.getLower());
             }
 
         }
