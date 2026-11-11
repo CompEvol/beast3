@@ -88,6 +88,37 @@ public class BeautiCommandLineErrorTest extends BeautiBase {
     }
 
     @Test
+    public void exitActionMergeIsReportedAsNotImplemented() {
+        Throwable e = initialiseFails("-template", TEMPLATE_DIR + "/Standard.xml", "-nex", NEXUS_DIR + "dna.nex",
+                "-exitaction", "merge");
+        assertTrue(e.getMessage() != null && e.getMessage().contains("merge"), "message: " + e.getMessage());
+    }
+
+    @Test
+    public void everyArgumentWithAValueReportsWhenItIsMissing() {
+        for (String arg : new String[] {"-xml", "-template", "-nex", "-fasta_nucleotide", "-xmldata", "-exitaction", "-out"}) {
+            Throwable e = initialiseFails(arg);
+            assertTrue(e instanceof IllegalArgumentException, arg + ": " + e);
+            assertTrue(e.getMessage().contains(arg + " needs a value"), arg + ": " + e.getMessage());
+        }
+    }
+
+    @Test
+    public void xmlNotMadeByBeautiDoesNotNeedADialog() {
+        // an example XML has no beautitemplate attribute. BEAUti asks for confirmation in a dialog,
+        // which cannot be shown on this thread: it must warn and go on, not fail on the dialog
+        String xml = new File(NEXUS_DIR).getParentFile().toPath().resolve("testHKY.xml").toString();
+        assertTrue(new File(xml).exists(), xml);
+        try {
+            assertTimeoutPreemptively(LIMIT, () -> BeautiTabPane.initialise(new String[] {"-xml", xml, "-exitaction", "usexml"}));
+        } catch (RuntimeException e) {
+            // loading a hand-written XML may fail for other reasons, but not because of the dialog
+            String text = e + " " + e.getCause();
+            assertFalse(text.contains("FX application thread"), text);
+        }
+    }
+
+    @Test
     public void validArgumentsWriteTheXML() {
         // null means: the XML was written, there is no document to show
         assertNull(assertTimeoutPreemptively(LIMIT, () -> BeautiTabPane.initialise(new String[] {

@@ -85,6 +85,9 @@ public class Beauti extends Application {
         splashLayout.setEffect(new DropShadow());
     }
 
+    /** the console, as it was before the arguments were processed: -noerr replaces System.err */
+    private final java.io.PrintStream console = System.err;
+
     @Override
     public void start(final Stage initStage) throws Exception {
         final Task<BeautiDoc> friendTask = new Task<BeautiDoc>() {
@@ -169,10 +172,12 @@ public class Beauti extends Application {
         initStage.hide();
         String message = "BEAUti could not start";
         if (problem != null) {
+            // the stack trace is detail, which -noerr hides
             problem.printStackTrace();
             message += ": " + (problem.getMessage() != null ? problem.getMessage() : problem.toString());
         }
-        System.err.println(message);
+        // the message itself is always shown, also with -noerr
+        console.println(message);
         if (!isBatchRun() && !java.awt.GraphicsEnvironment.isHeadless()) {
             // somebody is looking at the screen
             try {
