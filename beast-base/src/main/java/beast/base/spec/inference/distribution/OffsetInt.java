@@ -134,9 +134,10 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
 	@Override
 	public Integer getLowerBoundOfParameter() {
-    	if (dist == null) { // assuming bounds are not estimated during MCMC
-    		refresh();
-    	}
+		// Always refresh() (not only when dist is null), like ScalarDistribution's default via
+		// getApacheDistribution(), so the bounds follow an inner distribution or offset replaced
+		// after initialisation.
+		refresh();
 		int lower = dist.getLowerBoundOfParameter();
 		// Integer.MIN_VALUE means "no lower limit" (like -Infinity in OffsetReal), so keep it unbounded
 		if (lower == Integer.MIN_VALUE) {
@@ -148,9 +149,10 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
 	@Override
 	public Integer getUpperBoundOfParameter() {
-    	if (dist == null) {
-    		refresh();
-    	}
+		// Always refresh() (not only when dist is null), like ScalarDistribution's default via
+		// getApacheDistribution(), so the bounds follow an inner distribution or offset replaced
+		// after initialisation.
+		refresh();
 		int upper = dist.getUpperBoundOfParameter();
 		// Integer.MAX_VALUE means "no upper limit" (e.g. Poisson; like +Infinity in OffsetReal), so keep it unbounded
 		if (upper == Integer.MAX_VALUE) {

@@ -243,7 +243,14 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     public List<String> getArguments() {
         List<String> arguments = new ArrayList<>();
         // TODO id for IID ?
-        String id = param != null ? ((BEASTInterface) param).getID() : null;
+        // Read the input, not the cached field `param` (structure queries read inputs, as every other
+        // getArguments() does, e.g. YuleModel, TreeLikelihood): `param` is only set in initAndValidate(),
+        // but the parameter can be attached afterwards (BEAUti creates a new prior from a template,
+        // which initialises it, and only then sets its param input). BoundUtils uses the arguments
+        // to decide whether this distribution bounds a parameter, so a stale null here would make
+        // the parameter ignore its new prior.
+        Object p = paramInput.get();
+        String id = p != null ? ((BEASTInterface) p).getID() : null;
         arguments.add(id);
         return arguments;
     }
