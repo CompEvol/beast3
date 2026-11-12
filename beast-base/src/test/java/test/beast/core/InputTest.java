@@ -2,10 +2,7 @@ package test.beast.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 
 import beast.base.core.BEASTObject;
 import beast.base.core.Citation;
@@ -52,9 +49,9 @@ public class InputTest  {
 		o.initByName("longValue", "5e5");
 		o.initByName("doubleValue", "5e5");
 
-		Assert.assertEquals(500000, (int) o.intValue.get());
-		Assert.assertEquals(500000, (long) o.longValue.get());
-		Assert.assertEquals(500000.0, (double) o.doubleValue.get(), 1);
+		assertEquals(500000, (int) o.intValue.get());
+		assertEquals(500000, (long) o.longValue.get());
+		assertEquals(500000.0, (double) o.doubleValue.get(), 1);
 	}
 
 	@Test
