@@ -19,8 +19,10 @@ import org.testfx.util.WaitForAsyncUtils;
 import beast.base.parser.XMLParser;
 import beast.base.spec.inference.distribution.Dirichlet;
 import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.SimplexParam;
 import beastfx.app.beauti.BeautiTabPane;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -118,6 +120,56 @@ public class BeautiPriorValidationTest extends BeautiBase {
 	}
 
 	/**
+	 * A simplex whose values are all in [0,1] but do not sum to 1 is not valid. The message
+	 * must say the sum is wrong, not that the value is outside the range (issue #281).
+	 */
+	@Test
+	void simplexWithWrongSumIsReported(FxRobot robot) throws Exception {
+		importAlignment(NEXUS_DIR, new File("anolis.nex"));
+		robot.clickOn("#SiteModel");
+		robot.clickOn("#substModelComboBox").clickOn("HKY");
+		selectTab(robot, "Priors");
+		assertFalse(isReported(robot, "FrequenciesPrior.s:anolis"), "the default prior on the frequencies is valid");
+
+		Dirichlet prior = (Dirichlet) doc.pluginmap.get("FrequenciesPrior.s:anolis");
+		SimplexParam freqs = (SimplexParam) prior.paramInput.get();
+		robot.interact(() -> {
+			for (int i = 0; i < freqs.size(); i++) {
+				freqs.set(i, 0.3);
+			}
+		});
+		// leaving the panel and coming back rebuilds it
+		selectTab(robot, "MCMC");
+		selectTab(robot, "Priors");
+		WaitForAsyncUtils.waitForFxEvents();
+		screenshot("/tmp/priorValidation4.png");
+		assertTrue(isReported(robot, "FrequenciesPrior.s:anolis"), "the wrong sum should be reported");
+		String message = message(robot, "FrequenciesPrior.s:anolis");
+		System.err.println("Message shown: " + message);
+		assertTrue(message.contains(freqs.getID()), "the message should name the parameter: " + message);
+		assertTrue(message.contains("The values must sum to 1"), "the message should say the sum is wrong: " + message);
+		assertFalse(message.contains("outside the"), "every value is in range: " + message);
+		// the "initial = ..." button gets its message from PriorEditorUtil, which failed on a
+		// vector parameter and said the value was outside the range
+		String buttonMessage = initialValueTooltip(robot, freqs.getID());
+		System.err.println("Initial value button: " + buttonMessage);
+		assertTrue(buttonMessage.contains("The values must sum to 1, but they sum to 1.2"),
+				"the initial value button should say the sum is wrong: " + buttonMessage);
+		assertFalse(buttonMessage.contains("outside the"), "every value is in range: " + buttonMessage);
+
+		robot.interact(() -> {
+			for (int i = 0; i < freqs.size(); i++) {
+				freqs.set(i, 0.25);
+			}
+		});
+		selectTab(robot, "MCMC");
+		selectTab(robot, "Priors");
+		WaitForAsyncUtils.waitForFxEvents();
+		assertFalse(isReported(robot, "FrequenciesPrior.s:anolis"), "the values sum to 1 again, so nothing should be reported");
+		assertXMLParses();
+	}
+
+	/**
 	 * Expand the editor of a prior. Expanded priors are remembered in a static set, so an
 	 * earlier test in the same JVM may have left this one expanded already; clicking its
 	 * edit button again would collapse it, and the hidden field could not take the focus.
@@ -149,6 +201,15 @@ public class BeautiPriorValidationTest extends BeautiBase {
 
 	private String message(FxRobot robot, String priorID) {
 		return validateLabel(robot, priorID).getTooltip().getText();
+	}
+
+	/** @return the tooltip of the "initial = ..." button of the parameter with this ID **/
+	private String initialValueTooltip(FxRobot robot, String paramID) {
+		for (Node n : robot.lookup(n -> n instanceof Button b && isShowing(b) && b.getTooltip() != null
+				&& b.getTooltip().getText().contains(paramID)).queryAll()) {
+			return ((Button) n).getTooltip().getText();
+		}
+		throw new AssertionError("no initial value button for " + paramID);
 	}
 
 	private TextField visibleTextField(FxRobot robot, String id, String text) {
