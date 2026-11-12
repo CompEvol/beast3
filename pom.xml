@@ -60,7 +60,6 @@
         <commons-rng.version>1.6</commons-rng.version>
         <commons-statistics.version>1.2</commons-statistics.version>
         <junit.version>5.8.2</junit.version>
-        <junit4.version>4.13.2</junit4.version>
         <testfx.version>4.0.18</testfx.version>
         <assertj.version>3.20.2</assertj.version>
         <maven-resolver.version>2.0.16</maven-resolver.version>
@@ -184,12 +183,6 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter</artifactId>
                 <version>${junit.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit4.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
