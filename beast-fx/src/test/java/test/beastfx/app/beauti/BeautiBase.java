@@ -31,6 +31,7 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Screen;
 import javafx.stage.Window;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -88,6 +89,36 @@ public class BeautiBase extends ApplicationExtension {
 	@AfterEach
 	void resetProgramStatus() {
 		ProgramStatus.name = "unknown";
+		resetExpandedPriors();
+	}
+
+	/**
+	 * Also reset before the first test of each class: a test that does not extend BeautiBase,
+	 * e.g. ScalarDistributionInputEditorTest, can leave the sets filled. This is not done in a
+	 * {@code @BeforeEach}, because TestFX has already started BEAUti by then (its {@code @Start}
+	 * runs first), and clearing the sets would lose the priors BEAUti has just collapsed.
+	 */
+	@BeforeAll
+	static void resetExpandedPriorsBeforeClass() {
+		resetExpandedPriors();
+	}
+
+	/**
+	 * BEAUti remembers which items of a list (e.g. the priors) are collapsed in static sets of
+	 * ListInputEditor, so a test that expands a prior leaves it expanded for the next test in
+	 * the same JVM, where clicking its edit button then collapses it. Clear them before each
+	 * test class and after every test, so each test starts as BEAUti does when it is started.
+	 */
+	static void resetExpandedPriors() {
+		for (String name : new String[] {"g_collapsedIDs", "g_initiallyCollapsedIDs"}) {
+			try {
+				java.lang.reflect.Field field = beastfx.app.inputeditor.ListInputEditor.class.getDeclaredField(name);
+				field.setAccessible(true);
+				((java.util.Set<?>) field.get(null)).clear();
+			} catch (ReflectiveOperationException | RuntimeException e) {
+				throw new IllegalStateException("cannot reset ListInputEditor." + name + "; was it renamed?", e);
+			}
+		}
 	}
 
 	public BeautiBase() {

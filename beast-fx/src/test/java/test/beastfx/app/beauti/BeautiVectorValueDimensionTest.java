@@ -100,8 +100,8 @@ public class BeautiVectorValueDimensionTest extends BeautiBase {
 		robot.clickOn("#SiteModel");
 		robot.clickOn("#substModelComboBox").clickOn("HKY");
 		selectTab(robot, "Priors");
-		// expanded priors are remembered in a static set, so an earlier test in the same JVM
-		// may have left this one expanded already; clicking again would collapse it
+		// BeautiBase resets the expanded priors before each class and after each test; the check is kept in case
+		// the prior is expanded by default
 		if (!isShowing(alphaField(robot))) {
 			clickOnNodesWithID(robot, "FrequenciesPrior.s:anolis.editButton");
 			WaitForAsyncUtils.waitForFxEvents();
