@@ -428,6 +428,7 @@ public class ScalarDistributionInputEditorTest {
 	public void testBoundedOffsetShowsInnermostInputs() throws Exception {
 		AtomicReference<Throwable> error = new AtomicReference<>();
 		List<String> missing = new ArrayList<>();
+		List<String> initialButtons = new ArrayList<>();
 		runOnFXThread(() -> {
 			BeautiDoc doc = new BeautiDoc();
 			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
@@ -435,7 +436,9 @@ public class ScalarDistributionInputEditorTest {
 			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
 			kappa.setID("kappa.s:test");
 			OffsetReal offset = new OffsetReal();
-			offset.initByName("distribution", standardNormal(), "offset", new RealScalarParam<>(1.0, Real.INSTANCE));
+			// as the OffsetReal template makes it: with a placeholder param of its own, value 0
+			offset.initByName("distribution", standardNormal(), "offset", new RealScalarParam<>(1.0, Real.INSTANCE),
+					"param", new RealScalarParam<>(0.0, Real.INSTANCE));
 			TruncatedReal bounded = new TruncatedReal();
 			bounded.initByName("param", kappa, "distribution", offset,
 					"lower", new RealScalarParam<>(0.0, Real.INSTANCE),
@@ -456,6 +459,13 @@ public class ScalarDistributionInputEditorTest {
 					missing.add(id);
 				}
 			}
+			List<String> texts = new ArrayList<>();
+			collectButtonTexts(editor.getComponent(), texts);
+			for (String text : texts) {
+				if (text != null && text.startsWith("initial")) {
+					initialButtons.add(text);
+				}
+			}
 		}, error);
 
 		if (error.get() != null) {
@@ -463,6 +473,8 @@ public class ScalarDistributionInputEditorTest {
 			fail("test could not be run: " + error.get());
 		}
 		assertTrue(missing.isEmpty(), "no text field for " + missing);
+		// the initial value is that of kappa; the distribution inside Offset has none of its own
+		assertEquals(List.of("initial = 2.0"), initialButtons);
 	}
 
 	private static Normal standardNormal() {

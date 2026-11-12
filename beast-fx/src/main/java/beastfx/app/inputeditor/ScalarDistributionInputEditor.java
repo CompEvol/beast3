@@ -156,7 +156,11 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         
         
         ScalarDistribution<?,?> prior = (ScalarDistribution<?,?>) m_beastObject;
-	        if (prior != null) {
+        // No initial value button for the distribution inside a Bounded or Offset prior,
+        // e.g. the row for the distribution inside Offset inside Bounded: the initial value
+        // is that of the wrapper's parameter, which has its own button, and a wrapper used
+        // as an inner distribution only has a placeholder param (value 0).
+	        if (prior != null && wrapperOf(input) == null) {
 	        	if (prior.paramInput.get() instanceof RealScalar p) {
 	            // add range button for real parameters
 	            Button rangeButton = new Button(paramToString(p));

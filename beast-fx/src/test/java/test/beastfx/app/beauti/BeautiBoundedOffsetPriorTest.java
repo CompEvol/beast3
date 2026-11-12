@@ -18,6 +18,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import beastfx.app.beauti.BeautiTabPane;
 import beastfx.app.inputeditor.BeautiSubTemplate;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -80,6 +81,10 @@ public class BeautiBoundedOffsetPriorTest extends BeautiBase {
 		assertFalse(showingTextFields(robot, "offset").isEmpty(), "no field for the offset after choosing Normal");
 		assertFalse(showingTextFields(robot, "mean").isEmpty(), "no field for the mean of the Normal inside Offset");
 		assertFalse(showingTextFields(robot, "sigma").isEmpty(), "no field for the sigma of the Normal inside Offset");
+		// only kappa has an initial value; the row for the distribution inside Offset has none
+		// (it used to show "initial = 0.0", the placeholder param of the inner Offset)
+		assertFalse(robot.lookup(n -> n instanceof Button b && isShowing(n) && "initial = 0.0".equals(b.getText()))
+				.tryQuery().isPresent(), "initial value button shown for the distribution inside Offset");
 
 		// and another one: Gamma has alpha and beta instead
 		innermost = comboBoxOffering(robot, "Gamma", "OffsetReal");
