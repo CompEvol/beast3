@@ -169,10 +169,11 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 //            valuesInput.get().add(value);
 //        }
 
-        // Validate against domain and bounds constraints
+        // Validate against domain and bounds constraints, and any rule of the type, such as a simplex sum
         if (! isValid()) {
-            throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + domain.getClass().getName());
+            String why = whyNotValid();
+            throw new IllegalArgumentException("Initial value of " + this + " is not valid."
+                    + (why == null ? "" : " " + why));
         }
     }
 

@@ -68,4 +68,16 @@ public class IntSimplexTest {
         assertEquals(6, negativeElement.sum(), 1e-10);
         assertFalse(negativeElement.isValid());
     }
+
+    @Test
+    public void testWhyNotValid() {
+        assertNull(new TestIntSimplex(Arrays.asList(1, 2, 3), 6).whyNotValid());
+
+        assertEquals("The values must sum to 7, but they sum to 6.",
+                new TestIntSimplex(Arrays.asList(1, 2, 3), 7).whyNotValid());
+
+        // an element outside the domain is reported before the sum
+        String why = new TestIntSimplex(Arrays.asList(-1, 3, 4), 6).whyNotValid();
+        assertTrue(why.startsWith("Element 1 (-1)"), why);
+    }
 }

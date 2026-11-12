@@ -7,7 +7,6 @@ import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
-import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.*;
@@ -53,10 +52,9 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     public void initAndValidate() {
         param = paramInput.get(); // optional
         if (param != null && !param.isValid()) {
-            String range = param instanceof Bounded<?> bounded
-                    ? " The range allowed by its domain and its prior is " + bounded.boundsToString() + "."
-                    : "";
-            throw new IllegalArgumentException("The value of " + param + " is not valid." + range);
+            String why = param.whyNotValid();
+            throw new IllegalArgumentException("The value of " + param + " is not valid."
+                    + (why == null ? "" : " " + why));
         }
     }
 
