@@ -35,6 +35,8 @@ import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.LogUniform;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.OffsetReal;
+import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.Uniform;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -305,6 +307,194 @@ public class ScalarDistributionInputEditorTest {
 		assertEquals(0.0, growthRate.get().getLower(), 0.0);
 		assertEquals(1.0, growthRate.get().getUpper(), 0.0);
 		assertTrue(buttonTexts.contains("initial = 3.0E-4"), "initial value button text: " + buttonTexts);
+	}
+
+
+	/**
+	 * The choices for the inner distribution of a Bounded Real and an Offset Real prior
+	 * (issue #232). Inside Bounded, any real distribution can be truncated, also one whose
+	 * support is wider than the parameter's domain, and Offset can go inside; Bounded cannot,
+	 * so the nesting stops. Inside Offset, no wrapper is offered.
+	 */
+	@Test
+	public void testInnerDistributionChoicesOfWrappers() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> insideBounded = new ArrayList<>();
+		List<String> insideOffset = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
+			kappa.setID("kappa.s:test");
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", kappa, "distribution", standardNormal(),
+					"lower", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"upper", new RealScalarParam<>(100.0, Real.INSTANCE));
+			bounded.setID("KappaPrior.s:test");
+			doc.registerPlugin(kappa);
+			doc.registerPlugin(bounded);
+			insideBounded.addAll(choices(doc, bounded, bounded.distributionInput));
+
+			RealScalarParam<PositiveReal> rate = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
+			rate.setID("rate.s:test");
+			OffsetReal offset = new OffsetReal();
+			offset.initByName("param", rate, "distribution", new LogUniform());
+			offset.setID("RatePrior.s:test");
+			doc.registerPlugin(rate);
+			doc.registerPlugin(offset);
+			insideOffset.addAll(choices(doc, offset, offset.distributionInput));
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(insideBounded.contains("Normal"), "Normal can be truncated to a positive range: " + insideBounded);
+		assertTrue(insideBounded.contains("OffsetReal"), "Offset is allowed inside Bounded: " + insideBounded);
+		assertFalse(insideBounded.contains("BoundedReal"), "Bounded inside Bounded: " + insideBounded);
+		// a distribution with its own lower and upper would show the bounds twice
+		for (String uniform : new String[] {"Uniform", "NonNegativeUniform", "LogUniform"}) {
+			assertFalse(insideBounded.contains(uniform), uniform + " offered inside Bounded: " + insideBounded);
+		}
+		assertFalse(insideBounded.contains("BoundedInt") || insideBounded.contains("OffsetInt") || insideBounded.contains("Poisson"),
+				"integer distribution offered for a real parameter: " + insideBounded);
+		assertFalse(insideOffset.isEmpty(), "nothing offered inside Offset");
+		assertFalse(insideOffset.contains("BoundedReal") || insideOffset.contains("OffsetReal"),
+				"wrapper offered inside Offset: " + insideOffset);
+	}
+
+	/**
+	 * A Normal bounded to [-1, 1] is not a valid prior for a PositiveReal parameter: it gives
+	 * probability to values the parameter cannot take. The priors panel reports it as invalid;
+	 * bounded to [0, 1] it is valid.
+	 */
+	@Test
+	public void testBoundedPriorOutsideDomainIsReported() throws Exception {
+		assertEquals(List.of(InputEditor.ValidationStatus.IS_INVALID), boundedPriorStatus(-1.0));
+		assertFalse(boundedPriorStatus(0.0).contains(InputEditor.ValidationStatus.IS_INVALID));
+	}
+
+	/** validation statuses of the editor of a Normal prior bounded to [lower, 1] on a positive parameter */
+	private List<InputEditor.ValidationStatus> boundedPriorStatus(double lower) throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<InputEditor.ValidationStatus> statuses = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(0.5, PositiveReal.INSTANCE);
+			kappa.setID("kappa.s:test");
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", kappa, "distribution", standardNormal(),
+					"lower", new RealScalarParam<>(lower, Real.INSTANCE),
+					"upper", new RealScalarParam<>(1.0, Real.INSTANCE));
+			bounded.setID("KappaPrior.s:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", bounded);
+			prior.setID("prior");
+			doc.registerPlugin(kappa);
+			doc.registerPlugin(bounded);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			ScalarDistributionInputEditor priorEditor = findEditor(editor.getComponent(), ScalarDistributionInputEditor.class);
+			assertNotNull(priorEditor, "no editor for the prior");
+			priorEditor.addValidationListener(new InputEditor.Base(doc) {
+				@Override
+				public Class<?> type() {
+					return Object.class;
+				}
+				@Override
+				public void startValidating(InputEditor.ValidationStatus state) {
+					statuses.add(state);
+				}
+			});
+			priorEditor.validateInput();
+		}, error);
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		return statuses;
+	}
+
+	/**
+	 * Bounded with Offset inside it: the expanded editor shows the bounds, the offset, and
+	 * the inputs of the distribution inside Offset (here the mean and sigma of a Normal).
+	 */
+	@Test
+	public void testBoundedOffsetShowsInnermostInputs() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> missing = new ArrayList<>();
+		List<String> initialButtons = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
+			kappa.setID("kappa.s:test");
+			OffsetReal offset = new OffsetReal();
+			// as the OffsetReal template makes it: with a placeholder param of its own, value 0
+			offset.initByName("distribution", standardNormal(), "offset", new RealScalarParam<>(1.0, Real.INSTANCE),
+					"param", new RealScalarParam<>(0.0, Real.INSTANCE));
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", kappa, "distribution", offset,
+					"lower", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"upper", new RealScalarParam<>(100.0, Real.INSTANCE));
+			bounded.setID("KappaPrior.s:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", bounded);
+			prior.setID("prior");
+			doc.registerPlugin(kappa);
+			doc.registerPlugin(bounded);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, true,
+					ExpandOption.TRUE, ButtonStatus.ALL, null, doc);
+			for (String id : new String[] {"lower", "upper", "offset", "mean", "sigma"}) {
+				if (findTextField(editor.getComponent(), id) == null) {
+					missing.add(id);
+				}
+			}
+			List<String> texts = new ArrayList<>();
+			collectButtonTexts(editor.getComponent(), texts);
+			for (String text : texts) {
+				if (text != null && text.startsWith("initial")) {
+					initialButtons.add(text);
+				}
+			}
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(missing.isEmpty(), "no text field for " + missing);
+		// the initial value is that of kappa; the distribution inside Offset has none of its own
+		assertEquals(List.of("initial = 2.0"), initialButtons);
+	}
+
+	private static Normal standardNormal() {
+		Normal normal = new Normal();
+		normal.initByName("mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+				"sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+		return normal;
+	}
+
+	/** the template IDs offered in the combo box of the editor for a wrapper's inner distribution */
+	private static List<String> choices(BeautiDoc doc, BEASTInterface wrapper, Input<?> distributionInput) throws Exception {
+		InputEditor editor = doc.getInputEditorFactory().createInputEditor(distributionInput, wrapper, doc);
+		@SuppressWarnings("unchecked")
+		ComboBox<BeautiSubTemplate> comboBox = (ComboBox<BeautiSubTemplate>) findComboBox(editor.getComponent());
+		assertNotNull(comboBox, "no combo box for the inner distribution of " + wrapper.getID());
+		List<String> ids = new ArrayList<>();
+		for (BeautiSubTemplate t : comboBox.getItems()) {
+			ids.add(t.getID());
+		}
+		return ids;
 	}
 
 

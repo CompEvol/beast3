@@ -29,6 +29,7 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Dirichlet;
 import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.Uniform;
@@ -413,13 +414,14 @@ public class PriorReplacementTest {
 			// the outer combo box selects the Bounded prior itself, the inner one its distribution
 			ComboBox<BeautiSubTemplate> inner = findComboBoxShowing(root, "Normal");
 			assertNotNull(inner, "no combo box for the inner distribution of the Bounded prior");
-			select(inner, "Uniform");
+			// Beta has support [0,1]. Uniform, which has its own bounds, is not offered inside Bounded
+			select(inner, "Beta");
 		}, error);
 		rethrow(error);
 
 		assertEquals(List.of(0.0, 10.0), boundsBefore);
-		assertTrue(bounded.get().distributionInput.get() instanceof Uniform,
-				"inner distribution was not replaced by Uniform: " + bounded.get().distributionInput.get());
+		assertTrue((Object) bounded.get().distributionInput.get() instanceof Beta,
+				"inner distribution was not replaced by Beta: " + bounded.get().distributionInput.get());
 		assertEquals(0.0, param.get().getLower(), 0.0);
 		assertEquals(1.0, param.get().getUpper(), 0.0);
 	}

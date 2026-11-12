@@ -125,6 +125,41 @@ final class PriorEditorUtil {
 	}
 
 	/**
+	 * @return a message if the prior gives probability to values outside the domain of its
+	 * parameter, e.g. a Normal bounded to [-1, 1] on a PositiveReal parameter, or null if its
+	 * support lies within the domain. Such a prior is not a proper density on the values the
+	 * parameter can take: BEAST samples the right values, but its normalising constant is wrong,
+	 * which matters for marginal likelihoods, and sampling from the prior gives invalid values.
+	 */
+	static String supportOutsideDomainMessage(TensorDistribution<?,?> prior) {
+		if (prior == null || !(prior.paramInput.get() instanceof Tensor<?,?> param)
+				|| !(param.getDomain() instanceof Bounded<?> domain)) {
+			return null;
+		}
+		Object lower, upper;
+		try {
+			lower = prior.getLowerBoundOfParameter();
+			upper = prior.getUpperBoundOfParameter();
+		} catch (RuntimeException e) {
+			// the support cannot be determined: nothing to report
+			return null;
+		}
+		String id = ((BEASTInterface) param).getID();
+		String domainName = param.getDomain().getClass().getSimpleName();
+		if (lower instanceof Number l && domain.getLower() instanceof Number dl && l.doubleValue() < dl.doubleValue()) {
+			return "The prior allows values of " + id + " down to " + l + ", but " + id + " is " + domainName
+					+ " (lower bound " + dl + "). Raise the lower bound of the prior to at least " + dl
+					+ ", or choose another prior.";
+		}
+		if (upper instanceof Number u && domain.getUpper() instanceof Number du && u.doubleValue() > du.doubleValue()) {
+			return "The prior allows values of " + id + " up to " + u + ", but " + id + " is " + domainName
+					+ " (upper bound " + du + "). Lower the upper bound of the prior to at most " + du
+					+ ", or choose another prior.";
+		}
+		return null;
+	}
+
+	/**
 	 * Show an out-of-range initial value in the editor: the validation label (if the editor
 	 * has one) turns red, the "initial = ..." button turns red with the message as tooltip,
 	 * and validation listeners are told the input is invalid.
@@ -136,11 +171,15 @@ final class PriorEditorUtil {
 	 */
 	static boolean checkInitialValue(InputEditor.Base editor, TensorDistribution<?,?> prior,
 			Button initialValueButton, String initialValueTooltip) {
-		String message = invalidInitialValueMessage(prior);
+		String initialValueMessage = invalidInitialValueMessage(prior);
 		if (initialValueButton != null) {
-			initialValueButton.setStyle(message == null ? "" : INVALID_STYLE);
-			initialValueButton.setTooltip(new Tooltip(message == null ? initialValueTooltip : message));
+			initialValueButton.setStyle(initialValueMessage == null ? "" : INVALID_STYLE);
+			initialValueButton.setTooltip(new Tooltip(initialValueMessage == null ? initialValueTooltip : initialValueMessage));
 		}
+		// a prior that reaches outside the parameter's domain is reported first: fixing it
+		// may also make the initial value valid
+		String supportMessage = supportOutsideDomainMessage(prior);
+		String message = supportMessage != null ? supportMessage : initialValueMessage;
 		if (message == null) {
 			return true;
 		}
