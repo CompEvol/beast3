@@ -15,6 +15,22 @@
 3. Download bundles from the workflow run page (Artifacts section, 90-day retention).
 4. Test locally, then upload to the GitHub Release alongside the Mac DMG.
 
+## Bundled packages
+
+From 2.8.0 the installers carry five packages next to `BEAST.base` and `BEAST.app`: **bModelTest, ORC, SA, StarBeast3 and CCD** ([#248](https://github.com/CompEvol/beast3/issues/248)). Their zips go in the bundle's `packages/` folder (`Contents/app/packages/` on the Mac, `lib/packages/` on Linux and Windows). On first launch the launcher seeds them into the user's package folder ([#276](https://github.com/CompEvol/beast3/pull/276)).
+
+A package zip is compiled against one build of `beast-base` and `beast-fx`. It has to work with the core it ships with, whatever its `version.xml` says it needs. So the packages are built against the release candidate, and the order of a release is:
+
+1. **Publish the core.** Tag the release candidate (e.g. `v2.8.0-rc3`); `ci-publish.yml` publishes `beast-pkgmgmt`, `beast-base` and `beast-fx` to Maven Central.
+2. **Build and release each bundled package against it.** In the package's `pom.xml`, set `beast.version` to the candidate (e.g. `2.8.0-rc3`), build, and attach the package zip to a GitHub release of the package. The package's maintainer normally does this. If they cannot in time, build it from a pinned commit of the package's repository.
+3. **Pin the zips.** `release/bundled-packages.tsv` lists, for each package, the version, the URL of the released zip and its SHA-256. The bundle scripts take exactly these files and check each checksum.
+4. **Check the pinned zips against the candidate**, with the package check in [beast3-test](https://github.com/CompEvol/beast3-test) (`packages/`): build, examples, BEAUti scenarios and TreeAnnotator with CCD. This tests what ships, not the packages' default branches.
+5. **Build the installers.** `release/Mac/build-sign-dmg.sh`, `release/Linux/assemble-bundle.sh` and `release/Windows/assemble-bundle.sh` put the pinned zips into `packages/` next to the two core zips.
+
+**From the last release candidate to the final release**, the API of `beast-base` and `beast-fx` that packages use does not change (see "Changes to `beast-base`" in [scripts/DevNotes.md](../scripts/DevNotes.md)). The packages built against the last candidate then ship in the final release unchanged; only the core is rebuilt. If that API has to change after all, the order above is repeated for the final release.
+
+Status for 2.8.0 (12 Nov): the launcher seeds the bundled packages (#276). Still to do: `bundled-packages.tsv`, and the three bundle scripts, which copy only the two core zips.
+
 ## Artifacts produced by CI
 
 | Artifact | File |
