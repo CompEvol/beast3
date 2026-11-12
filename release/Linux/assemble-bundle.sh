@@ -123,6 +123,8 @@ for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
     cp "$PKG_ZIP" "$BUNDLE/lib/packages/"
     echo "    Bundled $(basename "$PKG_ZIP") into lib/packages/"
 done
+# the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
+bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$BUNDLE/lib/packages/"
 
 # ── Step 4: Copy JRE+FX ──────────────────────────────────────────────────────
 # cp -a preserves symlinks. A plain cp -r dereferences JRE internal symlinks,
@@ -209,9 +211,11 @@ VJAR_COUNT=$(find "$BUNDLE/lib" -name "*.jar" | wc -l | tr -d ' ')
     || _fail "beast-base or beast-fx JAR still on boot module path in lib/"
 
 PKG_COUNT=$(find "$BUNDLE/lib/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
-[ "$PKG_COUNT" -ge 2 ] \
-    && _ok "lib/packages/ has ${PKG_COUNT} core package zip(s)" \
-    || _fail "lib/packages/ has too few package zips: ${PKG_COUNT} (expected ≥2)"
+# the two core packages plus the bundled packages of release/bundled-packages.tsv
+PKG_EXPECTED=$((2 + $(grep -cv '^#\|^[[:space:]]*$' "$REPO_ROOT/release/bundled-packages.tsv")))
+[ "$PKG_COUNT" -eq "$PKG_EXPECTED" ] \
+    && _ok "lib/packages/ has ${PKG_COUNT} package zip(s)" \
+    || _fail "lib/packages/ has ${PKG_COUNT} package zips, expected ${PKG_EXPECTED}"
 
 for s in beast beauti treeannotator logcombiner applauncher packagemanager loganalyser; do
     [ -x "$BUNDLE/bin/$s" ] && _ok "bin/$s executable" || _fail "bin/$s not executable"
