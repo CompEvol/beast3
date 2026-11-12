@@ -275,6 +275,8 @@ for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
     cp "$PKG_ZIP" "$APP_DIR_IN_BUNDLE/packages/"
     echo "    Bundled $(basename "$PKG_ZIP") into Contents/app/packages/"
 done
+# the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
+bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$APP_DIR_IN_BUNDLE/packages/"
 
 
 

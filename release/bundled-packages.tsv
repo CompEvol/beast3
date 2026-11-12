@@ -1,0 +1,19 @@
+# Packages bundled with the BEAST installers (issue #248). One line per package:
+# <name in version.xml><TAB><version><TAB><URL of the released zip><TAB><SHA-256 of the zip>
+#
+# The bundle scripts (release/Mac/build-sign-dmg.sh, release/Linux/assemble-bundle.sh,
+# release/Windows/assemble-bundle.sh) download exactly these files with
+# release/common/fetch-bundled-packages.sh, check each checksum, and put the zips in the
+# bundle's packages/ folder, where the launcher seeds them on first launch.
+#
+# For each release candidate, the packages are built against that candidate and released,
+# and this list points to those releases (release/README.md, "Bundled packages").
+#
+# Pinned 12 Nov 2026: the latest release of each package, built against earlier 2.8.0
+# builds. They load and work with master (beast3#248, comment of 12 Nov); to be replaced
+# by releases built against 2.8.0-rc3.
+bModelTest	1.4.0	https://github.com/BEAST2-Dev/bModelTest/releases/download/v1.4.0/BMT.v1.4.0.zip	60e8226926b47f631131b1c36e391c318746e567042c485aaed23a54eefc295e
+ORC	1.3.1	https://github.com/jordandouglas/ORC/releases/download/v1.3.1/ORC.v1.3.1.zip	93c8ba4d10215e905f82df71fa67df53e06aff2eb7c1e47262476101013802c1
+SA	2.3.0	https://github.com/CompEvol/sampled-ancestors/releases/download/v2.3.0-beta2/SA.v2.3.0.zip	a331355c77dfefb23a51429d5d10a4524d6d00d21cfa64b1efb1ddf80832c9d0
+starbeast3	1.3.1	https://github.com/rbouckaert/starbeast3/releases/download/v1.3.1/starbeast3.v1.3.1.zip	5b627f49617fd2f137c5bdf33469e1cdf676f06fefa93e9cce39b0a18664d33c
+CCD	1.2.2	https://github.com/CompEvol/CCD/releases/download/v1.2.2/CCD.v1.2.2.zip	3154d54d0c76e50cd5c5358236e7830ceb165a1e1beaf831a0d67baf5f00c0f3

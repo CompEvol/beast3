@@ -212,6 +212,8 @@ for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
     cp "$PKG_ZIP" "$BUNDLE/app/packages/"
     echo "    Bundled $(basename "$PKG_ZIP") into app/packages/"
 done
+# the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
+bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$BUNDLE/app/packages/"
 
 # ── Step 5: Patch all .cfg files to module-path mode ─────────────────────────
 # jpackage emits classpath-mode cfg when --main-jar is used. Three transforms:
@@ -313,9 +315,11 @@ grep -q 'app.mainmodule' "$BUNDLE/app/beast.cfg" \
     || _fail "beast-base or beast-fx JAR still on boot module path in app/"
 
 PKG_COUNT=$(find "$BUNDLE/app/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
-[ "$PKG_COUNT" -ge 2 ] \
-    && _ok "app/packages/ has ${PKG_COUNT} core package zip(s)" \
-    || _fail "app/packages/ has too few package zips: ${PKG_COUNT} (expected ≥2)"
+# the two core packages plus the bundled packages of release/bundled-packages.tsv
+PKG_EXPECTED=$((2 + $(grep -cv '^#\|^[[:space:]]*$' "$REPO_ROOT/release/bundled-packages.tsv")))
+[ "$PKG_COUNT" -eq "$PKG_EXPECTED" ] \
+    && _ok "app/packages/ has ${PKG_COUNT} package zip(s)" \
+    || _fail "app/packages/ has ${PKG_COUNT} package zips, expected ${PKG_EXPECTED}"
 
 SPEC_COUNT=$(find "$BUNDLE/examples" -maxdepth 1 -name "*.xml" 2>/dev/null | wc -l | tr -d ' ')
 [ "$SPEC_COUNT" -gt 0 ] \
