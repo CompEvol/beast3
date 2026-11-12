@@ -102,8 +102,9 @@ final class PriorEditorUtil {
 	}
 
 	/**
-	 * @return a message if the initial value of the parameter of prior is outside the
-	 * range allowed by its domain and the prior, or null if it is valid or there is no parameter.
+	 * @return a message saying why the initial value of the parameter of prior is not valid,
+	 * e.g. outside the range allowed by its domain and the prior, or a simplex that does not
+	 * sum to 1; or null if it is valid or there is no parameter.
 	 */
 	static String invalidInitialValueMessage(TensorDistribution<?,?> prior) {
 		if (prior == null || !(prior.paramInput.get() instanceof Tensor<?,?> param)) {
@@ -118,10 +119,16 @@ final class PriorEditorUtil {
 		} catch (RuntimeException e) {
 			return "Initial value of " + ((BEASTInterface) param).getID() + " could not be checked: " + e.getMessage();
 		}
-		String range = param instanceof Bounded<?> b ? " " + b.boundsToString() : "";
-		return "Initial value " + param.get() + " of " + ((BEASTInterface) param).getID()
-				+ " is outside the range" + range + " allowed by its prior "
-				+ prior.getClass().getSimpleName() + ". Change the initial value or the prior.";
+		// say why it is not valid, as TensorDistribution.initAndValidate() does: e.g. a
+		// simplex whose values are all in range but do not sum to 1 (issue #281)
+		String why = param.whyNotValid();
+		if (why == null) {
+			why = param instanceof Bounded<?> b ? "The range allowed by its domain and its prior "
+					+ prior.getClass().getSimpleName() + " is " + b.boundsToString() + "." : "";
+		}
+		// param.toString() gives the ID and the value; param.get() fails on a vector
+		return "The value of " + param + " is not valid. " + why
+				+ " Change the initial value or the prior.";
 	}
 
 	/**
