@@ -353,6 +353,10 @@ public class ScalarDistributionInputEditorTest {
 		assertTrue(insideBounded.contains("Normal"), "Normal can be truncated to a positive range: " + insideBounded);
 		assertTrue(insideBounded.contains("OffsetReal"), "Offset is allowed inside Bounded: " + insideBounded);
 		assertFalse(insideBounded.contains("BoundedReal"), "Bounded inside Bounded: " + insideBounded);
+		// a distribution with its own lower and upper would show the bounds twice
+		for (String uniform : new String[] {"Uniform", "NonNegativeUniform", "LogUniform"}) {
+			assertFalse(insideBounded.contains(uniform), uniform + " offered inside Bounded: " + insideBounded);
+		}
 		assertFalse(insideBounded.contains("BoundedInt") || insideBounded.contains("OffsetInt") || insideBounded.contains("Poisson"),
 				"integer distribution offered for a real parameter: " + insideBounded);
 		assertFalse(insideOffset.isEmpty(), "nothing offered inside Offset");
@@ -414,6 +418,51 @@ public class ScalarDistributionInputEditorTest {
 			fail("test could not be run: " + error.get());
 		}
 		return statuses;
+	}
+
+	/**
+	 * Bounded with Offset inside it: the expanded editor shows the bounds, the offset, and
+	 * the inputs of the distribution inside Offset (here the mean and sigma of a Normal).
+	 */
+	@Test
+	public void testBoundedOffsetShowsInnermostInputs() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> missing = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
+			kappa.setID("kappa.s:test");
+			OffsetReal offset = new OffsetReal();
+			offset.initByName("distribution", standardNormal(), "offset", new RealScalarParam<>(1.0, Real.INSTANCE));
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", kappa, "distribution", offset,
+					"lower", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"upper", new RealScalarParam<>(100.0, Real.INSTANCE));
+			bounded.setID("KappaPrior.s:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", bounded);
+			prior.setID("prior");
+			doc.registerPlugin(kappa);
+			doc.registerPlugin(bounded);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, true,
+					ExpandOption.TRUE, ButtonStatus.ALL, null, doc);
+			for (String id : new String[] {"lower", "upper", "offset", "mean", "sigma"}) {
+				if (findTextField(editor.getComponent(), id) == null) {
+					missing.add(id);
+				}
+			}
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(missing.isEmpty(), "no text field for " + missing);
 	}
 
 	private static Normal standardNormal() {

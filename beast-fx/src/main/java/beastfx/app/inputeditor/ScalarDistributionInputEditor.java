@@ -759,9 +759,12 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         			: templateID.equals("BoundedInt") || templateID.equals("OffsetInt");
         	boolean add;
         	if (insideBounded) {
+        		// a distribution with its own lower and upper (Uniform, LogUniform, ...) is
+        		// not offered: Bounded already gives the bounds, so they would be shown twice
         		add = isOffset ? rightKind
         				: !isBounded && templateDomain != null
-        				  && (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain);
+        				  && (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain)
+        				  && !hasOwnBounds(templateInstances.get(k - 1));
         	} else if (insideOffset) {
         		add = !isBounded && !isOffset && isCompatible(domain, templateDomain);
         	} else {
@@ -869,6 +872,12 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 			}
 		}
 		return null;
+	}
+
+	/** @return true if the distribution has lower and upper inputs of its own, as Uniform has */
+	private static boolean hasOwnBounds(BEASTInterface distribution) {
+		return distribution != null && distribution.getInputs().containsKey("lower")
+				&& distribution.getInputs().containsKey("upper");
 	}
 
 	private boolean isCompatible(Class<?> paramDomain, Class<?> templateDomain) {
@@ -997,13 +1006,14 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 			}
 			
 	        List<InputEditor> editors = doc.getInputEditorFactory().addInputs(expandBox, (BEASTInterface)input.get(), this, null, doc);
-			
+
 //		} else if (m_beastObject instanceof TruncatedIntDistribution td) {
 //			expandBox.getChildren().set(0, createComboBox(td.distributionInput.get(), td.distributionInput));
-//			
+//
 //	        List<InputEditor> editors = doc.getInputEditorFactory().addInputs(expandBox, td.distributionInput.get(), this, null, doc);
-	        
+
 	        processVbox(editors);
+	        addInputsOfNestedDistribution((BEASTInterface) input.get(), editors);
 //		} else if (m_beastObject instanceof OffsetRealDistribution od) {
 //			expandBox.getChildren().set(0, createComboBox(od.distributionInput.get(), od.distributionInput));
 //			
@@ -1043,6 +1053,36 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 			}
 		}
 	}
+
+    /**
+     * Bounded can hold Offset (issue #232). Then the editors added for the Offset include one
+     * for its distribution input, which only offers a combo box: add the inputs of the
+     * distribution inside Offset (e.g. the mean and sigma of a Normal) right after it.
+     */
+    private void addInputsOfNestedDistribution(BEASTInterface inner, List<InputEditor> innerEditors) {
+    	if (!(inner instanceof OffsetReal || inner instanceof OffsetInt)) {
+    		return;
+    	}
+    	Input<?> distributionInput = inner.getInput("distribution");
+    	if (!(distributionInput.get() instanceof BEASTInterface innermost)) {
+    		return;
+    	}
+    	List<InputEditor> editors = doc.getInputEditorFactory().addInputs(expandBox, innermost, this, null, doc);
+    	List<Node> components = new ArrayList<>();
+    	for (InputEditor e : editors) {
+    		components.add(e.getComponent());
+    	}
+    	expandBox.getChildren().removeAll(components);
+    	// after the editor of Offset's distribution input, or at the end if there is none
+    	int pos = expandBox.getChildren().size();
+    	for (InputEditor e : innerEditors) {
+    		int index = expandBox.getChildren().indexOf(e.getComponent());
+    		if (e instanceof InputEditor.Base b && b.m_input == distributionInput && index >= 0) {
+    			pos = index + 1;
+    		}
+    	}
+    	expandBox.getChildren().addAll(pos, components);
+    }
 
     private void processVbox(List<InputEditor> editors) {
         // move editors in list to the front of the expandBox
