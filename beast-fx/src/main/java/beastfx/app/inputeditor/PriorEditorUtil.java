@@ -12,6 +12,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -101,6 +102,9 @@ final class PriorEditorUtil {
 		}
 	}
 
+	/** the number of values of a vector parameter shown in {@link #invalidInitialValueMessage} */
+	static final int MAX_VALUES_IN_MESSAGE = 5;
+
 	/**
 	 * @return a message saying why the initial value of the parameter of prior is not valid,
 	 * e.g. outside the range allowed by its domain and the prior, or a simplex that does not
@@ -126,9 +130,29 @@ final class PriorEditorUtil {
 			why = param instanceof Bounded<?> b ? "The range allowed by its domain and its prior "
 					+ prior.getClass().getSimpleName() + " is " + b.boundsToString() + "." : "";
 		}
-		// param.toString() gives the ID and the value; param.get() fails on a vector
-		return "The value of " + param + " is not valid. " + why
+		return "The value of " + valueToString(param, MAX_VALUES_IN_MESSAGE) + " is not valid. " + why
 				+ " Change the initial value or the prior.";
+	}
+
+	/**
+	 * @return the ID, the shape and the value of param as {@code param.toString()} gives them,
+	 * e.g. {@code freqs{4}: 0.25 0.25 0.25 0.25}, without its trailing space, and with only the
+	 * first maxValues values of a longer vector followed by {@code ...}, e.g. for per-branch
+	 * rates, to keep a tooltip short. Not for parsing: use {@code param.toString()} for that.
+	 */
+	static String valueToString(Tensor<?,?> param, int maxValues) {
+		// param.get() fails on a vector; toString() puts a space after each vector value
+		String str = param.toString().trim();
+		int colon = str.lastIndexOf(": ");
+		if (colon < 0) {
+			return str;
+		}
+		String[] values = str.substring(colon + 2).split(" ");
+		if (values.length <= maxValues) {
+			return str;
+		}
+		return str.substring(0, colon + 2)
+				+ String.join(" ", Arrays.copyOf(values, maxValues)) + " ...";
 	}
 
 	/**

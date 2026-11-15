@@ -156,6 +156,9 @@ public class BeautiPriorValidationTest extends BeautiBase {
 		assertTrue(buttonMessage.contains("The values must sum to 1, but they sum to 1.2"),
 				"the initial value button should say the sum is wrong: " + buttonMessage);
 		assertFalse(buttonMessage.contains("outside the"), "every value is in range: " + buttonMessage);
+		// the ID, the shape and the values, then a single space before "is not valid"
+		assertTrue(buttonMessage.contains("The value of " + freqs.getID() + "{4}: 0.3 0.3 0.3 0.3 is not valid."),
+				"the initial value button should give the value once, without a double space: " + buttonMessage);
 
 		robot.interact(() -> {
 			for (int i = 0; i < freqs.size(); i++) {
