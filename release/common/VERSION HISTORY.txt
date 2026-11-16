@@ -7,14 +7,14 @@ All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
 Version 2.8.0-rc3 November 2026
 	o Bundle the pinned packages in the Mac, Linux and Windows installers, and seed every package bundled with the application #248
-	o Add BactrianSubtreeScale, a scale-invariant subtree slide, and use it for BEAUti's subtree slide and the example XMLs #214
+	o Add BactrianSubtreeScale, a scale-invariant subtree slide, and use it with its default size for BEAUti's subtree slide (replacing the 0.01 BactrianSubtreeSlide of #201) and the example XMLs #214 #201
 	o Add a gainExponent for operator auto-tuning, default 0.6 for BactrianSubtreeSlide, and let schedule settings override an operator's default gain #218
 	o AdaptableOperatorSampler: learn operator weights for simplex parameters, clamp variances at 0 #227
 	o Fix the Hastings ratio of SampleOffValues #203
 	o Make the spec calibrated Yule prior and starting tree work with spec MRCAPrior calibrations #198
 	o Keep the calibrated Yule and birth-death densities accurate at small birth rates #207
 	o GTR in BEAUti: Dirichlet prior on the rates, more weight on rates and frequencies operators #146
-	o Use proper, wide log-normal default priors in BEAUti templates, and start the BEAUti subtree slide at size 0.01 #208 #201
+	o Use proper, wide log-normal default priors in BEAUti templates #208
 	o Random local clock template: scale only on-rates, Gibbs-sample off-rates, and key the rates prior to its clock partition #234 #222
 	o Offer a uniform prior for positive and non-negative parameters; reject invalid uniform bounds during MCMC and drop PositiveUniform #224
 	o BEAUti priors: drop bounds from the Initial button, fix stale prior links and combo labels, and report a prior that is not valid for its parameter or reaches outside its domain #230 #240
