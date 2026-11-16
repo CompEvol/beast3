@@ -5,11 +5,14 @@ import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.core.Log;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.*;
+import beast.base.spec.Bounded;
+import beast.base.spec.type.BoundUtils;
 import beast.base.spec.type.Scalar;
 import beast.base.spec.type.Tensor;
 import beast.base.spec.type.Vector;
@@ -56,6 +59,55 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
             throw new IllegalArgumentException("The value of " + param + " is not valid."
                     + (why == null ? "" : " " + why));
         }
+        warnIfSupportOutsideDomain();
+    }
+
+    /**
+     * Warn when this distribution puts probability on values that the domain of its
+     * parameter does not allow, e.g. Poisson on a PositiveInt parameter. See
+     * {@link BoundUtils#supportOutsideDomain(Bounded, Object, Object)} for why that matters.
+     * This is a warning rather than an error: while the distribution's own parameters
+     * are fixed the missing mass is a constant, and existing analyses must keep running.
+     */
+    protected void warnIfSupportOutsideDomain() {
+        String message = supportOutsideDomainMessage();
+        if (message != null) {
+            Log.warning("Warning: " + message);
+        }
+    }
+
+    /**
+     * @return a description of where this distribution's support reaches outside the
+     * domain of its parameter, or null when it fits or there is nothing to check
+     */
+    public String supportOutsideDomainMessage() {
+        if (param == null || !(param.getDomain() instanceof Bounded<?> domainBounds)) {
+            return null;
+        }
+        String outside;
+        try {
+            outside = BoundUtils.supportOutsideDomain(domainBounds,
+                    getLowerBoundOfParameter(), getUpperBoundOfParameter());
+        } catch (Throwable e) {
+            // bounds not available for this distribution, nothing to check
+            return null;
+        }
+        if (outside == null) {
+            return null;
+        }
+        String paramName = param instanceof BEASTInterface b && b.getID() != null
+                ? b.getID() : "the parameter";
+        return describe(this) + " puts probability on values " + outside
+                + ", but the domain " + param.getDomain().getClass().getSimpleName()
+                + " of " + paramName + " does not allow them. The prior is then not normalised"
+                + " over the values " + paramName + " can take, which biases estimates of the"
+                + " prior's own parameters and of the marginal likelihood."
+                + " Consider an Offset or Bounded prior, or a distribution whose support fits the domain.";
+    }
+
+    private static String describe(BEASTInterface o) {
+        String name = o.getClass().getSimpleName();
+        return o.getID() == null ? name : name + " '" + o.getID() + "'";
     }
 
     /**

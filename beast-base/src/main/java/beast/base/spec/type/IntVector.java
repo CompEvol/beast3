@@ -54,7 +54,9 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
     @Override
     default Integer getLower() {
         D domain = getDomain();
-        Integer lower = domain.getLower();
+        // inclusive, as these bounds are (see lowerInclusive()): PositiveInt's exclusive 0 becomes 1,
+        // so operators that propose up to getLower() never propose a value the domain rejects
+        Integer lower = domain.getInclusiveLower();
         if (this instanceof BEASTInterface b) {
             for (BEASTInterface o : b.getOutputs()) {
                 if (o instanceof ScalarDistribution d) {
@@ -76,7 +78,7 @@ public interface IntVector<D extends Int> extends Vector<D, Integer>, Bounded<In
     @Override
     default Integer getUpper() {
         D domain = getDomain();
-        Integer upper = domain.getUpper();
+        Integer upper = domain.getInclusiveUpper();
         if (this instanceof BEASTInterface b) {
             for (BEASTInterface o : b.getOutputs()) {
                 if (o instanceof ScalarDistribution d) {

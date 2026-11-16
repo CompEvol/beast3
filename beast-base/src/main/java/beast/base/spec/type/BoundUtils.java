@@ -1,6 +1,8 @@
 package beast.base.spec.type;
 
 import beast.base.core.BEASTInterface;
+import beast.base.spec.Bounded;
+import beast.base.spec.domain.Int;
 import beast.base.spec.inference.distribution.TensorDistribution;
 
 import java.util.List;
@@ -95,6 +97,53 @@ public final class BoundUtils {
             }
         }
         return current;
+    }
+
+    /**
+     * Describes where a distribution's support reaches outside a parameter's domain,
+     * e.g. Poisson (support from 0) on a PositiveInt parameter, or Normal on a
+     * PositiveReal one. The parameter cannot take those values, so the prior is not
+     * normalised over the values it can take: the missing mass is a constant while the
+     * distribution's own parameters are fixed, but it biases them when they are
+     * estimated, and it biases marginal likelihood estimates either way.
+     * <p>
+     * Integer bounds are compared as inclusive bounds, so a domain whose lower bound 0
+     * is exclusive (PositiveInt) starts at 1. Real bounds that are equal fit whether or
+     * not they are inclusive, since a single point carries no mass.
+     *
+     * @param domainBounds the bounds of the parameter's domain
+     * @param supportLower the lower bound of the distribution's support (inclusive)
+     * @param supportUpper the upper bound of the distribution's support (inclusive)
+     * @return null when the support lies within the domain, otherwise a description
+     *         such as "below 1" or "above 1.0"
+     */
+    public static String supportOutsideDomain(Bounded<?> domainBounds, Object supportLower, Object supportUpper) {
+        String below = null;
+        String above = null;
+        if (supportLower instanceof Integer lower && domainBounds instanceof Int intDomain) {
+            int first = intDomain.getInclusiveLower();
+            if (lower < first) {
+                below = "below " + first;
+            }
+        } else if (supportLower instanceof Double lower && domainBounds.getLower() instanceof Double domainLower) {
+            if (lower < domainLower) {
+                below = "below " + domainLower;
+            }
+        }
+        if (supportUpper instanceof Integer upper && domainBounds instanceof Int intDomain) {
+            int last = intDomain.getInclusiveUpper();
+            if (upper > last) {
+                above = "above " + last;
+            }
+        } else if (supportUpper instanceof Double upper && domainBounds.getUpper() instanceof Double domainUpper) {
+            if (upper > domainUpper) {
+                above = "above " + domainUpper;
+            }
+        }
+        if (below != null && above != null) {
+            return below + " and " + above;
+        }
+        return below != null ? below : above;
     }
 
 }

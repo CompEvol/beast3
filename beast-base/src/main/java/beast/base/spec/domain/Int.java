@@ -15,7 +15,31 @@ import beast.base.spec.Bounded;
 public class Int implements Domain<Integer>, Bounded<Integer> {
     public static final Int INSTANCE = new Int();
 
-    protected Int() {}
+    /**
+     * The smallest and largest integers this domain allows, e.g. 1 for PositiveInt,
+     * which is stored as the exclusive lower bound 0. Computed once, as integer
+     * parameters read them on every proposal. The bound methods of the subclasses
+     * return constants, so calling them from the constructor is safe.
+     */
+    private final int inclusiveLower;
+    private final int inclusiveUpper;
+
+    protected Int() {
+        int lower = getLower();
+        inclusiveLower = lowerInclusive() || lower == Integer.MAX_VALUE ? lower : lower + 1;
+        int upper = getUpper();
+        inclusiveUpper = upperInclusive() || upper == Integer.MIN_VALUE ? upper : upper - 1;
+    }
+
+    /** @return the smallest integer this domain allows */
+    public final int getInclusiveLower() {
+        return inclusiveLower;
+    }
+
+    /** @return the largest integer this domain allows */
+    public final int getInclusiveUpper() {
+        return inclusiveUpper;
+    }
 
     /**
      * Checks whether a given value is valid {@code Int}
