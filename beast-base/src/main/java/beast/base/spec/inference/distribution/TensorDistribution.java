@@ -45,11 +45,32 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     protected S param;
 
     /**
+     * Set when initAndValidate() starts. Until then the inputs that define this
+     * distribution's bounds may not be initialised themselves: an IntScalarParam bound
+     * reads 0 before its own initAndValidate(), and the XML parser initialises a
+     * parameter declared in the state before the bound parameters nested in its prior
+     * (issue #286). Parameters therefore ignore this distribution's bounds until then;
+     * the bounds are checked here instead, by param.isValid() below.
+     */
+    private boolean initialised = false;
+
+    /**
+     * @return whether initAndValidate() has started, so that the bounds this
+     * distribution reports can be relied on
+     */
+    public boolean isInitialised() {
+        return initialised;
+    }
+
+    /**
      * Initializes the distribution by reading the tensor parameter input and
      * validating its current value against type constraints.
      */
     @Override
     public void initAndValidate() {
+        // subclasses have refreshed their inputs before calling this, so from here on
+        // the bounds of this distribution can be used, including by param.isValid() below
+        initialised = true;
         param = paramInput.get(); // optional
         if (param != null && !param.isValid()) {
             String why = param.whyNotValid();
