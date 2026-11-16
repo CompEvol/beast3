@@ -5,6 +5,38 @@ Last updated: November 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-rc3 November 2026
+	o Bundle the pinned packages in the Mac, Linux and Windows installers, and seed every package bundled with the application #248
+	o Add BactrianSubtreeScale, a scale-invariant subtree slide, and use it for BEAUti's subtree slide and the example XMLs #214
+	o Add a gainExponent for operator auto-tuning, default 0.6 for BactrianSubtreeSlide, and let schedule settings override an operator's default gain #218
+	o AdaptableOperatorSampler: learn operator weights for simplex parameters, clamp variances at 0 #227
+	o Fix the Hastings ratio of SampleOffValues #203
+	o Make the spec calibrated Yule prior and starting tree work with spec MRCAPrior calibrations #198
+	o Keep the calibrated Yule and birth-death densities accurate at small birth rates #207
+	o GTR in BEAUti: Dirichlet prior on the rates, more weight on rates and frequencies operators #146
+	o Use proper, wide log-normal default priors in BEAUti templates, and start the BEAUti subtree slide at size 0.01 #208 #201
+	o Random local clock template: scale only on-rates, Gibbs-sample off-rates, and key the rates prior to its clock partition #234 #222
+	o Offer a uniform prior for positive and non-negative parameters; reject invalid uniform bounds during MCMC and drop PositiveUniform #224
+	o BEAUti priors: drop bounds from the Initial button, fix stale prior links and combo labels, and report a prior that is not valid for its parameter or reaches outside its domain #230 #240
+	o BEAUti: valid inner distribution choices for Bounded and Offset priors, show the inputs of Offset inside Bounded, and no initial value button for a distribution inside a wrapper #232
+	o Say why a parameter value is not valid (TensorDistribution, vector parameters, IntSimplex) and use whyNotValid() in BEAUti's invalid initial value message #253 #281
+	o IntSimplex.isValid() rejects an element outside the domain or bounds #255
+	o BEAUti dialog and vector parameters refuse a value that does not fit the dimension #244
+	o SiteModel: read the lower bound of the shape through the RealScalar interface #258
+	o BEAUti: refuse BEAST 2 analyses with a clear message #229
+	o BEAUti: report a command-line argument it cannot process and exit, and fix -xml FILE -exitaction usexml failing at start-up #264 #271
+	o BEAUti: a template that fails to load no longer throws a second exception #54
+	o BEAST exits with status 1 after an exception in the MCMC run #265
+	o Log boolean parameters as 1/0, not true/false #223
+	o seqgen: accept the deprecated SiteModel, and fix SimulatedAlignment restarting the global random stream #219
+	o Write parameter domains as names in JSONProducer #206
+	o Restore TreeHeightLogger as a deprecated class #235
+	o macOS bin/beast: use BEAGLE_LIB on Intel Macs too #228
+	o Convert the calibration, tree-prior and 12 more BEAST 2 examples to BEAST 3 with proper priors; ship SeqGen examples in beast-fx; proper priors in the legacy example copies #199 #204 #216 #220
+	o Move the example XML files to beast-base/examples and beast-fx/examples, and the BEAUti templates to beast-fx/fxtemplates #243 #238
+	o CHANGELOG: announce that the legacy classes go in 3.0.0, and that SliceOperator and the alignment taxon=sequence shorthand are removed #212 #236
+	o Tests: drop JUnit 4 so a JUnit 4 test cannot silently go unrun, BSP group size reference values from BEAST X, and correct the slow-test commands #270 #280 #273 #190
+
 Version 2.8.0-rc2 November 2026
 	o Fix BEAGLE loading on macOS in the 2.8 release #181
 	o Let AVMN move trees again through a scalable input on LogTransform (with the full dilation Jacobian), connect the tree to the AVMN log transform in BEAUti, and fix the legacy AVMN Hastings ratio for trees #180 #184
