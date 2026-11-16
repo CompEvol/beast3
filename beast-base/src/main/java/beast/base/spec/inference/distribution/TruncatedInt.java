@@ -7,8 +7,6 @@ import beast.base.core.Input.Validate;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
-import org.apache.commons.statistics.distribution.UniformDiscreteDistribution;
-
 import java.util.List;
 
 
@@ -91,10 +89,15 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double logDensity(double x) {
-        if (isValid((int) x))
-            return dist.calcLogP((int) x) - Math.log(1 - probOutOfBounds());
-        else
+        if (!isValid((int) x)) {
             return Double.NEGATIVE_INFINITY;
+        }
+        // the mass of the inner distribution on [lower, upper], both ends included
+        double mass = getUpperCDF() - getLowerCDF();
+        if (mass <= 0) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        return dist.calcLogP((int) x) - Math.log(mass);
     }
 
     @Override
@@ -104,9 +107,11 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double cumulativeProbability(double x) {
+        // P(X <= x) only changes at integers
+        x = Math.floor(x);
         if (x < lower.get()) {
             return 0.0;
-        } else if (x > upper.get()) {
+        } else if (x >= upper.get()) {
             return 1.0;
         } else {
             double lowerP = getLowerCDF();
@@ -121,7 +126,10 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         double lowerP = getLowerCDF();
         double upperP = getUpperCDF();
         double adjustedP = lowerP + p * (upperP - lowerP);
-        return getInnerDistribution().inverseCumulativeProbability(adjustedP);
+        int x = getInnerDistribution().inverseCumulativeProbability(adjustedP);
+        // adjustedP = lowerP (p = 0) maps to a value below lower, and rounding near
+        // upperP can map just past upper, so keep the result inside [lower, upper]
+        return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
     public ScalarDistribution<IntScalar<Int>, Integer> getInnerDistribution() {
@@ -151,54 +159,32 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         return Math.min(upper.get(), dist.getUpperBoundOfParameter());
     }
 
+    /**
+     * @return P(X < lower) = P(X <= lower - 1) for the inner distribution, so that
+     * lower itself is inside the truncation interval
+     */
     double getLowerCDF() {
-        return getInnerDistribution().cumulativeProbability(lower.get());
+        int l = lower.get();
+        if (l == Integer.MIN_VALUE) {
+            // nothing lies below the smallest int, and l - 1 would wrap around
+            return 0.0;
+        }
+        return getInnerDistribution().cumulativeProbability(l - 1);
     }
 
     double getUpperCDF() {
         return getInnerDistribution().cumulativeProbability(upper.get());
     }
 
-    double probOutOfBounds() {
-        double probOOB = getLowerCDF() + (1-getUpperCDF());
-        assert 0.0 <= probOOB && probOOB <= 1.0;
-        return probOOB;
-    }
     
     @Override
 	public List<Integer> sample() {
-        // Sample CDF value that is compatible with the valid interval [lower, upper] 
-        int uLower = lower.get();
-        int uUpper = upper.get();
-        UniformDiscreteDistribution uDist = UniformDiscreteDistribution.of(uLower, uUpper);
-        double u = uDist.createSampler(rng).sample();
-
-        // Transform using inverse CDF of the inner distribution
-        int x;
-        try {
-            x = getInnerDistribution().inverseCumulativeProbability(u);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to sample from truncated distribution", e);
-            // TODO use rejection sampling as fallback?
-        }
-
-        // Alternative implementation using rejection sampling (less efficient, but simpler logic):
-        // double x = dist.sample().get(0);
-        // int iterations = 0;
-        // while (!isValid(x)) {
-        //     if (iterations >= 10000) {
-        //     throw new RuntimeException(
-        //         "Failed to sample from truncated distribution after " + maxIterations + 
-        //         " attempts. The truncation interval [" + lower.get() + ", " + upper.get() + 
-        //         "] may have negligible probability mass.");
-        //     }
-        //     x = dist.sample().get(0);
-        //     iterations++;
-        // }
-
-        // Assert that the resulting sample is valid
+        refresh();
+        // inverse transform sampling: a uniform draw on [0, 1) mapped through the
+        // inverse CDF of the truncated distribution lands in [lower, upper]
+        double u = rng.nextDouble();
+        int x = inverseCumulativeProbability(u);
         assert isValid(x);
-
         // Returning an immutable result
         return List.of(x);
     }
@@ -206,20 +192,25 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     @Override
     public double getMean() {
         refresh();
-        ScalarDistribution<IntScalar<Int>, Integer> dist = getInnerDistribution();
-        int from = lower.get();
-        int to = upper.get();
-        int diff = to - from;
-        int step = 1 + diff / 1000;
-        
-        int i = from;
+        // sum over the values that carry all but a negligible part of the truncated mass;
+        // the tails beyond these quantiles cannot shift the mean noticeably
+        long from = inverseCumulativeProbability(0.0);
+        long to = inverseCumulativeProbability(1.0 - 1e-12);
+        // exact for up to MAX_MEAN_TERMS values; beyond that, approximate by visiting
+        // every step-th value (shown in BEAUti, so it should not fail)
+        long step = 1 + (to - from) / MAX_MEAN_TERMS;
         double mean = 0;
-        while (i <= to) {
-        	mean += i *  dist.density(i) * step;
-        	i += step;
+        double mass = 0;
+        for (long i = from; i <= to; i += step) {
+            double p = dist.density(i);
+            mean += i * p;
+            mass += p;
         }
-        return mean;
+        return mean / mass;
     }
+
+    /** largest number of values getMean() sums over exactly */
+    private static final long MAX_MEAN_TERMS = 10_000_000L;
 
     @Override
 	protected Object getApacheDistribution() {
