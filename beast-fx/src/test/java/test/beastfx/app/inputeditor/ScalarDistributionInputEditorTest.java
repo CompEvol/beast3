@@ -573,7 +573,7 @@ public class ScalarDistributionInputEditorTest {
 		assertNotNull(button.get(), "no initial value button");
 		assertTrue(button.get().getStyle().contains("red"), "initial value button not marked: " + button.get().getStyle());
 		String tooltip = button.get().getTooltip().getText();
-		assertTrue(tooltip.contains("5.0") && tooltip.contains("outside the range"), "tooltip: " + tooltip);
+		assertTrue(tooltip.contains("5.0") && tooltip.contains("outside the allowed range [0.0,1.0]"), "tooltip: " + tooltip);
 		assertTrue(statuses.contains(InputEditor.ValidationStatus.IS_INVALID), "validation statuses: " + statuses);
 	}
 

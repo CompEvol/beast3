@@ -12,6 +12,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -101,9 +102,13 @@ final class PriorEditorUtil {
 		}
 	}
 
+	/** the number of values of a vector parameter shown in {@link #invalidInitialValueMessage} */
+	static final int MAX_VALUES_IN_MESSAGE = 5;
+
 	/**
-	 * @return a message if the initial value of the parameter of prior is outside the
-	 * range allowed by its domain and the prior, or null if it is valid or there is no parameter.
+	 * @return a message saying why the initial value of the parameter of prior is not valid,
+	 * e.g. outside the range allowed by its domain and the prior, or a simplex that does not
+	 * sum to 1; or null if it is valid or there is no parameter.
 	 */
 	static String invalidInitialValueMessage(TensorDistribution<?,?> prior) {
 		if (prior == null || !(prior.paramInput.get() instanceof Tensor<?,?> param)) {
@@ -118,10 +123,36 @@ final class PriorEditorUtil {
 		} catch (RuntimeException e) {
 			return "Initial value of " + ((BEASTInterface) param).getID() + " could not be checked: " + e.getMessage();
 		}
-		String range = param instanceof Bounded<?> b ? " " + b.boundsToString() : "";
-		return "Initial value " + param.get() + " of " + ((BEASTInterface) param).getID()
-				+ " is outside the range" + range + " allowed by its prior "
-				+ prior.getClass().getSimpleName() + ". Change the initial value or the prior.";
+		// say why it is not valid, as TensorDistribution.initAndValidate() does: e.g. a
+		// simplex whose values are all in range but do not sum to 1 (issue #281)
+		String why = param.whyNotValid();
+		if (why == null) {
+			why = param instanceof Bounded<?> b ? "The range allowed by its domain and its prior "
+					+ prior.getClass().getSimpleName() + " is " + b.boundsToString() + "." : "";
+		}
+		return "The value of " + valueToString(param, MAX_VALUES_IN_MESSAGE) + " is not valid. " + why
+				+ " Change the initial value or the prior.";
+	}
+
+	/**
+	 * @return the ID, the shape and the value of param as {@code param.toString()} gives them,
+	 * e.g. {@code freqs{4}: 0.25 0.25 0.25 0.25}, without its trailing space, and with only the
+	 * first maxValues values of a longer vector followed by {@code ...}, e.g. for per-branch
+	 * rates, to keep a tooltip short. Not for parsing: use {@code param.toString()} for that.
+	 */
+	static String valueToString(Tensor<?,?> param, int maxValues) {
+		// param.get() fails on a vector; toString() puts a space after each vector value
+		String str = param.toString().trim();
+		int colon = str.lastIndexOf(": ");
+		if (colon < 0) {
+			return str;
+		}
+		String[] values = str.substring(colon + 2).split(" ");
+		if (values.length <= maxValues) {
+			return str;
+		}
+		return str.substring(0, colon + 2)
+				+ String.join(" ", Arrays.copyOf(values, maxValues)) + " ...";
 	}
 
 	/**
