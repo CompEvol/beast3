@@ -135,6 +135,24 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
     }
 
     /**
+     * Returns the survival function P(X &gt; x). Unlike {@code 1 - cumulativeProbability(x)},
+     * it keeps its precision in the upper tail, where P(X &le; x) is close to 1.
+     *
+     * @param x the point at which the survival function should be computed
+     * @return the probability P(X &gt; x)
+     */
+    public double survivalProbability(double x) {
+        Object dist = getApacheDistribution();
+        if (dist instanceof ContinuousDistribution cd) {
+            return cd.survivalProbability(x);
+        } else if (dist instanceof DiscreteDistribution dd) {
+            // P(X > x) only changes at integers; the cast saturates outside the int range
+            return dd.survivalProbability((int) Math.floor(x));
+        }
+        return 1.0 - cumulativeProbability(x);
+    }
+
+    /**
      * @return org.apache.commons.statistics.distribution.ContinuousDistribution or 
      *    org.apache.commons.statistics.distribution.DiscreteDistribution if available
      *    or null otherwise
@@ -179,6 +197,29 @@ public abstract class ScalarDistribution<S extends Scalar<?,T>, T>
          }
          throw new RuntimeException("Unknown distribution type");
      }
+
+    /**
+     * The inverse of {@link #survivalProbability(double)}: the smallest x with
+     * P(X &gt; x) &le; p. Use it instead of {@code inverseCumulativeProbability(1 - p)}
+     * when p is small, where 1 - p rounds away the difference.
+     *
+     * @param p the survival probability
+     * @return x
+     */
+    public T inverseSurvivalProbability(double p) {
+        if (p <= 0) {
+            return getUpperBoundOfParameter();
+        } else if (p >= 1) {
+            return getLowerBoundOfParameter();
+        }
+        Object dist = getApacheDistribution();
+        if (dist instanceof ContinuousDistribution cd) {
+            return (T) Double.valueOf(cd.inverseSurvivalProbability(p));
+        } else if (dist instanceof DiscreteDistribution dd) {
+            return (T) Integer.valueOf(dd.inverseSurvivalProbability(p));
+        }
+        return inverseCumulativeProbability(1.0 - p);
+    }
      
      /**
       * Returns the lower bound of the distribution's support, derived from

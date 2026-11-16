@@ -93,9 +93,51 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         return Math.exp(dist.calcLogP((int)x - offset.get()));
     }
     
+    // The CDF, survival function and their inverses must shift by the offset: the inherited
+    // versions use getApacheDistribution(), which is the inner distribution's, unshifted.
+    // TruncatedInt uses them for its normaliser when it wraps an OffsetInt.
+
+    @Override
+    public double cumulativeProbability(double x) {
+        if (dist == null) {
+            refresh();
+        }
+        return dist.cumulativeProbability(x - offset.get());
+    }
+
+    @Override
+    public double survivalProbability(double x) {
+        if (dist == null) {
+            refresh();
+        }
+        return dist.survivalProbability(x - offset.get());
+    }
+
     @Override
     public Integer inverseCumulativeProbability(double p) {
-    	return dist.inverseCumulativeProbability(p) + offset.get();
+        if (dist == null) {
+            refresh();
+        }
+        return shift(dist.inverseCumulativeProbability(p));
+    }
+
+    @Override
+    public Integer inverseSurvivalProbability(double p) {
+        if (dist == null) {
+            refresh();
+        }
+        return shift(dist.inverseSurvivalProbability(p));
+    }
+
+    /**
+     * @return x + offset, keeping Integer.MIN_VALUE and Integer.MAX_VALUE as "no limit",
+     * as the bounds below do, and saturating instead of wrapping around
+     */
+    private int shift(int x) {
+        if (x == Integer.MIN_VALUE || x == Integer.MAX_VALUE) {
+            return x;
+        }
+        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, (long) x + offset.get()));
     }
     
     @Override

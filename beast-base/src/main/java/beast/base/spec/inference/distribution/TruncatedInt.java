@@ -17,7 +17,7 @@ import java.util.List;
 public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     final public Input<ScalarDistribution<IntScalar<Int>, Integer>> distributionInput = new Input<>("distribution",
-            "precision of the normal distribution, defaults to 1", Validate.REQUIRED);
+            "the distribution to truncate", Validate.REQUIRED);
     final public Input<IntScalar<Int>> lowerInput = new Input<IntScalar<Int>>("lower", "Lower end of the truncation interval.");
     final public Input<IntScalar<Int>> upperInput = new Input<IntScalar<Int>>("upper", "Upper end of the truncation interval.");
 
@@ -36,7 +36,8 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         int lower,
         int upper
     ) {
-        assert (Int.INSTANCE.getLower() <= lower) && (lower < upper) && (upper <= Int.INSTANCE.getUpper());
+        // lower == upper is allowed: all the mass is then on that one value
+        assert (Int.INSTANCE.getLower() <= lower) && (lower <= upper) && (upper <= Int.INSTANCE.getUpper());
 
         try {
             initByName(
@@ -92,8 +93,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         if (!isValid((int) x)) {
             return Double.NEGATIVE_INFINITY;
         }
-        // the mass of the inner distribution on [lower, upper], both ends included
-        double mass = getUpperCDF() - getLowerCDF();
+        double mass = mass();
         if (mass <= 0) {
             return Double.NEGATIVE_INFINITY;
         }
@@ -113,22 +113,69 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
             return 0.0;
         } else if (x >= upper.get()) {
             return 1.0;
-        } else {
-            double lowerP = getLowerCDF();
-            double upperP = getUpperCDF();
-            double p = getInnerDistribution().cumulativeProbability(x);
-            return (p - lowerP) / (upperP - lowerP);
         }
+        Interval iv = interval();
+        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        if (iv.upperTail) {
+            // P(lower <= X <= x) = P(X >= lower) - P(X > x)
+            return (iv.atLower - inner.survivalProbability(x)) / iv.mass;
+        }
+        // P(lower <= X <= x) = P(X <= x) - P(X < lower)
+        return (inner.cumulativeProbability(x) - iv.atLower) / iv.mass;
     }
-    
+
+    @Override
+    public double survivalProbability(double x) {
+        x = Math.floor(x);
+        if (x < lower.get()) {
+            return 1.0;
+        } else if (x >= upper.get()) {
+            return 0.0;
+        }
+        Interval iv = interval();
+        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        if (iv.upperTail) {
+            // P(x < X <= upper) = P(X > x) - P(X > upper)
+            return (inner.survivalProbability(x) - iv.atUpper) / iv.mass;
+        }
+        return (iv.atUpper - inner.cumulativeProbability(x)) / iv.mass;
+    }
+
     @Override
     public Integer inverseCumulativeProbability(double p) {
-        double lowerP = getLowerCDF();
-        double upperP = getUpperCDF();
-        double adjustedP = lowerP + p * (upperP - lowerP);
-        int x = getInnerDistribution().inverseCumulativeProbability(adjustedP);
-        // adjustedP = lowerP (p = 0) maps to a value below lower, and rounding near
-        // upperP can map just past upper, so keep the result inside [lower, upper]
+        Interval iv = interval();
+        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        int x;
+        if (iv.upperTail) {
+            // smallest x with P(X >= lower) - P(X > x) >= p * mass
+            x = inner.inverseSurvivalProbability(iv.atLower - p * iv.mass);
+        } else {
+            // smallest x with P(X <= x) - P(X < lower) >= p * mass
+            x = inner.inverseCumulativeProbability(iv.atLower + p * iv.mass);
+        }
+        return clamp(x);
+    }
+
+    @Override
+    public Integer inverseSurvivalProbability(double p) {
+        Interval iv = interval();
+        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        int x;
+        if (iv.upperTail) {
+            // smallest x with P(X > x) - P(X > upper) <= p * mass
+            x = inner.inverseSurvivalProbability(iv.atUpper + p * iv.mass);
+        } else {
+            // smallest x with P(X <= upper) - P(X <= x) <= p * mass
+            x = inner.inverseCumulativeProbability(iv.atUpper - p * iv.mass);
+        }
+        return clamp(x);
+    }
+
+    /**
+     * p = 0 maps to a value below lower, and rounding near the ends can map just
+     * past them, so keep the result inside [lower, upper]
+     */
+    private int clamp(int x) {
         return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
@@ -176,7 +223,79 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         return getInnerDistribution().cumulativeProbability(upper.get());
     }
 
-    
+    /** @return P(X >= lower) = P(X > lower - 1) for the inner distribution */
+    double getLowerSurvival() {
+        int l = lower.get();
+        if (l == Integer.MIN_VALUE) {
+            return 1.0;
+        }
+        return getInnerDistribution().survivalProbability(l - 1);
+    }
+
+    /** @return P(X > upper) for the inner distribution */
+    double getUpperSurvival() {
+        return getInnerDistribution().survivalProbability(upper.get());
+    }
+
+    /**
+     * Whether [lower, upper] lies in the upper tail of the inner distribution. There
+     * P(X <= x) is close to 1 and differences of it lose their precision, down to 0
+     * (Poisson(2) from 25 on: P(X <= 24) is 1.0 in double precision), so the mass,
+     * CDF and inverse are computed from the survival function P(X > x) instead.
+     */
+    private static boolean isUpperTail(double lowerCDF) {
+        return lowerCDF > 0.5;
+    }
+
+    /**
+     * @return the probability mass of the inner distribution on [lower, upper], both
+     * ends included. Used by logDensity() on every MCMC step, so it does not allocate.
+     */
+    double mass() {
+        double lowerCDF = getLowerCDF();
+        if (isUpperTail(lowerCDF)) {
+            return getLowerSurvival() - getUpperSurvival();
+        }
+        return getUpperCDF() - lowerCDF;
+    }
+
+    /**
+     * The inner distribution's probabilities at both ends of [lower, upper]: cumulative
+     * probabilities P(X < lower) and P(X <= upper), or in the upper tail survival
+     * probabilities P(X >= lower) and P(X > upper).
+     */
+    private static final class Interval {
+        final boolean upperTail;
+        final double atLower, atUpper, mass;
+
+        Interval(boolean upperTail, double atLower, double atUpper) {
+            this.upperTail = upperTail;
+            this.atLower = atLower;
+            this.atUpper = atUpper;
+            this.mass = upperTail ? atLower - atUpper : atUpper - atLower;
+        }
+    }
+
+    /**
+     * @return the interval, for the CDF, the inverses, sample() and getMean()
+     * @throws IllegalStateException if [lower, upper] carries no probability, so that
+     * the truncated distribution is not defined (logDensity() is then -Infinity)
+     */
+    private Interval interval() {
+        refresh();
+        double lowerCDF = getLowerCDF();
+        Interval iv = isUpperTail(lowerCDF)
+                ? new Interval(true, getLowerSurvival(), getUpperSurvival())
+                : new Interval(false, lowerCDF, getUpperCDF());
+        if (!(iv.mass > 0)) {
+            throw new IllegalStateException(getClass().getSimpleName()
+                    + (getID() == null ? "" : " '" + getID() + "'") + ": the interval ["
+                    + lower.get() + ", " + upper.get() + "] carries no probability under "
+                    + dist.getClass().getSimpleName() + ", so the truncated distribution is not defined");
+        }
+        return iv;
+    }
+
     @Override
 	public List<Integer> sample() {
         refresh();
@@ -191,11 +310,13 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double getMean() {
-        refresh();
         // sum over the values that carry all but a negligible part of the truncated mass;
-        // the tails beyond these quantiles cannot shift the mean noticeably
+        // the tails beyond these quantiles cannot shift the mean noticeably. The upper
+        // quantile comes from the survival function: 1 - 1e-12 relative to the interval
+        // can round to 1.0 when it is measured with P(X <= x), and the inverse at 1.0 is
+        // Integer.MAX_VALUE.
         long from = inverseCumulativeProbability(0.0);
-        long to = inverseCumulativeProbability(1.0 - 1e-12);
+        long to = inverseSurvivalProbability(1e-12);
         // exact for up to MAX_MEAN_TERMS values; beyond that, approximate by visiting
         // every step-th value (shown in BEAUti, so it should not fail)
         long step = 1 + (to - from) / MAX_MEAN_TERMS;

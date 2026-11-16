@@ -149,4 +149,135 @@ public class TruncatedIntTest {
             assertEquals(expected, (double) counts[x] / n, 5 * se, "frequency of " + x);
         }
     }
+
+    //*** right tail: Walter's review of #284 ***//
+
+    /** P(X >= lower) for X ~ Poisson(lambda), from the survival function */
+    private static double upperTailMass(double lambda, int lower) {
+        return PoissonDistribution.of(lambda).survivalProbability(lower - 1);
+    }
+
+    /**
+     * Lower bound in the right tail: P(X <= lower - 1) is 1.0 or close to it in double
+     * precision, so the normaliser has to come from the survival function. With
+     * F(upper) - F(lower - 1) the density was -0.0989 at 20 (should be -0.091),
+     * -Infinity at 25 and -19.13 at 30.
+     */
+    @Test
+    public void testRightTailDensity() {
+        double lambda = 2.0;
+        PoissonDistribution p = PoissonDistribution.of(lambda);
+        for (int lower : new int[]{10, 20, 25, 30}) {
+            TruncatedInt t = truncatedPoisson(lambda, lower, null);
+            double expected = p.logProbability(lower) - Math.log(upperTailMass(lambda, lower));
+            assertEquals(expected, t.logDensity(lower), 1e-9, "logDensity at lower = " + lower);
+            double sum = 0;
+            for (int x = lower; x <= lower + 200; x++) {
+                sum += t.density(x);
+            }
+            assertEquals(1.0, sum, 1e-9, "pmf from " + lower);
+            assertEquals(t.density(lower), t.cumulativeProbability(lower), 1e-12);
+            assertFalse(Double.isNaN(t.cumulativeProbability(lower + 3)));
+        }
+    }
+
+    /** [25, 30]: both ends in the right tail */
+    @Test
+    public void testRightTailInterval() {
+        TruncatedInt t = truncatedPoisson(2.0, 25, 30);
+        double sum = 0;
+        for (int x = 25; x <= 30; x++) {
+            sum += t.density(x);
+        }
+        assertEquals(1.0, sum, 1e-9);
+        assertEquals(1.0, t.cumulativeProbability(30), 1e-12);
+        int[] counts = new int[31];
+        for (int i = 0; i < 20_000; i++) {
+            int x = t.sample().get(0);
+            assertTrue(x >= 25 && x <= 30, "sample " + x + " outside [25,30]");
+            counts[x]++;
+        }
+        // P(25 | [25, 30]) is about 0.9, not "always 30"
+        assertEquals(t.density(25), counts[25] / 20_000.0, 0.01);
+    }
+
+    /** Sampling with the lower end in the right tail stays at lower and above */
+    @Test
+    public void testRightTailSample() {
+        for (int lower : new int[]{10, 25, 30}) {
+            TruncatedInt t = truncatedPoisson(2.0, lower, null);
+            for (int i = 0; i < 1000; i++) {
+                int x = t.sample().get(0);
+                assertTrue(x >= lower && x < lower + 50, "sample " + x + " for lower = " + lower);
+            }
+        }
+    }
+
+    /**
+     * Poisson(2) truncated from 10: the mean is 10.213 (by hand: P(10) = e^-2 2^10 / 10!, each
+     * next term times 2 / (x + 1), mean 47.49 / 4.65 over the first five). It was 10.0, because the
+     * upper quantile 1 - 1e-12 rounded to 1.0 and the sum stepped from 10 to 225.
+     */
+    @Test
+    public void testRightTailMean() {
+        double lambda = 2.0;
+        PoissonDistribution p = PoissonDistribution.of(lambda);
+        for (int lower : new int[]{10, 25}) {
+            double expected = 0;
+            for (int x = lower; x <= lower + 200; x++) {
+                expected += x * p.probability(x);
+            }
+            expected /= upperTailMass(lambda, lower);
+            assertEquals(expected, truncatedPoisson(lambda, lower, null).getMean(), 1e-9, "mean from " + lower);
+        }
+        assertEquals(10.213, truncatedPoisson(lambda, 10, null).getMean(), 0.001);
+    }
+
+    /** An interval without probability: logDensity is -Infinity, the rest says why it is undefined */
+    @Test
+    public void testEmptyInterval() {
+        TruncatedInt t = truncatedPoisson(2.0, -5, -1);
+        assertEquals(Double.NEGATIVE_INFINITY, t.logDensity(-3));
+        assertThrows(IllegalStateException.class, () -> t.cumulativeProbability(-3));
+        assertThrows(IllegalStateException.class, t::getMean);
+        assertThrows(IllegalStateException.class, t::sample);
+    }
+
+    /** lower == upper puts all the mass on that value; the constructor accepts it */
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public void testSingleValueConstructor() {
+        Poisson poisson = new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
+        // raw cast: the constructor's generic type does not accept a NonNegativeInt-domain
+        // distribution yet (step 3 of the domain-aware Offset/Bounded plan)
+        TruncatedInt t = new TruncatedInt((ScalarDistribution) poisson, 3, 3);
+        assertEquals(1.0, t.density(3), 1e-12);
+        assertEquals(3, t.sample().get(0));
+        assertEquals(3.0, t.getMean(), 1e-12);
+    }
+
+    /**
+     * Bounded(Offset(...)), which BEAUti offers: the normaliser uses the Offset's CDF, which
+     * ignored the offset, so the pmf of Bounded(Offset(Poisson(2), 5), [6, 8]) summed to 44.
+     */
+    @Test
+    public void testBoundedOffset() {
+        Poisson poisson = new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
+        OffsetInt offset = new OffsetInt();
+        offset.initByName("distribution", poisson, "offset", new IntScalarParam<>(5, Int.INSTANCE));
+        TruncatedInt t = new TruncatedInt();
+        t.initByName("distribution", offset,
+                "lower", new IntScalarParam<>(6, Int.INSTANCE),
+                "upper", new IntScalarParam<>(8, Int.INSTANCE));
+        PoissonDistribution p = PoissonDistribution.of(2.0);
+        double mass = p.probability(1) + p.probability(2) + p.probability(3);
+        assertEquals(p.probability(1) / mass, t.density(6), 1e-12);
+        double sum = 0;
+        for (int x = 6; x <= 8; x++) {
+            sum += t.density(x);
+        }
+        assertEquals(1.0, sum, 1e-12);
+        assertEquals((1 * p.probability(1) + 2 * p.probability(2) + 3 * p.probability(3)) / mass + 5,
+                t.getMean(), 1e-9);
+    }
 }

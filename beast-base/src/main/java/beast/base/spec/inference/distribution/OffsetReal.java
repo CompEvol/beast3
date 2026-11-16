@@ -93,9 +93,40 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
         return Math.exp(dist.calcLogP(x - offset.get()));
     }
     
+    // The CDF, survival function and their inverses must shift by the offset: the inherited
+    // versions use getApacheDistribution(), which is the inner distribution's, unshifted.
+    // TruncatedReal uses the CDF for its normaliser when it wraps an OffsetReal.
+
+    @Override
+    public double cumulativeProbability(double x) {
+        if (dist == null) {
+            refresh();
+        }
+        return dist.cumulativeProbability(x - offset.get());
+    }
+
+    @Override
+    public double survivalProbability(double x) {
+        if (dist == null) {
+            refresh();
+        }
+        return dist.survivalProbability(x - offset.get());
+    }
+
     @Override
     public Double inverseCumulativeProbability(double p) {
-    	return dist.inverseCumulativeProbability(p) + offset.get();
+        if (dist == null) {
+            refresh();
+        }
+        return dist.inverseCumulativeProbability(p) + offset.get();
+    }
+
+    @Override
+    public Double inverseSurvivalProbability(double p) {
+        if (dist == null) {
+            refresh();
+        }
+        return dist.inverseSurvivalProbability(p) + offset.get();
     }
 
     

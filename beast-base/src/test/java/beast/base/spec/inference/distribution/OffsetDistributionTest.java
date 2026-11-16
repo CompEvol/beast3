@@ -129,4 +129,35 @@ public class OffsetDistributionTest {
         assertEquals(Double.NEGATIVE_INFINITY, offsetReal.calculateLogP());
     }
 
+
+    //*** CDF, survival function and inverses shift by the offset ***//
+
+    /**
+     * They used to come from the inner distribution unshifted: P(X <= 4) for
+     * Poisson(2) + 5 was 0.947 instead of 0.
+     */
+    @Test
+    public void testOffsetIntCDF() {
+        OffsetInt o = offsetPoisson(2.0, 5, new IntScalarParam<>(6, Int.INSTANCE));
+        PoissonDistribution p = PoissonDistribution.of(2.0);
+        assertEquals(0.0, o.cumulativeProbability(4), 1e-15);
+        assertEquals(p.cumulativeProbability(0), o.cumulativeProbability(5), 1e-15);
+        assertEquals(p.cumulativeProbability(3), o.cumulativeProbability(8), 1e-15);
+        assertEquals(p.survivalProbability(3), o.survivalProbability(8), 1e-15);
+        assertEquals(1.0, o.survivalProbability(4), 1e-15);
+        assertEquals(p.inverseCumulativeProbability(0.5) + 5, o.inverseCumulativeProbability(0.5));
+        assertEquals(p.inverseSurvivalProbability(0.1) + 5, o.inverseSurvivalProbability(0.1));
+        // no upper limit stays no upper limit instead of wrapping around
+        assertEquals(Integer.MAX_VALUE, o.inverseCumulativeProbability(1.0));
+    }
+
+    @Test
+    public void testOffsetRealCDF() {
+        OffsetReal o = offsetExponential(1.0, 3.0, new RealScalarParam<>(4.0, Real.INSTANCE));
+        assertEquals(0.0, o.cumulativeProbability(3.0), 1e-15);
+        assertEquals(1 - Math.exp(-1), o.cumulativeProbability(4.0), 1e-12);
+        assertEquals(Math.exp(-1), o.survivalProbability(4.0), 1e-12);
+        assertEquals(3.0 + Math.log(2), o.inverseCumulativeProbability(0.5), 1e-12);
+        assertEquals(3.0 + Math.log(10), o.inverseSurvivalProbability(0.1), 1e-12);
+    }
 }
