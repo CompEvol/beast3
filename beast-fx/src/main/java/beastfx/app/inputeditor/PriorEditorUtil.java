@@ -6,7 +6,14 @@ import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.inference.distribution.Beta;
+import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.TensorDistribution;
+import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Tensor;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -65,11 +72,72 @@ final class PriorEditorUtil {
 		// density, and the model is parsed again from XML for a run.
 		newPrior.paramInput.setValue(param, newPrior);
 
+		if (newPrior instanceof IID<?, ?, ?> iid) {
+			setDefaultIIDBase(doc, iid, param, context);
+		}
+
 		list.set(itemNr, newPrior);
 		newPrior.setID(id);
 		doc.pluginmap.remove(id);
 		doc.registerPlugin(newPrior);
 		return newPrior;
+	}
+
+	/**
+	 * Give a new IID on a non-negative or unit-interval vector a base distribution that fits
+	 * the vector's domain. The IID template's base is a Uniform on (-1e307, 1e307), meant for
+	 * a Real vector; on a PositiveReal vector it puts half its mass below 0, where the vector
+	 * cannot go. The base becomes:
+	 * <ul>
+	 * <li>PositiveReal or NonNegativeReal: LogNormal(0, 8) in log space, as the hyperprior on
+	 * a positive scalar (BeautiConfig.HYPER_PRIOR_XML)</li>
+	 * <li>UnitInterval: Beta(1, 1), uniform on [0, 1]</li>
+	 * </ul>
+	 * A Real vector keeps the template's Uniform. The base is created from BEAUti's own
+	 * LogNormal and Beta subtemplates, as when the user picks one, and then given these values.
+	 */
+	static void setDefaultIIDBase(BeautiDoc doc, IID<?, ?, ?> iid, Object param, PartitionContext context) {
+		if (!(param instanceof RealVector<?> vector)) {
+			return;
+		}
+		Object domain = vector.getDomain();
+		// UnitInterval extends NonNegativeReal, so it is checked first
+		String templateID = domain instanceof UnitInterval ? "Beta"
+				: domain instanceof NonNegativeReal ? "LogNormal" : null;
+		if (templateID == null || doc == null || doc.beautiConfig == null) {
+			return;
+		}
+		BeautiSubTemplate template = null;
+		for (BeautiSubTemplate t : doc.beautiConfig.subTemplates) {
+			if (templateID.equals(t.getID())) {
+				template = t;
+				break;
+			}
+		}
+		if (template == null) {
+			// the template set has no LogNormal or Beta: keep the IID template's base
+			return;
+		}
+		// createSubNet puts the new distribution in iid's distr input, replacing the Uniform
+		Object base = template.createSubNet(context, iid, iid.distInput, true);
+		if (base instanceof LogNormal logNormal) {
+			setValue(logNormal.MParameterInput.get(), 0.0);
+			setValue(logNormal.SParameterInput.get(), 8.0);
+			logNormal.hasMeanInRealSpaceInput.setValue(false, logNormal);
+		} else if (base instanceof Beta beta) {
+			setValue(beta.alphaInput.get(), 1.0);
+			setValue(beta.betaInput.get(), 1.0);
+		}
+		if (base instanceof BEASTInterface b) {
+			b.initAndValidate();
+		}
+	}
+
+	private static void setValue(Object scalar, double value) {
+		if (scalar instanceof RealScalarParam<?> p) {
+			p.valuesInput.setValue(value, p);
+			p.initAndValidate();
+		}
 	}
 
 	/**
