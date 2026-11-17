@@ -223,6 +223,46 @@
 ]]>
         </subtemplate>
 
+        <!-- Geometric: number of failures before the first success -->
+        <subtemplate id='Geometric' class='beast.base.spec.inference.distribution.Geometric' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Geometric.param'
+            hmc='
+            Geometric/p/=ParametricDistributions/Geometric/p/'>
+            <![CDATA[
+		<distr spec='beast.base.spec.inference.distribution.Geometric'>
+            <p spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" value="0.5" estimate="false"/>
+		</distr>
+]]>
+        </subtemplate>
+
+        <!-- NegativeBinomial: over-dispersed Poisson with mean and dispersion r -->
+        <subtemplate id='NegativeBinomial' class='beast.base.spec.inference.distribution.NegativeBinomial' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.NegativeBinomial.param'
+            hmc='
+            NegativeBinomial/mean/=ParametricDistributions/NegativeBinomial/mean/,
+            NegativeBinomial/r/=ParametricDistributions/NegativeBinomial/r/'>
+            <![CDATA[
+		<distr spec='beast.base.spec.inference.distribution.NegativeBinomial'>
+            <mean spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            <r spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+		</distr>
+]]>
+        </subtemplate>
+
+        <!-- Binomial: number of successes in numTrials trials -->
+        <subtemplate id='Binomial' class='beast.base.spec.inference.distribution.Binomial' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.Binomial.param'
+            hmc='
+            Binomial/numTrials/=ParametricDistributions/Binomial/numTrials/,
+            Binomial/p/=ParametricDistributions/Binomial/p/'>
+            <![CDATA[
+		<distr spec='beast.base.spec.inference.distribution.Binomial'>
+            <numTrials spec="beast.base.spec.inference.parameter.IntScalarParam" domain="NonNegativeInt" value="10" estimate="false"/>
+            <p spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" value="0.5" estimate="false"/>
+		</distr>
+]]>
+        </subtemplate>
+
         <!-- Dirichlet -->
         <!-- The "param" below is hidden from the user (see suppressInputs) and its value is never used. -->
         <!-- BEAUti still needs it to recognize Dirichlet as a valid prior for simplex parameters; -->

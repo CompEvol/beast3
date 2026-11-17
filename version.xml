@@ -228,6 +228,9 @@
                 <provider classname="beast.base.spec.inference.distribution.Normal"/>
 <!--OneOnX not migrated, it is not a distribution-->
                 <provider classname="beast.base.spec.inference.distribution.Poisson"/>
+                <provider classname="beast.base.spec.inference.distribution.Geometric"/>
+                <provider classname="beast.base.spec.inference.distribution.NegativeBinomial"/>
+                <provider classname="beast.base.spec.inference.distribution.Binomial"/>
                 <provider classname="beast.base.spec.inference.distribution.Uniform"/>
                 <provider classname="beast.base.spec.inference.distribution.NonNegativeUniform"/>
                 <provider classname="beast.base.spec.inference.distribution.IID"/>

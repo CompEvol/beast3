@@ -11,11 +11,13 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
+import beast.base.spec.inference.distribution.Geometric;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.distribution.TruncatedInt;
@@ -131,6 +133,23 @@ public class PriorEditorUtilTest {
 	 * parameter's is offered: the same domain, then a narrower one, then a broader one.
 	 * Other classes are not affected.
 	 */
+	/**
+	 * Geometric with p = 0 gives every count probability 0: the initial value is within the
+	 * prior's range, but BEAUti reports it, as MCMC cannot start from it.
+	 */
+	@Test
+	void geometricWithPZeroIsReported() {
+		RealScalarParam<UnitInterval> p = new RealScalarParam<>(0.3, UnitInterval.INSTANCE);
+		IntScalarParam<NonNegativeInt> k = new IntScalarParam<>(2, NonNegativeInt.INSTANCE);
+		k.setID("k");
+		Geometric geometric = new Geometric(k, p);
+		assertNull(PriorEditorUtil.invalidInitialValueMessage(geometric));
+		p.set(0.0);
+		String message = PriorEditorUtil.invalidInitialValueMessage(geometric);
+		assertNotNull(message, "p = 0 not reported");
+		assertTrue(message.contains("probability 0") && message.contains("k"), message);
+	}
+
 	@Test
 	void closestDomainPerClass() {
 		BeautiSubTemplate iid = template("IID", "IID");

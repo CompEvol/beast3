@@ -188,7 +188,7 @@ final class PriorEditorUtil {
 			// isValid() checks the value against the effective bounds, which include the bounds
 			// of the prior (via TensorDistribution.getArguments)
 			if (param.isValid()) {
-				return null;
+				return zeroProbabilityMessage(prior, param);
 			}
 		} catch (RuntimeException e) {
 			return "Initial value of " + ((BEASTInterface) param).getID() + " could not be checked: " + e.getMessage();
@@ -202,6 +202,26 @@ final class PriorEditorUtil {
 		}
 		return "The value of " + valueToString(param, MAX_VALUES_IN_MESSAGE) + " is not valid. " + why
 				+ " Change the initial value or the prior.";
+	}
+
+	/**
+	 * @return a message when the prior gives the initial value, which is within its range,
+	 * probability 0 all the same, e.g. Geometric with p = 0, or Binomial with fewer trials than
+	 * the count; MCMC cannot start from such a state. Null otherwise, also when the density
+	 * cannot be computed (nothing more to say than the editor already shows).
+	 */
+	private static String zeroProbabilityMessage(TensorDistribution<?,?> prior, Tensor<?,?> param) {
+		double logP;
+		try {
+			logP = prior.calculateLogP();
+		} catch (RuntimeException e) {
+			return null;
+		}
+		if (logP != Double.NEGATIVE_INFINITY) {
+			return null;
+		}
+		return "The prior " + prior.getClass().getSimpleName() + " gives " + valueToString(param, MAX_VALUES_IN_MESSAGE)
+				+ " probability 0, so MCMC cannot start from it. Change the initial value or the parameters of the prior.";
 	}
 
 	/**
