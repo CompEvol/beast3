@@ -48,6 +48,19 @@ public class DeclaredDomainTest {
         }
     }
 
+    /** a Poisson(lambda) prior on the parameter, which bounds it below by 0 */
+    private static Poisson poissonPrior(IntScalarParam<?> p, double lambda) {
+        Poisson prior = new Poisson();
+        prior.initByName("param", p, "lambda", new RealScalarParam<>(lambda, NonNegativeReal.INSTANCE));
+        return prior;
+    }
+
+    /** the domain error thrown on the first evaluation, for an estimated input whose range does not fit */
+    private static void assertRangeError(org.junit.jupiter.api.function.Executable e) {
+        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, e);
+        assertTrue(thrown.getMessage().contains("can move its support"), thrown.getMessage());
+    }
+
     /** initByName wraps the IllegalArgumentException from initAndValidate in a RuntimeException */
     private static void assertDomainError(org.junit.jupiter.api.function.Executable e) {
         RuntimeException thrown = assertThrows(RuntimeException.class, e);
@@ -92,19 +105,86 @@ public class DeclaredDomainTest {
         assertEquals(-1, o.getLowerBoundOfParameter());
     }
 
-    /** an estimated offset that moves the support outside the declared domain gives -Infinity */
+    /**
+     * Typed without a declared domain, the domain reads Int, not the type argument: this
+     * used to throw ClassCastException (Int cannot be cast to PositiveInt).
+     */
     @Test
-    public void testOffsetIntEstimatedOffset() {
-        IntScalarParam<Int> offset = new IntScalarParam<>(1, Int.INSTANCE);
+    public void testTypedWithoutDomainReadsInt() {
+        OffsetInt<PositiveInt> o = new OffsetInt<>(poisson(), 1);
+        Int d = o.getParameterDomain();
+        assertSame(Int.INSTANCE, d);
+        TruncatedReal<PositiveReal> t = new TruncatedReal<>(standardNormal(), 0.0, 1.0);
+        Real r = t.getParameterDomain();
+        assertSame(Real.INSTANCE, r);
+    }
+
+    /** an estimated offset, its range given by its domain */
+    private static OffsetInt<PositiveInt> estimatedOffset(IntScalarParam<?> offset) {
         IntScalarParam<PositiveInt> x = new IntScalarParam<>(3, PositiveInt.INSTANCE);
         OffsetInt<PositiveInt> o = new OffsetInt<>();
         o.initByName("domain", PositiveInt.INSTANCE, "distribution", poisson(), "offset", offset, "param", x);
         inState(offset, x);
+        return o;
+    }
+
+    /**
+     * An estimated offset that can move the support outside the declared domain is an error
+     * on the first evaluation, even when it starts at a value that fits: giving those states
+     * -Infinity would restrict the offset without normalising its prior.
+     */
+    @Test
+    public void testOffsetIntEstimatedOffsetRange() {
+        // Int and NonNegativeInt offsets can reach 0, where Poisson + 0 includes 0
+        assertRangeError(() -> estimatedOffset(new IntScalarParam<>(1, Int.INSTANCE)).calculateLogP());
+        assertRangeError(() -> estimatedOffset(new IntScalarParam<>(1, NonNegativeInt.INSTANCE)).calculateLogP());
+
+        // a PositiveInt offset cannot
+        IntScalarParam<PositiveInt> offset = new IntScalarParam<>(1, PositiveInt.INSTANCE);
+        OffsetInt<PositiveInt> o = estimatedOffset(offset);
+        assertTrue(Double.isFinite(o.calculateLogP()));
+        setValue(offset, 2);
+        assertTrue(Double.isFinite(o.calculateLogP()));
+    }
+
+    /** the range of an estimated offset is tightened by its prior */
+    @Test
+    public void testOffsetIntEstimatedOffsetRangeFromPrior() {
+        // offset ~ Poisson(1) can be 0: an error (Walter's example on #291)
+        IntScalarParam<Int> offset = new IntScalarParam<>(1, Int.INSTANCE);
+        offset.setID("offset");
+        poissonPrior(offset, 1.0);
+        assertRangeError(() -> estimatedOffset(offset).calculateLogP());
+
+        // offset ~ Poisson(1) + 1 starts at 1: fine
+        IntScalarParam<Int> offset1 = new IntScalarParam<>(1, Int.INSTANCE);
+        offset1.setID("offset1");
+        OffsetInt<Int> prior = new OffsetInt<>();
+        prior.initByName("distribution", poisson(), "offset", new IntScalarParam<>(1, Int.INSTANCE), "param", offset1);
+        assertTrue(Double.isFinite(estimatedOffset(offset1).calculateLogP()));
+    }
+
+    /**
+     * An offset calculated from other values has no known range: it is checked on every
+     * evaluation, with -Infinity while it puts the support outside the declared domain.
+     */
+    @Test
+    public void testOffsetIntCalculatedOffset() {
+        IntScalarParam<Int> a = new IntScalarParam<>(1, Int.INSTANCE);
+        beast.base.spec.evolution.IntSum sum = new beast.base.spec.evolution.IntSum();
+        sum.initByName("arg", a);
+        IntScalarParam<PositiveInt> x = new IntScalarParam<>(3, PositiveInt.INSTANCE);
+        OffsetInt<PositiveInt> o = new OffsetInt<>();
+        o.initByName("domain", PositiveInt.INSTANCE, "distribution", poisson(), "offset", sum, "param", x);
+        inState(a, x);
         double logP = o.calculateLogP();
         assertTrue(Double.isFinite(logP));
-        setValue(offset, 0);
+        // as MCMC does after a proposal: the sum recalculates
+        setValue(a, 0);
+        sum.requiresRecalculation();
         assertEquals(Double.NEGATIVE_INFINITY, o.calculateLogP());
-        setValue(offset, 1);
+        setValue(a, 1);
+        sum.requiresRecalculation();
         assertEquals(logP, o.calculateLogP(), 1e-15);
     }
 
@@ -140,18 +220,20 @@ public class DeclaredDomainTest {
                 "lower", new IntScalarParam<>(0, Int.INSTANCE), "upper", new IntScalarParam<>(10, Int.INSTANCE)));
     }
 
-    /** an estimated lower bound that moves to 0 under PositiveInt gives -Infinity */
-    @Test
-    public void testTruncatedIntEstimatedBound() {
-        IntScalarParam<Int> lower = new IntScalarParam<>(1, Int.INSTANCE);
+    private static TruncatedInt<PositiveInt> estimatedLower(IntScalarParam<?> lower) {
         IntScalarParam<PositiveInt> x = new IntScalarParam<>(3, PositiveInt.INSTANCE);
         TruncatedInt<PositiveInt> t = new TruncatedInt<>();
         t.initByName("domain", PositiveInt.INSTANCE, "distribution", poisson(),
                 "lower", lower, "upper", new IntScalarParam<>(10, Int.INSTANCE), "param", x);
         inState(lower, x);
-        assertTrue(Double.isFinite(t.calculateLogP()));
-        setValue(lower, 0);
-        assertEquals(Double.NEGATIVE_INFINITY, t.calculateLogP());
+        return t;
+    }
+
+    /** an estimated lower bound that can reach 0 under PositiveInt is an error; one that cannot is fine */
+    @Test
+    public void testTruncatedIntEstimatedBound() {
+        assertRangeError(() -> estimatedLower(new IntScalarParam<>(1, NonNegativeInt.INSTANCE)).calculateLogP());
+        assertTrue(Double.isFinite(estimatedLower(new IntScalarParam<>(1, PositiveInt.INSTANCE)).calculateLogP()));
     }
 
     //*** OffsetReal and TruncatedReal ***//
@@ -169,17 +251,20 @@ public class DeclaredDomainTest {
         assertThrows(RuntimeException.class, () -> new OffsetReal<>(PositiveReal.INSTANCE, exp, -1.0));
     }
 
-    @Test
-    public void testOffsetRealEstimatedOffset() {
-        RealScalarParam<Real> offset = new RealScalarParam<>(1.0, Real.INSTANCE);
+    private static OffsetReal<PositiveReal> estimatedOffset(RealScalarParam<?> offset) {
         RealScalarParam<PositiveReal> x = new RealScalarParam<>(3.0, PositiveReal.INSTANCE);
         Exponential exp = new Exponential(null, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
         OffsetReal<PositiveReal> o = new OffsetReal<>();
         o.initByName("domain", PositiveReal.INSTANCE, "distribution", exp, "offset", offset, "param", x);
         inState(offset, x);
-        assertTrue(Double.isFinite(o.calculateLogP()));
-        setValue(offset, -0.5);
-        assertEquals(Double.NEGATIVE_INFINITY, o.calculateLogP());
+        return o;
+    }
+
+    /** a Real offset can go below 0; a NonNegativeReal one keeps Exp + offset within PositiveReal */
+    @Test
+    public void testOffsetRealEstimatedOffset() {
+        assertRangeError(() -> estimatedOffset(new RealScalarParam<>(1.0, Real.INSTANCE)).calculateLogP());
+        assertTrue(Double.isFinite(estimatedOffset(new RealScalarParam<>(1.0, NonNegativeReal.INSTANCE)).calculateLogP()));
     }
 
     @Test

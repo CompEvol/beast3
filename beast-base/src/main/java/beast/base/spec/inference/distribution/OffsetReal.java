@@ -4,6 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -14,7 +15,7 @@ import java.util.List;
  * so that the effective parameter is {@code x - offset}.
  */
 @Description("Offsets a real valued distribution.")
-public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> {
+public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements DeclaresDomain {
 
     // any real distribution, whatever the domain of its own parameter, e.g. LogNormal (PositiveReal)
     final public Input<ScalarDistribution<? extends RealScalar<?>, Double>> distributionInput = new Input<>("distribution",
@@ -24,12 +25,14 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
 
     public final Input<? extends Real> domainInput = new Input<>("domain",
             "the domain of the values this distribution puts probability on, e.g. PositiveReal for LogNormal " +
-            "with offset 1 (optional). The shifted support must lie within it: it is checked when " +
-            "initialised, and the log density is -Infinity while an estimated offset puts it outside.");
+            "with offset 1 (optional). The shifted support must lie within it, for every value an estimated " +
+            "offset can take: an error otherwise.");
 
     private ScalarDistribution<? extends RealScalar<?>, Double> dist;
     RealScalar<?> offset;
     private Real declaredDomain;
+    /** how the offset can change, once known (see outsideDeclaredDomain()) */
+    private DeclaredDomain.Range offsetRange;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -80,11 +83,9 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
         refresh();
         dist.initAndValidate();
         declaredDomain = domainInput.get();
+        offsetRange = null;
         if (declaredDomain != null) {
-            String outside = supportOutsideDeclaredDomain();
-            if (outside != null) {
-                throw new IllegalArgumentException(DeclaredDomain.message(this, getID(), declaredDomain, outside));
-            }
+            DeclaredDomain.check(this, getID(), declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
         }
         super.initAndValidate();
     }
@@ -93,15 +94,35 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
      * @return the declared domain of the values this distribution puts probability on, or
      * Real when none is declared
      */
-    @SuppressWarnings("unchecked")
-    public D getParameterDomain() {
+    @Override
+    public Real getParameterDomain() {
         Real domain = domainInput.get();
-        return (D) (domain != null ? domain : Real.INSTANCE);
+        return domain != null ? domain : Real.INSTANCE;
     }
 
-    /** @return where the shifted support reaches outside the declared domain, or null */
-    private String supportOutsideDeclaredDomain() {
-        return DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
+    /**
+     * Whether the offset has put the support outside the declared domain. On the first
+     * evaluation, when all objects are initialised, an estimated offset's range is checked
+     * once (an error when it does not fit, see {@link DeclaredDomain}); only a calculated
+     * offset, whose range is not known, is checked on every evaluation.
+     */
+    private boolean outsideDeclaredDomain() {
+        if (declaredDomain == null) {
+            return false;
+        }
+        if (offsetRange == null || offsetRange == DeclaredDomain.Range.NOT_YET_KNOWN) {
+            offsetRange = DeclaredDomain.range(offset);
+            if (offsetRange == DeclaredDomain.Range.ESTIMATED) {
+                refresh();
+                DeclaredDomain.checkEstimated(this, getID(), declaredDomain,
+                        dist.getLowerBoundOfParameter() + offset.getLower(),
+                        dist.getUpperBoundOfParameter() + offset.getUpper(), "offset");
+            } else if (offsetRange == DeclaredDomain.Range.CALCULATED) {
+                DeclaredDomain.warnCalculated(this, getID(), "offset");
+            }
+        }
+        return offsetRange == DeclaredDomain.Range.CALCULATED
+                && DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter()) != null;
     }
 
     /**
@@ -123,8 +144,8 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
 
     @Override
     public double calculateLogP() {
-        if (declaredDomain != null && DeclaredDomain.canMove(offset) && supportOutsideDeclaredDomain() != null) {
-            // an estimated offset has moved the support outside the declared domain
+        if (outsideDeclaredDomain()) {
+            // a calculated offset has moved the support outside the declared domain
             logP = Double.NEGATIVE_INFINITY;
             return logP;
         }
@@ -134,7 +155,7 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
 
     @Override
     protected double calcLogP(Double value) {
-        if (declaredDomain != null && DeclaredDomain.canMove(offset) && supportOutsideDeclaredDomain() != null) {
+        if (outsideDeclaredDomain()) {
             return Double.NEGATIVE_INFINITY;
         }
         // refresh(); should have been called in dist.calcLogP

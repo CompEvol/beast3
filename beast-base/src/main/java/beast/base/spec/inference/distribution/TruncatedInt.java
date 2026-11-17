@@ -4,6 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
@@ -14,7 +15,7 @@ import java.util.List;
  * Wrapper that truncates an integer-valued distribution to the interval [lower, upper].
  */
 @Description("Distribution that truncates a integer valued distribution to the interval [lower,upper].")
-public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> {
+public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements DeclaresDomain {
 
     // any int distribution, whatever the domain of its own parameter
     final public Input<ScalarDistribution<? extends IntScalar<?>, Integer>> distributionInput = new Input<>("distribution",
@@ -24,12 +25,14 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
 
     public final Input<? extends Int> domainInput = new Input<>("domain",
             "the domain of the values this distribution puts probability on, e.g. PositiveInt for Poisson " +
-            "truncated to [1, 10] (optional). The truncated support must lie within it: it is checked when " +
-            "initialised, and the log probability is -Infinity while estimated bounds put it outside.");
+            "truncated to [1, 10] (optional). The truncated support must lie within it, for every value " +
+            "estimated bounds can take: an error otherwise.");
 
     private ScalarDistribution<? extends IntScalar<?>, Integer> dist;
     IntScalar<?> lower, upper;
     private Int declaredDomain;
+    /** how the truncation bounds can change, once known (see outsideDeclaredDomain()) */
+    private DeclaredDomain.Range boundsRange;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -63,11 +66,9 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
         refresh();
         dist.initAndValidate();
         declaredDomain = domainInput.get();
+        boundsRange = null;
         if (declaredDomain != null) {
-            String outside = supportOutsideDeclaredDomain();
-            if (outside != null) {
-                throw new IllegalArgumentException(DeclaredDomain.message(this, getID(), declaredDomain, outside));
-            }
+            DeclaredDomain.check(this, getID(), declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
         }
         super.initAndValidate();
     }
@@ -76,15 +77,39 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
      * @return the declared domain of the values this distribution puts probability on, or
      * Int when none is declared
      */
-    @SuppressWarnings("unchecked")
-    public D getParameterDomain() {
+    @Override
+    public Int getParameterDomain() {
         Int domain = domainInput.get();
-        return (D) (domain != null ? domain : Int.INSTANCE);
+        return domain != null ? domain : Int.INSTANCE;
     }
 
-    /** @return where the truncated support reaches outside the declared domain, or null */
-    private String supportOutsideDeclaredDomain() {
-        return DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
+    /**
+     * Whether the truncation bounds have put the support outside the declared domain. On
+     * the first evaluation, when all objects are initialised, the range of estimated bounds
+     * is checked once (an error when it does not fit, see {@link DeclaredDomain}); only
+     * calculated bounds, whose range is not known, are checked on every evaluation.
+     */
+    private boolean outsideDeclaredDomain() {
+        if (declaredDomain == null) {
+            return false;
+        }
+        if (boundsRange == null || boundsRange == DeclaredDomain.Range.NOT_YET_KNOWN) {
+            DeclaredDomain.Range l = DeclaredDomain.range(lowerInput.get());
+            DeclaredDomain.Range u = DeclaredDomain.range(upperInput.get());
+            boundsRange = l.compareTo(u) >= 0 ? l : u;
+            if (boundsRange == DeclaredDomain.Range.ESTIMATED) {
+                refresh();
+                // the lowest and highest values the support can reach
+                DeclaredDomain.checkEstimated(this, getID(), declaredDomain,
+                        Math.max(dist.getLowerBoundOfParameter(), l == DeclaredDomain.Range.ESTIMATED ? lower.getLower() : lower.get()),
+                        Math.min(dist.getUpperBoundOfParameter(), u == DeclaredDomain.Range.ESTIMATED ? upper.getUpper() : upper.get()),
+                        "truncation bounds");
+            } else if (boundsRange == DeclaredDomain.Range.CALCULATED) {
+                DeclaredDomain.warnCalculated(this, getID(), "truncation bounds");
+            }
+        }
+        return boundsRange == DeclaredDomain.Range.CALCULATED
+                && DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter()) != null;
     }
 
     /**
@@ -107,8 +132,8 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
     @Override
     public double calculateLogP() {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
-        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
-            // estimated bounds have moved the support outside the declared domain
+        if (outsideDeclaredDomain()) {
+            // calculated bounds have moved the support outside the declared domain
             logP = Double.NEGATIVE_INFINITY;
             return logP;
         }
@@ -119,7 +144,7 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
 	@Override
 	protected double calcLogP(Integer value) {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
-        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
+        if (outsideDeclaredDomain()) {
             return Double.NEGATIVE_INFINITY;
         }
 		return logDensity(value);

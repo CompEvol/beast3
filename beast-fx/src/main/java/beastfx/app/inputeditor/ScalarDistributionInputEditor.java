@@ -283,19 +283,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 		if (value == null) {
 			return null;
 		}
-		// Offset and Bounded priors are generic in their domain (e.g. OffsetInt<D extends Int>),
-		// so their class does not name it: use the domain they declare, or Int/Real otherwise
-		if (value instanceof OffsetInt<?> o) {
-			return o.getParameterDomain().getClass();
-		}
-		if (value instanceof TruncatedInt<?> t) {
-			return t.getParameterDomain().getClass();
-		}
-		if (value instanceof OffsetReal<?> o) {
-			return o.getParameterDomain().getClass();
-		}
-		if (value instanceof TruncatedReal<?> t) {
-			return t.getParameterDomain().getClass();
+		// a distribution generic in its domain (e.g. OffsetInt<D extends Int>) does not name it
+		// in its class: use the domain it declares
+		if (value instanceof DeclaresDomain d) {
+			return d.getParameterDomain().getClass();
 		}
 
         Type superclass = value.getClass().getGenericSuperclass();
