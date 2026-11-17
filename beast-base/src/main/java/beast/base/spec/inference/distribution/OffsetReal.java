@@ -4,6 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -14,15 +15,24 @@ import java.util.List;
  * so that the effective parameter is {@code x - offset}.
  */
 @Description("Offsets a real valued distribution.")
-public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
+public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements DeclaresDomain {
 
-    final public Input<ScalarDistribution<RealScalar<Real>, Double>> distributionInput = new Input<>("distribution",
-            "precision of the normal distribution, defaults to 1", Validate.REQUIRED);
-    
-	public final Input<RealScalar<Real>> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", new RealScalarParam<Real>(0.0, Real.INSTANCE));
+    // any real distribution, whatever the domain of its own parameter, e.g. LogNormal (PositiveReal)
+    final public Input<ScalarDistribution<? extends RealScalar<?>, Double>> distributionInput = new Input<>("distribution",
+            "the distribution to shift by the offset", Validate.REQUIRED);
 
-    private ScalarDistribution<RealScalar<Real>, Double> dist;
-    RealScalar<Real> offset;
+	public final Input<RealScalar<?>> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", new RealScalarParam<Real>(0.0, Real.INSTANCE));
+
+    public final Input<? extends Real> domainInput = new Input<>("domain",
+            "the domain of the values this distribution puts probability on, e.g. PositiveReal for LogNormal " +
+            "with offset 1 (optional). The shifted support must lie within it, for every value an estimated " +
+            "offset can take: an error otherwise.");
+
+    private ScalarDistribution<? extends RealScalar<?>, Double> dist;
+    RealScalar<?> offset;
+    private Real declaredDomain;
+    /** how the offset can change, once known (see outsideDeclaredDomain()) */
+    private DeclaredDomain.Range offsetRange;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -32,7 +42,7 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
     }
 
     public OffsetReal(
-        ScalarDistribution<RealScalar<Real>, Double> dist,
+        ScalarDistribution<? extends RealScalar<?>, Double> dist,
         double offset
     ) {
 
@@ -47,11 +57,72 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
         }
     }
 
+    /**
+     * @param domain the domain of the shifted values, e.g. PositiveReal.INSTANCE for LogNormal + 1
+     * @throws RuntimeException if the shifted support reaches outside the domain
+     */
+    public OffsetReal(
+        D domain,
+        ScalarDistribution<? extends RealScalar<?>, Double> dist,
+        double offset
+    ) {
+        try {
+            initByName(
+                "domain", domain,
+                "distribution", dist,
+                "offset", new RealScalarParam<Real>(offset, Real.INSTANCE)
+            );
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
     public void initAndValidate() {
         refresh();
         dist.initAndValidate();
+        declaredDomain = domainInput.get();
+        offsetRange = null;
+        if (declaredDomain != null) {
+            DeclaredDomain.check(this, getID(), declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
+        }
         super.initAndValidate();
+    }
+
+    /**
+     * @return the declared domain of the values this distribution puts probability on, or
+     * Real when none is declared
+     */
+    @Override
+    public Real getParameterDomain() {
+        Real domain = domainInput.get();
+        return domain != null ? domain : Real.INSTANCE;
+    }
+
+    /**
+     * Whether the offset has put the support outside the declared domain. On the first
+     * evaluation, when all objects are initialised, an estimated offset's range is checked
+     * once (an error when it does not fit, see {@link DeclaredDomain}); only a calculated
+     * offset, whose range is not known, is checked on every evaluation.
+     */
+    private boolean outsideDeclaredDomain() {
+        if (declaredDomain == null) {
+            return false;
+        }
+        if (offsetRange == null || offsetRange == DeclaredDomain.Range.NOT_YET_KNOWN) {
+            offsetRange = DeclaredDomain.range(offset);
+            if (offsetRange == DeclaredDomain.Range.ESTIMATED) {
+                refresh();
+                DeclaredDomain.checkEstimated(this, getID(), declaredDomain,
+                        dist.getLowerBoundOfParameter() + offset.getLower(),
+                        dist.getUpperBoundOfParameter() + offset.getUpper(), "offset");
+            } else if (offsetRange == DeclaredDomain.Range.CALCULATED) {
+                DeclaredDomain.warnCalculated(this, getID(), "offset");
+            }
+        }
+        return offsetRange == DeclaredDomain.Range.CALCULATED
+                && DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter()) != null;
     }
 
     /**
@@ -73,12 +144,20 @@ public class OffsetReal extends ScalarDistribution<RealScalar<Real>, Double> {
 
     @Override
     public double calculateLogP() {
+        if (outsideDeclaredDomain()) {
+            // a calculated offset has moved the support outside the declared domain
+            logP = Double.NEGATIVE_INFINITY;
+            return logP;
+        }
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Double value) {
+        if (outsideDeclaredDomain()) {
+            return Double.NEGATIVE_INFINITY;
+        }
         // refresh(); should have been called in dist.calcLogP
         return dist.calcLogP(value - offset.get());
     }

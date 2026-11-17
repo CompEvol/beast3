@@ -644,6 +644,11 @@ public class Input<T> {
                                             Type[] upperBounds = wType.getUpperBounds();
                                             if (upperBounds.length > 0 && upperBounds[0] instanceof Class<?> boundCls) {
                                                 theClass = boundCls;
+                                            } else if (upperBounds.length > 0 && upperBounds[0] instanceof ParameterizedType boundType
+                                                    && boundType.getRawType() instanceof Class<?> boundCls) {
+                                                // e.g. Input<ScalarDistribution<? extends IntScalar<?>, Integer>>:
+                                                // the raw type, as for a ParameterizedType above
+                                                theClass = boundCls;
                                             } else {
                                                 throw new IllegalArgumentException("Unsupported wildcard type: " + firstType);
                                             }

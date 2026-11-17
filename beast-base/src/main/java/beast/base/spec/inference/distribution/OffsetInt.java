@@ -4,6 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
@@ -14,15 +15,24 @@ import java.util.List;
  * so that the effective parameter is {@code x - offset}.
  */
 @Description("Offsets a integer valued distribution.")
-public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
+public class OffsetInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements DeclaresDomain {
 
-    final public Input<ScalarDistribution<IntScalar<Int>, Integer>> distributionInput = new Input<>("distribution",
-            "precision of the normal distribution, defaults to 1", Validate.REQUIRED);
-    
-	public final Input<IntScalar<Int>> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", new IntScalarParam<Int>(0, Int.INSTANCE));
+    // any integer distribution, whatever the domain of its own parameter, e.g. Poisson (NonNegativeInt)
+    final public Input<ScalarDistribution<? extends IntScalar<?>, Integer>> distributionInput = new Input<>("distribution",
+            "the distribution to shift by the offset", Validate.REQUIRED);
 
-    private ScalarDistribution<IntScalar<Int>, Integer> dist;
-    IntScalar<Int> offset;
+	public final Input<IntScalar<?>> offsetInput = new Input<>("offset", "offset of origin (defaults to 0)", new IntScalarParam<Int>(0, Int.INSTANCE));
+
+    public final Input<? extends Int> domainInput = new Input<>("domain",
+            "the domain of the values this distribution puts probability on, e.g. PositiveInt for Poisson " +
+            "with offset 1 (optional). The shifted support must lie within it, for every value an estimated " +
+            "offset can take: an error otherwise.");
+
+    private ScalarDistribution<? extends IntScalar<?>, Integer> dist;
+    IntScalar<?> offset;
+    private Int declaredDomain;
+    /** how the offset can change, once known (see outsideDeclaredDomain()) */
+    private DeclaredDomain.Range offsetRange;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -32,7 +42,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
     public OffsetInt(
-        ScalarDistribution<IntScalar<Int>, Integer> dist,
+        ScalarDistribution<? extends IntScalar<?>, Integer> dist,
         int offset
     ) {
 
@@ -47,11 +57,72 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         }
     }
 
+    /**
+     * @param domain the domain of the shifted values, e.g. PositiveInt.INSTANCE for Poisson + 1
+     * @throws RuntimeException if the shifted support reaches outside the domain, e.g. Poisson - 1
+     */
+    public OffsetInt(
+        D domain,
+        ScalarDistribution<? extends IntScalar<?>, Integer> dist,
+        int offset
+    ) {
+        try {
+            initByName(
+                "domain", domain,
+                "distribution", dist,
+                "offset", new IntScalarParam<Int>(offset, Int.INSTANCE)
+            );
+        } catch (Exception e) {
+            throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
+                    " via initByName in constructor.", e );
+        }
+    }
+
     @Override
     public void initAndValidate() {
         refresh();
         dist.initAndValidate();
+        declaredDomain = domainInput.get();
+        offsetRange = null;
+        if (declaredDomain != null) {
+            DeclaredDomain.check(this, getID(), declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
+        }
         super.initAndValidate();
+    }
+
+    /**
+     * @return the declared domain of the values this distribution puts probability on, or
+     * Int when none is declared
+     */
+    @Override
+    public Int getParameterDomain() {
+        Int domain = domainInput.get();
+        return domain != null ? domain : Int.INSTANCE;
+    }
+
+    /**
+     * Whether the offset has put the support outside the declared domain. On the first
+     * evaluation, when all objects are initialised, an estimated offset's range is checked
+     * once (an error when it does not fit, see {@link DeclaredDomain}); only a calculated
+     * offset, whose range is not known, is checked on every evaluation.
+     */
+    private boolean outsideDeclaredDomain() {
+        if (declaredDomain == null) {
+            return false;
+        }
+        if (offsetRange == null || offsetRange == DeclaredDomain.Range.NOT_YET_KNOWN) {
+            offsetRange = DeclaredDomain.range(offset);
+            if (offsetRange == DeclaredDomain.Range.ESTIMATED) {
+                refresh();
+                DeclaredDomain.checkEstimated(this, getID(), declaredDomain,
+                        DeclaredDomain.add(dist.getLowerBoundOfParameter(), offset.getLower()),
+                        DeclaredDomain.add(dist.getUpperBoundOfParameter(), offset.getUpper()), "offset");
+            } else if (offsetRange == DeclaredDomain.Range.CALCULATED) {
+                DeclaredDomain.warnCalculated(this, getID(), "offset");
+            }
+        }
+        return offsetRange == DeclaredDomain.Range.CALCULATED
+                && DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter()) != null;
     }
 
     /**
@@ -73,12 +144,20 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 
     @Override
     public double calculateLogP() {
+        if (outsideDeclaredDomain()) {
+            // a calculated offset has moved the support outside the declared domain
+            logP = Double.NEGATIVE_INFINITY;
+            return logP;
+        }
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
 
     @Override
     protected double calcLogP(Integer value) {
+        if (outsideDeclaredDomain()) {
+            return Double.NEGATIVE_INFINITY;
+        }
         // refresh(); should have been called in dist.calcLogP
         return dist.calcLogP(value - offset.get());
     }
@@ -134,10 +213,7 @@ public class OffsetInt extends ScalarDistribution<IntScalar<Int>, Integer> {
      * as the bounds below do, and saturating instead of wrapping around
      */
     private int shift(int x) {
-        if (x == Integer.MIN_VALUE || x == Integer.MAX_VALUE) {
-            return x;
-        }
-        return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, (long) x + offset.get()));
+        return DeclaredDomain.add(x, offset.get());
     }
     
     @Override

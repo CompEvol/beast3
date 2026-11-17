@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -282,15 +283,25 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 		if (value == null) {
 			return null;
 		}
-		
+		// a distribution generic in its domain (e.g. OffsetInt<D extends Int>) does not name it
+		// in its class: use the domain it declares
+		if (value instanceof DeclaresDomain d) {
+			return d.getParameterDomain().getClass();
+		}
+
         Type superclass = value.getClass().getGenericSuperclass();
         if (superclass instanceof ParameterizedType pt) {
             Type [] types = pt.getActualTypeArguments();
             while (types[0] instanceof ParameterizedType pt2) {
             	types = pt2.getActualTypeArguments();
             }
-        	Class<?> type = (Class<?>) types[0];
-        	return type;
+            if (types[0] instanceof TypeVariable<?> tv && tv.getBounds()[0] instanceof Class<?> bound) {
+            	// another class generic in its domain: the bound, e.g. Int for <D extends Int>
+            	return bound;
+            }
+            if (types[0] instanceof Class<?> type) {
+            	return type;
+            }
         }
         
 //        if (superclass instanceof ParameterizedType pt) {
