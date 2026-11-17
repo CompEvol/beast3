@@ -19,6 +19,7 @@ import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.distribution.Geometric;
 import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.OffsetInt;
 import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.distribution.TruncatedInt;
 import beast.base.spec.inference.distribution.TruncatedReal;
@@ -129,11 +130,6 @@ public class PriorEditorUtilTest {
 	}
 
 	/**
-	 * Of several templates for the same class, the one whose domain is closest to the
-	 * parameter's is offered: the same domain, then a narrower one, then a broader one.
-	 * Other classes are not affected.
-	 */
-	/**
 	 * Geometric with p = 0 gives every count probability 0: the initial value is within the
 	 * prior's range, but BEAUti reports it, as MCMC cannot start from it.
 	 */
@@ -150,6 +146,30 @@ public class PriorEditorUtilTest {
 		assertTrue(message.contains("probability 0") && message.contains("k"), message);
 	}
 
+	/**
+	 * Offset Int for a PositiveInt parameter starts as Poisson + 1. When the user then sets the
+	 * offset to 0, the priors panel reports it (BEAST would stop at start, #291).
+	 */
+	@Test
+	void offsetSetBackToZeroOnPositiveIntIsReported() {
+		IntScalarParam<PositiveInt> k = new IntScalarParam<>(1, PositiveInt.INSTANCE);
+		k.setID("k");
+		IntScalarParam<Int> offset = new IntScalarParam<>(1, Int.INSTANCE);
+		OffsetInt<PositiveInt> prior = new OffsetInt<>();
+		prior.initByName("param", k, "domain", PositiveInt.INSTANCE, "offset", offset,
+				"distribution", new Poisson(null, new RealScalarParam<>(0.693, NonNegativeReal.INSTANCE)));
+		assertNull(PriorEditorUtil.supportOutsideDomainMessage(prior));
+		offset.set(0);
+		String message = PriorEditorUtil.supportOutsideDomainMessage(prior);
+		assertNotNull(message, "offset 0 on a PositiveInt parameter not reported");
+		assertTrue(message.contains("down to 0"), message);
+	}
+
+	/**
+	 * Of several templates for the same class, the one whose domain is closest to the
+	 * parameter's is offered: the same domain, then a narrower one, then a broader one.
+	 * Other classes are not affected.
+	 */
 	@Test
 	void closestDomainPerClass() {
 		BeautiSubTemplate iid = template("IID", "IID");

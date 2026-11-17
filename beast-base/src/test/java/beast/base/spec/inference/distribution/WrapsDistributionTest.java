@@ -83,4 +83,38 @@ public class WrapsDistributionTest {
         assertNull(unit.supportOutsideDomainWith(normal(), UnitInterval.INSTANCE));
         assertNull(unit.supportOutsideDomainWith(exponential(), UnitInterval.INSTANCE));
     }
+
+    @Test
+    public void truncatingAndShiftingWrappers() {
+        assertEquals(false, new OffsetInt<Int>(poisson(), 1).truncates());
+        OffsetReal<Real> offsetReal = new OffsetReal<>();
+        offsetReal.initByName("distribution", exponential(), "offset", new RealScalarParam<>(0.0, Real.INSTANCE));
+        assertEquals(false, offsetReal.truncates());
+        TruncatedInt<Int> truncatedInt = new TruncatedInt<>();
+        truncatedInt.initByName("distribution", poisson(),
+                "lower", new IntScalarParam<>(0, Int.INSTANCE), "upper", new IntScalarParam<>(10, Int.INSTANCE));
+        assertEquals(true, truncatedInt.truncates());
+        TruncatedReal<Real> truncatedReal = new TruncatedReal<>();
+        truncatedReal.initByName("distribution", normal(),
+                "lower", new RealScalarParam<>(0.0, Real.INSTANCE), "upper", new RealScalarParam<>(1.0, Real.INSTANCE));
+        assertEquals(true, truncatedReal.truncates());
+    }
+
+    /** after the distribution input changes (as in BEAUti), the new inner distribution is returned, before any refresh() */
+    @Test
+    public void innerDistributionIsCurrent() {
+        TruncatedInt<Int> bounded = new TruncatedInt<>();
+        bounded.initByName("distribution", poisson(),
+                "lower", new IntScalarParam<>(0, Int.INSTANCE), "upper", new IntScalarParam<>(10, Int.INSTANCE));
+        OffsetInt<Int> offset = new OffsetInt<>(poisson(), 1);
+        bounded.distributionInput.setValue(offset, bounded);
+        assertEquals(offset, bounded.getInnerDistribution());
+
+        TruncatedReal<Real> boundedReal = new TruncatedReal<>();
+        boundedReal.initByName("distribution", normal(),
+                "lower", new RealScalarParam<>(0.0, Real.INSTANCE), "upper", new RealScalarParam<>(1.0, Real.INSTANCE));
+        Exponential e = exponential();
+        boundedReal.distributionInput.setValue(e, boundedReal);
+        assertEquals(e, boundedReal.getInnerDistribution());
+    }
 }

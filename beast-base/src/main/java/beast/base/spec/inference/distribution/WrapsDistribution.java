@@ -11,8 +11,15 @@ import beast.base.spec.domain.DeclaresDomain;
  */
 public interface WrapsDistribution extends DeclaresDomain {
 
-    /** @return the wrapped distribution */
+    /** @return the wrapped distribution, as its input now holds it */
     ScalarDistribution<?, ?> getInnerDistribution();
+
+    /**
+     * @return true if this wrapper truncates the wrapped distribution to an interval (Bounded),
+     *         false if it shifts it (Offset). A truncating wrapper can hold a shifting one, not
+     *         the other way round.
+     */
+    boolean truncates();
 
     /**
      * Where the support of this wrapper would reach outside a domain if {@code inner} took the

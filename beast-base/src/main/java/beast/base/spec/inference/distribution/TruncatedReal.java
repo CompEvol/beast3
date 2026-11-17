@@ -3,8 +3,8 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.Bounded;
 import beast.base.core.Input.Validate;
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -241,11 +241,17 @@ public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar
         return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
+    /**
+     * @return the inner distribution as the distribution input now holds it: read from the
+     * input, not the copy refresh() keeps, so it is current also after the input changed (e.g.
+     * in BEAUti) and before the next refresh()
+     */
+    @Override
     public ScalarDistribution<? extends RealScalar<?>, Double> getInnerDistribution() {
     	if (dist == null) {
     		refresh();
     	}
-        return dist;
+        return distributionInput.get();
     }
 
     @Override
@@ -407,6 +413,11 @@ public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar
         return Real.INSTANCE.isValid(value) && lower.get() <= value && value <= upper.get();
     }
 
+
+    @Override
+    public boolean truncates() {
+        return true;
+    }
 
     @Override
     public String supportOutsideDomainWith(ScalarDistribution<?, ?> inner, Bounded<?> domain) {

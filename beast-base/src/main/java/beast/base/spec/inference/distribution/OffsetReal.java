@@ -3,8 +3,8 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.Bounded;
 import beast.base.core.Input.Validate;
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -265,6 +265,11 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
     @Override
     public ScalarDistribution<? extends RealScalar<?>, Double> getInnerDistribution() {
         return distributionInput.get();
+    }
+
+    @Override
+    public boolean truncates() {
+        return false;
     }
 
     @Override

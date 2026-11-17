@@ -3,8 +3,8 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
-import beast.base.spec.Bounded;
 import beast.base.core.Input.Validate;
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
@@ -284,6 +284,11 @@ public class OffsetInt<D extends Int> extends ScalarDistribution<IntScalar<D>, I
     @Override
     public ScalarDistribution<? extends IntScalar<?>, Integer> getInnerDistribution() {
         return distributionInput.get();
+    }
+
+    @Override
+    public boolean truncates() {
+        return false;
     }
 
     @Override
