@@ -22,6 +22,9 @@
     <map name='Uniform'>beast.base.spec.inference.distribution.Uniform</map>
     <map name='NonNegativeUniform'>beast.base.spec.inference.distribution.NonNegativeUniform</map>
     <map name='Poisson'>beast.base.spec.inference.distribution.Poisson</map>
+    <map name='Geometric'>beast.base.spec.inference.distribution.Geometric</map>
+    <map name='NegativeBinomial'>beast.base.spec.inference.distribution.NegativeBinomial</map>
+    <map name='Binomial'>beast.base.spec.inference.distribution.Binomial</map>
     <!-- Multivariate distribution   -->
     <map name='Dirichlet'>beast.base.spec.inference.distribution.Dirichlet</map>
     <map name='IID'>beast.base.spec.inference.distribution.IID</map>

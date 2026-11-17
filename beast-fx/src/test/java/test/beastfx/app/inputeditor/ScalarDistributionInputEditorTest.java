@@ -28,17 +28,26 @@ import beast.base.core.Input.Validate;
 import beast.base.inference.CompoundDistribution;
 import beast.base.inference.Distribution;
 import beast.base.inference.State;
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeInt;
+import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
+import beast.base.spec.inference.distribution.Binomial;
+import beast.base.spec.inference.distribution.Geometric;
 import beast.base.spec.inference.distribution.LogUniform;
+import beast.base.spec.inference.distribution.NegativeBinomial;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.OffsetReal;
+import beast.base.spec.inference.distribution.Poisson;
+import beast.base.spec.inference.distribution.TruncatedInt;
 import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.Uniform;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
 import beastfx.app.inputeditor.BeautiConfig;
@@ -357,11 +366,69 @@ public class ScalarDistributionInputEditorTest {
 		for (String uniform : new String[] {"Uniform", "NonNegativeUniform", "LogUniform"}) {
 			assertFalse(insideBounded.contains(uniform), uniform + " offered inside Bounded: " + insideBounded);
 		}
-		assertFalse(insideBounded.contains("BoundedInt") || insideBounded.contains("OffsetInt") || insideBounded.contains("Poisson"),
-				"integer distribution offered for a real parameter: " + insideBounded);
+		for (String intDistr : new String[] {"BoundedInt", "OffsetInt", "Poisson", "Geometric", "NegativeBinomial", "Binomial"}) {
+			assertFalse(insideBounded.contains(intDistr), "integer distribution offered for a real parameter: " + insideBounded);
+		}
 		assertFalse(insideOffset.isEmpty(), "nothing offered inside Offset");
 		assertFalse(insideOffset.contains("BoundedReal") || insideOffset.contains("OffsetReal"),
 				"wrapper offered inside Offset: " + insideOffset);
+	}
+
+	/**
+	 * The count distributions Geometric, NegativeBinomial and Binomial are offered for an
+	 * integer parameter, here inside a Bounded Int prior on a NonNegativeInt count.
+	 */
+	@Test
+	public void testCountDistributionsOfferedForIntParameter() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> insideBounded = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			IntScalarParam<NonNegativeInt> count = new IntScalarParam<>(2, NonNegativeInt.INSTANCE);
+			count.setID("count.s:test");
+			TruncatedInt bounded = new TruncatedInt();
+			bounded.initByName("param", count,
+					"distribution", new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE)),
+					"lower", new IntScalarParam<>(0, Int.INSTANCE),
+					"upper", new IntScalarParam<>(10, Int.INSTANCE));
+			bounded.setID("CountPrior.s:test");
+			doc.registerPlugin(count);
+			doc.registerPlugin(bounded);
+			insideBounded.addAll(choices(doc, bounded, bounded.distributionInput));
+
+			// the editor, with its density plot, quantiles and mean, builds for each of them
+			RealScalarParam<UnitInterval> p = new RealScalarParam<>(0.3, UnitInterval.INSTANCE);
+			ScalarDistribution<?, ?>[] counts = {
+					new Geometric(null, p),
+					new NegativeBinomial(null, new RealScalarParam<>(4.0, PositiveReal.INSTANCE),
+							new RealScalarParam<>(0.5, PositiveReal.INSTANCE)),
+					new Binomial(null, new IntScalarParam<>(10, NonNegativeInt.INSTANCE), p)};
+			for (ScalarDistribution<?, ?> inner : counts) {
+				IntScalarParam<NonNegativeInt> k = new IntScalarParam<>(2, NonNegativeInt.INSTANCE);
+				String name = inner.getClass().getSimpleName();
+				k.setID(name + "Count.s:test");
+				TruncatedInt wrapper = new TruncatedInt();
+				wrapper.initByName("param", k, "distribution", inner,
+						"lower", new IntScalarParam<>(0, Int.INSTANCE),
+						"upper", new IntScalarParam<>(8, Int.INSTANCE));
+				wrapper.setID(name + "Prior.s:test");
+				doc.registerPlugin(k);
+				doc.registerPlugin(wrapper);
+				InputEditor editor = doc.getInputEditorFactory().createInputEditor(wrapper.distributionInput, wrapper, doc);
+				assertNotNull(editor.getComponent(), "no editor for " + name);
+			}
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		for (String countDistr : new String[] {"Poisson", "Geometric", "NegativeBinomial", "Binomial"}) {
+			assertTrue(insideBounded.contains(countDistr), countDistr + " not offered for a count: " + insideBounded);
+		}
+		assertFalse(insideBounded.contains("Normal"), "real distribution offered for a count: " + insideBounded);
 	}
 
 	/**
