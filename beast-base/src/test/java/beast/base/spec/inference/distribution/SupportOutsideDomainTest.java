@@ -73,18 +73,31 @@ public class SupportOutsideDomainTest {
         assertEquals(1, x.getLower());
     }
 
-    /** an integer domain whose bounds are held in fields, as a package might define one */
+    /**
+     * an integer domain whose bounds are held in fields, as a package might define one; both
+     * bounds exclusive, so the inclusive ones are lower + 1 and upper - 1
+     */
     private static final class FieldBoundedInt extends Int {
         private final int lower;
-        FieldBoundedInt(int lower) {
+        private final int upper;
+        FieldBoundedInt(int lower, int upper) {
             this.lower = lower;
+            this.upper = upper;
         }
         @Override
         public Integer getLower() {
             return lower;
         }
         @Override
+        public Integer getUpper() {
+            return upper;
+        }
+        @Override
         public boolean lowerInclusive() {
+            return false;
+        }
+        @Override
+        public boolean upperInclusive() {
             return false;
         }
     }
@@ -95,10 +108,16 @@ public class SupportOutsideDomainTest {
      */
     @Test
     public void testDomainWithBoundsInFields() {
-        FieldBoundedInt domain = new FieldBoundedInt(4);
+        FieldBoundedInt domain = new FieldBoundedInt(4, 10);
         IntScalarParam<FieldBoundedInt> x = new IntScalarParam<>(7, domain);
         assertEquals(5, x.getLower());
         assertEquals(5, domain.getInclusiveLower());
+        // an exclusive upper bound: 10 is not allowed, so the parameter's upper bound is 9
+        assertEquals(9, x.getUpper());
+        assertEquals(9, domain.getInclusiveUpper());
+        assertTrue(x.isValid(9));
+        assertFalse(x.isValid(10));
+        assertFalse(x.isValid(4));
     }
 
     /** IntVectorParam.setLower() checks against the inclusive domain bound, like getLower() */
@@ -109,6 +128,35 @@ public class SupportOutsideDomainTest {
         assertThrows(IllegalArgumentException.class, () -> v.setLower(0));
         v.setLower(1);
         assertEquals(1, v.getLower());
+    }
+
+    /** isValid() on a PositiveInt parameter: 0 is rejected, 1 accepted */
+    @Test
+    public void testPositiveIntParameterIsValid() {
+        IntScalarParam<PositiveInt> x = new IntScalarParam<>(3, PositiveInt.INSTANCE);
+        assertFalse(x.isValid(0));
+        assertTrue(x.isValid(1));
+        IntVectorParam<PositiveInt> v = new IntVectorParam<>(new int[]{1, 2}, PositiveInt.INSTANCE);
+        assertFalse(v.isValid(0));
+        assertTrue(v.isValid(1));
+    }
+
+    /**
+     * A prior bound tighter than the inclusive domain bound still wins:
+     * Bounded(Poisson, [3, 10]) on PositiveInt gives [3, 10], not [1, 10].
+     */
+    @Test
+    public void testTighterPriorBoundWins() {
+        IntScalarParam<PositiveInt> x = new IntScalarParam<>(5, PositiveInt.INSTANCE);
+        x.setID("x");
+        TruncatedInt bounded = new TruncatedInt();
+        bounded.initByName("distribution", poisson(),
+                "lower", new IntScalarParam<>(3, Int.INSTANCE), "upper", new IntScalarParam<>(10, Int.INSTANCE),
+                "param", x);
+        assertEquals(3, x.getLower());
+        assertEquals(10, x.getUpper());
+        assertFalse(x.isValid(2));
+        assertTrue(x.isValid(3));
     }
 
     //*** TensorDistribution.supportOutsideDomainMessage ***//
