@@ -16,6 +16,9 @@ import java.util.List;
 /**
  * Binomial distribution: the number of successes in numTrials = n independent trials,
  * each with probability of success p. Its support is 0, 1, ..., n.
+ * <p>
+ * When numTrials is estimated, nothing keeps it at or above the current count: a proposal
+ * that moves it below the count gets log density -Infinity and is rejected, not prevented.
  */
 @Description("Binomial distribution, the number of successes in numTrials = n independent trials, " +
         "f(k; n, p) = C(n, k) p^k (1 - p)^(n - k) for k = 0, 1, ..., n. It has mean n p. " +

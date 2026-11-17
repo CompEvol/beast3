@@ -69,6 +69,29 @@ public class CountDistributionsTest {
         assertEquals(2 * Math.log(0.8) + Math.log(0.2), g.calculateLogP(), 1e-12);
     }
 
+    @Test
+    public void geometricWithPZeroGivesZeroProbability() {
+        // p = 0 is in UnitInterval but is not a distribution: every count gets probability 0,
+        // so MCMC rejects the state instead of stopping with an exception
+        RealScalarParam<UnitInterval> p = new RealScalarParam<>(0.3, UnitInterval.INSTANCE);
+        Geometric g = new Geometric(k(2), p);
+        p.set(0.0);
+        assertEquals(Double.NEGATIVE_INFINITY, g.calculateLogP());
+        IID iid = new IID(new IntVectorParam<>(new int[]{0, 3}, NonNegativeInt.INSTANCE), g);
+        assertEquals(Double.NEGATIVE_INFINITY, iid.calculateLogP());
+        // the support does not depend on p
+        assertEquals(0, g.getLowerBoundOfParameter());
+        assertEquals(Integer.MAX_VALUE, g.getUpperBoundOfParameter());
+        // what needs an actual distribution says why it cannot
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> g.cumulativeProbability(1));
+        assertTrue(e.getMessage().contains("p is 0"), e.getMessage());
+        // and it recovers when p moves away from 0, also to a tiny p
+        p.set(1e-300);
+        assertTrue(Double.isFinite(g.calculateLogP()));
+        p.set(0.3);
+        assertEquals(2 * Math.log(0.7) + Math.log(0.3), g.calculateLogP(), 1e-12);
+    }
+
     // ---- Binomial ----
 
     @Test

@@ -24,7 +24,7 @@ import java.util.List;
 public class Geometric extends ScalarDistribution<IntScalar<NonNegativeInt>, Integer> {
 
     final public Input<RealScalar<UnitInterval>> pInput = new Input<>("p",
-            "probability of success on each trial, greater than 0; defaults to 0.5");
+            "probability of success on each trial, greater than 0 (at 0 every count has probability 0); defaults to 0.5");
 
     private GeometricDistribution dist = GeometricDistribution.of(0.5);
     private DiscreteDistribution.Sampler sampler;
@@ -51,11 +51,16 @@ public class Geometric extends ScalarDistribution<IntScalar<NonNegativeInt>, Int
         super.initAndValidate();
     }
 
+    /** true while p = 0: no success ever, so no count has positive probability */
+    private boolean pIsZero;
+
     @Override
     public void refresh() {
         double p = (pInput.get() != null) ? pInput.get().get() : 0.5;
-        if (isNotEqual(dist.getProbabilityOfSuccess(), p)) {
-            // throws IllegalArgumentException for p = 0, which is not a distribution
+        // p = 0 is in the UnitInterval domain of p, but is not a distribution (Apache's
+        // GeometricDistribution throws for it): every count gets probability 0 instead
+        pIsZero = p == 0;
+        if (!pIsZero && (isNotEqual(dist.getProbabilityOfSuccess(), p) || p < EPS)) {
             dist = GeometricDistribution.of(p);
             sampler = null;
         }
@@ -63,8 +68,26 @@ public class Geometric extends ScalarDistribution<IntScalar<NonNegativeInt>, Int
 
     @Override
     public double calculateLogP() {
-        logP = getApacheDistribution().logProbability(param.get());
+        logP = calcLogP(param.get());
         return logP;
+    }
+
+    /** log P(X = value); -Infinity for every value when p = 0, so MCMC rejects such a state */
+    @Override
+    protected double calcLogP(Integer value) {
+        refresh(); // p may have been changed by MCMC
+        return pIsZero ? Double.NEGATIVE_INFINITY : dist.logProbability(value);
+    }
+
+    /** the support, 0, 1, 2, ..., whatever p is (also for p = 0, so bounds checks never fail) */
+    @Override
+    public Integer getLowerBoundOfParameter() {
+        return 0;
+    }
+
+    @Override
+    public Integer getUpperBoundOfParameter() {
+        return Integer.MAX_VALUE;
     }
 
     @Override
@@ -86,9 +109,17 @@ public class Geometric extends ScalarDistribution<IntScalar<NonNegativeInt>, Int
         return true;
     }
 
+    /**
+     * @throws IllegalArgumentException when p = 0, for which there is no distribution to
+     * compute a CDF, quantile, mean or sample from
+     */
     @Override
     protected GeometricDistribution getApacheDistribution() {
         refresh(); // parameters may have been changed by MCMC
+        if (pIsZero) {
+            throw new IllegalArgumentException(getClass().getSimpleName() + (getID() == null ? "" : " '" + getID() + "'")
+                    + ": p is 0, but the probability of success must be greater than 0.");
+        }
         return dist;
     }
 
