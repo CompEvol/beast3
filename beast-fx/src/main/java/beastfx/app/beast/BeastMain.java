@@ -176,12 +176,6 @@ public class BeastMain extends Console {
                         new Arguments.StringOption("packagedir", "PACKAGEDIR" ,"Set user package directory instead of using the default"),
                 });
 
-        // issue #93 -Dbeast.args cannot take multiple args in one string
-        String argsStr = System.getProperty("beast.args");
-//        System.out.println("argsStr = " + argsStr);
-        if (argsStr != null && !argsStr.isBlank())
-            args = argsStr.trim().split("\\s+");
-
         try {
             arguments.parseArguments(args);
         } catch (Arguments.ArgumentException ae) {
