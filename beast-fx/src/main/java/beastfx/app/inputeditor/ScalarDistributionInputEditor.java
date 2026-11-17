@@ -417,7 +417,16 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     	
     	LineChart<Number,Number> chart;
     	LineChart.Series<Number,Number> series;
+    	NumberAxis xAxis, yAxis;
     	Label infoLabel1, infoLabel2, infoLabel3;
+    	/** shown for continuous distributions on positive values only **/
+    	CheckBox logScaleBox;
+
+    	/**
+    	 * Whether to plot positive distributions on a log scale. Shared by all plots, and kept
+    	 * for the session, since the panels are rebuilt whenever a value changes.
+    	 */
+    	static boolean logScale = false;
     	
         // the margin to the left of y-labels
         private static final int MARGIN_LEFT_OF_Y_LABELS = 5;
@@ -427,10 +436,10 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         int m_nTicks;
 
         PDPanel() {
-    		NumberAxis xAxis = new NumberAxis();
+    		xAxis = new NumberAxis();
     		xAxis.setForceZeroInRange(false);
             //xAxis.setLabel("x");                
-            NumberAxis yAxis = new NumberAxis();        
+            yAxis = new NumberAxis();
             yAxis.setLabel("p(x)");
             chart = new LineChart<Number,Number>(xAxis,yAxis);
             //chart.setAnimated(false);
@@ -453,10 +462,19 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	    	infoLabel2.setPadding(new Insets(0, 100, 0, MARGIN_LEFT_OF_Y_LABELS));
 	    	infoLabel3 = new Label();
 	    	infoLabel3.setStyle("-fx-font-size:6pt;");
+	    	logScaleBox = new CheckBox("log x");
+	    	logScaleBox.setStyle("-fx-font-size:8pt;");
+	    	logScaleBox.setPadding(new Insets(0, 0, 0, 10));
+	    	logScaleBox.setTooltip(new Tooltip("Plot x on a log scale, with the density of log10(x)"));
+	    	logScaleBox.setSelected(logScale);
+	    	logScaleBox.setOnAction(e -> {
+	    		logScale = logScaleBox.isSelected();
+	    		paintComponent();
+	    	});
 	    	HBox box = new HBox();
 	    	// box.setSpacing(50);
 	    	box.setAlignment(Pos.CENTER);
-	    	box.getChildren().addAll(infoLabel1, infoLabel2, infoLabel3);
+	    	box.getChildren().addAll(infoLabel1, infoLabel2, infoLabel3, logScaleBox);
 	    	getChildren().add(box);
         }
         
@@ -505,16 +523,34 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 
             double minValue = 0.1;
             double maxValue = 1;
+            boolean quantilesKnown = true;
             try {
             	minValue = inverseCumulativeProbability(m_distr, 0.01);
             } catch (Throwable e) {
                 // use default
+                quantilesKnown = false;
             }
             try {
                 maxValue = inverseCumulativeProbability(m_distr, 0.99);
             } catch (Throwable e) {
             	// use default
+                quantilesKnown = false;
             }
+            // a log scale is offered for a continuous distribution whose support starts at 0 or above:
+            // it puts no probability on 0 itself, so all of it can be shown. Not for an integer one,
+            // which can put probability on 0, nor for one that reaches below 0.
+            boolean canUseLogScale = quantilesKnown && !m_distr.isIntegerDistribution()
+                    && supportLowerBound(m_distr) >= 0
+                    && minValue > 0 && maxValue > minValue && Double.isFinite(maxValue);
+            // hidden where it does not apply; the choice is kept for the next plot
+            logScaleBox.setVisible(canUseLogScale);
+            logScaleBox.setManaged(canUseLogScale);
+            logScaleBox.setSelected(logScale);
+            boolean useLogScale = canUseLogScale && logScale;
+            setLogAxis(useLogScale, minValue, maxValue);
+            // the 1% and 99% quantiles: minValue is moved below for the linear scale
+            double logMin = useLogScale ? Math.log10(minValue) : 0;
+            double logMax = useLogScale ? Math.log10(maxValue) : 0;
 //            double lowerParam = param == null ? 0 :
 //            	param.getLower() instanceof Integer ? (int) param.getLower() : (double) param.getLower();
             double lowerParam = (param != null && param.getLower() instanceof Number lower)
@@ -548,13 +584,24 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             double[] fyPoints = new double[points];
             double yMax = 0;
             
+            // on a log scale: x evenly spaced in log10(x) between the 1% and 99% quantiles, and
+            // the density of log10(x), p(x) * x * ln(10), so the area under the curve is still 1
             for (int i = 0; i < points; i++) {
-            	xPoints[i] = minValue + (xRange * i) / (points-1);
-            	double y0 = minValue + (xRange * i) / (points-1);
+            	double y0;
+            	if (useLogScale) {
+            		xPoints[i] = logMin + ((logMax - logMin) * i) / (points-1);
+            		y0 = Math.pow(10, xPoints[i]);
+            	} else {
+            		xPoints[i] = minValue + (xRange * i) / (points-1);
+            		y0 = xPoints[i];
+            	}
             	if (param != null && (y0 < lowerParam || y0 > upperParam)) {
             		fyPoints[i] = 0;
             	} else {
             		fyPoints[i] = getDensityForPlot(m_distr, y0);
+            		if (useLogScale) {
+            			fyPoints[i] *= y0 * Math.log(10);
+            		}
             	}
                 if (Double.isInfinite(fyPoints[i]) || Double.isNaN(fyPoints[i])) {
                     fyPoints[i] = 0;
@@ -606,6 +653,64 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             infoLabel2.setText(info2);
             infoLabel3.setText(info3);
         }
+
+		/** @return the lower bound of the distribution's support, or -Infinity if not known */
+		private double supportLowerBound(ScalarDistribution<?, ?> distr) {
+			try {
+				Object lower = distr.getLowerBoundOfParameter();
+				return lower instanceof Number n ? n.doubleValue() : Double.NEGATIVE_INFINITY;
+			} catch (Throwable e) {
+				return Double.NEGATIVE_INFINITY;
+			}
+		}
+
+		/**
+		 * Switch the x axis between a linear scale and a log scale. On a log scale the axis
+		 * shows log10(x) from the decade below the lowest plotted value to the one above the
+		 * highest, with x itself in the tick labels.
+		 */
+		private void setLogAxis(boolean log, double minValue, double maxValue) {
+			if (log) {
+				double lower = Math.floor(Math.log10(minValue));
+				double upper = Math.ceil(Math.log10(maxValue));
+				if (upper <= lower) {
+					upper = lower + 1;
+				}
+				xAxis.setAutoRanging(false);
+				xAxis.setLowerBound(lower);
+				xAxis.setUpperBound(upper);
+				xAxis.setTickUnit(Math.max(1, Math.ceil((upper - lower) / 8)));
+				xAxis.setMinorTickVisible(false);
+				xAxis.setTickLabelFormatter(new javafx.util.StringConverter<Number>() {
+					@Override
+					public String toString(Number u) {
+						return formatPowerOfTen(u.doubleValue());
+					}
+					@Override
+					public Number fromString(String string) {
+						return Math.log10(Double.parseDouble(string));
+					}
+				});
+				yAxis.setLabel("p(log10 x)");
+			} else if (!xAxis.isAutoRanging()) {
+				xAxis.setAutoRanging(true);
+				xAxis.setMinorTickVisible(true);
+				xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis));
+				yAxis.setLabel("p(x)");
+			}
+		}
+
+		/** @return 10^u as a tick label, e.g. 0.01, 1, 1000, 1e6 */
+		private String formatPowerOfTen(double u) {
+			long k = Math.round(u);
+			if (Math.abs(u - k) > 1e-9) {
+				return String.format("%.2g", Math.pow(10, u));
+			}
+			if (k >= -3 && k <= 4) {
+				return new java.math.BigDecimal(java.math.BigInteger.ONE, (int) -k).toPlainString();
+			}
+			return "1e" + k;
+		}
 
 		private double inverseCumulativeProbability(ScalarDistribution<?, ?> m_distr, double level) {
             Object o = m_distr.inverseCumulativeProbability(level);
