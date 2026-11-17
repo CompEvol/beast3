@@ -25,6 +25,11 @@ public final class BoundUtils {
      * @return the tightened lower bound (the maximum of current and distribution bound)
      */
     public static Double updateLower(Double current, TensorDistribution dist, BEASTInterface b) {
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
+            return current;
+        }
         List<String> arguments = dist.getArguments();
         if (arguments.contains(b.getID()) && b.getID() != null) {
             try {
@@ -46,6 +51,11 @@ public final class BoundUtils {
      * @return the tightened upper bound (the minimum of current and distribution bound)
      */
     public static Double updateUpper(Double current, TensorDistribution dist, BEASTInterface b) {
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
+            return current;
+        }
         List<String> arguments = dist.getArguments();
         if (arguments.contains(b.getID()) && b.getID() != null) {
             try {
@@ -67,6 +77,11 @@ public final class BoundUtils {
      * @return the tightened lower bound (the maximum of current and distribution bound)
      */
     public static Integer updateLower(Integer current, TensorDistribution dist, BEASTInterface b) {
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
+            return current;
+        }
         List<String> arguments = dist.getArguments();
         if (arguments.contains(b.getID()) && b.getID() != null) {
             try {
@@ -88,6 +103,11 @@ public final class BoundUtils {
      * @return the tightened upper bound (the minimum of current and distribution bound)
      */
     public static Integer updateUpper(Integer current, TensorDistribution dist, BEASTInterface b) {
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
+            return current;
+        }
         List<String> arguments = dist.getArguments();
         if (arguments.contains(b.getID()) && b.getID() != null) {
             try {
