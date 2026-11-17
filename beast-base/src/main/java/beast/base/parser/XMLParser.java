@@ -24,6 +24,8 @@
 */
 package beast.base.parser;
 
+import beast.base.spec.inference.distribution.TensorDistribution;
+
 
 import beast.base.core.*;
 import beast.base.core.Input.Validate;
@@ -515,6 +517,15 @@ public class XMLParser {
 
     private void initBEASTObjects() throws XMLParserException {
     	Node node = null;
+    	// Objects are initialised in the order they were created, so a parameter declared in
+    	// the state comes before the bound parameters nested in its prior, which still read 0.
+    	// Parameters ignore the bounds of a distribution marked here until that distribution
+    	// is initialised (issue #286); the marks are cleared below in any case.
+    	for (BEASTInterface o : beastObjectsWaitingToInit) {
+    		if (o instanceof TensorDistribution<?, ?> d) {
+    			d.setAwaitingInit(true);
+    		}
+    	}
         try {
         	for (int i = 0; i < beastObjectsWaitingToInit.size(); i++) {
         		final BEASTInterface beastObject = beastObjectsWaitingToInit.get(i);
@@ -527,6 +538,14 @@ public class XMLParser {
             //beastObject.initAndValidate();
             e.printStackTrace();
             throw new XMLParserException(node, "validate and intialize error: " + e.getMessage(), 110);
+        } finally {
+        	// e.g. a distribution whose initAndValidate() does not call super's, or one not
+        	// reached because an earlier object failed: bound its parameter as before
+        	for (BEASTInterface o : beastObjectsWaitingToInit) {
+        		if (o instanceof TensorDistribution<?, ?> d) {
+        			d.setAwaitingInit(false);
+        		}
+        	}
         }
 	}
 

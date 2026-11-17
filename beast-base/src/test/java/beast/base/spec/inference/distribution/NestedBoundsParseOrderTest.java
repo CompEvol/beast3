@@ -100,4 +100,66 @@ public class NestedBoundsParseOrderTest {
         assertTrue(e.getMessage().contains("not valid"), e.getMessage());
         assertTrue(e.getMessage().contains("[0,10]"), e.getMessage());
     }
+
+    //*** outside XML loading, priors bound their parameter as before (review of #288) ***//
+
+    /**
+     * A prior built in code and never initialised, as BEAUti editors or package code may
+     * build one, bounds its parameter as on master: the bounds are skipped only while the
+     * XML parser initialises its objects.
+     */
+    @Test
+    public void testPriorBuiltInCodeWithoutInit() {
+        beast.base.spec.inference.parameter.IntScalarParam<beast.base.spec.domain.Int> x =
+                new beast.base.spec.inference.parameter.IntScalarParam<>(3, beast.base.spec.domain.Int.INSTANCE);
+        x.setID("x");
+        IntUniform uniform = new IntUniform();
+        uniform.setInputValue("lower", new beast.base.spec.inference.parameter.IntScalarParam<>(0, beast.base.spec.domain.Int.INSTANCE));
+        uniform.setInputValue("upper", new beast.base.spec.inference.parameter.IntScalarParam<>(5, beast.base.spec.domain.Int.INSTANCE));
+        uniform.setInputValue("param", x);
+        assertFalse(uniform.isAwaitingInit());
+        assertEquals(0, x.getLower());
+        assertEquals(5, x.getUpper());
+        assertFalse(x.isValid(7));
+    }
+
+    /**
+     * A distribution whose initAndValidate() does not call super's never clears its own
+     * mark, so the parser clears it once it has initialised everything, and parameters
+     * use its bounds after loading as before. MarkovChainDistribution is such a class.
+     */
+    @Test
+    public void testParserClearsMarkOfDistributionNotCallingSuper() throws Exception {
+        String v = "<stateNode id='v' spec='beast.base.spec.inference.parameter.RealVectorParam' domain='PositiveReal' value='1.0 2.0 3.0'/>";
+        String prior = "<distribution id='vPrior' spec='" + DIST + "MarkovChainDistribution' param='@v' shape='1.0' jeffreys='true'/>";
+        String op = "<operator spec='beast.base.spec.inference.operator.ScaleOperator' parameter='@v' scaleFactor='0.5' weight='1'/>";
+        beast.base.inference.MCMC mcmc = (beast.base.inference.MCMC) parse(model(v, prior, op));
+        int checked = 0;
+        for (beast.base.inference.StateNode n : mcmc.startStateInput.get().stateNodeInput.get()) {
+            for (beast.base.core.BEASTInterface o : n.getOutputs()) {
+                if (o instanceof TensorDistribution<?, ?> d) {
+                    assertFalse(d.isAwaitingInit(), "mark left on " + d.getClass().getSimpleName());
+                    checked++;
+                }
+            }
+        }
+        assertTrue(checked > 0, "no distribution found on the parameter");
+    }
+
+    /** after a normal load, the nested bounds apply and no mark is left */
+    @Test
+    public void testBoundsApplyAfterLoading() throws Exception {
+        String prior = "<distribution id='kPrior' spec='" + DIST + "IntUniform' param='@k'>"
+                + intParam("lower", 0) + intParam("upper", 10) + "</distribution>";
+        beast.base.inference.MCMC mcmc = (beast.base.inference.MCMC) parse(model(K, prior, K_WALK));
+        beast.base.spec.type.IntScalar<?> k = null;
+        for (beast.base.inference.StateNode n : mcmc.startStateInput.get().stateNodeInput.get()) {
+            if ("k".equals(n.getID())) {
+                k = (beast.base.spec.type.IntScalar<?>) n;
+            }
+        }
+        assertNotNull(k);
+        assertEquals(0, k.getLower());
+        assertEquals(10, k.getUpper());
+    }
 }

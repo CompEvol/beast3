@@ -26,6 +26,11 @@ import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
 import beast.base.inference.CompoundDistribution;
 import beast.base.spec.domain.PositiveReal;
+import beast.base.spec.inference.parameter.IntScalarParam;
+import beast.base.spec.inference.distribution.TruncatedInt;
+import beast.base.spec.inference.distribution.Poisson;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Dirichlet;
 import beast.base.spec.inference.distribution.IID;
@@ -424,6 +429,56 @@ public class PriorReplacementTest {
 				"inner distribution was not replaced by Beta: " + bounded.get().distributionInput.get());
 		assertEquals(0.0, param.get().getLower(), 0.0);
 		assertEquals(1.0, param.get().getUpper(), 0.0);
+	}
+
+	/**
+	 * Choosing BoundedInt for an integer parameter in the priors panel. BEAUti builds the
+	 * prior by parsing the template, whose lower and upper are nested parameters, the case
+	 * of issue #286. Afterwards the parameter must have the template's bounds [0, 1], and the
+	 * prior must not still be marked as awaiting initialisation, so that editing it later
+	 * bounds the parameter as before.
+	 */
+	@Test
+	public void testChoosingBoundedIntBoundsTheParameter() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<IntScalarParam<NonNegativeInt>> param = new AtomicReference<>();
+		AtomicReference<CompoundDistribution> priors = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+			IntScalarParam<NonNegativeInt> k = new IntScalarParam<>(1, NonNegativeInt.INSTANCE);
+			k.setID("k.c:test");
+			param.set(k);
+			Poisson poisson = new Poisson(k, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
+			poisson.setID("KPrior.c:test");
+			CompoundDistribution prior = new CompoundDistribution();
+			prior.initByName("distribution", poisson);
+			prior.setID("prior");
+			priors.set(prior);
+			doc.registerPlugin(k);
+			doc.registerPlugin(poisson);
+			doc.registerPlugin(prior);
+
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, true,
+					ExpandOption.TRUE, ButtonStatus.ALL, null, doc);
+			Parent root = editor.getComponent();
+			new Scene(root);
+			root.applyCss();
+			root.layout();
+			ComboBox<BeautiSubTemplate> comboBox = findComboBoxOffering(root, "BoundedInt");
+			assertNotNull(comboBox, "no combo box offering BoundedInt");
+			select(comboBox, "BoundedInt");
+		}, error);
+		rethrow(error);
+
+		Object newPrior = priors.get().pDistributions.get().get(0);
+		assertTrue(newPrior instanceof TruncatedInt, "prior was not replaced by BoundedInt: " + newPrior);
+		TruncatedInt bounded = (TruncatedInt) newPrior;
+		assertFalse(bounded.isAwaitingInit(), "BoundedInt still marked as awaiting initialisation");
+		assertEquals(param.get(), bounded.paramInput.get());
+		assertEquals(0, param.get().getLower());
+		assertEquals(1, param.get().getUpper());
 	}
 
 	/** first combo box in the node tree rooted at node whose selected template has the given id **/

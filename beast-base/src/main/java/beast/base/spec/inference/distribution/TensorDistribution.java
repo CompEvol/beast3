@@ -45,21 +45,34 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     protected S param;
 
     /**
-     * Set when initAndValidate() starts. Until then the inputs that define this
-     * distribution's bounds may not be initialised themselves: an IntScalarParam bound
-     * reads 0 before its own initAndValidate(), and the XML parser initialises a
-     * parameter declared in the state before the bound parameters nested in its prior
-     * (issue #286). Parameters therefore ignore this distribution's bounds until then;
-     * the bounds are checked here instead, by param.isValid() below.
+     * Set by the XML parser on the distributions it is about to initialise, and cleared when
+     * this distribution's initAndValidate() starts, or by the parser once it has initialised
+     * everything (issue #286). The parser initialises objects in the order it creates them,
+     * so a parameter declared in the state is initialised before the bound parameters
+     * nested in its prior, which still read 0 (an IntScalarParam's value is set by its own
+     * initAndValidate()). While this is set, parameters ignore this distribution's bounds;
+     * the bounds are checked by param.isValid() in initAndValidate() below instead.
+     * <p>
+     * Outside XML loading this is never set, so a distribution built or rewired in code
+     * without initAndValidate(), or one whose initAndValidate() does not call super's,
+     * bounds its parameter as before.
      */
-    private boolean initialised = false;
+    private boolean awaitingInit = false;
 
     /**
-     * @return whether initAndValidate() has started, so that the bounds this
-     * distribution reports can be relied on
+     * For the XML parser: mark this distribution as created but not yet initialised, so that
+     * parameters ignore its bounds until initAndValidate() starts. Not for other use.
      */
-    public boolean isInitialised() {
-        return initialised;
+    public final void setAwaitingInit(boolean awaitingInit) {
+        this.awaitingInit = awaitingInit;
+    }
+
+    /**
+     * @return whether the XML parser created this distribution but has not initialised it
+     * yet, so that its bounds cannot be relied on
+     */
+    public final boolean isAwaitingInit() {
+        return awaitingInit;
     }
 
     /**
@@ -68,9 +81,10 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
      */
     @Override
     public void initAndValidate() {
-        // subclasses have refreshed their inputs before calling this, so from here on
-        // the bounds of this distribution can be used, including by param.isValid() below
-        initialised = true;
+        // Subclasses refresh their inputs before calling this, so from here on the bounds
+        // of this distribution can be used, including by param.isValid() below. (A subclass
+        // that calls this first has param.isValid() see its previous inputs, as before.)
+        awaitingInit = false;
         param = paramInput.get(); // optional
         if (param != null && !param.isValid()) {
             String why = param.whyNotValid();

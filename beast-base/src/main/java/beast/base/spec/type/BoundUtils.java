@@ -23,8 +23,9 @@ public final class BoundUtils {
      * @return the tightened lower bound (the maximum of current and distribution bound)
      */
     public static Double updateLower(Double current, TensorDistribution dist, BEASTInterface b) {
-        if (!dist.isInitialised()) {
-            // its bound inputs may not be initialised yet (#286); it checks the bounds itself when it is
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
             return current;
         }
         List<String> arguments = dist.getArguments();
@@ -48,8 +49,9 @@ public final class BoundUtils {
      * @return the tightened upper bound (the minimum of current and distribution bound)
      */
     public static Double updateUpper(Double current, TensorDistribution dist, BEASTInterface b) {
-        if (!dist.isInitialised()) {
-            // its bound inputs may not be initialised yet (#286); it checks the bounds itself when it is
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
             return current;
         }
         List<String> arguments = dist.getArguments();
@@ -73,8 +75,9 @@ public final class BoundUtils {
      * @return the tightened lower bound (the maximum of current and distribution bound)
      */
     public static Integer updateLower(Integer current, TensorDistribution dist, BEASTInterface b) {
-        if (!dist.isInitialised()) {
-            // its bound inputs may not be initialised yet (#286); it checks the bounds itself when it is
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
             return current;
         }
         List<String> arguments = dist.getArguments();
@@ -98,8 +101,9 @@ public final class BoundUtils {
      * @return the tightened upper bound (the minimum of current and distribution bound)
      */
     public static Integer updateUpper(Integer current, TensorDistribution dist, BEASTInterface b) {
-        if (!dist.isInitialised()) {
-            // its bound inputs may not be initialised yet (#286); it checks the bounds itself when it is
+        if (dist.isAwaitingInit()) {
+            // created by the XML parser, whose bound inputs may not be initialised yet (#286);
+            // it checks the bounds itself when it is initialised
             return current;
         }
         List<String> arguments = dist.getArguments();
