@@ -73,6 +73,44 @@ public class SupportOutsideDomainTest {
         assertEquals(1, x.getLower());
     }
 
+    /** an integer domain whose bounds are held in fields, as a package might define one */
+    private static final class FieldBoundedInt extends Int {
+        private final int lower;
+        FieldBoundedInt(int lower) {
+            this.lower = lower;
+        }
+        @Override
+        public Integer getLower() {
+            return lower;
+        }
+        @Override
+        public boolean lowerInclusive() {
+            return false;
+        }
+    }
+
+    /**
+     * The inclusive bound must follow a domain whose bounds are held in fields. Computing
+     * it in the Int constructor would read the field before it is set (0), giving 1.
+     */
+    @Test
+    public void testDomainWithBoundsInFields() {
+        FieldBoundedInt domain = new FieldBoundedInt(4);
+        IntScalarParam<FieldBoundedInt> x = new IntScalarParam<>(7, domain);
+        assertEquals(5, x.getLower());
+        assertEquals(5, domain.getInclusiveLower());
+    }
+
+    /** IntVectorParam.setLower() checks against the inclusive domain bound, like getLower() */
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testSetLowerOnPositiveIntVector() {
+        IntVectorParam<PositiveInt> v = new IntVectorParam<>(new int[]{1, 2}, PositiveInt.INSTANCE);
+        assertThrows(IllegalArgumentException.class, () -> v.setLower(0));
+        v.setLower(1);
+        assertEquals(1, v.getLower());
+    }
+
     //*** TensorDistribution.supportOutsideDomainMessage ***//
 
     private static Poisson poisson() {

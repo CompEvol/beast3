@@ -16,29 +16,43 @@ public class Int implements Domain<Integer>, Bounded<Integer> {
     public static final Int INSTANCE = new Int();
 
     /**
-     * The smallest and largest integers this domain allows, e.g. 1 for PositiveInt,
-     * which is stored as the exclusive lower bound 0. Computed once, as integer
-     * parameters read them on every proposal. The bound methods of the subclasses
-     * return constants, so calling them from the constructor is safe.
+     * The smallest and largest integers this domain allows, e.g. 1 for PositiveInt, which
+     * is stored as the exclusive lower bound 0. Integer parameters read them on every
+     * proposal, so they are cached, but only on first use: computing them in the
+     * constructor would read the bounds of a subclass that keeps them in fields before
+     * those fields are set. The cache assumes a domain's bounds do not change; a domain
+     * whose bounds do can override the getters.
      */
-    private final int inclusiveLower;
-    private final int inclusiveUpper;
+    private Integer inclusiveLower;
+    private Integer inclusiveUpper;
 
-    protected Int() {
-        int lower = getLower();
-        inclusiveLower = lowerInclusive() || lower == Integer.MAX_VALUE ? lower : lower + 1;
-        int upper = getUpper();
-        inclusiveUpper = upperInclusive() || upper == Integer.MIN_VALUE ? upper : upper - 1;
-    }
+    protected Int() {}
 
     /** @return the smallest integer this domain allows */
-    public final int getInclusiveLower() {
-        return inclusiveLower;
+    public Integer getInclusiveLower() {
+        Integer l = inclusiveLower;
+        if (l == null) {
+            // a race between threads only computes the same immutable value twice
+            l = getLower();
+            if (!lowerInclusive() && l != Integer.MAX_VALUE) {
+                l = l + 1;
+            }
+            inclusiveLower = l;
+        }
+        return l;
     }
 
     /** @return the largest integer this domain allows */
-    public final int getInclusiveUpper() {
-        return inclusiveUpper;
+    public Integer getInclusiveUpper() {
+        Integer u = inclusiveUpper;
+        if (u == null) {
+            u = getUpper();
+            if (!upperInclusive() && u != Integer.MIN_VALUE) {
+                u = u - 1;
+            }
+            inclusiveUpper = u;
+        }
+        return u;
     }
 
     /**

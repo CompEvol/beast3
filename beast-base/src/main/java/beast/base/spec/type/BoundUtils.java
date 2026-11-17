@@ -107,6 +107,10 @@ public final class BoundUtils {
      * distribution's own parameters are fixed, but it biases them when they are
      * estimated, and it biases marginal likelihood estimates either way.
      * <p>
+     * Called at initialisation only, so it sees the current values of the distribution's
+     * inputs: with an estimated bound, e.g. Bounded(Poisson, [L, 10]) on a PositiveInt
+     * parameter, it does not warn when L starts at 1 although L may move to 0 later.
+     * <p>
      * Integer bounds are compared as inclusive bounds, so a domain whose lower bound 0
      * is exclusive (PositiveInt) starts at 1. Real bounds that are equal fit whether or
      * not they are inclusive, since a single point carries no mass.

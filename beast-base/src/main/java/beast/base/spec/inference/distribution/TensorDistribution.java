@@ -88,7 +88,7 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         try {
             outside = BoundUtils.supportOutsideDomain(domainBounds,
                     getLowerBoundOfParameter(), getUpperBoundOfParameter());
-        } catch (Throwable e) {
+        } catch (RuntimeException e) {
             // bounds not available for this distribution, nothing to check
             return null;
         }
@@ -100,8 +100,8 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
         return describe(this) + " puts probability on values " + outside
                 + ", but the domain " + param.getDomain().getClass().getSimpleName()
                 + " of " + paramName + " does not allow them. The prior is then not normalised"
-                + " over the values " + paramName + " can take, which biases estimates of the"
-                + " prior's own parameters and of the marginal likelihood."
+                + " over the values " + paramName + " can take, which biases the marginal likelihood,"
+                + " and estimates of the prior's own parameters when they are estimated."
                 + " Consider an Offset or Bounded prior, or a distribution whose support fits the domain.";
     }
 
