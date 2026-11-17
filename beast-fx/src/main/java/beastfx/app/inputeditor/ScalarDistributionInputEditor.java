@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -282,15 +283,34 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 		if (value == null) {
 			return null;
 		}
-		
+		// Offset and Bounded priors are generic in their domain (e.g. OffsetInt<D extends Int>),
+		// so their class does not name it: use the domain they declare, or Int/Real otherwise
+		if (value instanceof OffsetInt<?> o) {
+			return o.getParameterDomain().getClass();
+		}
+		if (value instanceof TruncatedInt<?> t) {
+			return t.getParameterDomain().getClass();
+		}
+		if (value instanceof OffsetReal<?> o) {
+			return o.getParameterDomain().getClass();
+		}
+		if (value instanceof TruncatedReal<?> t) {
+			return t.getParameterDomain().getClass();
+		}
+
         Type superclass = value.getClass().getGenericSuperclass();
         if (superclass instanceof ParameterizedType pt) {
             Type [] types = pt.getActualTypeArguments();
             while (types[0] instanceof ParameterizedType pt2) {
             	types = pt2.getActualTypeArguments();
             }
-        	Class<?> type = (Class<?>) types[0];
-        	return type;
+            if (types[0] instanceof TypeVariable<?> tv && tv.getBounds()[0] instanceof Class<?> bound) {
+            	// another class generic in its domain: the bound, e.g. Int for <D extends Int>
+            	return bound;
+            }
+            if (types[0] instanceof Class<?> type) {
+            	return type;
+            }
         }
         
 //        if (superclass instanceof ParameterizedType pt) {

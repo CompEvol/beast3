@@ -19,16 +19,23 @@ import java.util.List;
 @Description("Truncates a real valued distribution to the interval [lower,upper]. " +
              "The base distribution itself should not define any parameters. " +
         "All parameters should be passed via TruncatedRealDistribution.")
-public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> {
+public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> {
 
 
-    final public Input<ScalarDistribution<RealScalar<Real>, Double>> distributionInput = new Input<>("distribution",
+    // any real distribution, whatever the domain of its own parameter
+    final public Input<ScalarDistribution<? extends RealScalar<?>, Double>> distributionInput = new Input<>("distribution",
             "the distribution to truncate", Validate.REQUIRED);
-    final public Input<RealScalar<Real>> lowerInput = new Input<>("lower", "Lower end of the truncation interval.");
-    final public Input<RealScalar<Real>> upperInput = new Input<>("upper", "Upper end of the truncation interval.");
+    final public Input<RealScalar<?>> lowerInput = new Input<>("lower", "Lower end of the truncation interval.");
+    final public Input<RealScalar<?>> upperInput = new Input<>("upper", "Upper end of the truncation interval.");
 
-    private ScalarDistribution<RealScalar<Real>, Double> dist;
-    RealScalar<Real> lower, upper;
+    public final Input<? extends Real> domainInput = new Input<>("domain",
+            "the domain of the values this distribution puts probability on, e.g. PositiveReal for Normal " +
+            "truncated to [0, 10] (optional). The truncated support must lie within it: it is checked when " +
+            "initialised, and the log density is -Infinity while estimated bounds put it outside.");
+
+    private ScalarDistribution<? extends RealScalar<?>, Double> dist;
+    RealScalar<?> lower, upper;
+    private Real declaredDomain;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -38,7 +45,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     }
 
     public TruncatedReal(
-        ScalarDistribution<RealScalar<Real>, Double> dist,
+        ScalarDistribution<? extends RealScalar<?>, Double> dist,
         double lower,
         double upper
     ) {
@@ -60,7 +67,29 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     public void initAndValidate() {
         refresh();
         dist.initAndValidate();
+        declaredDomain = domainInput.get();
+        if (declaredDomain != null) {
+            String outside = supportOutsideDeclaredDomain();
+            if (outside != null) {
+                throw new IllegalArgumentException(DeclaredDomain.message(this, getID(), declaredDomain, outside));
+            }
+        }
         super.initAndValidate();
+    }
+
+    /**
+     * @return the declared domain of the values this distribution puts probability on, or
+     * Real when none is declared
+     */
+    @SuppressWarnings("unchecked")
+    public D getParameterDomain() {
+        Real domain = domainInput.get();
+        return (D) (domain != null ? domain : Real.INSTANCE);
+    }
+
+    /** @return where the truncated support reaches outside the declared domain, or null */
+    private String supportOutsideDeclaredDomain() {
+        return DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
     }
 
     /**
@@ -83,6 +112,11 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     @Override
     public double calculateLogP() {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
+            // estimated bounds have moved the support outside the declared domain
+            logP = Double.NEGATIVE_INFINITY;
+            return logP;
+        }
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
@@ -90,6 +124,9 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
     @Override
     protected double calcLogP(Double value) {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
+            return Double.NEGATIVE_INFINITY;
+        }
         return logDensity(value);
     }
 
@@ -118,7 +155,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
             return 1.0;
         }
         Interval iv = interval();
-        ScalarDistribution<RealScalar<Real>, Double> inner = getInnerDistribution();
+        ScalarDistribution<? extends RealScalar<?>, Double> inner = getInnerDistribution();
         if (iv.upperTail) {
             // P(lower < X <= x) = P(X > lower) - P(X > x)
             return (iv.atLower - inner.survivalProbability(x)) / iv.mass;
@@ -134,7 +171,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
             return 0.0;
         }
         Interval iv = interval();
-        ScalarDistribution<RealScalar<Real>, Double> inner = getInnerDistribution();
+        ScalarDistribution<? extends RealScalar<?>, Double> inner = getInnerDistribution();
         if (iv.upperTail) {
             // P(x < X <= upper) = P(X > x) - P(X > upper)
             return (inner.survivalProbability(x) - iv.atUpper) / iv.mass;
@@ -148,7 +185,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
             throw new IllegalArgumentException("Probability p must be in [0, 1]");
         }
         Interval iv = interval();
-        ScalarDistribution<RealScalar<Real>, Double> inner = getInnerDistribution();
+        ScalarDistribution<? extends RealScalar<?>, Double> inner = getInnerDistribution();
         double x;
         if (iv.upperTail) {
             x = inner.inverseSurvivalProbability(iv.atLower - p * iv.mass);
@@ -164,7 +201,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
             throw new IllegalArgumentException("Probability p must be in [0, 1]");
         }
         Interval iv = interval();
-        ScalarDistribution<RealScalar<Real>, Double> inner = getInnerDistribution();
+        ScalarDistribution<? extends RealScalar<?>, Double> inner = getInnerDistribution();
         double x;
         if (iv.upperTail) {
             x = inner.inverseSurvivalProbability(iv.atUpper + p * iv.mass);
@@ -179,7 +216,7 @@ public class TruncatedReal extends ScalarDistribution<RealScalar<Real>, Double> 
         return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
-    public ScalarDistribution<RealScalar<Real>, Double> getInnerDistribution() {
+    public ScalarDistribution<? extends RealScalar<?>, Double> getInnerDistribution() {
     	if (dist == null) {
     		refresh();
     	}

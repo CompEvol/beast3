@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TruncatedIntTest {
 
-    private static TruncatedInt truncatedPoisson(double lambda, Integer lower, Integer upper) {
+    private static TruncatedInt<Int> truncatedPoisson(double lambda, Integer lower, Integer upper) {
         Poisson poisson = new Poisson(null, new RealScalarParam<>(lambda, NonNegativeReal.INSTANCE));
-        TruncatedInt t = new TruncatedInt();
+        TruncatedInt<Int> t = new TruncatedInt<>();
         if (lower == null) {
             t.initByName("distribution", poisson, "upper", new IntScalarParam<>(upper, Int.INSTANCE));
         } else if (upper == null) {
@@ -43,7 +43,7 @@ public class TruncatedIntTest {
      */
     @Test
     public void testDensityExactValue() {
-        TruncatedInt t = truncatedPoisson(2.0, 0, 5);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, 0, 5);
         assertEquals(0.1834862, t.density(3), 1e-7);
     }
 
@@ -51,7 +51,7 @@ public class TruncatedIntTest {
     public void testPmfSumsToOne() {
         int[][] intervals = {{0, 5}, {2, 5}, {0, 1}, {1, 1}, {3, 10}};
         for (int[] iv : intervals) {
-            TruncatedInt t = truncatedPoisson(2.0, iv[0], iv[1]);
+            TruncatedInt<Int> t = truncatedPoisson(2.0, iv[0], iv[1]);
             double sum = 0;
             for (int x = iv[0]; x <= iv[1]; x++) {
                 sum += t.density(x);
@@ -65,7 +65,7 @@ public class TruncatedIntTest {
     @Test
     public void testPmfSumsToOneOneSided() {
         // only a lower end: [2, infinity)
-        TruncatedInt t = truncatedPoisson(2.0, 2, null);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, 2, null);
         double sum = 0;
         for (int x = 2; x <= 100; x++) {
             sum += t.density(x);
@@ -85,7 +85,7 @@ public class TruncatedIntTest {
     public void testCalculateLogP() {
         double lambda = 2.0;
         IntScalarParam<Int> param = new IntScalarParam<>(2, Int.INSTANCE);
-        TruncatedInt t = truncatedPoisson(lambda, 2, 5);
+        TruncatedInt<Int> t = truncatedPoisson(lambda, 2, 5);
         t.initByName("param", param);
         double expected = PoissonDistribution.of(lambda).logProbability(2) - Math.log(mass(lambda, 2, 5));
         assertEquals(expected, t.calculateLogP(), 1e-12);
@@ -94,7 +94,7 @@ public class TruncatedIntTest {
     @Test
     public void testCumulativeProbability() {
         double lambda = 2.0;
-        TruncatedInt t = truncatedPoisson(lambda, 2, 5);
+        TruncatedInt<Int> t = truncatedPoisson(lambda, 2, 5);
         assertEquals(0.0, t.cumulativeProbability(1));
         assertEquals(0.0, t.cumulativeProbability(1.9));
         // the lower end itself carries mass
@@ -107,7 +107,7 @@ public class TruncatedIntTest {
 
     @Test
     public void testInverseCumulativeProbability() {
-        TruncatedInt t = truncatedPoisson(2.0, 2, 5);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, 2, 5);
         assertEquals(2, t.inverseCumulativeProbability(0.0));
         assertEquals(5, t.inverseCumulativeProbability(1.0));
         for (int k = 2; k <= 5; k++) {
@@ -118,7 +118,7 @@ public class TruncatedIntTest {
     @Test
     public void testMean() {
         double lambda = 2.0;
-        TruncatedInt t = truncatedPoisson(lambda, 2, 5);
+        TruncatedInt<Int> t = truncatedPoisson(lambda, 2, 5);
         PoissonDistribution p = PoissonDistribution.of(lambda);
         double expected = 0;
         for (int x = 2; x <= 5; x++) {
@@ -134,7 +134,7 @@ public class TruncatedIntTest {
 
     @Test
     public void testSample() {
-        TruncatedInt t = truncatedPoisson(2.0, 2, 5);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, 2, 5);
         int n = 100_000;
         int[] counts = new int[6];
         for (int i = 0; i < n; i++) {
@@ -168,7 +168,7 @@ public class TruncatedIntTest {
         double lambda = 2.0;
         PoissonDistribution p = PoissonDistribution.of(lambda);
         for (int lower : new int[]{10, 20, 25, 30}) {
-            TruncatedInt t = truncatedPoisson(lambda, lower, null);
+            TruncatedInt<Int> t = truncatedPoisson(lambda, lower, null);
             double expected = p.logProbability(lower) - Math.log(upperTailMass(lambda, lower));
             assertEquals(expected, t.logDensity(lower), 1e-9, "logDensity at lower = " + lower);
             double sum = 0;
@@ -184,7 +184,7 @@ public class TruncatedIntTest {
     /** [25, 30]: both ends in the right tail */
     @Test
     public void testRightTailInterval() {
-        TruncatedInt t = truncatedPoisson(2.0, 25, 30);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, 25, 30);
         double sum = 0;
         for (int x = 25; x <= 30; x++) {
             sum += t.density(x);
@@ -205,7 +205,7 @@ public class TruncatedIntTest {
     @Test
     public void testRightTailSample() {
         for (int lower : new int[]{10, 25, 30}) {
-            TruncatedInt t = truncatedPoisson(2.0, lower, null);
+            TruncatedInt<Int> t = truncatedPoisson(2.0, lower, null);
             for (int i = 0; i < 1000; i++) {
                 int x = t.sample().get(0);
                 assertTrue(x >= lower && x < lower + 50, "sample " + x + " for lower = " + lower);
@@ -236,7 +236,7 @@ public class TruncatedIntTest {
     /** An interval without probability: logDensity is -Infinity, the rest says why it is undefined */
     @Test
     public void testEmptyInterval() {
-        TruncatedInt t = truncatedPoisson(2.0, -5, -1);
+        TruncatedInt<Int> t = truncatedPoisson(2.0, -5, -1);
         assertEquals(Double.NEGATIVE_INFINITY, t.logDensity(-3));
         assertThrows(IllegalStateException.class, () -> t.cumulativeProbability(-3));
         assertThrows(IllegalStateException.class, t::getMean);
@@ -245,12 +245,10 @@ public class TruncatedIntTest {
 
     /** lower == upper puts all the mass on that value; the constructor accepts it */
     @Test
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public void testSingleValueConstructor() {
         Poisson poisson = new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
-        // raw cast: the constructor's generic type does not accept a NonNegativeInt-domain
-        // distribution yet (step 3 of the domain-aware Offset/Bounded plan)
-        TruncatedInt t = new TruncatedInt((ScalarDistribution) poisson, 3, 3);
+        // the constructor takes a distribution of any integer domain, here NonNegativeInt
+        TruncatedInt<Int> t = new TruncatedInt<>(poisson, 3, 3);
         assertEquals(1.0, t.density(3), 1e-12);
         assertEquals(3, t.sample().get(0));
         assertEquals(3.0, t.getMean(), 1e-12);
@@ -265,7 +263,7 @@ public class TruncatedIntTest {
         Poisson poisson = new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
         OffsetInt offset = new OffsetInt();
         offset.initByName("distribution", poisson, "offset", new IntScalarParam<>(5, Int.INSTANCE));
-        TruncatedInt t = new TruncatedInt();
+        TruncatedInt<Int> t = new TruncatedInt<>();
         t.initByName("distribution", offset,
                 "lower", new IntScalarParam<>(6, Int.INSTANCE),
                 "upper", new IntScalarParam<>(8, Int.INSTANCE));

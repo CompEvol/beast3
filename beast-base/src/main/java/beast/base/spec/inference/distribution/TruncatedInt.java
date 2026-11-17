@@ -14,15 +14,22 @@ import java.util.List;
  * Wrapper that truncates an integer-valued distribution to the interval [lower, upper].
  */
 @Description("Distribution that truncates a integer valued distribution to the interval [lower,upper].")
-public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
+public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> {
 
-    final public Input<ScalarDistribution<IntScalar<Int>, Integer>> distributionInput = new Input<>("distribution",
+    // any int distribution, whatever the domain of its own parameter
+    final public Input<ScalarDistribution<? extends IntScalar<?>, Integer>> distributionInput = new Input<>("distribution",
             "the distribution to truncate", Validate.REQUIRED);
-    final public Input<IntScalar<Int>> lowerInput = new Input<IntScalar<Int>>("lower", "Lower end of the truncation interval.");
-    final public Input<IntScalar<Int>> upperInput = new Input<IntScalar<Int>>("upper", "Upper end of the truncation interval.");
+    final public Input<IntScalar<?>> lowerInput = new Input<>("lower", "Lower end of the truncation interval.");
+    final public Input<IntScalar<?>> upperInput = new Input<>("upper", "Upper end of the truncation interval.");
 
-    private ScalarDistribution<IntScalar<Int>, Integer> dist;
-    IntScalar<Int> lower, upper;
+    public final Input<? extends Int> domainInput = new Input<>("domain",
+            "the domain of the values this distribution puts probability on, e.g. PositiveInt for Poisson " +
+            "truncated to [1, 10] (optional). The truncated support must lie within it: it is checked when " +
+            "initialised, and the log probability is -Infinity while estimated bounds put it outside.");
+
+    private ScalarDistribution<? extends IntScalar<?>, Integer> dist;
+    IntScalar<?> lower, upper;
+    private Int declaredDomain;
 
     /**
      * Must provide empty constructor for construction by XML.
@@ -32,7 +39,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     }
 
     public TruncatedInt(
-        ScalarDistribution<IntScalar<Int>, Integer> dist,
+        ScalarDistribution<? extends IntScalar<?>, Integer> dist,
         int lower,
         int upper
     ) {
@@ -55,7 +62,29 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     public void initAndValidate() {
         refresh();
         dist.initAndValidate();
+        declaredDomain = domainInput.get();
+        if (declaredDomain != null) {
+            String outside = supportOutsideDeclaredDomain();
+            if (outside != null) {
+                throw new IllegalArgumentException(DeclaredDomain.message(this, getID(), declaredDomain, outside));
+            }
+        }
         super.initAndValidate();
+    }
+
+    /**
+     * @return the declared domain of the values this distribution puts probability on, or
+     * Int when none is declared
+     */
+    @SuppressWarnings("unchecked")
+    public D getParameterDomain() {
+        Int domain = domainInput.get();
+        return (D) (domain != null ? domain : Int.INSTANCE);
+    }
+
+    /** @return where the truncated support reaches outside the declared domain, or null */
+    private String supportOutsideDeclaredDomain() {
+        return DeclaredDomain.outside(declaredDomain, getLowerBoundOfParameter(), getUpperBoundOfParameter());
     }
 
     /**
@@ -78,6 +107,11 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     @Override
     public double calculateLogP() {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
+            // estimated bounds have moved the support outside the declared domain
+            logP = Double.NEGATIVE_INFINITY;
+            return logP;
+        }
         logP = logDensity(param.get()); // no unboxing needed, faster
         return logP;
     }
@@ -85,6 +119,9 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
 	@Override
 	protected double calcLogP(Integer value) {
         refresh(); // this make sure distribution parameters are updated if they are sampled during MCMC
+        if (declaredDomain != null && (DeclaredDomain.canMove(lowerInput.get()) || DeclaredDomain.canMove(upperInput.get())) && supportOutsideDeclaredDomain() != null) {
+            return Double.NEGATIVE_INFINITY;
+        }
 		return logDensity(value);
 	}
 
@@ -115,7 +152,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
             return 1.0;
         }
         Interval iv = interval();
-        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        ScalarDistribution<? extends IntScalar<?>, Integer> inner = getInnerDistribution();
         if (iv.upperTail) {
             // P(lower <= X <= x) = P(X >= lower) - P(X > x)
             return (iv.atLower - inner.survivalProbability(x)) / iv.mass;
@@ -133,7 +170,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
             return 0.0;
         }
         Interval iv = interval();
-        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        ScalarDistribution<? extends IntScalar<?>, Integer> inner = getInnerDistribution();
         if (iv.upperTail) {
             // P(x < X <= upper) = P(X > x) - P(X > upper)
             return (inner.survivalProbability(x) - iv.atUpper) / iv.mass;
@@ -144,7 +181,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     @Override
     public Integer inverseCumulativeProbability(double p) {
         Interval iv = interval();
-        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        ScalarDistribution<? extends IntScalar<?>, Integer> inner = getInnerDistribution();
         int x;
         if (iv.upperTail) {
             // smallest x with P(X >= lower) - P(X > x) >= p * mass
@@ -159,7 +196,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
     @Override
     public Integer inverseSurvivalProbability(double p) {
         Interval iv = interval();
-        ScalarDistribution<IntScalar<Int>, Integer> inner = getInnerDistribution();
+        ScalarDistribution<? extends IntScalar<?>, Integer> inner = getInnerDistribution();
         int x;
         if (iv.upperTail) {
             // smallest x with P(X > x) - P(X > upper) <= p * mass
@@ -179,7 +216,7 @@ public class TruncatedInt extends ScalarDistribution<IntScalar<Int>, Integer> {
         return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
-    public ScalarDistribution<IntScalar<Int>, Integer> getInnerDistribution() {
+    public ScalarDistribution<? extends IntScalar<?>, Integer> getInnerDistribution() {
     	if (dist == null) {
     		refresh();
     	}

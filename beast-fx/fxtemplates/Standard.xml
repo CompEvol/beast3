@@ -140,7 +140,11 @@
             beast.base.spec.inference.parameter.IntSimplexParam.shape,
             beast.base.spec.inference.parameter.IntSimplexParam.keys,
             beast.base.spec.inference.distribution.IID.param,
-            beast.base.spec.inference.distribution.MarkovChainDistribution.param
+            beast.base.spec.inference.distribution.MarkovChainDistribution.param,
+            beast.base.spec.inference.distribution.OffsetInt.domain,
+            beast.base.spec.inference.distribution.OffsetReal.domain,
+            beast.base.spec.inference.distribution.TruncatedInt.domain,
+            beast.base.spec.inference.distribution.TruncatedReal.domain
             '
         hmc='BirthDeath/index/,
 RandomTree/rootHeight/,
