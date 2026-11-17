@@ -521,11 +521,7 @@ public class XMLParser {
     	// the state comes before the bound parameters nested in its prior, which still read 0.
     	// Parameters ignore the bounds of a distribution marked here until that distribution
     	// is initialised (issue #286); the marks are cleared below in any case.
-    	for (BEASTInterface o : beastObjectsWaitingToInit) {
-    		if (o instanceof TensorDistribution<?, ?> d) {
-    			d.setAwaitingInit(true);
-    		}
-    	}
+    	TensorDistribution.setAwaitingInit(beastObjectsWaitingToInit, true);
         try {
         	for (int i = 0; i < beastObjectsWaitingToInit.size(); i++) {
         		final BEASTInterface beastObject = beastObjectsWaitingToInit.get(i);
@@ -541,11 +537,7 @@ public class XMLParser {
         } finally {
         	// e.g. a distribution whose initAndValidate() does not call super's, or one not
         	// reached because an earlier object failed: bound its parameter as before
-        	for (BEASTInterface o : beastObjectsWaitingToInit) {
-        		if (o instanceof TensorDistribution<?, ?> d) {
-        			d.setAwaitingInit(false);
-        		}
-        	}
+        	TensorDistribution.setAwaitingInit(beastObjectsWaitingToInit, false);
         }
 	}
 
