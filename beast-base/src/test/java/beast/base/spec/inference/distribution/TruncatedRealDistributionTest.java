@@ -342,4 +342,80 @@ public class TruncatedRealDistributionTest {
         assertEquals(0.317, probOOB, 0.01, "Probability out of bounds should be ~0.32 for N(0,1) truncated to [-1,1]");
     }
 
+
+    //*** right tail ***//
+
+    private static TruncatedReal truncatedExp(double lower, Double upper) {
+        Exponential exp = new Exponential(null, new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        TruncatedReal t = new TruncatedReal();
+        if (upper == null) {
+            t.initByName("distribution", exp, "lower", new RealScalarParam<>(lower, Real.INSTANCE));
+        } else {
+            t.initByName("distribution", exp, "lower", new RealScalarParam<>(lower, Real.INSTANCE),
+                    "upper", new RealScalarParam<>(upper, Real.INSTANCE));
+        }
+        return t;
+    }
+
+    /**
+     * Exp(1) truncated from L is L + Exp(1): density e^-(x - L), CDF 1 - e^-(x - L),
+     * mean L + 1. With the normaliser 1 - P(X <= L) - (1 - P(X <= upper)) the density was
+     * off by 1.7e-4 in log at L = 30, and +Infinity at L = 40, where P(X <= 40) is 1.0
+     * in double precision; samples were NaN there.
+     */
+    @Test
+    public void testRightTailExponential() {
+        for (double lower : new double[]{10, 30, 40, 100}) {
+            TruncatedReal t = truncatedExp(lower, null);
+            assertEquals(-0.5, t.logDensity(lower + 0.5), 1e-9, "logDensity from " + lower);
+            assertEquals(1 - Math.exp(-1), t.cumulativeProbability(lower + 1), 1e-9, "CDF from " + lower);
+            assertEquals(Math.exp(-1), t.survivalProbability(lower + 1), 1e-9);
+            assertEquals(lower + Math.log(2), t.inverseCumulativeProbability(0.5), 1e-9, "median from " + lower);
+            assertEquals(lower + 1, t.getMean(), 1e-3, "mean from " + lower);
+            double sum = 0;
+            int n = 20_000;
+            for (int i = 0; i < n; i++) {
+                double x = t.sample().get(0);
+                assertTrue(x >= lower && Double.isFinite(x), "sample " + x + " from " + lower);
+                sum += x;
+            }
+            // the sample mean of Exp(1) has standard error 1/sqrt(n) = 0.007
+            assertEquals(lower + 1, sum / n, 0.05, "sample mean from " + lower);
+        }
+    }
+
+    /** [40, 41]: both ends in the right tail */
+    @Test
+    public void testRightTailInterval() {
+        TruncatedReal t = truncatedExp(40, 41.0);
+        assertEquals(-0.5 - Math.log(1 - Math.exp(-1)), t.logDensity(40.5), 1e-9);
+        assertEquals(1.0, t.cumulativeProbability(41), 1e-12);
+        assertEquals((1 - Math.exp(-0.5)) / (1 - Math.exp(-1)), t.cumulativeProbability(40.5), 1e-9);
+    }
+
+    /** Normal(0, 1) from 10: the mean is the inverse Mills ratio phi(10) / (1 - Phi(10)) */
+    @Test
+    public void testRightTailNormalMean() {
+        Normal normal = new Normal();
+        normal.initByName("mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+                "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        TruncatedReal t = new TruncatedReal();
+        t.initByName("distribution", normal, "lower", new RealScalarParam<>(10.0, Real.INSTANCE));
+        org.apache.commons.statistics.distribution.NormalDistribution n =
+                org.apache.commons.statistics.distribution.NormalDistribution.of(0, 1);
+        double expected = n.density(10) / n.survivalProbability(10);
+        assertEquals(10.098, expected, 1e-3);
+        assertEquals(expected, t.getMean(), 1e-3);
+        assertEquals(n.logDensity(10.5) - Math.log(n.survivalProbability(10)), t.logDensity(10.5), 1e-9);
+    }
+
+    /** An interval without probability: logDensity is -Infinity, the rest says why it is undefined */
+    @Test
+    public void testEmptyInterval() {
+        TruncatedReal t = truncatedExp(-5, -1.0);
+        assertEquals(Double.NEGATIVE_INFINITY, t.logDensity(-3));
+        assertThrows(IllegalStateException.class, () -> t.cumulativeProbability(-3));
+        assertThrows(IllegalStateException.class, t::getMean);
+        assertThrows(IllegalStateException.class, t::sample);
+    }
 }
