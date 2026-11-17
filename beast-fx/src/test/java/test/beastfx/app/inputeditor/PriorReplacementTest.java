@@ -32,8 +32,10 @@ import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.Real;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.distribution.Dirichlet;
 import beast.base.spec.inference.distribution.IID;
+import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.TruncatedReal;
@@ -96,15 +98,20 @@ public class PriorReplacementTest {
 	/** IID prior with a Normal base distribution on a 2-dimensional real vector, in a CompoundDistribution **/
 	private static class IIDFixture {
 		BeautiDoc doc;
-		RealVectorParam<Real> rates;
+		RealVectorParam<?> rates;
 		IID<?,?,?> iid;
 		CompoundDistribution prior;
 
 		IIDFixture() throws Exception {
+			this(Real.INSTANCE);
+		}
+
+		/** as above, with a vector of the given domain **/
+		IIDFixture(Real domain) throws Exception {
 			doc = new BeautiDoc();
 			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
 
-			rates = new RealVectorParam<>(new double[] {0.5, 0.5}, Real.INSTANCE);
+			rates = new RealVectorParam<>(new double[] {0.5, 0.5}, domain);
 			rates.setID("rates.c:test");
 			Normal normal = new Normal();
 			normal.initByName(
@@ -230,6 +237,75 @@ public class PriorReplacementTest {
 			root.layout();
 			return editor;
 		}
+	}
+
+
+	/**
+	 * select IID for a vector of the given domain and return the new IID prior; checks
+	 * that one IID is offered, from the template with the given id
+	 */
+	private static IID<?,?,?> selectIID(Real domain, String expectedTemplateID) throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<IIDFixture> fixture = new AtomicReference<>();
+		runOnFXThread(() -> {
+			IIDFixture f = new IIDFixture(domain);
+			fixture.set(f);
+			InputEditor editor = f.expandedEditor();
+			ComboBox<BeautiSubTemplate> comboBox = findComboBoxOffering(editor.getComponent(), "IID");
+			assertNotNull(comboBox, "no combo box offering IID");
+			List<String> iids = comboBox.getItems().stream().filter(t -> offers(t, "IID")).map(BeautiSubTemplate::getID).toList();
+			assertEquals(List.of(expectedTemplateID), iids, "IID templates offered for " + domain.getClass().getSimpleName());
+			select(comboBox, "IID");
+		}, error);
+		rethrow(error);
+		Object newPrior = fixture.get().prior.pDistributions.get().get(0);
+		assertTrue(newPrior instanceof IID, "prior was not replaced by an IID: " + newPrior);
+		assertNotSame(fixture.get().iid, newPrior, "prior was not replaced");
+		return (IID<?,?,?>) newPrior;
+	}
+
+	/**
+	 * IID chosen for a PositiveReal or NonNegativeReal vector starts with LogNormal(0, 8) as
+	 * base distribution, as the hyperprior on a positive scalar, not with the Real IID
+	 * template's Uniform on (-1e307, 1e307), which puts half its mass below 0. It comes from
+	 * the IID.nonNegative template, the one whose domain is closest.
+	 */
+	@Test
+	public void testIIDOnPositiveRealVectorDefaultsToLogNormal() throws Exception {
+		assertLogNormalBase(selectIID(PositiveReal.INSTANCE, "IID.nonNegative"));
+	}
+
+	@Test
+	public void testIIDOnNonNegativeRealVectorDefaultsToLogNormal() throws Exception {
+		assertLogNormalBase(selectIID(NonNegativeReal.INSTANCE, "IID.nonNegative"));
+	}
+
+	private static void assertLogNormalBase(IID<?,?,?> iid) {
+		assertTrue(iid.distInput.get() instanceof LogNormal, "base distribution: " + iid.distInput.get());
+		LogNormal logNormal = (LogNormal) iid.distInput.get();
+		assertEquals(0.0, logNormal.MParameterInput.get().get(), 0.0);
+		assertEquals(8.0, logNormal.SParameterInput.get().get(), 0.0);
+		assertFalse(logNormal.hasMeanInRealSpaceInput.get());
+		assertEquals(0.0, (Double) iid.getLowerBoundOfParameter(), 0.0);
+	}
+
+	/** IID chosen for a UnitInterval vector starts with Beta(1, 1), uniform on [0, 1] **/
+	@Test
+	public void testIIDOnUnitIntervalVectorDefaultsToBeta() throws Exception {
+		IID<?,?,?> iid = selectIID(UnitInterval.INSTANCE, "IID.unitInterval");
+		assertTrue(iid.distInput.get() instanceof Beta, "base distribution: " + iid.distInput.get());
+		Beta beta = (Beta) iid.distInput.get();
+		assertEquals(1.0, beta.alphaInput.get().get(), 0.0);
+		assertEquals(1.0, beta.betaInput.get().get(), 0.0);
+		assertEquals(0.0, (Double) iid.getLowerBoundOfParameter(), 0.0);
+		assertEquals(1.0, (Double) iid.getUpperBoundOfParameter(), 0.0);
+	}
+
+	/** IID chosen for a Real vector keeps the template's base distribution **/
+	@Test
+	public void testIIDOnRealVectorKeepsTemplateBase() throws Exception {
+		IID<?,?,?> iid = selectIID(Real.INSTANCE, "IID");
+		assertTrue(iid.distInput.get() instanceof Uniform, "base distribution: " + iid.distInput.get());
 	}
 
 
@@ -498,7 +574,7 @@ public class PriorReplacementTest {
 	@SuppressWarnings("unchecked")
 	private static void select(ComboBox<BeautiSubTemplate> comboBox, String templateID) {
 		BeautiSubTemplate template = comboBox.getItems().stream()
-				.filter(t -> t.getID().equals(templateID)).findFirst().orElse(null);
+				.filter(t -> offers(t, templateID)).findFirst().orElse(null);
 		assertNotNull(template, templateID + " not offered");
 		// select it, then run the combo box's action as selecting it in the GUI does
 		// (setValue alone does not fire it while the combo box is not showing)
@@ -507,14 +583,19 @@ public class PriorReplacementTest {
 	}
 
 
-	/** first combo box in the node tree rooted at node that offers the template with the given id **/
+	/** whether template has the given id, or shows it as its label (e.g. "IID" for IID.nonNegative) **/
+	private static boolean offers(BeautiSubTemplate template, String idOrLabel) {
+		return template.getID().equals(idOrLabel) || idOrLabel.equals(template.labelInput.get());
+	}
+
+	/** first combo box in the node tree rooted at node that offers the template with the given id or label **/
 	@SuppressWarnings("unchecked")
 	private static ComboBox<BeautiSubTemplate> findComboBoxOffering(Node node, String templateID) {
 		List<ComboBox<?>> comboBoxes = new ArrayList<>();
 		collectComboBoxes(node, comboBoxes);
 		for (ComboBox<?> comboBox : comboBoxes) {
 			for (Object item : comboBox.getItems()) {
-				if (item instanceof BeautiSubTemplate t && t.getID().equals(templateID)) {
+				if (item instanceof BeautiSubTemplate t && offers(t, templateID)) {
 					return (ComboBox<BeautiSubTemplate>) comboBox;
 				}
 			}

@@ -257,6 +257,42 @@
 ]]>
         </subtemplate>
 
+        <!-- IID for a non-negative vector (e.g. rates): offered instead of the IID above, as its
+             domain is closer (see the label input of BeautiSubTemplate). LogNormal(0, 8) in log
+             space, as the hyperprior on a positive scalar (BeautiConfig.HYPER_PRIOR_XML). -->
+        <subtemplate id='IID.nonNegative' label='IID' class='beast.base.spec.inference.distribution.IID' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.IID.param'
+            hmc='
+            IID/alpha/=ParametricDistributions/IID/mean/,
+            IID/offset/=ParametricDistributions/IID/offset/'>
+            <![CDATA[
+			<distr spec="beast.base.spec.inference.distribution.IID">
+	            <param spec="beast.base.spec.inference.parameter.RealVectorParam" dimension="2" domain="NonNegativeReal">1.0</param>
+        		<distr spec="beast.base.spec.inference.distribution.LogNormal" meanInRealSpace="false">
+		        	<M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+		        	<S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
+        		</distr>
+            </distr>
+]]>
+        </subtemplate>
+
+        <!-- IID for a unit-interval vector (e.g. frequencies): Beta(1, 1), uniform on [0, 1] -->
+        <subtemplate id='IID.unitInterval' label='IID' class='beast.base.spec.inference.distribution.IID' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.IID.param'
+            hmc='
+            IID/alpha/=ParametricDistributions/IID/mean/,
+            IID/offset/=ParametricDistributions/IID/offset/'>
+            <![CDATA[
+			<distr spec="beast.base.spec.inference.distribution.IID">
+	            <param spec="beast.base.spec.inference.parameter.RealVectorParam" dimension="2" domain="UnitInterval">0.5</param>
+        		<distr spec="beast.base.spec.inference.distribution.Beta">
+		        	<alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+		        	<beta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+        		</distr>
+            </distr>
+]]>
+        </subtemplate>
+
     </mergewith>
 
 

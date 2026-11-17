@@ -13,8 +13,11 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -70,6 +73,72 @@ final class PriorEditorUtil {
 		doc.pluginmap.remove(id);
 		doc.registerPlugin(newPrior);
 		return newPrior;
+	}
+
+	/**
+	 * Of the templates compatible with a parameter's domain, keep for each distribution class
+	 * only those whose domain is closest to the parameter's. Template sets can then give the
+	 * same distribution different defaults for different domains, e.g. an IID with a Uniform
+	 * base for Real vectors and one with a LogNormal base for non-negative vectors, and a
+	 * parameter is offered the one meant for it.
+	 * <p>
+	 * Closest is, in order: the same domain; a narrower one (the template's support then stays
+	 * within the parameter's domain), fewest steps away first; a broader one, fewest steps
+	 * away first. Templates that are equally close are all kept, as are templates of a class
+	 * offered only once.
+	 *
+	 * @param paramDomain the domain class of the parameter, e.g. PositiveReal
+	 * @param templates   the compatible templates
+	 * @param domains     the domain class of each template, in the same order
+	 * @return the templates to offer, in their original order
+	 */
+	static List<BeautiSubTemplate> closestDomainPerClass(Class<?> paramDomain, List<BeautiSubTemplate> templates,
+			List<Class<?>> domains) {
+		Map<String, Integer> best = new HashMap<>();
+		int[] distance = new int[templates.size()];
+		for (int i = 0; i < templates.size(); i++) {
+			distance[i] = domainDistance(paramDomain, domains.get(i));
+			best.merge(templates.get(i).classInput.get(), distance[i], Math::min);
+		}
+		List<BeautiSubTemplate> closest = new ArrayList<>();
+		for (int i = 0; i < templates.size(); i++) {
+			if (distance[i] == best.get(templates.get(i).classInput.get())) {
+				closest.add(templates.get(i));
+			}
+		}
+		return closest;
+	}
+
+	/**
+	 * @return 0 for the same domain, the number of subclass steps for a narrower template
+	 * domain, and 1000 plus the number of superclass steps for a broader one (unrelated
+	 * domains, which are not compatible, last)
+	 */
+	private static int domainDistance(Class<?> paramDomain, Class<?> templateDomain) {
+		if (paramDomain == null || templateDomain == null) {
+			return Integer.MAX_VALUE;
+		}
+		int steps = superclassSteps(templateDomain, paramDomain);
+		if (steps >= 0) {
+			return steps;
+		}
+		steps = superclassSteps(paramDomain, templateDomain);
+		if (steps >= 0) {
+			return 1000 + steps;
+		}
+		return Integer.MAX_VALUE;
+	}
+
+	/** @return how many superclass steps lead from sub to sup, or -1 if sup is not a superclass of sub */
+	private static int superclassSteps(Class<?> sub, Class<?> sup) {
+		int steps = 0;
+		for (Class<?> c = sub; c != null; c = c.getSuperclass()) {
+			if (c == sup) {
+				return steps;
+			}
+			steps++;
+		}
+		return -1;
 	}
 
 	/**
