@@ -76,6 +76,18 @@ public abstract class TensorDistribution<S extends Tensor<?,T>, T>
     }
 
     /**
+     * For the XML and JSON parsers: mark or unmark every distribution among the objects
+     * they are about to initialise. See {@link #setAwaitingInit(boolean)}.
+     */
+    public static void setAwaitingInit(Iterable<?> objects, boolean awaitingInit) {
+        for (Object o : objects) {
+            if (o instanceof TensorDistribution<?, ?> d) {
+                d.setAwaitingInit(awaitingInit);
+            }
+        }
+    }
+
+    /**
      * Initializes the distribution by reading the tensor parameter input and
      * validating its current value against type constraints.
      */
