@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +15,7 @@ import beast.base.spec.domain.NonNegativeReal;
 import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.distribution.TruncatedInt;
@@ -110,5 +112,46 @@ public class PriorEditorUtilTest {
 				assertNull(message, message);
 			}
 		}
+	}
+
+	/** a template for the given class, enough for closestDomainPerClass (not initialised) */
+	private static BeautiSubTemplate template(String id, String className) {
+		BeautiSubTemplate t = new BeautiSubTemplate();
+		t.setID(id);
+		t.classInput.setValue(className, t);
+		return t;
+	}
+
+	private static List<String> offered(Class<?> paramDomain, List<BeautiSubTemplate> templates, List<Class<?>> domains) {
+		return PriorEditorUtil.closestDomainPerClass(paramDomain, templates, domains).stream().map(BeautiSubTemplate::getID).toList();
+	}
+
+	/**
+	 * Of several templates for the same class, the one whose domain is closest to the
+	 * parameter's is offered: the same domain, then a narrower one, then a broader one.
+	 * Other classes are not affected.
+	 */
+	@Test
+	void closestDomainPerClass() {
+		BeautiSubTemplate iid = template("IID", "IID");
+		BeautiSubTemplate iidNonNegative = template("IID.nonNegative", "IID");
+		BeautiSubTemplate iidUnit = template("IID.unitInterval", "IID");
+		BeautiSubTemplate dirichlet = template("Dirichlet", "Dirichlet");
+		List<BeautiSubTemplate> all = List.of(iid, dirichlet, iidNonNegative, iidUnit);
+		List<Class<?>> domains = List.of(Real.class, UnitInterval.class, NonNegativeReal.class, UnitInterval.class);
+
+		assertEquals(List.of("IID", "Dirichlet"), offered(Real.class, all, domains));
+		assertEquals(List.of("Dirichlet", "IID.nonNegative"), offered(NonNegativeReal.class, all, domains));
+		// broader: NonNegativeReal is one step from PositiveReal, Real two
+		assertEquals(List.of("IID.nonNegative"), offered(PositiveReal.class,
+				List.of(iid, iidNonNegative), List.of(Real.class, NonNegativeReal.class)));
+		assertEquals(List.of("Dirichlet", "IID.unitInterval"), offered(UnitInterval.class, all, domains));
+		// narrower before broader: for a NonNegativeReal parameter, UnitInterval before Real
+		assertEquals(List.of("IID.unitInterval"), offered(NonNegativeReal.class,
+				List.of(iid, iidUnit), List.of(Real.class, UnitInterval.class)));
+		// equally close templates are all offered
+		BeautiSubTemplate iid2 = template("IID.normal", "IID");
+		assertEquals(List.of("IID", "IID.normal"), offered(Real.class,
+				List.of(iid, iid2), List.of(Real.class, Real.class)));
 	}
 }

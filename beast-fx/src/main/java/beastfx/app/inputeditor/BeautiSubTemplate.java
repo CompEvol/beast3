@@ -58,6 +58,10 @@ public class BeautiSubTemplate extends BEASTObject {
     final public Input<String> hmcInput = new Input<>("hmc", "comma delimited list of `help me choose` pages available "
     		+ "from the https://beast2-dev.github.io/hmc/ site."
     		+ "Pages can be redirected by adding an alias, e.g. CalibratedYuleModelNarrow/isNarrow/=Narrow/isNarrow/.");
+    final public Input<String> labelInput = new Input<>("label", "name shown for this template, e.g. in a combo box "
+    		+ "(optional; defaults to the id, with spaces between words). Templates for the same class that differ "
+    		+ "only in the domain they are meant for can share a label, e.g. IID with a LogNormal base for "
+    		+ "non-negative vectors: a parameter is offered the one closest to its domain.");
 
     public Class<?> _class = null;
     Object instance;
@@ -502,6 +506,9 @@ public class BeautiSubTemplate extends BEASTObject {
 
     @Override
     public String toString() {
+        if (labelInput.get() != null) {
+            return labelInput.get();
+        }
         String id = getID();
         id = id.replaceAll("([a-z])([A-Z])", "$1 $2");
         return id;

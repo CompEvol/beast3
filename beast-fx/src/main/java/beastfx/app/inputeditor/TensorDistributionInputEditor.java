@@ -279,12 +279,17 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
         TensorDistribution<?,?> distr = (TensorDistribution<?,?>) m_beastObject;
         Object param = distr.paramInput.get();
         Class<?> domain = getParameterDomain(param);
+        List<BeautiSubTemplate> compatible = new ArrayList<>();
+        List<Class<?>> compatibleDomains = new ArrayList<>();
         for (BeautiSubTemplate template : tensorTemplates) {
         	if (isCompatible(domain, templateDomains.get(k), hasSimplexParam(param, templateInstances.get(k)))) {
-        		comboBox.getItems().add(template);
+        		compatible.add(template);
+        		compatibleDomains.add(templateDomains.get(k));
         	}
         	k++;
         }
+        // of several templates for the same distribution, offer the one meant for this domain
+        comboBox.getItems().addAll(PriorEditorUtil.closestDomainPerClass(domain, compatible, compatibleDomains));
         
         if (comboBox.getItems().size() == 0) {
         	return null;
@@ -300,7 +305,8 @@ public class TensorDistributionInputEditor extends BEASTObjectInputEditor implem
 
         id = prior.getClass().getName();
         		// id.substring(0, id.indexOf('.'));
-        for (BeautiSubTemplate template : tensorTemplates) {
+        // among the offered templates only: several templates can create the same class
+        for (BeautiSubTemplate template : comboBox.getItems()) {
             if (template.classInput.get() != null && template._class.getName().equals(id)) {
                 comboBox.setValue(template);
             }

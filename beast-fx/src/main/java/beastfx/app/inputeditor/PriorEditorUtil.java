@@ -6,22 +6,18 @@ import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Int;
-import beast.base.spec.domain.NonNegativeReal;
-import beast.base.spec.domain.UnitInterval;
-import beast.base.spec.inference.distribution.Beta;
-import beast.base.spec.inference.distribution.IID;
-import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.parameter.RealScalarParam;
-import beast.base.spec.type.RealVector;
 import beast.base.spec.type.Tensor;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -72,10 +68,6 @@ final class PriorEditorUtil {
 		// density, and the model is parsed again from XML for a run.
 		newPrior.paramInput.setValue(param, newPrior);
 
-		if (newPrior instanceof IID<?, ?, ?> iid) {
-			setDefaultIIDBase(doc, iid, param, context);
-		}
-
 		list.set(itemNr, newPrior);
 		newPrior.setID(id);
 		doc.pluginmap.remove(id);
@@ -84,60 +76,69 @@ final class PriorEditorUtil {
 	}
 
 	/**
-	 * Give a new IID on a non-negative or unit-interval vector a base distribution that fits
-	 * the vector's domain. The IID template's base is a Uniform on (-1e307, 1e307), meant for
-	 * a Real vector; on a PositiveReal vector it puts half its mass below 0, where the vector
-	 * cannot go. The base becomes:
-	 * <ul>
-	 * <li>PositiveReal or NonNegativeReal: LogNormal(0, 8) in log space, as the hyperprior on
-	 * a positive scalar (BeautiConfig.HYPER_PRIOR_XML)</li>
-	 * <li>UnitInterval: Beta(1, 1), uniform on [0, 1]</li>
-	 * </ul>
-	 * A Real vector keeps the template's Uniform. The base is created from BEAUti's own
-	 * LogNormal and Beta subtemplates, as when the user picks one, and then given these values.
+	 * Of the templates compatible with a parameter's domain, keep for each distribution class
+	 * only those whose domain is closest to the parameter's. Template sets can then give the
+	 * same distribution different defaults for different domains, e.g. an IID with a Uniform
+	 * base for Real vectors and one with a LogNormal base for non-negative vectors, and a
+	 * parameter is offered the one meant for it.
+	 * <p>
+	 * Closest is, in order: the same domain; a narrower one (the template's support then stays
+	 * within the parameter's domain), fewest steps away first; a broader one, fewest steps
+	 * away first. Templates that are equally close are all kept, as are templates of a class
+	 * offered only once.
+	 *
+	 * @param paramDomain the domain class of the parameter, e.g. PositiveReal
+	 * @param templates   the compatible templates
+	 * @param domains     the domain class of each template, in the same order
+	 * @return the templates to offer, in their original order
 	 */
-	static void setDefaultIIDBase(BeautiDoc doc, IID<?, ?, ?> iid, Object param, PartitionContext context) {
-		if (!(param instanceof RealVector<?> vector)) {
-			return;
+	static List<BeautiSubTemplate> closestDomainPerClass(Class<?> paramDomain, List<BeautiSubTemplate> templates,
+			List<Class<?>> domains) {
+		Map<String, Integer> best = new HashMap<>();
+		int[] distance = new int[templates.size()];
+		for (int i = 0; i < templates.size(); i++) {
+			distance[i] = domainDistance(paramDomain, domains.get(i));
+			best.merge(templates.get(i).classInput.get(), distance[i], Math::min);
 		}
-		Object domain = vector.getDomain();
-		// UnitInterval extends NonNegativeReal, so it is checked first
-		String templateID = domain instanceof UnitInterval ? "Beta"
-				: domain instanceof NonNegativeReal ? "LogNormal" : null;
-		if (templateID == null || doc == null || doc.beautiConfig == null) {
-			return;
-		}
-		BeautiSubTemplate template = null;
-		for (BeautiSubTemplate t : doc.beautiConfig.subTemplates) {
-			if (templateID.equals(t.getID())) {
-				template = t;
-				break;
+		List<BeautiSubTemplate> closest = new ArrayList<>();
+		for (int i = 0; i < templates.size(); i++) {
+			if (distance[i] == best.get(templates.get(i).classInput.get())) {
+				closest.add(templates.get(i));
 			}
 		}
-		if (template == null) {
-			// the template set has no LogNormal or Beta: keep the IID template's base
-			return;
-		}
-		// createSubNet puts the new distribution in iid's distr input, replacing the Uniform
-		Object base = template.createSubNet(context, iid, iid.distInput, true);
-		if (base instanceof LogNormal logNormal) {
-			setValue(logNormal.MParameterInput.get(), 0.0);
-			setValue(logNormal.SParameterInput.get(), 8.0);
-			logNormal.hasMeanInRealSpaceInput.setValue(false, logNormal);
-		} else if (base instanceof Beta beta) {
-			setValue(beta.alphaInput.get(), 1.0);
-			setValue(beta.betaInput.get(), 1.0);
-		}
-		if (base instanceof BEASTInterface b) {
-			b.initAndValidate();
-		}
+		return closest;
 	}
 
-	private static void setValue(Object scalar, double value) {
-		if (scalar instanceof RealScalarParam<?> p) {
-			p.valuesInput.setValue(value, p);
-			p.initAndValidate();
+	/**
+	 * @return 0 for the same domain, the number of subclass steps for a narrower template
+	 * domain, and 1000 plus the number of superclass steps for a broader one (unrelated
+	 * domains, which are not compatible, last)
+	 */
+	private static int domainDistance(Class<?> paramDomain, Class<?> templateDomain) {
+		if (paramDomain == null || templateDomain == null) {
+			return Integer.MAX_VALUE;
 		}
+		int steps = superclassSteps(templateDomain, paramDomain);
+		if (steps >= 0) {
+			return steps;
+		}
+		steps = superclassSteps(paramDomain, templateDomain);
+		if (steps >= 0) {
+			return 1000 + steps;
+		}
+		return Integer.MAX_VALUE;
+	}
+
+	/** @return how many superclass steps lead from sub to sup, or -1 if sup is not a superclass of sub */
+	private static int superclassSteps(Class<?> sub, Class<?> sup) {
+		int steps = 0;
+		for (Class<?> c = sub; c != null; c = c.getSuperclass()) {
+			if (c == sup) {
+				return steps;
+			}
+			steps++;
+		}
+		return -1;
 	}
 
 	/**
