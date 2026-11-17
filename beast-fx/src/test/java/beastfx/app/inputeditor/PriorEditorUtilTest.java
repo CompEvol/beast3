@@ -1,20 +1,32 @@
 package beastfx.app.inputeditor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.Poisson;
+import beast.base.spec.inference.distribution.TruncatedInt;
+import beast.base.spec.inference.distribution.TruncatedReal;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
 
 /**
  * Tests for {@link PriorEditorUtil#valueToString}, which gives the value of a parameter in the
- * invalid initial value message. It is in this package because the method is package private.
+ * invalid initial value message, and {@link PriorEditorUtil#supportOutsideDomainMessage}. It is
+ * in this package because the methods are package private.
  */
 public class PriorEditorUtilTest {
 
@@ -54,5 +66,49 @@ public class PriorEditorUtilTest {
 		RealScalarParam<Real> mu = new RealScalarParam<>(5.0, Real.INSTANCE);
 		mu.setID("mu");
 		assertEquals("mu: 5.0", PriorEditorUtil.valueToString(mu, 1));
+	}
+
+	/**
+	 * BEAUti's check that a prior's support fits the parameter's domain compares integer
+	 * domains with their inclusive bounds, as the runtime does: Bounded(Poisson, [0, 10]) on
+	 * a PositiveInt parameter is reported, [1, 10] is not.
+	 */
+	@Test
+	void boundedPoissonOnPositiveInt() {
+		for (int lower : new int[] {0, 1}) {
+			IntScalarParam<PositiveInt> k = new IntScalarParam<>(3, PositiveInt.INSTANCE);
+			k.setID("k");
+			Poisson poisson = new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
+			TruncatedInt bounded = new TruncatedInt();
+			bounded.initByName("distribution", poisson, "lower", new IntScalarParam<>(lower, Int.INSTANCE),
+					"upper", new IntScalarParam<>(10, Int.INSTANCE), "param", k);
+			String message = PriorEditorUtil.supportOutsideDomainMessage(bounded);
+			if (lower == 0) {
+				assertNotNull(message, "a prior from 0 on PositiveInt must be reported");
+				assertTrue(message.contains("at least 1"), message);
+			} else {
+				assertNull(message);
+			}
+		}
+	}
+
+	/** real domains keep their bound as it is: a prior from 0 fits PositiveReal, one from -1 does not */
+	@Test
+	void boundedNormalOnPositiveReal() {
+		for (double lower : new double[] {0.0, -1.0}) {
+			RealScalarParam<PositiveReal> kappa = new RealScalarParam<>(2.0, PositiveReal.INSTANCE);
+			kappa.setID("kappa");
+			Normal normal = new Normal(null, new RealScalarParam<>(0.0, Real.INSTANCE),
+					new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("distribution", normal, "lower", new RealScalarParam<>(lower, Real.INSTANCE),
+					"upper", new RealScalarParam<>(10.0, Real.INSTANCE), "param", kappa);
+			String message = PriorEditorUtil.supportOutsideDomainMessage(bounded);
+			if (lower < 0) {
+				assertNotNull(message);
+			} else {
+				assertNull(message, message);
+			}
+		}
 	}
 }

@@ -54,6 +54,10 @@ public interface RealVector<D extends Real> extends Vector<D, Double>, Bounded<D
     @Override
     default Double getLower() {
         D domain = getDomain();
+        // The domain bound is used as it is, even when it is exclusive (PositiveReal's 0):
+        // unlike an integer (see IntScalar.getLower()), a continuous value has no "next" value
+        // to make it inclusive with, and the single point 0 carries no probability, so an
+        // operator that proposes 0 has it rejected by isValid() at no cost.
         Double lower = domain.getLower();
         if (this instanceof BEASTInterface b) {
             for (BEASTInterface o : b.getOutputs()) {

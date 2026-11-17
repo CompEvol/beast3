@@ -347,7 +347,8 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     @Deprecated
     public void setLower(Integer lower) {
-        if (lower < getDomain().getLower())
+        // inclusive, as getLower() is: PositiveInt starts at 1
+        if (lower < getDomain().getInclusiveLower())
             throw new IllegalArgumentException("Lower bound " + lower +
                     " is not valid for domain " + domain.getClass().getName());
         this.lower = lower;
@@ -356,7 +357,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 
     @Deprecated
     public void setUpper(Integer upper) {
-        if (upper > getDomain().getUpper())
+        if (upper > getDomain().getInclusiveUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
                     " is not valid for domain " + domain.getClass().getName());
         this.upper = upper;

@@ -136,6 +136,8 @@ public class Dirichlet extends TensorDistribution<Simplex, Double> {
 
     @Override
     public Double getUpperBoundOfParameter() {
-        return gammas[0].getSupportUpperBound();
+        // the elements of a simplex sum to 1, so none can exceed 1
+        // (the gammas used for sampling are unbounded above)
+        return 1.0;
     }
 }

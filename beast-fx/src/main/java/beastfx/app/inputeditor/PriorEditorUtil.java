@@ -5,6 +5,7 @@ import beast.base.core.Input;
 import beast.base.inference.Distribution;
 import beast.base.parser.PartitionContext;
 import beast.base.spec.Bounded;
+import beast.base.spec.domain.Int;
 import beast.base.spec.inference.distribution.TensorDistribution;
 import beast.base.spec.type.Tensor;
 import javafx.scene.control.Button;
@@ -177,12 +178,16 @@ final class PriorEditorUtil {
 		}
 		String id = ((BEASTInterface) param).getID();
 		String domainName = param.getDomain().getClass().getSimpleName();
-		if (lower instanceof Number l && domain.getLower() instanceof Number dl && l.doubleValue() < dl.doubleValue()) {
+		// integer domains are compared with their inclusive bounds, as the parameter's
+		// getLower()/getUpper() and the runtime check are: PositiveInt starts at 1, not 0
+		Object domainLower = domain instanceof Int i ? i.getInclusiveLower() : domain.getLower();
+		Object domainUpper = domain instanceof Int i ? i.getInclusiveUpper() : domain.getUpper();
+		if (lower instanceof Number l && domainLower instanceof Number dl && l.doubleValue() < dl.doubleValue()) {
 			return "The prior allows values of " + id + " down to " + l + ", but " + id + " is " + domainName
 					+ " (lower bound " + dl + "). Raise the lower bound of the prior to at least " + dl
 					+ ", or choose another prior.";
 		}
-		if (upper instanceof Number u && domain.getUpper() instanceof Number du && u.doubleValue() > du.doubleValue()) {
+		if (upper instanceof Number u && domainUpper instanceof Number du && u.doubleValue() > du.doubleValue()) {
 			return "The prior allows values of " + id + " up to " + u + ", but " + id + " is " + domainName
 					+ " (upper bound " + du + "). Lower the upper bound of the prior to at most " + du
 					+ ", or choose another prior.";
