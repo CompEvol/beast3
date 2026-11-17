@@ -3,8 +3,8 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.spec.Bounded;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
@@ -15,7 +15,7 @@ import java.util.List;
  * Wrapper that truncates an integer-valued distribution to the interval [lower, upper].
  */
 @Description("Distribution that truncates a integer valued distribution to the interval [lower,upper].")
-public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements DeclaresDomain {
+public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements WrapsDistribution {
 
     // any int distribution, whatever the domain of its own parameter
     final public Input<ScalarDistribution<? extends IntScalar<?>, Integer>> distributionInput = new Input<>("distribution",
@@ -410,4 +410,14 @@ public class TruncatedInt<D extends Int> extends ScalarDistribution<IntScalar<D>
     }
 
     
+
+    @Override
+    public String supportOutsideDomainWith(ScalarDistribution<?, ?> inner, Bounded<?> domain) {
+        int lo = lowerInput.get() != null ? lowerInput.get().get() : Integer.MIN_VALUE;
+        int hi = upperInput.get() != null ? upperInput.get().get() : Integer.MAX_VALUE;
+        return DeclaredDomain.outside(domain,
+                Math.max(lo, (Integer) inner.getLowerBoundOfParameter()),
+                Math.min(hi, (Integer) inner.getUpperBoundOfParameter()));
+    }
+
 } // class TruncatedInt

@@ -3,8 +3,8 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.core.Description;
 import beast.base.core.Input;
+import beast.base.spec.Bounded;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.DeclaresDomain;
 import beast.base.spec.domain.Int;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.type.IntScalar;
@@ -15,7 +15,7 @@ import java.util.List;
  * so that the effective parameter is {@code x - offset}.
  */
 @Description("Offsets a integer valued distribution.")
-public class OffsetInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements DeclaresDomain {
+public class OffsetInt<D extends Int> extends ScalarDistribution<IntScalar<D>, Integer> implements WrapsDistribution {
 
     // any integer distribution, whatever the domain of its own parameter, e.g. Poisson (NonNegativeInt)
     final public Input<ScalarDistribution<? extends IntScalar<?>, Integer>> distributionInput = new Input<>("distribution",
@@ -279,5 +279,19 @@ public class OffsetInt<D extends Int> extends ScalarDistribution<IntScalar<D>, I
 		// saturate at Integer.MAX_VALUE instead of wrapping around, as BoundUtils does with Math.min
 		return (int) Math.min(Integer.MAX_VALUE, (long) upper + offset.get());
 	}
+
+
+    @Override
+    public ScalarDistribution<? extends IntScalar<?>, Integer> getInnerDistribution() {
+        return distributionInput.get();
+    }
+
+    @Override
+    public String supportOutsideDomainWith(ScalarDistribution<?, ?> inner, Bounded<?> domain) {
+        int shift = offsetInput.get().get();
+        return DeclaredDomain.outside(domain,
+                DeclaredDomain.add((Integer) inner.getLowerBoundOfParameter(), shift),
+                DeclaredDomain.add((Integer) inner.getUpperBoundOfParameter(), shift));
+    }
 
 } // class OffsetInt
