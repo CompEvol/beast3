@@ -27,19 +27,22 @@ public class IntUniformOperator extends Operator {
 
     int howMany;
     Tensor<? extends Int, Integer> parameter;
-    int lowerIndex, upperIndex;
+    /**
+     * The parameter's bounds, read on the first proposal rather than in initAndValidate():
+     * they come from the parameter's priors, which may not be initialised yet when this
+     * operator is (an operator listed before its prior in the XML, issue #286). Reading
+     * them on every proposal instead was 1.76x slower on a model with only this operator.
+     */
+    private int lower, upper;
+    private boolean boundsRead;
 
     @Override
     public void initAndValidate() {
         parameter = parameterInput.get();
-        if (parameter instanceof IntScalarParam<? extends Int> intScalarParam) {
-            lowerIndex = intScalarParam.getLower();
-            upperIndex = intScalarParam.getUpper();
-        } else if (parameter instanceof IntVectorParam<? extends Int> intVectorParam) {
-            lowerIndex = intVectorParam.getLower();
-            upperIndex = intVectorParam.getUpper();
-        } else
+        if (!(parameter instanceof IntScalarParam<? extends Int>) && !(parameter instanceof IntVectorParam<? extends Int>)) {
             throw new IllegalArgumentException("Unsupported parameter type : " + parameter.getClass());
+        }
+        boundsRead = false;
 
         howMany = howManyInput.get();
         if (howMany > parameter.size()) {
@@ -50,21 +53,48 @@ public class IntUniformOperator extends Operator {
     @Override
     public double proposal() {
 
+        if (!boundsRead) {
+            if (parameter instanceof IntScalarParam<? extends Int> p) {
+                lower = p.getLower();
+                upper = p.getUpper();
+            } else if (parameter instanceof IntVectorParam<? extends Int> p) {
+                lower = p.getLower();
+                upper = p.getUpper();
+            }
+            boundsRead = true;
+        }
+
         if (parameter instanceof IntScalarParam<? extends Int> intScalarParam) {
-            int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-            intScalarParam.set(newValue);
+            intScalarParam.set(uniform(lower, upper));
 
         } else if (parameter instanceof IntVectorParam<? extends Int> intVectorParam) {
             for (int n = 0; n < howMany; ++n) {
                 // do not worry about duplication, does not matter
                 int index = Randomizer.nextInt(intVectorParam.size());
-
-                int newValue = Randomizer.nextInt(upperIndex - lowerIndex + 1) + lowerIndex; // from 0 to n-1, n must > 0,
-                intVectorParam.set(index, newValue);
+                intVectorParam.set(index, uniform(lower, upper));
             }
         }
 
         return 0.0;
+    }
+
+    /**
+     * @return a value drawn uniformly from [lower, upper]. The number of values is computed
+     * as a long, since upper - lower + 1 overflows an int for a wide range such as a domain's
+     * [0, Integer.MAX_VALUE].
+     */
+    static int uniform(int lower, int upper) {
+        long count = (long) upper - lower + 1;
+        if (count <= 0) {
+            throw new IllegalArgumentException("Cannot draw a value: the upper bound " + upper
+                    + " is below the lower bound " + lower);
+        }
+        if (count <= Integer.MAX_VALUE) {
+            return lower + Randomizer.nextInt((int) count);
+        }
+        // more values than an int can count: draw the offset from lower as a long
+        long offset = (long) (Randomizer.nextDouble() * count);
+        return (int) Math.min(upper, lower + offset);
     }
 
 }

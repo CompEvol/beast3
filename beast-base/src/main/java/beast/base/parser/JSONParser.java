@@ -24,6 +24,8 @@
  */
 package beast.base.parser;
 
+import beast.base.spec.inference.distribution.TensorDistribution;
+
 
 
 
@@ -286,6 +288,13 @@ public class JSONParser {
 
 	private void initBEASTObjects() throws JSONParserException {
 		JSONObject node = null;
+		// as XMLParser.initBEASTObjects(): parameters ignore the bounds of a distribution that
+		// is created but not initialised yet, whose bound parameters still read 0 (issue #286)
+		List<BEASTInterface> objects = new ArrayList<>();
+		for (BEASTObjectWrapper bow : objectsWaitingToInit) {
+			objects.add(bow.object);
+		}
+		TensorDistribution.setAwaitingInit(objects, true);
 		try {
 			for (int i = 0; i < objectsWaitingToInit.size(); i++) {
 				BEASTObjectWrapper bow = objectsWaitingToInit.get(i);
@@ -299,6 +308,8 @@ public class JSONParser {
 			// beastObject.initAndValidate();
 			e.printStackTrace();
 			throw new JSONParserException(node, "validate and intialize error: " + e.getMessage(), 110);
+		} finally {
+			TensorDistribution.setAwaitingInit(objects, false);
 		}
 	}
 

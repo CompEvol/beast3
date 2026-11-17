@@ -162,4 +162,80 @@ public class NestedBoundsParseOrderTest {
         assertEquals(0, k.getLower());
         assertEquals(10, k.getUpper());
     }
+
+    //*** an IntUniformOperator listed before its prior (review of #288) ***//
+
+    private static final String K_UNIFORM_OP =
+            "<operator spec='beast.base.spec.inference.operator.uniform.IntUniformOperator' parameter='@k' weight='1'/>";
+
+    /** as model(), with the operator before the distribution, so it is initialised first */
+    private static String modelOperatorFirst(String stateNode, String prior, String operator) {
+        return "<beast version='2.8' namespace='beast.base.inference:beast.base.inference.util'>\n"
+                + "<run spec='MCMC' id='mcmc' chainLength='2000'>\n"
+                + "  <state id='state'>" + stateNode + "</state>\n"
+                + "  " + operator + "\n"
+                + "  <distribution spec='CompoundDistribution' id='posterior'>" + prior + "</distribution>\n"
+                + "  <logger logEvery='1000'><log idref='posterior'/></logger>\n"
+                + "</run>\n</beast>\n";
+    }
+
+    private static beast.base.spec.type.IntScalar<?> stateNode(beast.base.inference.MCMC mcmc, String id) {
+        for (beast.base.inference.StateNode n : mcmc.startStateInput.get().stateNodeInput.get()) {
+            if (id.equals(n.getID())) {
+                return (beast.base.spec.type.IntScalar<?>) n;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * IntUniformOperator used to cache its bounds when initialised. Listed before its prior,
+     * it was initialised while the prior was still marked, cached the domain's bounds
+     * [MIN_VALUE, MAX_VALUE], and its first proposal threw "n must be positive" (the range
+     * overflowed). It now reads the bounds in proposal().
+     */
+    @Test
+    public void testIntUniformOperatorBeforePrior() throws Exception {
+        String prior = "<distribution id='kPrior' spec='" + DIST + "IntUniform' param='@k'>"
+                + intParam("lower", 0) + intParam("upper", 10) + "</distribution>";
+        beast.base.inference.MCMC mcmc = (beast.base.inference.MCMC) parse(modelOperatorFirst(K, prior, K_UNIFORM_OP));
+        assertDoesNotThrow(mcmc::run);
+        int k = stateNode(mcmc, "k").get();
+        assertTrue(k >= 0 && k <= 10, "k = " + k);
+    }
+
+    /** the same with Bounded(Poisson) and the operator first */
+    @Test
+    public void testIntUniformOperatorBeforeBoundedPrior() throws Exception {
+        String prior = "<distribution id='kPrior' spec='" + DIST + "TruncatedInt' param='@k'>"
+                + intParam("lower", 0) + intParam("upper", 10)
+                + "<distribution spec='" + DIST + "Poisson'>"
+                + "<lambda spec='" + REAL + "' domain='NonNegativeReal' value='2.0' estimate='false'/>"
+                + "</distribution></distribution>";
+        beast.base.inference.MCMC mcmc = (beast.base.inference.MCMC) parse(modelOperatorFirst(K, prior, K_UNIFORM_OP));
+        assertDoesNotThrow(mcmc::run);
+        int k = stateNode(mcmc, "k").get();
+        assertTrue(k >= 0 && k <= 10, "k = " + k);
+    }
+
+    //*** JSON (review of #288) ***//
+
+    /**
+     * JSONParser initialises objects in the same order as XMLParser, so it needs the same
+     * marks: the model with an IntUniform prior with nested bounds, written as JSON, loads.
+     */
+    @Test
+    public void testJSONWithNestedBounds() throws Exception {
+        String prior = "<distribution id='kPrior' spec='" + DIST + "IntUniform' param='@k'>"
+                + intParam("lower", 0) + intParam("upper", 10) + "</distribution>";
+        beast.base.inference.MCMC mcmc = (beast.base.inference.MCMC) parse(model(K, prior, K_WALK));
+        String json = new beast.base.parser.JSONProducer().toJSON(mcmc);
+        java.io.File file = dir.resolve("model.json").toFile();
+        Files.writeString(file.toPath(), json);
+        beast.base.inference.MCMC fromJSON = (beast.base.inference.MCMC) new beast.base.parser.JSONParser().parseFile(file);
+        beast.base.spec.type.IntScalar<?> k = stateNode(fromJSON, "k");
+        assertNotNull(k);
+        assertEquals(0, k.getLower());
+        assertEquals(10, k.getUpper());
+    }
 }
