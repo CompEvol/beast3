@@ -123,7 +123,7 @@ mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner
 mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.TreeAnnotator
 ```
 
-The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes arguments to the application. The working directory is the project root, so file paths in `-Dbeast.args` are relative to there. Note: this approach only works from the beast3 project directory.
+The `-Dbeast.main=` property selects the main class (defaults to `beastfx.app.beast.BeastMain`). The `-Dbeast.args=` property passes its contents to that main class as program arguments, split at spaces; put single quotes around an argument that contains spaces, e.g. `-Dbeast.args="-seed 1 '/path with spaces/run.xml'"`. It works for any main class, e.g. `mvn -pl beast-fx exec:exec -Dbeast.main=beastfx.app.tools.LogCombiner -Dbeast.args="-log a.log -log b.log -o combined.log -b 10"`. The working directory is the project root, so file paths in `-Dbeast.args` are relative to there. Note: this approach only works from the beast3 project directory.
 
 ### From IntelliJ
 

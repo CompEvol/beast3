@@ -241,15 +241,11 @@
                 <configuration>
                     <executable>java</executable>
                     <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
-                    <arguments>
-                        <argument>--module-path</argument>
-                        <modulepath/>
-                        <argument>-DBEAST_PACKAGE_PATH=${project.build.outputDirectory}</argument>
-<!-- -D flags are JVM system properties and must appear before the -m module/MainClass -->
-                        <argument>-Dbeast.args=${beast.args}</argument>
-                        <argument>-m</argument>
-                        <argument>beast.fx/${beast.main}</argument>
-                    </arguments>
+                    <!-- one string, which the plugin splits into separate arguments (quotes keep
+                         a path with spaces together), so ${beast.args} reaches the main method of
+                         ${beast.main} as its program arguments, whichever main that is.
+                         -D flags before -m are JVM system properties. -->
+                    <commandlineArgs>--module-path %classpath -DBEAST_PACKAGE_PATH=${project.build.outputDirectory} -m beast.fx/${beast.main} ${beast.args}</commandlineArgs>
                 </configuration>
             </plugin>
             <!-- Build the installable BEAST.app package zip (version.xml + lib/) -->
