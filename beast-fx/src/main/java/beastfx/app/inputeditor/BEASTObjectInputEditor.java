@@ -237,7 +237,10 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
                     beastObject = null;
                 } else {
                     try {
-                        beastObject = selected.createSubNet(doc.getContextFor(beastObject), m_beastObject, m_input, true);
+                        // the input may have no value yet: then the object it belongs to
+                        // gives the partition
+                        BEASTInterface contextSource = beastObject != null ? beastObject : m_beastObject;
+                        beastObject = selected.createSubNet(doc.getContextFor(contextSource), m_beastObject, m_input, true);
                     } catch (Exception ex) {
                         // also log to the console: the dialog alone leaves no trace, which
                         // makes selection failures (e.g. BEAST2-Dev/bModelTest#9) undiagnosable
