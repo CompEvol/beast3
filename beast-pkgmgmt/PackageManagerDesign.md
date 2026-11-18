@@ -268,6 +268,15 @@ provide the same JPMS module name, `createAndRegisterModuleLayer()` skips the ZI
 module is already present in a plugin layer. `BEASTClassLoader.registerPluginLayer()` uses
 `putIfAbsent` so the Maven class-loader wins.
 
+**Resolver in the release bundle:** `MavenPackageResolver` needs `maven-resolver-supplier-mvn4`
+and its dependencies at runtime, for install and for startup loading. In the release bundles
+these JARs are on the **classpath** (`app/resolver/`, `lib/resolver/` on Linux), not the module
+path, because Maven's own JARs split packages and would stop the JVM at start as automatic
+modules; the launchers add `--add-reads beast.pkgmgmt=ALL-UNNAMED` and `java.compiler` (#297,
+see "Maven resolver on the classpath" in `release/README.md`). If the resolver is missing,
+install fails with `UnsupportedOperationException` and `loadMavenPackages()` prints a warning
+and skips all Maven packages.
+
 **Repository management** (CLI):
 ```
 packagemanager -addMavenRepository https://beast2.org/maven/

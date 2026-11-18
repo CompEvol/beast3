@@ -25,6 +25,27 @@
                     </argLine>
                 </configuration>
             </plugin>
+            <!-- The Maven resolver used to install Maven packages (#297). It is an optional
+                 dependency, so it is not in beast-fx/target/lib; the release scripts bundle
+                 these jars in a resolver/ folder and the launchers put them on the classpath.
+                 They cannot go on the module path: Maven's own jars split packages (e.g.
+                 org.apache.maven.artifact.repository.metadata is in both maven-artifact and
+                 maven-repository-metadata), which stops the JVM at start. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resolver</id>
+                        <phase>package</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/resolver</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

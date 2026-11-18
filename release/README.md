@@ -41,7 +41,41 @@ Status for 2.8.0 (12 Nov): the launcher seeds the bundled packages (#276). Still
 
 ## Version constraints
 
-Version is read from `pom.xml` and must be plain `x.y.z`. Keep `pom.xml` at `x.y.z-SNAPSHOT`; the CI strips `-SNAPSHOT` automatically.
+Keep `pom.xml` at `x.y.z-SNAPSHOT`; never commit a release version to the poms. Each release build sets the release version itself with `mvn versions:set` before building, because the version names the jars and package zips and is compiled into the module descriptors (e.g. `beast.pkgmgmt@2.8.0`):
+
+| Build | Version from | How |
+|---|---|---|
+| Linux, Windows (CI) | `pom.xml`, `-SNAPSHOT` stripped | `versions:set` in `release-bundles.yml`, on a throw-away checkout |
+| Mac DMG (local) | `version="..."` in `version.xml` | `versions:set` in Step 1 of `build-sign-dmg.sh`; `versions:revert` on exit puts the poms back |
+
+All three bundle scripts stop with an error if any jar or package zip in the bundle still has `SNAPSHOT` in its name. The 2.8.0-rc3 DMG shipped `beast.pkgmgmt@2.8.0-SNAPSHOT`, because the Mac script did not set the version yet (#297).
+
+## Maven resolver on the classpath
+
+`packagemanager -maven`, BEAUti's "Install from Maven" and the loading of installed Maven packages at every start all need the Maven resolver (`maven-resolver-supplier-mvn4` and its dependencies, 40 jars, about 6.8 MB). Every bundle ships them in a `resolver/` folder next to the boot-layer jars (#297):
+
+| Platform | Resolver jars |
+|---|---|
+| macOS | `BEAST.app/Contents/app/resolver/` |
+| Windows | `BEAST.v<ver>/app/resolver/` |
+| Linux | `BEAST.v<ver>/lib/resolver/` |
+
+They come from `beast-pkgmgmt/target/resolver/`, which the `copy-resolver` execution in `beast-pkgmgmt/pom.xml` writes during `mvn package`.
+
+**They go on the classpath, not the module path.** Maven's own jars split two packages between them (`org.apache.maven.artifact.repository.metadata` in `maven-artifact` and `maven-repository-metadata`; `org.apache.maven.model.merge` in `maven-model` and `maven-model-builder`). On the module path they become automatic modules, and the JVM refuses to start with a `ResolutionException`. On the classpath they all go into the unnamed module, where split packages are allowed. The `resolver/` subfolder is not scanned by `--module-path`, which only looks at the jars directly in the folder.
+
+Every launcher (bin scripts, `.bat` files, jpackage `.cfg` files and the Mac wrapper apps) therefore has:
+
+```
+-cp "<app>/resolver/*" --add-reads beast.pkgmgmt=ALL-UNNAMED --add-modules ALL-MODULE-PATH,java.compiler,...
+```
+
+- `--add-reads` lets `beast.pkgmgmt` (on the module path) read the resolver classes in the unnamed module.
+- `java.compiler` is needed because a `-m` launch does not resolve `javax.tools` by default, and the mvn4 supplier uses it.
+
+All launchers need this, not only `packagemanager`: every launcher loads the installed Maven packages at start (`PackageManager.loadMavenPackages()`), and without the resolver it only prints `Warning: Maven resolver not available...` and skips them.
+
+The resolver is part of the launcher, not of the core packages, so it is not in the BEAST.base or BEAST.app package zips (`src/assembly/package.xml`).
 
 ## Why JavaFX JARs are excluded from the release bundle
 

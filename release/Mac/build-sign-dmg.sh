@@ -129,6 +129,13 @@ echo "==> JRE+FX home: ${BUILD_JAVA_HOME}"
 # ── Step 1: Maven build ─────────────────────────────────────────────────────
 echo ""
 echo "==> Step 1: Building project with Maven..."
+# Build with the release version from version.xml, not the -SNAPSHOT version in the
+# poms (#297): the version is compiled into the module descriptors (e.g.
+# beast.pkgmgmt@2.8.0) and names the jars and core package zips. CI does the same for
+# Linux and Windows (release-bundles.yml). versions:revert in the EXIT trap puts the
+# poms back afterwards, also when the build fails, so nothing needs committing.
+trap 'mvn -f "$REPO_ROOT/pom.xml" versions:revert -q' EXIT
+mvn -f "$REPO_ROOT/pom.xml" versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=true -q
 mvn -f "$REPO_ROOT/pom.xml" clean package -DskipTests -q
 echo "    Build complete."
 
@@ -187,6 +194,23 @@ fi
 JAR_COUNT=$(find "$STAGING" -name "*.jar" | wc -l | tr -d ' ')
 echo "    Staged ${JAR_COUNT} JARs into staging/"
 
+# The Maven resolver jars (#297), written by beast-pkgmgmt's copy-resolver execution.
+# They are copied into Contents/app/resolver/ after jpackage (below) and go on the
+# classpath, not the module path: Maven's own jars split packages, which stops the
+# JVM at start on the module path.
+RESOLVER_SRC="$REPO_ROOT/beast-pkgmgmt/target/resolver"
+if ! ls "$RESOLVER_SRC"/*.jar >/dev/null 2>&1; then
+    echo "ERROR: Maven resolver JARs not found in $RESOLVER_SRC (run 'mvn package' first)"
+    exit 1
+fi
+
+# The release must not ship -SNAPSHOT jars (#297)
+if find "$STAGING" "$RESOLVER_SRC" -name "*SNAPSHOT*" | grep -q .; then
+    echo "ERROR: SNAPSHOT JARs staged for release:"
+    find "$STAGING" "$RESOLVER_SRC" -name "*SNAPSHOT*"
+    exit 1
+fi
+
 # ── Step 3: Create BEAST.app with jpackage ───────────────────────────────────
 echo ""
 echo "==> Step 3: Creating BEAST.app with jpackage..."
@@ -238,12 +262,30 @@ sed -i '' 's|^app\.mainclass=.*|app.mainmodule=beast.pkgmgmt/beast.pkgmgmt.launc
 #                      Homebrew on Intel
 #   /opt/homebrew/lib  Homebrew on Apple Silicon ("brew install beagle")
 # $APPDIR (Contents/app) stays first, as in jpackage's default path. See #181.
+# --add-reads and java.compiler are for the Maven resolver on the classpath (#297):
+# beast.pkgmgmt must read the unnamed module, and the resolver needs javax.tools,
+# which a -m launch does not resolve by itself.
 sed -i '' '/^\[JavaOptions\]/a\
 java-options=--module-path=\$APPDIR\
-java-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\
+java-options=--add-modules=ALL-MODULE-PATH,java.compiler,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\
+java-options=--add-reads=beast.pkgmgmt=ALL-UNNAMED\
 java-options=--enable-native-access=javafx.graphics,javafx.media,javafx.web,beagle\
 java-options=-Djava.library.path=\$APPDIR:/usr/local/lib:/opt/homebrew/lib
 ' "$BEAST_CFG"
+# The Maven resolver jars go on the classpath (#297), one app.classpath line per jar
+# (no wildcard), in Contents/app/resolver/ where they are copied below.
+for jar in "$RESOLVER_SRC"/*.jar; do
+    echo "app.classpath=\$APPDIR/resolver/$(basename "$jar")"
+done > "$BEAST_CFG.resolver"
+awk -v f="$BEAST_CFG.resolver" '{ print } /^\[Application\]$/ { while ((getline l < f) > 0) print l }' \
+    "$BEAST_CFG" > "$BEAST_CFG.new"
+mv "$BEAST_CFG.new" "$BEAST_CFG"
+rm -f "$BEAST_CFG.resolver"
+if ! grep -q -- '--add-reads=beast.pkgmgmt=ALL-UNNAMED' "$BEAST_CFG" \
+        || [ "$(grep -c '^app\.classpath=.*resolver' "$BEAST_CFG")" -ne "$(ls "$RESOLVER_SRC"/*.jar | wc -l | tr -d ' ')" ]; then
+    echo "ERROR: BEAST.cfg was not patched with the Maven resolver classpath"
+    exit 1
+fi
 
 # jpackage may strip bin/java from the bundled runtime (it uses its own native
 # launcher). Restore it from the Zulu JRE+FX so wrapper .app bundles and bin/
@@ -277,6 +319,18 @@ for PKG_ZIP in "$BASE_PKG_ZIP" "$APP_PKG_ZIP"; do
 done
 # the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
 bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$APP_DIR_IN_BUNDLE/packages/"
+if find "$APP_DIR_IN_BUNDLE/packages" -name "*SNAPSHOT*" | grep -q .; then
+    echo "ERROR: SNAPSHOT package zips bundled for release (#297):"
+    find "$APP_DIR_IN_BUNDLE/packages" -name "*SNAPSHOT*"
+    exit 1
+fi
+
+# The Maven resolver (#297): on the classpath (BEAST.cfg app.classpath, the launchers'
+# -cp), in a subdirectory, which the module path ($APPDIR) does not scan. Placed after
+# jpackage, like packages/, so codesign seals it.
+mkdir -p "$APP_DIR_IN_BUNDLE/resolver"
+cp "$RESOLVER_SRC"/*.jar "$APP_DIR_IN_BUNDLE/resolver/"
+echo "    Bundled $(ls "$APP_DIR_IN_BUNDLE/resolver" | wc -l | tr -d ' ') Maven resolver JARs into Contents/app/resolver/"
 
 
 
@@ -313,12 +367,12 @@ build_wrapper_app() {
     local launch_cmd
     if [ -n "$extra_args" ]; then
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
+    --module-path \"\$BEAST_APP/app\" -cp \"\$BEAST_APP/app/resolver/*\" --add-reads beast.pkgmgmt=ALL-UNNAMED --add-modules ALL-MODULE-PATH,java.compiler,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class $extra_args \"\$@\""
     else
         launch_cmd="exec \"\$BEAST_APP/runtime/Contents/Home/bin/java\" \\
-    --module-path \"\$BEAST_APP/app\" --add-modules ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
+    --module-path \"\$BEAST_APP/app\" -cp \"\$BEAST_APP/app/resolver/*\" --add-reads beast.pkgmgmt=ALL-UNNAMED --add-modules ALL-MODULE-PATH,java.compiler,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject --enable-native-access=javafx.graphics,javafx.media,javafx.web \\
     -Xss256m -Xmx8g -Duser.language=en -Dfile.encoding=UTF-8 \\
     -m $module_name/$main_class \"\$@\""
     fi

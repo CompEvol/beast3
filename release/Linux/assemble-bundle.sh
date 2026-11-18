@@ -126,6 +126,22 @@ done
 # the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
 bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$BUNDLE/lib/packages/"
 
+# ── Step 3c: Bundle the Maven resolver into lib/resolver/ ────────────────────
+# The resolver (#297), written by beast-pkgmgmt's copy-resolver execution, goes on
+# the classpath (the bin/ scripts' -cp), not the module path: Maven's own jars split
+# packages, which stops the JVM at start on the module path. lib/resolver/ is a
+# subdirectory, which the module path (lib/) does not scan.
+echo ""
+echo "==> Step 3c: Bundling the Maven resolver into lib/resolver/..."
+RESOLVER_SRC="$REPO_ROOT/beast-pkgmgmt/target/resolver"
+if ! ls "$RESOLVER_SRC"/*.jar >/dev/null 2>&1; then
+    echo "ERROR: Maven resolver JARs not found in $RESOLVER_SRC (run 'mvn package' first)" >&2
+    exit 1
+fi
+mkdir -p "$BUNDLE/lib/resolver"
+cp "$RESOLVER_SRC"/*.jar "$BUNDLE/lib/resolver/"
+echo "    Bundled $(ls "$BUNDLE/lib/resolver" | wc -l | tr -d ' ') Maven resolver JARs into lib/resolver/"
+
 # ── Step 4: Copy JRE+FX ──────────────────────────────────────────────────────
 # cp -a preserves symlinks. A plain cp -r dereferences JRE internal symlinks,
 # corrupting the runtime structure (replaces 1 KB aliases with full files).
@@ -209,6 +225,21 @@ VJAR_COUNT=$(find "$BUNDLE/lib" -name "*.jar" | wc -l | tr -d ' ')
 [ -z "$(find "$BUNDLE/lib" -maxdepth 1 -name 'beast-base-*.jar' -o -name 'beast-fx-*.jar' 2>/dev/null)" ] \
     && _ok "beast-base/beast-fx removed from lib/ (plugin layer only)" \
     || _fail "beast-base or beast-fx JAR still on boot module path in lib/"
+
+RES_SRC_COUNT=$(ls "$REPO_ROOT/beast-pkgmgmt/target/resolver"/*.jar | wc -l | tr -d ' ')
+RES_COUNT=$(find "$BUNDLE/lib/resolver" -name "*.jar" 2>/dev/null | wc -l | tr -d ' ')
+[ "$RES_COUNT" -gt 0 ] && [ "$RES_COUNT" -eq "$RES_SRC_COUNT" ] \
+    && _ok "lib/resolver/ has ${RES_COUNT} Maven resolver JARs" \
+    || _fail "lib/resolver/ has ${RES_COUNT} JARs, expected ${RES_SRC_COUNT}"
+[ -z "$(find "$BUNDLE/lib" -maxdepth 1 -name 'maven-*.jar' 2>/dev/null)" ] \
+    && _ok "no Maven resolver JARs on the module path (lib/)" \
+    || _fail "Maven resolver JARs in lib/ — their split packages stop the JVM at start"
+grep -q -- '--add-reads beast.pkgmgmt=ALL-UNNAMED' "$BUNDLE/bin/packagemanager" \
+    && _ok "bin/packagemanager puts the Maven resolver on the classpath" \
+    || _fail "bin/packagemanager lacks --add-reads beast.pkgmgmt=ALL-UNNAMED"
+[ -z "$(find "$BUNDLE/lib" -name '*SNAPSHOT*' 2>/dev/null)" ] \
+    && _ok "no SNAPSHOT JARs or package zips in lib/" \
+    || _fail "SNAPSHOT files in lib/: $(find "$BUNDLE/lib" -name '*SNAPSHOT*' | xargs -n1 basename | tr '\n' ' ')"
 
 PKG_COUNT=$(find "$BUNDLE/lib/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
 # the two core packages plus the bundled packages of release/bundled-packages.tsv
