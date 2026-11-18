@@ -9,6 +9,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 import beast.base.core.BEASTInterface;
+import beast.base.core.Log;
 import beastfx.app.beauti.ThemeProvider;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
@@ -87,7 +88,7 @@ public class Alert {
 			alert.setY(node.getY() + node.getHeight()/2);
 		}
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
-		alert.showAndWait();
+		showMessage(alert, message);
 	}
 
 	public static ButtonType showConfirmDialog(Parent parent, String message, String header, ButtonType ... yesNoCancelOption) {
@@ -118,7 +119,7 @@ public class Alert {
 			alert.setY(node.getY() + node.getHeight()/2);
 		}
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
-		alert.showAndWait();
+		showMessage(alert, (header != null ? header + ": " : "") + message);
 	}
 
 	public static void showMessageDialog(Parent parent, String [] messages, String header, AlertType informationMessage, ImageIcon icon) {
@@ -171,7 +172,28 @@ public class Alert {
 		pane.setPrefWidth(600);
 		alert.setResizable(true);
 		ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
-		alert.showAndWait();
+		showMessage(alert, header);
+	}
+
+	/**
+	 * Shows a message dialog and waits until it is closed, except when JavaFX runs headless
+	 * (Monocle's headless platform, as in the tests). Then no one can close it: the dialog is
+	 * shown without waiting, and the message is logged, so that code which runs into an error
+	 * carries on and a test fails at its next check instead of waiting forever (#302). A test
+	 * can still find the dialog and click its button.
+	 */
+	private static void showMessage(Dialog<?> alert, String text) {
+		if (isHeadlessFX()) {
+			Log.warning("Message dialog (not waited for, JavaFX is headless): " + text);
+			alert.show();
+		} else {
+			alert.showAndWait();
+		}
+	}
+
+	/** whether JavaFX runs on Monocle's headless platform, where no one can answer a dialog */
+	static boolean isHeadlessFX() {
+		return "Headless".equalsIgnoreCase(System.getProperty("monocle.platform"));
 	}
 
 	private static String removeHTML(String html) {
