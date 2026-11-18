@@ -51,10 +51,10 @@ packagemanager -list -installed
 
 ```sh
 # Install by coordinate
-packagemanager -maven io.github.compevol:beast-morph-models:1.3.0
+packagemanager -maven io.github.compevol:morph-models:1.3.1
 
 # Uninstall (cached JARs in maven-repo/ are left in place)
-packagemanager -delMaven io.github.compevol:beast-morph-models
+packagemanager -delMaven io.github.compevol:morph-models
 
 # List installed Maven packages
 packagemanager -listMaven

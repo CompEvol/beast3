@@ -242,13 +242,13 @@ This is the **new feature**. Config lives in `~/.beast/2.8/maven-packages.xml`:
 
 ```xml
 <packages>
-    <package groupId="io.github.compevol" artifactId="beast-morph-models" version="1.3.0"/>
+    <package groupId="io.github.compevol" artifactId="morph-models" version="1.3.1"/>
 </packages>
 ```
 
 **Install** (CLI):
 ```
-packagemanager -maven io.github.compevol:beast-morph-models:1.3.0
+packagemanager -maven io.github.compevol:morph-models:1.3.1
 ```
 → `PackageManager.installMavenPackage()` (`PackageManager:1141`):
 1. Creates `MavenPackageResolver` with local cache at `~/.beast/2.8/maven-repo/`.
@@ -278,7 +278,7 @@ comma-separated list. Maven Central is always included and does not need to be l
 
 **Uninstall**:
 ```
-packagemanager -delMaven io.github.compevol:beast-morph-models
+packagemanager -delMaven io.github.compevol:morph-models
 ```
 Removes the coordinate from `maven-packages.xml`. The cached JARs in `maven-repo/` are **not**
 deleted (they act as a download cache and are inert without a config entry).
