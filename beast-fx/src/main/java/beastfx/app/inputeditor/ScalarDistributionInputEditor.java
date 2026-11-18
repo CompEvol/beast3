@@ -38,7 +38,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implements HasExpandBox {
 
@@ -425,6 +428,9 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
     	 * for the session, since the panels are rebuilt whenever a value changes.
     	 */
     	static boolean logScale = false;
+
+    	/** the panels created so far, so that ticking "log x" in one redraws the others too */
+    	private static final Set<PDPanel> PANELS = Collections.newSetFromMap(new WeakHashMap<>());
     	
         // the margin to the left of y-labels
         private static final int MARGIN_LEFT_OF_Y_LABELS = 5;
@@ -463,12 +469,19 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	    	logScaleBox = new CheckBox("log x");
 	    	logScaleBox.setStyle("-fx-font-size:8pt;");
 	    	logScaleBox.setPadding(new Insets(0, 0, 0, 10));
-	    	logScaleBox.setTooltip(new Tooltip("Plot x on a log scale, with the density of log10(x)"));
+	    	logScaleBox.setTooltip(new Tooltip("Plot x on a log scale, with the density of log10(x).\n"
+	    			+ "Applies to all plots. The quantiles and mean are still given in x."));
 	    	logScaleBox.setSelected(logScale);
 	    	logScaleBox.setOnAction(e -> {
 	    		logScale = logScaleBox.isSelected();
-	    		paintComponent();
+	    		// the choice is shared, so redraw every plot on screen, not only this one
+	    		for (PDPanel panel : new ArrayList<>(PANELS)) {
+	    			if (panel == this || panel.getScene() != null) {
+	    				panel.paintComponent();
+	    			}
+	    		}
 	    	});
+	    	PANELS.add(this);
 	    	HBox box = new HBox();
 	    	// box.setSpacing(50);
 	    	box.setAlignment(Pos.CENTER);
@@ -523,32 +536,33 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             double maxValue = 1;
             boolean quantilesKnown = true;
             try {
-            	minValue = inverseCumulativeProbability(m_distr, 0.01);
+            	minValue = quantile(m_distr, 0.01);
             } catch (Throwable e) {
                 // use default
                 quantilesKnown = false;
             }
             try {
-                maxValue = inverseCumulativeProbability(m_distr, 0.99);
+                maxValue = quantile(m_distr, 0.99);
             } catch (Throwable e) {
             	// use default
                 quantilesKnown = false;
             }
-            // a log scale is offered for a continuous distribution whose support starts at 0 or above:
-            // it puts no probability on 0 itself, so all of it can be shown. Not for an integer one,
-            // which can put probability on 0, nor for one that reaches below 0.
-            boolean canUseLogScale = quantilesKnown && !m_distr.isIntegerDistribution()
-                    && supportLowerBound(m_distr) >= 0
-                    && minValue > 0 && maxValue > minValue && Double.isFinite(maxValue);
+            boolean canUseLogScale = quantilesKnown && canUseLogScale(m_distr, minValue, maxValue);
             // hidden where it does not apply; the choice is kept for the next plot
             logScaleBox.setVisible(canUseLogScale);
             logScaleBox.setManaged(canUseLogScale);
             logScaleBox.setSelected(logScale);
             boolean useLogScale = canUseLogScale && logScale;
-            setLogAxis(useLogScale, minValue, maxValue);
-            // the 1% and 99% quantiles: minValue is moved below for the linear scale
-            double logMin = useLogScale ? Math.log10(minValue) : 0;
-            double logMax = useLogScale ? Math.log10(maxValue) : 0;
+            // on a log scale, the curve runs from the 0.1% to the 99.9% quantile, so that it
+            // comes close to 0 at both ends instead of stopping inside the axis's whole decades
+            double logMin = 0, logMax = 0;
+            if (useLogScale) {
+            	logMin = Math.log10(quantileOr(m_distr, 0.001, minValue));
+            	logMax = Math.log10(quantileOr(m_distr, 0.999, maxValue));
+            	setLogAxis(true, Math.pow(10, logMin), Math.pow(10, logMax));
+            } else {
+            	setLogAxis(false, minValue, maxValue);
+            }
 //            double lowerParam = param == null ? 0 :
 //            	param.getLower() instanceof Integer ? (int) param.getLower() : (double) param.getLower();
             double lowerParam = (param != null && param.getLower() instanceof Number lower)
@@ -582,7 +596,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             double[] fyPoints = new double[points];
             double yMax = 0;
             
-            // on a log scale: x evenly spaced in log10(x) between the 1% and 99% quantiles, and
+            // on a log scale: x evenly spaced in log10(x) between the 0.1% and 99.9% quantiles, and
             // the density of log10(x), p(x) * x * ln(10), so the area under the curve is still 1
             for (int i = 0; i < points; i++) {
             	double y0;
@@ -630,7 +644,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             mayBeUnstable = false;
             for (k = 0; k < 5; k++) {
                 try {
-                    info2 += format(inverseCumulativeProbability(m_distr, quantiles[k]));
+                    info2 += format(quantile(m_distr, quantiles[k]));
                 } catch (RuntimeException e) {
                 	info2 += "not available";
                 }
@@ -651,16 +665,6 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
             infoLabel2.setText(info2);
             infoLabel3.setText(info3);
         }
-
-		/** @return the lower bound of the distribution's support, or -Infinity if not known */
-		private double supportLowerBound(ScalarDistribution<?, ?> distr) {
-			try {
-				Object lower = distr.getLowerBoundOfParameter();
-				return lower instanceof Number n ? n.doubleValue() : Double.NEGATIVE_INFINITY;
-			} catch (Throwable e) {
-				return Double.NEGATIVE_INFINITY;
-			}
-		}
 
 		/**
 		 * Switch the x axis between a linear scale and a log scale. On a log scale the axis
@@ -696,28 +700,6 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 				xAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(xAxis));
 				yAxis.setLabel("p(x)");
 			}
-		}
-
-		/** @return 10^u as a tick label, e.g. 0.01, 1, 1000, 1e6 */
-		private String formatPowerOfTen(double u) {
-			long k = Math.round(u);
-			if (Math.abs(u - k) > 1e-9) {
-				return String.format("%.2g", Math.pow(10, u));
-			}
-			if (k >= -3 && k <= 4) {
-				return new java.math.BigDecimal(java.math.BigInteger.ONE, (int) -k).toPlainString();
-			}
-			return "1e" + k;
-		}
-
-		private double inverseCumulativeProbability(ScalarDistribution<?, ?> m_distr, double level) {
-            Object o = m_distr.inverseCumulativeProbability(level);
-            if (o instanceof Double d) {
-            	return d;
-            } else if (o instanceof Integer i) {
-               	return i;
-            }
-			return 0;
 		}
 
 		private String format(double value) {
@@ -756,6 +738,63 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         }
     }
     
+    /**
+     * Whether the density plot offers a log scale for x: for a continuous distribution whose
+     * support starts at 0 or above, as it puts no probability on 0 itself, so all of it can be
+     * shown. Not for an integer one, which can put probability on 0, nor for one that reaches
+     * below 0.
+     *
+     * @param q01 the distribution's 1% quantile
+     * @param q99 its 99% quantile
+     */
+    static boolean canUseLogScale(ScalarDistribution<?, ?> distr, double q01, double q99) {
+        return !distr.isIntegerDistribution() && supportLowerBound(distr) >= 0
+                && q01 > 0 && q99 > q01 && Double.isFinite(q99);
+    }
+
+    /** @return the lower bound of the distribution's support, or -Infinity if not known */
+    private static double supportLowerBound(ScalarDistribution<?, ?> distr) {
+        try {
+            Object lower = distr.getLowerBoundOfParameter();
+            return lower instanceof Number n ? n.doubleValue() : Double.NEGATIVE_INFINITY;
+        } catch (Throwable e) {
+            return Double.NEGATIVE_INFINITY;
+        }
+    }
+
+    /** @return 10^u as a tick label of a log axis, e.g. 0.01, 1, 1000, 1e6 */
+    static String formatPowerOfTen(double u) {
+        long k = Math.round(u);
+        if (Math.abs(u - k) > 1e-9) {
+            return String.format("%.2g", Math.pow(10, u));
+        }
+        if (k >= -3 && k <= 4) {
+            return new java.math.BigDecimal(java.math.BigInteger.ONE, (int) -k).toPlainString();
+        }
+        return "1e" + k;
+    }
+
+    /** @return the distribution's quantile at the given level, as a double */
+    private static double quantile(ScalarDistribution<?, ?> distr, double level) {
+        Object o = distr.inverseCumulativeProbability(level);
+        if (o instanceof Double d) {
+            return d;
+        } else if (o instanceof Integer i) {
+            return i;
+        }
+        return 0;
+    }
+
+    /** @return the quantile at the given level, or the fallback if it is not a positive finite number */
+    private static double quantileOr(ScalarDistribution<?, ?> distr, double level, double fallback) {
+        try {
+            double q = quantile(distr, level);
+            return q > 0 && Double.isFinite(q) ? q : fallback;
+        } catch (Throwable e) {
+            return fallback;
+        }
+    }
+
     /**
      * Returns the density of pDistr at x when pDistr is a density of a
      * continuous variable, but returns the probability of the closest
