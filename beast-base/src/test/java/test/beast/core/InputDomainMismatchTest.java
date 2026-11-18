@@ -3,6 +3,8 @@ package test.beast.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +22,10 @@ import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.Poisson;
 import beast.base.spec.inference.parameter.IntSimplexParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.parameter.RealVectorParam;
+import beast.base.spec.inference.parameter.VectorElement;
+import beast.base.spec.evolution.Sum;
+import beast.base.spec.inference.util.AsRealScalar;
 
 /**
  * A tensor input given a value whose domain does not fit the declared one, e.g. a Real
@@ -100,5 +106,98 @@ public class InputDomainMismatchTest {
         assertEquals(NonNegativeInt.INSTANCE, groupSizes.getDomain());
         groupSizes.domainTypeInput.setValue(PositiveInt.INSTANCE, groupSizes);
         assertEquals(PositiveInt.INSTANCE, groupSizes.getDomain());
+    }
+
+    /** a value whose domain is fixed gets advice that can be followed: wrap it */
+    @Test
+    void valueWithFixedDomainIsToldToWrap() {
+        Sum sum = new Sum();
+        sum.setID("total");
+        sum.initByName("arg", new RealScalarParam<>(0.5, PositiveReal.INSTANCE));
+        Gamma gamma = new Gamma();
+        gamma.initByName("alpha", sum, "theta", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        String message = gamma.alphaInput.domainMismatch(gamma);
+        assertNotNull(message);
+        assertTrue(message.contains("AsRealScalar") && message.contains("domain=\"PositiveReal\""), message);
+        assertFalse(message.contains("give 'total' domain="), message);
+
+        // following the advice removes the mismatch
+        AsRealScalar<PositiveReal> wrapped = new AsRealScalar<>();
+        wrapped.initByName("arg", sum, "domain", PositiveReal.INSTANCE);
+        Gamma fixed = new Gamma();
+        fixed.initByName("alpha", wrapped, "theta", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+        assertNull(fixed.alphaInput.domainMismatch(fixed));
+    }
+
+    /** a VectorElement's domain is known before it is initialised, as the parser validates first */
+    @Test
+    void vectorElementDomainIsSeenBeforeInitialisation() {
+        RealVectorParam<Real> v = new RealVectorParam<>(new double[] {0.5, 1.0}, Real.INSTANCE);
+        VectorElement<Real> element = new VectorElement<>();
+        element.vectorInput.setValue(v, element);
+        element.indexInput.setValue(0, element);
+        assertEquals(Real.INSTANCE, element.getDomain());
+        Gamma gamma = new Gamma();
+        gamma.alphaInput.setValue(element, gamma);
+        assertNotNull(gamma.alphaInput.domainMismatch(gamma), "VectorElement of a Real vector fits PositiveReal");
+    }
+
+    /** a domain set after getDomain() was called, before init, is seen */
+    @Test
+    void domainSetLaterBeforeInitIsSeen() {
+        RealScalarParam<Real> p = new RealScalarParam<>();
+        p.domainTypeInput.setValue(Real.INSTANCE, p);
+        assertEquals(Real.INSTANCE, p.getDomain());
+        p.domainTypeInput.setValue(PositiveReal.INSTANCE, p);
+        assertEquals(PositiveReal.INSTANCE, p.getDomain());
+    }
+
+    /** two objects without IDs and the same mismatch are both warned about */
+    @Test
+    void sameMismatchOnTwoObjectsIsWarnedForEach() {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        java.io.PrintStream old = beast.base.core.Log.warning;
+        beast.base.core.Log.warning = new java.io.PrintStream(out, true);
+        try {
+            for (int i = 0; i < 2; i++) {
+                Gamma gamma = new Gamma();
+                gamma.initByName("alpha", new RealScalarParam<>(0.5, Real.INSTANCE),
+                        "theta", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+            }
+        } finally {
+            beast.base.core.Log.warning = old;
+        }
+        String log = out.toString();
+        assertEquals(2, log.split("is declared PositiveReal", -1).length - 1, log);
+    }
+
+    /** a mismatch that is fixed and comes back is warned about again */
+    @Test
+    void mismatchThatComesBackIsWarnedAgain() {
+        Gamma gamma = gammaWithAlpha(new RealScalarParam<>(0.5, Real.INSTANCE));
+        String message = gamma.alphaInput.domainMismatch(gamma);
+        assertTrue(DomainMismatchWarnings.warned(message));
+        Object real = gamma.alphaInput.get();
+        gamma.alphaInput.setValue(new RealScalarParam<>(0.5, PositiveReal.INSTANCE), gamma);
+        gamma.validateInputs();
+        assertFalse(DomainMismatchWarnings.warned(message), "fixed mismatch still recorded");
+        gamma.alphaInput.setValue(real, gamma);
+        gamma.validateInputs();
+        assertTrue(DomainMismatchWarnings.warned(message), "returning mismatch not logged");
+    }
+
+    @Test
+    void nullOwnerIsAllowed() {
+        Gamma gamma = gammaWithAlpha(new RealScalarParam<>(0.5, Real.INSTANCE));
+        String message = gamma.alphaInput.domainMismatch(null);
+        assertNotNull(message);
+        assertTrue(message.startsWith("Input 'alpha' is declared PositiveReal"), message);
+    }
+
+    /** before init, an invalid value gives the intended error, not a NullPointerException */
+    @Test
+    void intSimplexInvalidValueBeforeInitGivesIllegalArgument() {
+        IntSimplexParam<NonNegativeInt> p = new IntSimplexParam<>();
+        assertThrows(IllegalArgumentException.class, () -> p.setLower(-1));
     }
 }

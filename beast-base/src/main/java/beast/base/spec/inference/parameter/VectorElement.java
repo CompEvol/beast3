@@ -52,7 +52,9 @@ public class VectorElement<D extends Real> extends CalculationNode implements Re
     @SuppressWarnings("unchecked")
     @Override
     public D getDomain() {
-        return (D) vector.getDomain();
+        // before init, the vector is read from its input
+        RealVector<?> v = vector != null ? vector : vectorInput.get();
+        return v == null ? null : (D) v.getDomain();
     }
 
     @Override

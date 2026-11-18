@@ -23,7 +23,7 @@ MutationRatePrior/index/=Priors/MutationRatePrior/
             <![CDATA[
             <plugin spec='beast.base.spec.evolution.sitemodel.SiteModel' id="SiteModel.s:$(n)" gammaCategoryCount='0'>
                 <!--substModel will be automatically detected /-->
-                <proportionInvariant spec="beast.base.spec.inference.parameter.RealScalarParam" domain="NonNegativeReal" id='proportionInvariant.s:$(n)' value='0.0' estimate='false'/>
+                <proportionInvariant spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" id='proportionInvariant.s:$(n)' value='0.0' estimate='false'/>
                 <mutationRate        spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" id='mutationRate.s:$(n)' value='1.0' estimate='false'/>
                 <shape               spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" id='gammaShape.s:$(n)' value='1.0' estimate='false'/>
             </plugin>

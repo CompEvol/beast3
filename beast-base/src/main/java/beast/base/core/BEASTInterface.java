@@ -435,10 +435,7 @@ public interface BEASTInterface extends Citable {
         try {
             for (final Input<?> input : listInputs()) {
                 input.validate();
-                String mismatch = input.domainMismatch(this);
-                if (mismatch != null) {
-                    DomainMismatchWarnings.warn(mismatch);
-                }
+                DomainMismatchWarnings.report(this, input, input.domainMismatch(this));
             }
         } catch (IllegalArgumentException ex) {
             Log.err.println("Validation error when initializing object " +
