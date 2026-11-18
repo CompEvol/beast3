@@ -32,8 +32,8 @@
 	</substModel>
     </input>
 
-    <parameter id="birthRate" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
-    <parameter id="relativeDeathRate" value="0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+    <parameter id="birthRate" value="1.0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
+    <parameter id="relativeDeathRate" value="0" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="NonNegativeReal"/>
 
     <!-- initial yule prior = -6.0, yule-like prior = -2.8219461696520542 -->
     <!-- expected yule prior = 1/(n.lambda)\sum_{k=1}^{n-1}k/(n-k) where lambda = birth rate, n = number of taxa

@@ -34,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.fail;
  * {@code <map>} entries to the classes BEAST actually builds. Objects the parser builds
  * but the run never reaches are not checked.
  *
+ * <p>It also checks that no tensor input is given a value of the wrong domain (#226).
+ *
  * <p>The legacy BEAST 2 examples under {@code examples/legacy} are not checked.
  */
 // setUp sets file.name.prefix, a JVM-wide global; see ExampleXmlParsingTest.
@@ -69,6 +71,50 @@ public class ExampleDeprecationTest {
         }
         if (!problems.isEmpty()) {
             fail("Examples use deprecated classes:\n  " + String.join("\n  ", problems));
+        }
+    }
+
+    /**
+     * The release examples give no tensor input a value whose domain does not fit the
+     * declared one, e.g. a parameter with domain Real for an input declared PositiveReal.
+     * That is deprecated (#226) and will be an error in a future version.
+     */
+    @Test
+    public void testExamplesHaveNoDomainMismatches() throws Exception {
+        File dir = new File(XMLPathUtil.resolveExamplesDir());
+        String[] files = dir.list((d, name) -> name.endsWith(".xml") || name.endsWith(".json"));
+        assertTrue(files != null && files.length > 0, "No examples found in " + dir);
+        Arrays.sort(files);
+
+        List<String> problems = new ArrayList<>();
+        for (String name : files) {
+            Randomizer.setSeedReproducible(127);
+            File file = new File(dir, name);
+            Object run;
+            try {
+                run = name.endsWith(".json") ? new JSONParser().parseFile(file) : new XMLParser().parseFile(file);
+            } catch (Exception e) {
+                // Parse failures are reported by ExampleXmlParsingTest and ExampleJSONParsingTest.
+                continue;
+            }
+            Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            collect(run, seen);
+            Set<String> mismatches = new TreeSet<>();
+            for (Object o : seen) {
+                BEASTInterface b = (BEASTInterface) o;
+                for (Input<?> input : b.listInputs()) {
+                    String mismatch = input.domainMismatch(b);
+                    if (mismatch != null) {
+                        mismatches.add(mismatch);
+                    }
+                }
+            }
+            for (String mismatch : mismatches) {
+                problems.add(name + ": " + mismatch);
+            }
+        }
+        if (!problems.isEmpty()) {
+            fail("Examples give inputs a value of the wrong domain:\n  " + String.join("\n  ", problems));
         }
     }
 

@@ -6,7 +6,7 @@ import beast.base.evolution.alignment.Sequence;
 import beast.base.evolution.datatype.UserDataType;
 import beast.base.evolution.substitutionmodel.SubstitutionModel;
 import beast.base.evolution.tree.Tree;
-import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.evolution.sitemodel.SiteModel;
 import beast.base.spec.evolution.substitutionmodel.*;
@@ -227,7 +227,7 @@ public class TreeLikelihoodTest  {
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 4,
                 "shape", new RealScalarParam<>(0.137064, PositiveReal.INSTANCE),
-                "proportionInvariant", new RealScalarParam<>(0.0, NonNegativeReal.INSTANCE),
+                "proportionInvariant", new RealScalarParam<>(0.0, UnitInterval.INSTANCE),
                 "substModel", hky);
 
         TreeLikelihood likelihood = newTreeLikelihood();
@@ -259,7 +259,7 @@ public class TreeLikelihoodTest  {
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 1,
                 "shape", new RealScalarParam<>(0.137064, PositiveReal.INSTANCE),
-                "proportionInvariant", new RealScalarParam<>(0.701211, NonNegativeReal.INSTANCE),
+                "proportionInvariant", new RealScalarParam<>(0.701211, UnitInterval.INSTANCE),
                 "substModel", hky);
 
         TreeLikelihood likelihood = newTreeLikelihood();
@@ -290,7 +290,7 @@ public class TreeLikelihoodTest  {
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 4,
                 "shape", new RealScalarParam<>(0.587649, PositiveReal.INSTANCE),
-                "proportionInvariant", new RealScalarParam<>(0.486548, NonNegativeReal.INSTANCE),
+                "proportionInvariant", new RealScalarParam<>(0.486548, UnitInterval.INSTANCE),
                 "substModel", hky);
 
         TreeLikelihood likelihood = newTreeLikelihood();
@@ -349,7 +349,7 @@ public class TreeLikelihoodTest  {
 
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 1,
-                "proportionInvariant", new RealScalarParam<>(0.5, NonNegativeReal.INSTANCE),
+                "proportionInvariant", new RealScalarParam<>(0.5, UnitInterval.INSTANCE),
                 "substModel", gsm);
         //siteModel.init("1.0", 1, null, "0.5", gsm);
 
@@ -411,7 +411,7 @@ public class TreeLikelihoodTest  {
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 4,
                 "shape", new RealScalarParam<>(0.5, PositiveReal.INSTANCE),
-                "proportionInvariant", new RealScalarParam<>(0.5, NonNegativeReal.INSTANCE),
+                "proportionInvariant", new RealScalarParam<>(0.5, UnitInterval.INSTANCE),
                 "substModel", gsm);
 
         TreeLikelihood likelihood = newTreeLikelihood();
@@ -496,7 +496,7 @@ public class TreeLikelihoodTest  {
         Tree tree = BEASTTestCase.getAminoAcidTree(data);
         SiteModel siteModel = new SiteModel();
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 1, "substModel", substModel,
-                "proportionInvariant", new RealScalarParam<>(0.2, NonNegativeReal.INSTANCE));
+                "proportionInvariant", new RealScalarParam<>(0.2, UnitInterval.INSTANCE));
 
         TreeLikelihood likelihood = newTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel);
@@ -561,7 +561,7 @@ public class TreeLikelihoodTest  {
         siteModel.initByName("mutationRate", mu1, "gammaCategoryCount", 1, "substModel", substModel,
                 "gammaCategoryCount", 4,
                 "shape", new RealScalarParam<>(0.15, PositiveReal.INSTANCE),
-                "proportionInvariant", new RealScalarParam<>(0.2, NonNegativeReal.INSTANCE));
+                "proportionInvariant", new RealScalarParam<>(0.2, UnitInterval.INSTANCE));
 
         TreeLikelihood likelihood = newTreeLikelihood();
         likelihood.initByName("data", data, "tree", tree, "siteModel", siteModel);

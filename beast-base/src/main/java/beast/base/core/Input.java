@@ -527,6 +527,39 @@ public class Input<T> {
     }
 
     /**
+     * Whether the domain of a tensor value fits the domain this input declares, e.g. a
+     * parameter with domain Real for an {@code Input<RealScalar<PositiveReal>>}. A value whose
+     * domain is the declared one or a sub-domain of it fits, e.g. a PositiveReal parameter for
+     * an input declared NonNegativeReal.
+     *
+     * @param owner the object this input belongs to, for the message
+     * @return why the value does not fit, or null if it fits or this is not a tensor input
+     * with a declared domain
+     */
+    public String domainMismatch(BEASTInterface owner) {
+        if (tensorClass == null || theClass == null || !Domain.class.isAssignableFrom(theClass)
+                || !(value instanceof Tensor<?, ?> tensor)) {
+            return null;
+        }
+        Object domain;
+        try {
+            domain = tensor.getDomain();
+        } catch (RuntimeException e) {
+            return null;
+        }
+        if (domain == null || theClass.isInstance(domain)) {
+            return null;
+        }
+        String declared = theClass.getSimpleName();
+        String valueName = value instanceof BEASTInterface b && b.getID() != null ? "'" + b.getID() + "'" : "its value";
+        String ownerName = owner.getClass().getSimpleName() + (owner.getID() != null ? " '" + owner.getID() + "'" : "");
+        return "Input '" + getName() + "' of " + ownerName + " is declared " + declared + ", but "
+                + valueName + " has domain " + domain.getClass().getSimpleName() + ". "
+                + "This is deprecated and will be an error in a future version of BEAST: "
+                + "give " + valueName + " domain=\"" + declared + "\" (or a narrower domain).";
+    }
+
+    /**
      * Type-safe alternative to {@link #setValue(Object, BEASTInterface)}.
      * Provides compile-time type checking of the value parameter.
      *
