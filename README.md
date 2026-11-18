@@ -218,12 +218,12 @@ and enter the Maven coordinates:
 groupId:artifactId:version
 ```
 
-For example: `io.github.compevol:beast-morph-models:1.3.0`
+For example: `io.github.compevol:morph-models:1.3.1`
 
 ### From the command line
 
 ```bash
-packagemanager -maven io.github.compevol:beast-morph-models:1.3.0
+packagemanager -maven io.github.compevol:morph-models:1.3.1
 ```
 
 Maven packages are resolved via [Apache Maven Resolver](https://maven.apache.org/resolver/),
