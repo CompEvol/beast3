@@ -227,6 +227,11 @@ public class AppLauncher {
         return box;
     }
 
+    /**
+     * The apps of the installed packages: those in a package directory (e.g. unpacked
+     * from a ZIP), whose version.xml is a file, and those installed from Maven, whose
+     * version.xml is inside the package's JAR in maven-repo.
+     */
     List<PackageApp> getPackageApps() {
         List<PackageApp> packageApps = new ArrayList<>();
         List<String> dirs = PackageManager.getBeastDirectories();
@@ -236,16 +241,43 @@ public class AppLauncher {
                 getPackageApps(versionFile, packageApps, jarDirName);
             }
         }
+        for (PackageManager.MavenCoordinate coord : PackageManager.loadMavenPackageConfig()) {
+            File jar = PackageManager.getMavenPackageJar(coord);
+            if (jar == null) {
+                Log.debug.println("Maven package " + coord + " is not in maven-repo, so its apps are not listed");
+                continue;
+            }
+            try {
+                Document doc = PackageManager.readVersionXmlFromJar(jar);
+                if (doc != null) {
+                    getPackageApps(doc, packageApps, jar.getParent());
+                }
+            } catch (Exception e) {
+                Log.warning("Could not read version.xml from " + jar + ": " + e.getMessage());
+            }
+        }
         return packageApps;
     }
 
     public static void getPackageApps(File versionFile, List<PackageApp> packageApps, String jarDirName) {
-
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        Document doc;
         try {
-            doc = factory.newDocumentBuilder().parse(versionFile);
+            Document doc = factory.newDocumentBuilder().parse(versionFile);
             doc.normalize();
+            getPackageApps(doc, packageApps, jarDirName);
+        } catch (Exception e) {
+            // ignore
+            System.err.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Adds the apps declared by packageapp (or, in old packages, addonapp) elements of a
+     * package's version.xml. An app whose class is already listed, e.g. a package that is
+     * both in a package directory and installed from Maven, is listed once.
+     */
+    static void getPackageApps(Document doc, List<PackageApp> packageApps, String jarDirName) {
+        try {
             // get package-app info from version.xml
             Element packageElement = doc.getDocumentElement();
             NodeList nodes = doc.getElementsByTagName("packageapp");
@@ -258,6 +290,9 @@ public class AppLauncher {
                 packageApp.packageName = packageElement.getAttribute("name");
                 packageApp.jarDir = jarDirName;
                 packageApp.className = packageAppElement.getAttribute("class");
+                if (packageApps.stream().anyMatch(a -> a.className.equals(packageApp.className))) {
+                    continue;
+                }
                 packageApp.description = packageAppElement.getAttribute("description");
                 packageApp.argumentsString = packageAppElement.getAttribute("args");
 
