@@ -31,6 +31,7 @@ import beast.base.inference.State;
 import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.domain.UnitInterval;
@@ -38,8 +39,11 @@ import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.Beta;
 import beast.base.spec.inference.distribution.Binomial;
 import beast.base.spec.inference.distribution.Geometric;
+import beast.base.spec.inference.distribution.IntUniform;
+import beast.base.spec.inference.distribution.LogNormal;
 import beast.base.spec.inference.distribution.LogUniform;
 import beast.base.spec.inference.distribution.NegativeBinomial;
+import beast.base.spec.inference.distribution.OffsetInt;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.distribution.OffsetReal;
 import beast.base.spec.inference.distribution.Poisson;
@@ -360,6 +364,7 @@ public class ScalarDistributionInputEditorTest {
 			fail("test could not be run: " + error.get());
 		}
 		assertTrue(insideBounded.contains("Normal"), "Normal can be truncated to a positive range: " + insideBounded);
+		// Bounded truncates to the parameter's domain, so the Offset inside it is the one for any real
 		assertTrue(insideBounded.contains("OffsetReal"), "Offset is allowed inside Bounded: " + insideBounded);
 		assertFalse(insideBounded.contains("BoundedReal"), "Bounded inside Bounded: " + insideBounded);
 		// a distribution with its own lower and upper would show the bounds twice
@@ -429,6 +434,222 @@ public class ScalarDistributionInputEditorTest {
 			assertTrue(insideBounded.contains(countDistr), countDistr + " not offered for a count: " + insideBounded);
 		}
 		assertFalse(insideBounded.contains("Normal"), "real distribution offered for a count: " + insideBounded);
+	}
+
+	/**
+	 * Of the Bounded and Offset templates, the priors panel offers the variant meant for the
+	 * parameter's domain, so that the defaults fit it: e.g. Offset Int with offset 1 for a
+	 * PositiveInt parameter, where Poisson + 0 would put probability on 0.
+	 */
+	@Test
+	public void testWrapperVariantFitsParameterDomain() throws Exception {
+		assertEquals(List.of("BoundedInt", "OffsetInt"), wrapperTemplatesOffered(
+				new IntScalarParam<>(0, Int.INSTANCE), "IntUniform"));
+		assertEquals(List.of("BoundedInt.nonNegative", "OffsetInt.nonNegative"), wrapperTemplatesOffered(
+				new IntScalarParam<>(0, NonNegativeInt.INSTANCE), "Poisson"));
+		assertEquals(List.of("BoundedInt.positive", "OffsetInt.positive"), wrapperTemplatesOffered(
+				new IntScalarParam<>(1, PositiveInt.INSTANCE), "IntUniform"));
+		assertEquals(List.of("BoundedReal", "OffsetReal"), wrapperTemplatesOffered(
+				new RealScalarParam<>(0.5, Real.INSTANCE), "Normal"));
+		assertEquals(List.of("BoundedReal", "OffsetReal.nonNegative"), wrapperTemplatesOffered(
+				new RealScalarParam<>(0.5, PositiveReal.INSTANCE), "Normal"));
+		assertEquals(List.of("BoundedReal", "OffsetReal.unitInterval"), wrapperTemplatesOffered(
+				new RealScalarParam<>(0.5, UnitInterval.INSTANCE), "Normal"));
+	}
+
+	/**
+	 * Selecting Offset Int for a PositiveInt parameter gives Poisson + 1, declared PositiveInt:
+	 * a valid prior for the parameter's initial value 1.
+	 */
+	@Test
+	public void testOffsetIntForPositiveIntStartsAtOne() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		AtomicReference<Object> newPrior = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+			IntScalarParam<PositiveInt> count = new IntScalarParam<>(1, PositiveInt.INSTANCE);
+			CompoundDistribution prior = priorOn(doc, count, "IntUniform");
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			@SuppressWarnings("unchecked")
+			ComboBox<BeautiSubTemplate> comboBox = (ComboBox<BeautiSubTemplate>) findComboBox(editor.getComponent());
+			BeautiSubTemplate offset = comboBox.getItems().stream()
+					.filter(t -> t.getID().startsWith("OffsetInt")).findFirst().orElseThrow();
+			comboBox.setValue(offset);
+			comboBox.getOnAction().handle(new ActionEvent(comboBox, comboBox));
+			newPrior.set(prior.pDistributions.get().get(0));
+		}, error);
+
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		assertTrue(newPrior.get() instanceof OffsetInt<?>, "prior was not replaced by OffsetInt: " + newPrior.get());
+		OffsetInt<?> offset = (OffsetInt<?>) newPrior.get();
+		assertEquals(1, offset.getOffset());
+		assertEquals(PositiveInt.INSTANCE, offset.getParameterDomain());
+		assertEquals(1, offset.getLowerBoundOfParameter());
+		assertTrue(Double.isFinite(offset.calculateLogP()), "logP " + offset.calculateLogP());
+	}
+
+	/**
+	 * Inside an Offset, an inner distribution is offered only when, shifted by the offset, its
+	 * support fits the parameter's domain and the Offset's declared domain: inside an Offset 0
+	 * declared NonNegativeReal, Normal (support the whole line) is not offered, though the
+	 * parameter is Real; Exponential and Gamma are.
+	 */
+	@Test
+	public void testInnerDistributionsOfOffsetFitTheDomain() throws Exception {
+		List<String> inner = innerChoicesOfOffsetReal();
+		for (String d : new String[] {"Normal", "Laplace", "Cauchy"}) {
+			assertFalse(inner.contains(d), d + " offered inside an Offset declared NonNegativeReal: " + inner);
+		}
+		for (String d : new String[] {"LogNormal", "Exponential", "Gamma"}) {
+			assertTrue(inner.contains(d), d + " not offered inside an Offset declared NonNegativeReal: " + inner);
+		}
+	}
+
+	/**
+	 * For a PositiveInt parameter, the count distributions (support from 0) are offered inside
+	 * Offset 1 but not inside Offset 0, where IntUniform [1, 10] still is.
+	 */
+	@Test
+	public void testInnerIntDistributionsOfOffsetFitTheDomain() throws Exception {
+		List<String> atZero = innerChoicesOfOffsetInt(0, new IntUniform());
+		List<String> atOne = innerChoicesOfOffsetInt(1, new IntUniform());
+		for (String fromZero : new String[] {"Poisson", "Geometric", "NegativeBinomial", "Binomial"}) {
+			assertFalse(atZero.contains(fromZero), fromZero + " offered inside Offset 0 for a PositiveInt parameter: " + atZero);
+			assertTrue(atOne.contains(fromZero), fromZero + " not offered inside Offset 1 for a PositiveInt parameter: " + atOne);
+		}
+		assertTrue(atZero.contains("IntUniform"), "IntUniform not offered inside Offset 0: " + atZero);
+	}
+
+	/**
+	 * When no distribution fits inside an Offset, e.g. Offset -1 on a PositiveInt parameter around
+	 * a distribution BEAUti has no template for, they are offered anyway, so the box stays and
+	 * the panel can report the prior as invalid.
+	 */
+	@Test
+	public void testInnerDistributionsOfOffsetOfferedWhenNoneFits() throws Exception {
+		List<String> inner = innerChoicesOfOffsetInt(-1, new IntUniformWithoutTemplate());
+		assertTrue(inner.contains("Poisson") && inner.contains("IntUniform"), "nothing offered: " + inner);
+	}
+
+	/** an integer distribution without a BEAUti template */
+	public static class IntUniformWithoutTemplate extends IntUniform {
+	}
+
+	/**
+	 * inner choices of an Offset with the given offset around the given IntUniform, set to [1, 5],
+	 * on a PositiveInt parameter
+	 */
+	private List<String> innerChoicesOfOffsetInt(int offset, IntUniform innerDistr) throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> inner = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+			IntScalarParam<PositiveInt> count = new IntScalarParam<>(3, PositiveInt.INSTANCE);
+			count.setID("count.s:test");
+			innerDistr.initByName("lower", new IntScalarParam<>(1, Int.INSTANCE), "upper", new IntScalarParam<>(5, Int.INSTANCE));
+			OffsetInt<PositiveInt> wrapper = new OffsetInt<>();
+			wrapper.initByName("param", count, "distribution", innerDistr,
+					"offset", new IntScalarParam<>(offset, Int.INSTANCE));
+			wrapper.setID("CountPrior.s:test");
+			doc.registerPlugin(count);
+			doc.registerPlugin(wrapper);
+			inner.addAll(choices(doc, wrapper, wrapper.distributionInput));
+		}, error);
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		return inner;
+	}
+
+	/** inner choices of an Offset 0 declared NonNegativeReal around LogNormal, on a Real parameter */
+	private List<String> innerChoicesOfOffsetReal() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> inner = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+			RealScalarParam<Real> x = new RealScalarParam<>(1.0, Real.INSTANCE);
+			x.setID("x.s:test");
+			LogNormal logNormal = new LogNormal();
+			logNormal.initByName("M", new RealScalarParam<>(0.0, Real.INSTANCE), "S", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			OffsetReal<NonNegativeReal> wrapper = new OffsetReal<>();
+			wrapper.initByName("param", x, "distribution", logNormal, "domain", NonNegativeReal.INSTANCE,
+					"offset", new RealScalarParam<>(0.0, Real.INSTANCE));
+			wrapper.setID("XPrior.s:test");
+			doc.registerPlugin(x);
+			doc.registerPlugin(wrapper);
+			inner.addAll(choices(doc, wrapper, wrapper.distributionInput));
+		}, error);
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		return inner;
+	}
+
+	/** @return the IDs of the Bounded and Offset templates offered in the priors panel for the parameter */
+	private List<String> wrapperTemplatesOffered(BEASTInterface param, String priorTemplate) throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		List<String> offered = new ArrayList<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+			CompoundDistribution prior = priorOn(doc, param, priorTemplate);
+			InputEditor editor = doc.getInputEditorFactory().createInputEditor(
+					(Input<?>) prior.pDistributions, (BEASTInterface) prior, doc);
+			ComboBox<?> comboBox = findComboBox(editor.getComponent());
+			assertNotNull(comboBox, "no combo box to select a distribution from");
+			for (Object item : comboBox.getItems()) {
+				String id = ((BeautiSubTemplate) item).getID();
+				if (id.startsWith("Bounded") || id.startsWith("Offset")) {
+					offered.add(id);
+				}
+			}
+		}, error);
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
+		return offered;
+	}
+
+	/** a priors panel list holding a prior on the parameter, of the given simple kind */
+	private static CompoundDistribution priorOn(BeautiDoc doc, BEASTInterface param, String kind) {
+		param.setID("x.s:test");
+		ScalarDistribution<?, ?> d;
+		switch (kind) {
+		case "IntUniform" -> {
+			IntUniform u = new IntUniform();
+			u.initByName("param", param, "lower", new IntScalarParam<>(-5, Int.INSTANCE), "upper", new IntScalarParam<>(5, Int.INSTANCE));
+			d = u;
+		}
+		case "Poisson" -> {
+			Poisson p = new Poisson();
+			p.initByName("param", param, "lambda", new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE));
+			d = p;
+		}
+		default -> {
+			Normal n = new Normal();
+			n.initByName("param", param, "mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			d = n;
+		}
+		}
+		d.setID("XPrior.s:test");
+		CompoundDistribution prior = new CompoundDistribution();
+		prior.initByName("distribution", d);
+		prior.setID("prior");
+		doc.registerPlugin(param);
+		doc.registerPlugin(d);
+		doc.registerPlugin(prior);
+		return prior;
 	}
 
 	/**

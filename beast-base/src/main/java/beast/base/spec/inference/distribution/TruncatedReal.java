@@ -4,7 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.DeclaresDomain;
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -20,7 +20,7 @@ import java.util.List;
 @Description("Truncates a real valued distribution to the interval [lower,upper]. " +
              "The base distribution itself should not define any parameters. " +
         "All parameters should be passed via TruncatedRealDistribution.")
-public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements DeclaresDomain {
+public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements WrapsDistribution {
 
 
     // any real distribution, whatever the domain of its own parameter
@@ -241,11 +241,17 @@ public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar
         return Math.max(lower.get(), Math.min(upper.get(), x));
     }
 
+    /**
+     * @return the inner distribution as the distribution input now holds it: read from the
+     * input, not the copy refresh() keeps, so it is current also after the input changed (e.g.
+     * in BEAUti) and before the next refresh()
+     */
+    @Override
     public ScalarDistribution<? extends RealScalar<?>, Double> getInnerDistribution() {
     	if (dist == null) {
     		refresh();
     	}
-        return dist;
+        return distributionInput.get();
     }
 
     @Override
@@ -405,6 +411,21 @@ public class TruncatedReal<D extends Real> extends ScalarDistribution<RealScalar
 
     boolean isValid(double value) {
         return Real.INSTANCE.isValid(value) && lower.get() <= value && value <= upper.get();
+    }
+
+
+    @Override
+    public boolean truncates() {
+        return true;
+    }
+
+    @Override
+    public String supportOutsideDomainWith(ScalarDistribution<?, ?> inner, Bounded<?> domain) {
+        double lo = lowerInput.get() != null ? lowerInput.get().get() : Double.NEGATIVE_INFINITY;
+        double hi = upperInput.get() != null ? upperInput.get().get() : Double.POSITIVE_INFINITY;
+        return DeclaredDomain.outside(domain,
+                Math.max(lo, DeclaredDomain.lowerOrInfinite(inner)),
+                Math.min(hi, DeclaredDomain.upperOrInfinite(inner)));
     }
 
 } // class TruncatedReal

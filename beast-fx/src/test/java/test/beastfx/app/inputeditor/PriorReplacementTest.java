@@ -542,9 +542,10 @@ public class PriorReplacementTest {
 			new Scene(root);
 			root.applyCss();
 			root.layout();
-			ComboBox<BeautiSubTemplate> comboBox = findComboBoxOffering(root, "BoundedInt");
-			assertNotNull(comboBox, "no combo box offering BoundedInt");
-			select(comboBox, "BoundedInt");
+			// the Bounded Int meant for a NonNegativeInt parameter
+			ComboBox<BeautiSubTemplate> comboBox = findComboBoxOffering(root, "BoundedInt.nonNegative");
+			assertNotNull(comboBox, "no combo box offering BoundedInt.nonNegative");
+			select(comboBox, "BoundedInt.nonNegative");
 		}, error);
 		rethrow(error);
 

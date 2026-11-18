@@ -4,7 +4,7 @@ package beast.base.spec.inference.distribution;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
-import beast.base.spec.domain.DeclaresDomain;
+import beast.base.spec.Bounded;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.type.RealScalar;
@@ -15,7 +15,7 @@ import java.util.List;
  * so that the effective parameter is {@code x - offset}.
  */
 @Description("Offsets a real valued distribution.")
-public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements DeclaresDomain {
+public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>, Double> implements WrapsDistribution {
 
     // any real distribution, whatever the domain of its own parameter, e.g. LogNormal (PositiveReal)
     final public Input<ScalarDistribution<? extends RealScalar<?>, Double>> distributionInput = new Input<>("distribution",
@@ -260,5 +260,24 @@ public class OffsetReal<D extends Real> extends ScalarDistribution<RealScalar<D>
 		refresh();
 		return dist.getUpperBoundOfParameter() + offset.get();
 	}
+
+
+    @Override
+    public ScalarDistribution<? extends RealScalar<?>, Double> getInnerDistribution() {
+        return distributionInput.get();
+    }
+
+    @Override
+    public boolean truncates() {
+        return false;
+    }
+
+    @Override
+    public String supportOutsideDomainWith(ScalarDistribution<?, ?> inner, Bounded<?> domain) {
+        double shift = offsetInput.get().get();
+        return DeclaredDomain.outside(domain,
+                DeclaredDomain.lowerOrInfinite(inner) + shift,
+                DeclaredDomain.upperOrInfinite(inner) + shift);
+    }
 
 } // class OffsetReal

@@ -182,6 +182,98 @@
         </subtemplate>
 
 
+        <!-- Domain variants of the wrappers above. Each declares the domain it is meant for, and
+             BEAUti offers, of the templates with the same label, the one whose domain is closest
+             to the parameter's (PriorEditorUtil.closestDomainPerClass), so the defaults fit the
+             parameter: e.g. Poisson + 1 for a PositiveInt parameter, where Poisson + 0 would put
+             probability on 0. The declared domain is then also checked when BEAST runs. -->
+        <subtemplate id='BoundedInt.nonNegative' label='Bounded Int' class='beast.base.spec.inference.distribution.TruncatedInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.TruncatedInt.param'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.TruncatedInt" domain="NonNegativeInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="NonNegativeInt" value="0" estimate="false"/>
+            <lower spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <upper spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="1" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <subtemplate id='BoundedInt.positive' label='Bounded Int' class='beast.base.spec.inference.distribution.TruncatedInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.TruncatedInt.param'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.TruncatedInt" domain="PositiveInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="PositiveInt" value="1" estimate="false"/>
+            <lower spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="1" estimate="false"/>
+            <upper spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="2" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <subtemplate id='OffsetInt.nonNegative' label='Offset Int' class='beast.base.spec.inference.distribution.OffsetInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetInt.param'
+			hmc='OffsetInt/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetInt" domain="NonNegativeInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="NonNegativeInt" value="0" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <subtemplate id='OffsetInt.positive' label='Offset Int' class='beast.base.spec.inference.distribution.OffsetInt' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetInt.param'
+			hmc='OffsetInt/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetInt" domain="PositiveInt">
+            <param spec="beast.base.spec.inference.parameter.IntScalarParam" domain="PositiveInt" value="1" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="1" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Poisson">
+	            <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.693" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <subtemplate id='OffsetReal.nonNegative' label='Offset Real' class='beast.base.spec.inference.distribution.OffsetReal' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetReal.param'
+			hmc='OffsetReal/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetReal" domain="NonNegativeReal">
+            <param spec="beast.base.spec.inference.parameter.RealScalarParam" domain="NonNegativeReal" value="1.0" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.LogNormal" meanInRealSpace="false">
+                <M spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+                <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+        <subtemplate id='OffsetReal.unitInterval' label='Offset Real' class='beast.base.spec.inference.distribution.OffsetReal' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.OffsetReal.param'
+			hmc='OffsetReal/offset/=ParametricDistributions/offset/'>
+            <![CDATA[
+        <distr spec="beast.base.spec.inference.distribution.OffsetReal" domain="UnitInterval">
+            <param spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" value="0.5" estimate="false"/>
+            <offset spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real" value="0.0" estimate="false"/>
+            <distribution spec="beast.base.spec.inference.distribution.Beta">
+                <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+                <beta spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="1.0" estimate="false"/>
+            </distribution>
+        </distr>
+]]>
+        </subtemplate>
+
+
         <!-- InverseGamma -->
         <subtemplate id='InverseGamma' class='beast.base.spec.inference.distribution.InverseGamma' mainid='[top]'
         	suppressInputs='beast.base.spec.inference.distribution.InverseGamma.param'
@@ -259,6 +351,20 @@
 		<distr spec='beast.base.spec.inference.distribution.Binomial'>
             <numTrials spec="beast.base.spec.inference.parameter.IntScalarParam" domain="NonNegativeInt" value="10" estimate="false"/>
             <p spec="beast.base.spec.inference.parameter.RealScalarParam" domain="UnitInterval" value="0.5" estimate="false"/>
+		</distr>
+]]>
+        </subtemplate>
+
+        <!-- IntUniform: uniform on the integers lower, ..., upper (both included) -->
+        <subtemplate id='IntUniform' class='beast.base.spec.inference.distribution.IntUniform' mainid='[top]'
+        	suppressInputs='beast.base.spec.inference.distribution.IntUniform.param'
+            hmc='
+            IntUniform/lower/=ParametricDistributions/IntUniform/lower/,
+            IntUniform/upper/=ParametricDistributions/IntUniform/upper/'>
+            <![CDATA[
+		<distr spec='beast.base.spec.inference.distribution.IntUniform'>
+            <lower spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="1" estimate="false"/>
+            <upper spec="beast.base.spec.inference.parameter.IntScalarParam" domain="Int" value="10" estimate="false"/>
 		</distr>
 ]]>
         </subtemplate>

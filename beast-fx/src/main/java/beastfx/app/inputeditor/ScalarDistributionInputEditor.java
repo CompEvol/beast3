@@ -10,15 +10,13 @@ import beast.base.spec.Bounded;
 import beast.base.spec.domain.*;
 import beast.base.spec.evolution.tree.MRCAPrior;
 import beast.base.spec.inference.distribution.IID;
-import beast.base.spec.inference.distribution.OffsetInt;
-import beast.base.spec.inference.distribution.OffsetReal;
 import beast.base.spec.inference.distribution.ScalarDistribution;
 import beast.base.spec.inference.distribution.TensorDistribution;
-import beast.base.spec.inference.distribution.TruncatedInt;
-import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.inference.distribution.WrapsDistribution;
+import beast.base.spec.type.Tensor;
 import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.IntVector;
 import beast.base.spec.type.RealScalar;
@@ -865,18 +863,33 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         // - inside Bounded (TruncatedReal/Int) the distribution is cut to [lower, upper], so any
         //   distribution of the same kind (real or integer) can go there, whatever the domain of
         //   the parameter, and Offset can too; Bounded inside Bounded is not offered.
-        // - inside Offset the distribution is that of the parameter minus the offset; it is
-        //   filtered on the parameter's domain as before, and no wrapper is offered.
+        // - inside Offset the distribution is that of the parameter minus the offset; no wrapper
+        //   is offered.
+        // Inside either, a distribution is only offered when the wrapper's support with it in
+        // place fits the parameter's domain (and the wrapper's declared domain), e.g. Poisson
+        // inside Offset 1 but not inside Offset 0 for a PositiveInt parameter. The current
+        // inner distribution is always offered, so the box can show it.
         BEASTInterface wrapper = wrapperOf(m_input);
-        boolean insideBounded = wrapper instanceof TruncatedReal || wrapper instanceof TruncatedInt;
-        boolean insideOffset = wrapper instanceof OffsetReal || wrapper instanceof OffsetInt;
+        boolean insideBounded = wrapper instanceof WrapsDistribution w && w.truncates();
+        boolean insideOffset = wrapper instanceof WrapsDistribution w && !w.truncates();
+        Object current = wrapper != null ? m_input.get() : null;
+        // an Offset inside a Bounded: the Bounded truncates to the parameter's domain, so what
+        // goes inside the Offset need not fit that domain itself
+        boolean nestedInWrapper = wrapper != null && isInsideWrapper(wrapper);
+        List<BeautiSubTemplate> offered = new ArrayList<>();
+        List<Class<?>> offeredDomains = new ArrayList<>();
+        List<BeautiSubTemplate> misfits = new ArrayList<>();
+        List<Class<?>> misfitDomains = new ArrayList<>();
         for (BeautiSubTemplate template : scalarTemplates) {
         	Class<?> templateDomain = templateDomains.get(k++);
-        	String templateID = template.getID();
-        	boolean isBounded = templateID.equals("BoundedReal") || templateID.equals("BoundedInt");
-        	boolean isOffset = templateID.equals("OffsetReal") || templateID.equals("OffsetInt");
-        	boolean rightKind = isReal ? templateID.equals("BoundedReal") || templateID.equals("OffsetReal")
-        			: templateID.equals("BoundedInt") || templateID.equals("OffsetInt");
+        	ScalarDistribution<?, ?> templateInstance = templateInstances.get(k - 1);
+        	// wrappers are recognised by what they are, not by their template ID, so domain
+        	// variants and wrappers from packages are handled alike
+        	boolean isBounded = templateInstance instanceof WrapsDistribution w && w.truncates();
+        	boolean isOffset = templateInstance instanceof WrapsDistribution w && !w.truncates();
+        	// a wrapper for values of the parameter's kind (real or integer)
+        	boolean rightKind = (isBounded || isOffset) && templateDomain != null
+        			&& (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain);
         	boolean add;
         	if (insideBounded) {
         		// a distribution with its own lower and upper (Uniform, LogUniform, ...) is
@@ -884,16 +897,39 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
         		add = isOffset ? rightKind
         				: !isBounded && templateDomain != null
         				  && (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain)
-        				  && !hasOwnBounds(templateInstances.get(k - 1));
+        				  && !hasOwnBounds(templateInstance);
         	} else if (insideOffset) {
-        		add = !isBounded && !isOffset && isCompatible(domain, templateDomain);
+        		add = !isBounded && !isOffset && templateDomain != null
+        				&& (isReal ? Real.class : Int.class).isAssignableFrom(templateDomain);
         	} else {
         		add = isCompatible(domain, templateDomain) || ((isBounded || isOffset) && rightKind);
         	}
-        	if (add) {
-        		comboBox.getItems().add(template);
+        	if (!add) {
+        		continue;
         	}
+        	if (wrapper instanceof WrapsDistribution w && !isBounded && !isOffset) {
+        		boolean isCurrent = current != null && template._class != null
+        				&& template._class.getName().equals(current.getClass().getName());
+        		if (!isCurrent && !fitsInside(w, templateInstance, nestedInWrapper ? null : param)) {
+        			misfits.add(template);
+        			misfitDomains.add(templateDomain);
+        			continue;
+        		}
+        	}
+        	offered.add(template);
+        	offeredDomains.add(templateDomain);
         }
+        if (offered.isEmpty()) {
+        	// nothing fits, e.g. an offset that puts every distribution outside the domain: offer
+        	// them anyway, so the box stays, and the panel reports the prior as invalid
+        	offered = misfits;
+        	offeredDomains = misfitDomains;
+        }
+        // of several templates for the same distribution (domain variants), offer the one meant
+        // for this domain. Inside a Bounded, which truncates to the parameter's domain, an Offset
+        // need not fit the domain itself: offer the one for any value of its kind.
+        Class<?> variantDomain = insideBounded ? (isReal ? Real.class : Int.class) : domain;
+        comboBox.getItems().addAll(PriorEditorUtil.closestDomainPerClass(variantDomain, offered, offeredDomains));
         
         if (comboBox.getItems().size() == 0) {
         	return null;
@@ -985,13 +1021,41 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	 */
 	private BEASTInterface wrapperOf(Input<?> input) {
 		for (BEASTInterface candidate : new BEASTInterface[] {inputOwner, m_beastObject}) {
-			if ((candidate instanceof TruncatedReal || candidate instanceof TruncatedInt
-					|| candidate instanceof OffsetReal || candidate instanceof OffsetInt)
+			if (candidate instanceof WrapsDistribution
 					&& input != null && candidate.getInput("distribution") == input) {
 				return candidate;
 			}
 		}
 		return null;
+	}
+
+	/** @return true if the wrapper is itself the distribution inside another wrapper (an Offset inside a Bounded) */
+	private static boolean isInsideWrapper(BEASTInterface wrapper) {
+		for (BEASTInterface output : wrapper.getOutputs()) {
+			if (output instanceof WrapsDistribution outer && outer.getInnerDistribution() == wrapper) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @return true if the wrapper's support, with the given distribution in place of its own,
+	 *         lies within the domain of the parameter (if not null) and within the wrapper's
+	 *         declared domain
+	 */
+	private static boolean fitsInside(WrapsDistribution wrapper, ScalarDistribution<?, ?> inner, Object param) {
+		try {
+			if (param instanceof Tensor<?, ?> t && t.getDomain() instanceof Bounded<?> paramDomain
+					&& wrapper.supportOutsideDomainWith(inner, paramDomain) != null) {
+				return false;
+			}
+			return !(wrapper.getParameterDomain() instanceof Bounded<?> declared)
+					|| wrapper.supportOutsideDomainWith(inner, declared) == null;
+		} catch (RuntimeException e) {
+			// the support could not be determined: offer it, validation reports a misfit
+			return true;
+		}
 	}
 
 	/** @return true if the distribution has lower and upper inputs of its own, as Uniform has */
@@ -1114,10 +1178,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	public void setExpandBox(VBox expandBox) {
 		this.expandBox = expandBox;
 
-		if (m_beastObject.getClass().getName().endsWith("TruncatedReal")
-				|| m_beastObject.getClass().getName().endsWith("TruncatedInt")
-				|| m_beastObject.getClass().getName().endsWith("OffsetReal")
-				|| m_beastObject.getClass().getName().endsWith("OffsetInt")) {
+		if (m_beastObject instanceof WrapsDistribution) {
 			((ScalarDistribution)m_beastObject.getInput("distribution").get()).refresh();
 			Input input = m_beastObject.getInput("distribution");
 			ComboBox<?> distributionComboBox = createComboBox((BEASTInterface)input.get(), input);
@@ -1180,7 +1241,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
      * distribution inside Offset (e.g. the mean and sigma of a Normal) right after it.
      */
     private void addInputsOfNestedDistribution(BEASTInterface inner, List<InputEditor> innerEditors) {
-    	if (!(inner instanceof OffsetReal || inner instanceof OffsetInt)) {
+    	if (!(inner instanceof WrapsDistribution w) || w.truncates()) {
     		return;
     	}
     	Input<?> distributionInput = inner.getInput("distribution");

@@ -112,6 +112,18 @@ final class DeclaredDomain {
         return distribution.getClass().getSimpleName() + (id == null ? "" : " '" + id + "'");
     }
 
+    /** the lower bound of a real distribution's support, -Infinity when it gives none */
+    static double lowerOrInfinite(ScalarDistribution<?, ?> d) {
+        Object lower = d.getLowerBoundOfParameter();
+        return lower == null ? Double.NEGATIVE_INFINITY : ((Number) lower).doubleValue();
+    }
+
+    /** the upper bound of a real distribution's support, +Infinity when it gives none */
+    static double upperOrInfinite(ScalarDistribution<?, ?> d) {
+        Object upper = d.getUpperBoundOfParameter();
+        return upper == null ? Double.POSITIVE_INFINITY : ((Number) upper).doubleValue();
+    }
+
     /** x + d, keeping Integer.MIN_VALUE and MAX_VALUE as "no limit", saturating instead of wrapping around */
     static int add(int x, int d) {
         if (x == Integer.MIN_VALUE || x == Integer.MAX_VALUE) {
