@@ -29,6 +29,7 @@ Genuinely new components not present in BEAST 2:
 - `Cauchy` — location/scale parameterization
 - `Bernoulli` — discrete boolean distribution with probability `p`
 - `IntUniform` — discrete uniform over integer range
+- `CountPrior` — prior on a vector of indicators: a distribution (e.g. `Poisson`) on the number that are on, with every placement of that number equally probable. Used by the random local clock and EBSP templates in place of `Poisson` on `IntSum(indicators)`, so that the whole prior is in the model rather than half of it in `BitFlipOperator`'s Hastings ratio. With `CountPrior`, use `BitFlipOperator` with `uniform="false"`; `uniform="true"` would apply the correction twice, and BEAST stops with an error if the two are combined. XML with `Poisson` on `IntSum` and the default `uniform="true"` keeps its meaning. See [#231](https://github.com/CompEvol/beast3/issues/231).
 - `GammaMean` — mean parameterization of Gamma (alpha + mean, alternative to alpha + scale/rate)
 - `IID` — applies a `ScalarDistribution` independently to each element of a vector parameter
 - `OffsetReal` — wraps a distribution with an additive offset

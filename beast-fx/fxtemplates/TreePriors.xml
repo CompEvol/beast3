@@ -485,9 +485,11 @@ EBSPLogger/mode/
                 <S spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
 
-            <distribution id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.Poisson">
-                <param id="indsSum.alltrees" spec="beast.base.spec.evolution.IntSum" arg="@indicators.alltrees"/>
-                <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
+            <!-- prior on the indicators: the number of population size changes is Poisson, every placement of that number equally probable -->
+            <distribution id="indicatorsPrior.alltrees" spec="beast.base.spec.inference.distribution.CountPrior" param="@indicators.alltrees">
+                <count spec="beast.base.spec.inference.distribution.Poisson">
+                    <lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
+                </count>
             </distribution>
 
             <distribution id='popSizePrior.alltrees' spec='beast.base.spec.inference.distribution.IID' param='@popSizes.alltrees' >
@@ -503,7 +505,7 @@ EBSPLogger/mode/
             <log id='sumIndicators' spec='beast.base.spec.evolution.Sum' arg='@indicators.alltrees'/>
 
 
-			<operator id="bitflip.alltrees" parameter="@indicators.alltrees" spec="beast.base.spec.inference.operator.BitFlipOperator" uniform="true" weight="30.0"/>
+			<operator id="bitflip.alltrees" parameter="@indicators.alltrees" spec="beast.base.spec.inference.operator.BitFlipOperator" uniform="false" weight="30.0"/>
 			<operator id="indicatorSampler.alltrees" dist="@popPriorDist.EBSP" indicators="@indicators.alltrees" spec="beast.base.spec.inference.operator.SampleOffValues" values="@popSizes.alltrees" weight="15.0"/>
 			<operator id="indicatorScaler.alltrees" degreesOfFreedom="1" indicator="@indicators.alltrees" parameter="@popSizes.alltrees" scaleAll="false" scaleAllIndependently="false" scaleFactor="0.5"  spec='beast.base.spec.inference.operator.ScaleOperator' weight="15.0"/>
 			<operator id="EBSPupDownOperator.alltrees" scaleFactor="0.7" spec='beast.base.spec.evolution.operator.UpDownOperator' weight="5.0">

@@ -24,11 +24,13 @@
 
 package beast.base.spec.inference.operator;
 
+import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
 import beast.base.inference.Operator;
 import beast.base.spec.domain.Bool;
+import beast.base.spec.inference.distribution.CountPrior;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.type.Tensor;
@@ -47,7 +49,8 @@ import beast.base.util.Randomizer;
         " same number of 'on' bits are equiprobable.")
 public class BitFlipOperator extends Operator {
     final public Input<Boolean> uniformInput = new Input<>("uniform", "when on, total probability of combinations with k" +
-            " 'on' bits is equal. Otherwise uniform on all combinations (default true)", true);
+            " 'on' bits is equal. Otherwise uniform on all combinations (default true). Set it to false when the" +
+            " parameter has a CountPrior, which already makes all placements of k 'on' bits equally probable", true);
 
     final public Input<Tensor<? extends Bool,Boolean>> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
 
@@ -62,6 +65,18 @@ public class BitFlipOperator extends Operator {
         
         if (!(parameterInput.get() instanceof BoolVectorParam) && !(parameterInput.get() instanceof BoolScalarParam)) {
         	throw new IllegalArgumentException("The parameter must be a BoolVectorParam or BoolScalarParam");
+        }
+        // CountPrior already has the -log C(K, s) term that uniform="true" adds through the
+        // Hastings ratio, so the two together would apply it twice (#231)
+        if (usesPriorOnSum) {
+            for (BEASTInterface o : ((BEASTInterface) parameterInput.get()).getOutputs()) {
+                if (o instanceof CountPrior) {
+                    throw new IllegalArgumentException("BitFlipOperator " + getID() + " has uniform=\"true\", but "
+                            + "its parameter " + ((BEASTInterface) parameterInput.get()).getID() + " has the prior CountPrior "
+                            + o.getID() + ", which already makes all placements of the same number of indicators "
+                            + "equally probable. Set uniform=\"false\" on the operator.");
+                }
+            }
         }
     }
 
