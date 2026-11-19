@@ -90,11 +90,16 @@ public class Alert {
 		alert.showAndWait();
 	}
 
+	/**
+	 * @return the button chosen, or {@link #CLOSED_OPTION} if the dialog was closed without
+	 * choosing one
+	 */
 	public static ButtonType showConfirmDialog(Parent parent, String message, String header, ButtonType ... yesNoCancelOption) {
+		// remove HTML before the text goes into the dialog, so tags such as <br> do not show
+		message = removeHTML(message);
 		javafx.scene.control.Alert alert = new javafx.scene.control.Alert(AlertType.CONFIRMATION,
 				message, 
 				yesNoCancelOption);
-		message = removeHTML(message);
 		alert.setHeaderText(header);
 		if (parent != null) {
 			Scene node = parent.getScene();
@@ -103,7 +108,7 @@ public class Alert {
 		}
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
 		Optional<ButtonType> option = alert.showAndWait();
-		return option.get();
+		return option.orElse(CLOSED_OPTION);
 	}
 
 	public static void showMessageDialog(Parent parent, String message, String header, AlertType informationMessage) {
@@ -227,12 +232,12 @@ public class Alert {
     	TextInputDialog dlg = new TextInputDialog(initialSelectionValue);
     	dlg.setHeaderText(title);
     	ThemeProvider.loadStyleSheet(dlg.getDialogPane().getScene());
-    	Optional<String> option = dlg.showAndWait();
+		// position the dialog before it is shown: after showAndWait() it is already closed
 		if (parent != null) {
 			Scene node = parent.getScene();
 			dlg.setX(node.getX() + node.getWidth()/2);
 			dlg.setY(node.getY() + node.getHeight()/2);
 		}
-		return option;
+		return dlg.showAndWait();
     }
 }
