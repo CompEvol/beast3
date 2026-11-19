@@ -24,15 +24,24 @@
 
 package beast.base.spec.inference.operator;
 
+import beast.base.core.BEASTInterface;
 import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.core.Input.Validate;
+import beast.base.inference.CalculationNode;
 import beast.base.inference.Operator;
 import beast.base.spec.domain.Bool;
+import beast.base.spec.inference.distribution.IndicatorPrior;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.BoolVectorParam;
 import beast.base.spec.type.Tensor;
 import beast.base.util.Randomizer;
+
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 /**
  * @author Joseph Heled
@@ -47,22 +56,74 @@ import beast.base.util.Randomizer;
         " same number of 'on' bits are equiprobable.")
 public class BitFlipOperator extends Operator {
     final public Input<Boolean> uniformInput = new Input<>("uniform", "when on, total probability of combinations with k" +
-            " 'on' bits is equal. Otherwise uniform on all combinations (default true)", true);
+            " 'on' bits is equal. Otherwise uniform on all combinations. Default: true, unless the parameter has" +
+            " a prior that is the whole prior on the indicators, such as CountPrior, which already makes all" +
+            " placements of k 'on' bits equally probable; then false, and true is an error");
 
     final public Input<Tensor<? extends Bool,Boolean>> parameterInput = new Input<>("parameter", "the parameter to operate a flip on.", Validate.REQUIRED);
 
     private boolean usesPriorOnSum = true;
 
+    /** whether usesPriorOnSum has been worked out from the parameter's priors */
+    private boolean resolved = false;
+
     @Override
 	public void initAndValidate() {
-        final Boolean b = uniformInput.get();
-        if (b != null) {
-            usesPriorOnSum = b;
-        }
-        
         if (!(parameterInput.get() instanceof BoolVectorParam) && !(parameterInput.get() instanceof BoolScalarParam)) {
         	throw new IllegalArgumentException("The parameter must be a BoolVectorParam or BoolScalarParam");
         }
+        // from XML, the priors of the parameter are known now, so a conflict is reported at
+        // load; from Java they may be added later, so this is done again on the first proposal
+        resolved = false;
+        resolveUniform();
+        resolved = false;
+    }
+
+    /**
+     * Works out whether the Hastings ratio makes placements of the same number of 'on' bits
+     * equally probable. An {@link IndicatorPrior}, e.g. CountPrior, is the whole prior on the
+     * indicators, so that term would be applied twice (#231).
+     */
+    private void resolveUniform() {
+        IndicatorPrior prior = indicatorPrior((BEASTInterface) parameterInput.get());
+        Boolean uniform = uniformInput.get();
+        if (uniform == null) {
+            usesPriorOnSum = prior == null;
+        } else if (uniform && prior != null) {
+            throw new IllegalArgumentException("BitFlipOperator " + getID() + " has uniform=\"true\", but "
+                    + "its parameter " + ((BEASTInterface) parameterInput.get()).getID() + " has the prior "
+                    + prior.getClass().getSimpleName() + " " + ((BEASTInterface) prior).getID()
+                    + ", which already makes all placements of the same number of indicators "
+                    + "equally probable. Set uniform=\"false\" on the operator, or leave it out.");
+        } else {
+            usesPriorOnSum = uniform;
+        }
+        resolved = true;
+    }
+
+    /**
+     * The indicator prior of a parameter: among its outputs, or the outputs of a view of it
+     * (another tensor computed from it), or null if it has none.
+     */
+    private static IndicatorPrior indicatorPrior(BEASTInterface parameter) {
+        Set<BEASTInterface> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        Deque<BEASTInterface> todo = new ArrayDeque<>();
+        todo.add(parameter);
+        while (!todo.isEmpty()) {
+            BEASTInterface o = todo.poll();
+            if (!seen.add(o)) {
+                continue;
+            }
+            for (BEASTInterface output : o.getOutputs()) {
+                if (output instanceof IndicatorPrior prior) {
+                    return prior;
+                }
+                if (output instanceof Tensor<?, ?> && output instanceof CalculationNode) {
+                    todo.add(output);
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -75,6 +136,9 @@ public class BitFlipOperator extends Operator {
     @Override
     public double proposal() {
 
+    	if (!resolved) {
+    		resolveUniform();
+    	}
     	Tensor<?,Boolean> param = parameterInput.get();
 
         final int dim = param.size();

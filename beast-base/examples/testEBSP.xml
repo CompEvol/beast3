@@ -371,11 +371,11 @@
                 <M spec="RealScalarParam" domain="Real" value="0.0" estimate="false"/>
                 <S spec="RealScalarParam" domain="PositiveReal" value="8.0" estimate="false"/>
             </distribution>
-            <distribution spec="Poisson">
-                <lambda spec="RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
-                <param id="indsSun" spec="beast.base.spec.inference.util.AsIntScalar" domain="NonNegativeInt">
-                    <arg spec="beast.base.spec.evolution.IntSum" arg="@indicators"/>
-                </param>
+            <!-- the number of population size changes is Poisson, every placement equally probable -->
+            <distribution id="indicatorsPrior" spec="CountPrior" param="@indicators">
+                <count spec="Poisson">
+                    <lambda spec="RealScalarParam" domain="PositiveReal" value="0.69314718056" estimate="false"/>
+                </count>
             </distribution>
             <distribution id="populationMeanPrior" spec="IID" param="@popSizes">
                 <distr id="popPriorDist" spec="Exponential" mean="@populationMean"/>
@@ -463,7 +463,7 @@
             <taxa idref="alignment003"/>
         </tree>
     </state>
-    <operator id="bitflip" parameter="@indicators" spec="BitFlipOperator" uniform="true" weight="1.0"/>
+    <operator id="bitflip" parameter="@indicators" spec="BitFlipOperator" uniform="false" weight="1.0"/>
     <operator dist="@popPriorDist" indicators="@indicators" spec="SampleOffValues" values="@popSizes" weight="15.0"/>
     <operator indicator="@indicators" parameter="@popSizes" scaleFactor="0.5" spec="ScaleOperator" weight="15.0"/>
     <operator parameter="@populationMean" scaleFactor="0.9" spec="ScaleOperator" weight="3.0"/>

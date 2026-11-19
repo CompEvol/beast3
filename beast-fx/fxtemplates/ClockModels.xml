@@ -85,7 +85,8 @@
             	<!-- lower="1e-9"/ -->
         </input>
 
-        <operator id="IndicatorsBitFlip.c:$(n)" spec="beast.base.spec.inference.operator.BitFlipOperator" weight="15" parameter="@Indicators.c:$(n)"/>
+        <!-- uniform="false": RRateChangesPrior (CountPrior) already makes all placements of the same number of changes equally probable -->
+        <operator id="IndicatorsBitFlip.c:$(n)" spec="beast.base.spec.inference.operator.BitFlipOperator" weight="15" parameter="@Indicators.c:$(n)" uniform="false"/>
 <!-- this should probably be a DeltaExchange instead of scale operator to keep mean rate to 1 -->
         <!-- scale only the rates of branches with a rate change: the others don't affect the likelihood,
              and proposals on them would make the scaler tune itself to them -->
@@ -109,17 +110,18 @@
                </distr>
             </distribution>
 
-				<!-- prior on number of changes -->
-				<distribution id='RRateChangesPrior.c:$(n)' spec='beast.base.spec.inference.distribution.Poisson' >
-					<param id="RRateChanges.c:$(n)" spec="beast.base.spec.evolution.IntSum" arg="@Indicators.c:$(n)"/>
-                	<lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.6931471805599453" estimate="false"/>
-    		    </distribution>
+				<!-- prior on the indicators: the number of changes is Poisson, every placement of that number equally probable -->
+				<distribution id='RRateChangesPrior.c:$(n)' spec='beast.base.spec.inference.distribution.CountPrior' param="@Indicators.c:$(n)">
+					<count spec='beast.base.spec.inference.distribution.Poisson'>
+						<lambda spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="0.6931471805599453" estimate="false"/>
+					</count>
+				</distribution>
 			</if>
 		</distribution>
 
 		<logger idref="tracelog">
 			<if cond='inlikelihood(RandomLocalClock.c:$(n))'>
-				<log idref="RRateChanges.c:$(n)"/>
+				<log id="RRateChanges.c:$(n)" spec="beast.base.spec.evolution.IntSum" arg="@Indicators.c:$(n)"/>
 			</if>
 		</logger>
 
