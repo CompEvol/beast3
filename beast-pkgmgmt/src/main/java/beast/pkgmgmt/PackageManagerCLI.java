@@ -143,6 +143,7 @@ public class PackageManagerCLI {
         System.out.println("packagemanager -maven io.github.compevol:morph-models:1.3.1");
         System.out.println("packagemanager -delMaven io.github.compevol:morph-models");
         System.out.println("packagemanager -listMaven");
+        System.out.println("packagemanager -plan");
         System.out.println("packagemanager -addMavenRepository https://beast2.org/maven/");
         System.exit(0);
     }
@@ -166,6 +167,7 @@ public class PackageManagerCLI {
                             new Arguments.StringOption("maven", "COORD", "Install a Maven package (groupId:artifactId:version)"),
                             new Arguments.StringOption("delMaven", "COORD", "Uninstall a Maven package (groupId:artifactId)"),
                             new Arguments.Option("listMaven", "List installed Maven packages"),
+                            new Arguments.Option("plan", "Show what BEAST loads from the installed packages, and why the rest is not loaded"),
                             new Arguments.StringOption("addMavenRepository", "URL", "Add an extra Maven repository URL"),
                             new Arguments.StringOption("delMavenRepository", "URL", "Remove an extra Maven repository URL"),
                             new Arguments.Option("listMavenRepositories", "List configured Maven repositories"),
@@ -217,6 +219,11 @@ public class PackageManagerCLI {
                 }
                 PackageManager.uninstallMavenPackage(parts[0], parts[1]);
                 System.out.println("Maven package " + parts[0] + ":" + parts[1] + " uninstalled.");
+                return;
+            }
+
+            if (arguments.hasOption("plan")) {
+                System.out.print(PackageManager.describePlan());
                 return;
             }
 

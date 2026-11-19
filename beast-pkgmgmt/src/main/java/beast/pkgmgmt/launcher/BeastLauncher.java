@@ -1,7 +1,6 @@
 package beast.pkgmgmt.launcher;
 
 import beast.pkgmgmt.*;
-import beast.pkgmgmt.Package;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -14,9 +13,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.security.MessageDigest;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -689,45 +686,15 @@ public class BeastLauncher {
 
 
         if (useStrictVersions) {
-        	// grab "required" attribute from beast spec
+            // load exactly the package versions the analysis was made with (its 'required'
+            // attribute); the loading run() asks for later is then already done
             if (beastFile.endsWith(".json")) {
-            	throw new IllegalArgumentException("The -strictversions flag is not implemented for JSON files yet (only XML files are supported).");
-            } else {
-            	try {
-	                BufferedReader fin = new BufferedReader(new FileReader(beastFile));
-	                StringBuilder buf = new StringBuilder();
-	                String str = null;
-	                int lineCount = 0;
-	                while (fin.ready() && lineCount < 100) {
-	                    str = fin.readLine();
-	                    buf.append(str);
-	                    buf.append(' ');
-	                }
-	                fin.close();
-	                str = buf.toString();
-	                int start = str.indexOf("required=");
-	                if (start < 0) {
-	                	throw new IllegalArgumentException("Could not find a 'required' attribute in the XML. Add the required attribute, or run without the -strictversions flag");
-	                }
-	                char c = str.charAt(start + 9);
-	                start += 10;
-	                int end = str.indexOf(c, start);
-	                String packages = str.substring(start, end);
-
-	                buf = new StringBuilder();
-	        		buf.append("\"");
-	        		buf.append(sanitise(System.getProperty("java.library.path")));
-	        		String packagePath = determinePackagePath("BEAST " + BEASTVersion.INSTANCE.getVersion() + ":" + packages);
-	        		buf.append(packagePath);
-	        		buf.append("\"");
-	        		return buf.toString();
-            	} catch (IOException e) {
-            		e.printStackTrace();
-            	}
+                throw new IllegalArgumentException("The -strictversions flag is not implemented for JSON files yet (only XML files are supported).");
             }
-        } 
-
-        PackageManager.checkInstalledDependencies();
+            beast.pkgmgmt.plan.Selection selection = beast.pkgmgmt.plan.Selection.fromAnalysis(java.nio.file.Path.of(beastFile));
+            PackageManager.loadExternalJars(String.join(":", selection.pinned().entrySet().stream()
+                    .map(e -> e.getKey() + " v" + e.getValue()).toList()));
+        }
 
         // just load all packages
         StringBuilder buf = new StringBuilder();
@@ -745,62 +712,6 @@ public class BeastLauncher {
 	}
 
 	
-	private static String determinePackagePath(String packagesString) throws UnsupportedEncodingException {
-		StringBuilder buf = new StringBuilder();
-//		if (PackageManager.getBEASTInstallDir() != null) {
-//			buf.append(File.pathSeparator);
-//			buf.append(URLDecoder.decode(PackageManager.getBEASTInstallDir() + "/lib/beast.base.jar", "UTF-8"));
-//		}
-	    if (packagesString != null && packagesString.trim().length() > 0) {
-	    	Map<String, Package> packages = new HashMap<String, Package>();
-	    	PackageManager.addInstalledPackages(packages);
-	    	
-	    	String unavailablePackages = "";
-	    	String [] packageAndVersions = packagesString.split(":");
-			Set<String> classes = new HashSet<String>();
-	    	for (String s : packageAndVersions) {
-	    		s = s.trim();
-	    		int i = s.lastIndexOf(" ");
-	    		if (i > 0) {
-	    			String pkgname = s.substring(0, i);
-	    			String pkgversion = s.substring(i+1).trim().replaceAll("v", "");
-	    			Package pkg = new Package(pkgname);
-	    			PackageVersion version = new PackageVersion(pkgversion);
-	    			PackageManager.useArchive(true);
-	    			String dirName = PackageManager.getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-	    			if (new File(dirName).exists()) {
-	    				buf.append(addJarsToPath(dirName, classes));
-	    			} else {
-	    				// check the latest installed version
-	    				Package pkg2 = packages.get(pkgname);
-	    				if (pkg2 == null || !pkg2.isInstalled() || !pkg2.getInstalledVersion().equals(version)) {
-	        				unavailablePackages += s +", ";
-	    				} else {
-	    					PackageManager.useArchive(false);
-	            			dirName = PackageManager.getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-	            			if (new File(dirName).exists()) {
-	            				buf.append(addJarsToPath(dirName, classes));
-	            			} else {
-	            				unavailablePackages += s +", ";
-	            			}
-	    				}
-	    			}
-	    		}
-	    	}
-	    	if (unavailablePackages.length() > 1) {
-	    		unavailablePackages = unavailablePackages.substring(0, unavailablePackages.length() - 2);
-	    		if (unavailablePackages.contains(",")) {
-	    			System.err.println("The following packages are required, but not available: " + unavailablePackages);
-	    		} else {
-	    			System.err.println("The following package is required, but is not available: " + unavailablePackages);
-	    		}
-	    		System.err.println("See http://beast2.org/managing-packages/ for details on how to install packages.");
-	    		throw new IllegalArgumentException("The following package(s) are required, but not available: " + unavailablePackages);
-	    	}
-	    }
-	    return buf.toString();
-    }
-
 	private static String determinePackagePath() throws UnsupportedEncodingException {
 		StringBuilder buf = new StringBuilder();
 		Set<String> classes = new HashSet<String>();
