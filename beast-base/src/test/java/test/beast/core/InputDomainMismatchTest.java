@@ -20,6 +20,8 @@ import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Gamma;
 import beast.base.spec.inference.distribution.Poisson;
+import beast.base.spec.evolution.substitutionmodel.ComplexSubstitutionModel;
+import beast.base.spec.inference.parameter.CompoundRealScalarParam;
 import beast.base.spec.inference.parameter.IntSimplexParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
@@ -140,6 +142,48 @@ public class InputDomainMismatchTest {
         Gamma gamma = new Gamma();
         gamma.alphaInput.setValue(element, gamma);
         assertNotNull(gamma.alphaInput.domainMismatch(gamma), "VectorElement of a Real vector fits PositiveReal");
+    }
+
+    /**
+     * A compound parameter's domain is that of the parameters inside it, so the advice is to
+     * give them the domain; its own domain input would change nothing (Walter's review of #303)
+     */
+    @Test
+    void compoundParameterIsToldToChangeItsParameters() {
+        ComplexSubstitutionModel csm = new ComplexSubstitutionModel();
+        csm.setID("csm");
+        csm.ratesInput.setValue(compound(Real.INSTANCE), csm);
+        String message = csm.ratesInput.domainMismatch(csm);
+        assertNotNull(message);
+        assertTrue(message.contains("parameters inside it") && message.contains("domain=\"PositiveReal\""), message);
+        assertFalse(message.contains("give 'rates' domain="), message);
+
+        // following the advice removes the mismatch
+        csm.ratesInput.setValue(compound(PositiveReal.INSTANCE), csm);
+        assertNull(csm.ratesInput.domainMismatch(csm));
+    }
+
+    private static CompoundRealScalarParam<?> compound(Real domain) {
+        CompoundRealScalarParam<Real> rates = new CompoundRealScalarParam<>();
+        rates.setID("rates");
+        rates.parameterListInput.get().add(new RealScalarParam<>(0.5, domain));
+        rates.parameterListInput.get().add(new RealScalarParam<>(1.0, domain));
+        return rates;
+    }
+
+    /** an element of a vector is told to change the vector, which is what fixes it */
+    @Test
+    void vectorElementIsToldToChangeItsVector() {
+        RealVectorParam<Real> v = new RealVectorParam<>(new double[] {0.5, 1.0}, Real.INSTANCE);
+        v.setID("rateVector");
+        VectorElement<Real> element = new VectorElement<>();
+        element.vectorInput.setValue(v, element);
+        element.indexInput.setValue(0, element);
+        Gamma gamma = new Gamma();
+        gamma.alphaInput.setValue(element, gamma);
+        String message = gamma.alphaInput.domainMismatch(gamma);
+        assertNotNull(message);
+        assertTrue(message.contains("give 'rateVector' domain=\"PositiveReal\""), message);
     }
 
     /** a domain set after getDomain() was called, before init, is seen */

@@ -534,6 +534,21 @@ public class Input<T> {
 
     /** what to change so the value fits a declared domain */
     private String domainAdvice(String valueName, String declared) {
+        // a compound parameter has a domain input (from RealVectorParam/IntVectorParam), but its
+        // domain is that of the parameters inside it: setting its own would change nothing
+        if (value instanceof beast.base.spec.inference.parameter.CompoundRealScalarParam<?>
+                || value instanceof beast.base.spec.inference.parameter.CompoundIntScalarParam<?>) {
+            return "the domain of " + valueName + " is that of the parameters inside it, so give each of them domain=\""
+                    + declared + "\" (or a narrower domain).";
+        }
+        // an element of a vector has the vector's domain
+        if (value instanceof beast.base.spec.inference.parameter.VectorElement<?> element) {
+            Object vector = element.vectorInput.get();
+            String vectorName = vector instanceof BEASTInterface v && v.getID() != null ? "'" + v.getID() + "'" : "the vector it reads";
+            return "the domain of " + valueName + " is that of " + vectorName + ", so give " + vectorName + " domain=\""
+                    + declared + "\" (or a narrower domain), or wrap " + valueName + ": <" + getName()
+                    + " spec=\"beast.base.spec.inference.util.AsRealScalar\" domain=\"" + declared + "\" arg=\"@...\"/>.";
+        }
         if (value instanceof BEASTInterface b) {
             for (Input<?> input : b.listInputs()) {
                 if (input.getName().equals("domain")) {

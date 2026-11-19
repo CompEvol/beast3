@@ -3,12 +3,14 @@ package test.beastfx.app.beauti;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,9 @@ import javafx.stage.Stage;
  * The objects BEAUti builds from its subtemplates give no tensor input a value whose domain
  * does not fit the declared one (#226), e.g. a NonNegativeReal proportionInvariant for the
  * site model's UnitInterval input, which would warn for every analysis built in BEAUti.
- * Subtemplates that cannot be built on their own, outside an analysis, are skipped.
+ * Every subtemplate is built for an imported partition, so tree priors, clocks and tree
+ * initialisers, which refer to the partition's tree, are checked too; one that does not build
+ * fails the test rather than dropping out of the check.
  */
 @ExtendWith(ApplicationExtension.class)
 public class SubTemplateDomainTest {
@@ -44,18 +48,23 @@ public class SubTemplateDomainTest {
         doc.beautiConfig = new BeautiConfig();
         doc.beautiConfig.initAndValidate();
         doc.newAnalysis();
+        // a partition with its tree: tree priors, clocks and tree initialisers refer to them
+        doc.importNexus(new File(BeautiBase.NEXUS_DIR + "anolis.nex"));
 
-        PartitionContext context = new PartitionContext("dna");
+        PartitionContext context = new PartitionContext("anolis");
         Set<String> built = new TreeSet<>();
+        Map<String, String> notBuilt = new TreeMap<>();
         Set<String> mismatches = new TreeSet<>();
         for (BeautiSubTemplate template : new ArrayList<>(doc.beautiConfig.subTemplates)) {
             BEASTInterface o;
             try {
                 o = template.createSubNet(context, true);
             } catch (Throwable e) {
+                notBuilt.put(template.getID(), e.toString());
                 continue;
             }
             if (o == null) {
+                notBuilt.put(template.getID(), "nothing built");
                 continue;
             }
             built.add(template.getID());
@@ -71,7 +80,9 @@ public class SubTemplateDomainTest {
                 }
             }
         }
-        assertTrue(built.contains("Gamma Site Model"), "Gamma Site Model not built; built " + built);
+        // a subtemplate that stops building would drop out of the check unnoticed
+        assertTrue(notBuilt.isEmpty(), "subtemplates not built, so not checked: " + notBuilt);
+        assertTrue(built.size() > 50, "only " + built.size() + " subtemplates: " + built);
         if (!mismatches.isEmpty()) {
             fail("Subtemplates give inputs a value of the wrong domain:\n  " + String.join("\n  ", mismatches));
         }
