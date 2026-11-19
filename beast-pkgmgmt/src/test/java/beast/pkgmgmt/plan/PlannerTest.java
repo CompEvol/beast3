@@ -103,7 +103,7 @@ class PlannerTest {
         InstalledPackage future = pkg("Future", "1.0.0", USER).needs("BEAST.base", "2.9.0")
                 .own("future", pkgs("future"), requires("beast.base")).build();
         LoadPlan plan = Planner.plan(with(future), release());
-        assertEquals("needs BEAST.base 2.9.0 or a later 2.x; installed: 2.8.0", reason(plan, "Future"));
+        assertEquals("needs BEAST.base 2.9.0 or a later 2.9.x; installed: 2.8.0", reason(plan, "Future"));
     }
 
     /** a package built for BEAST 2 does not run on BEAST 3 */
@@ -113,7 +113,18 @@ class PlannerTest {
                 .own("old", pkgs("old"), requires("beast.base")).build();
         Runtime beast3 = new Runtime(Version.of("3.0.0"), release().javafx(), release().bootModules());
         LoadPlan plan = Planner.plan(List.of(base("3.0.0", BUNDLED).build(), old), beast3);
-        assertEquals("needs BEAST.base 2.7.0 or a later 2.x; installed: 3.0.0", reason(plan, "Old"));
+        assertEquals("needs BEAST.base 2.7.0 or a later 2.7.x; installed: 3.0.0", reason(plan, "Old"));
+    }
+
+    /** minor releases of BEAST have broken packages: a package built for 2.8.x is not loaded on 2.9 */
+    @Test
+    void coreDependencyStopsAtTheMinorVersion() {
+        InstalledPackage p = pkg("Built28", "1.0", USER).needs("BEAST.base", "2.8.0-rc3")
+                .own("built28", pkgs("built28"), requires("beast.base")).build();
+        List<InstalledPackage> on281 = new ArrayList<>(List.of(base("2.8.1", BUNDLED).build(), p));
+        assertLoaded(Planner.plan(on281, release()), "Built28", "1.0");
+        List<InstalledPackage> on290 = new ArrayList<>(List.of(base("2.9.0", BUNDLED).build(), p));
+        assertEquals("needs BEAST.base 2.8.0-rc3 or a later 2.8.x; installed: 2.9.0", reason(Planner.plan(on290, release()), "Built28"));
     }
 
     /** the installed SA ZIP is used; a Maven package's POM version of SA is only a minimum */
@@ -273,7 +284,7 @@ class PlannerTest {
                 .own("next", pkgs("next"), requires("beast.base"))
                 .lib("beast.base", "2.9.0-SNAPSHOT", pkgs("beast.base.core"), requires()).build();
         LoadPlan plan = Planner.plan(with(next), release());
-        assertEquals("needs BEAST.base 2.9.0-SNAPSHOT or a later 2.x; installed: 2.8.0", reason(plan, "Next"));
+        assertEquals("needs BEAST.base 2.9.0-SNAPSHOT or a later 2.9.x; installed: 2.8.0", reason(plan, "Next"));
         assertTrue(plan.modules().stream().noneMatch(m -> m.version().toString().contains("SNAPSHOT")));
     }
 

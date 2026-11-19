@@ -26,8 +26,8 @@ import beast.pkgmgmt.plan.LoadPlan.PlannedModule;
  * <ol>
  * <li>Only BEAST.base and BEAST.app provide the core ({@code beast.base}, {@code beast.fx},
  *     {@code beast.pkgmgmt}) and nothing provides JavaFX: such jars among another package's
- *     libraries are ignored (#298). A dependency on a core package is a minimum within the same
- *     major version.</li>
+ *     libraries are ignored (#298). A dependency on a core package without a maximum is a minimum
+ *     within the same minor version (2.8.x).</li>
  * <li>Of several installed copies of a package, the first that works is used: a copy on the
  *     boot layer, then one on {@code BEAST_PACKAGE_PATH}, then the newest. So an upgraded core
  *     package is used if it works, and the bundled copy otherwise.</li>

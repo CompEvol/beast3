@@ -64,5 +64,7 @@ class VersionTest {
         assertEquals(2, Version.of("2.8.0-rc1").major());
         assertEquals(3, Version.of("3").major());
         assertEquals(0, Version.of("rc1").major());
+        assertEquals(8, Version.of("2.8.0-rc1").minor());
+        assertEquals(0, Version.of("3").minor());
     }
 }
