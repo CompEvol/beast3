@@ -1188,23 +1188,56 @@ public class PackageManager {
 		}
 		if (mainJar == null) return null;
 
-		try (JarFile jar = new JarFile(mainJar.toFile())) {
-			// Try root version.xml first, then META-INF/beast/version.xml
-			JarEntry entry = jar.getJarEntry("version.xml");
-			if (entry == null) {
-				entry = jar.getJarEntry("META-INF/beast/version.xml");
-			}
-			if (entry != null) {
-				try (InputStream is = jar.getInputStream(entry)) {
-					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-					Document doc = factory.newDocumentBuilder().parse(new InputSource(is));
-					return parseServices(doc);
-				}
+		try {
+			Document doc = readVersionXmlFromJar(mainJar.toFile());
+			if (doc != null) {
+				return parseServices(doc);
 			}
 		} catch (Exception e) {
 			System.err.println("Warning: could not read services from " + mainJar + ": " + e.getMessage());
 		}
 		return null;
+	}
+
+	/**
+	 * Reads the {@code version.xml} of a package JAR, at the JAR root or, failing that, at
+	 * {@code META-INF/beast/version.xml}.
+	 *
+	 * @return the parsed document, or null if the JAR has neither
+	 */
+	public static Document readVersionXmlFromJar(File jarFile) throws IOException, SAXException, ParserConfigurationException {
+		try (JarFile jar = new JarFile(jarFile)) {
+			JarEntry entry = jar.getJarEntry("version.xml");
+			if (entry == null) {
+				entry = jar.getJarEntry("META-INF/beast/version.xml");
+			}
+			if (entry == null) {
+				return null;
+			}
+			try (InputStream is = jar.getInputStream(entry)) {
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				Document doc = factory.newDocumentBuilder().parse(new InputSource(is));
+				doc.normalize();
+				return doc;
+			}
+		}
+	}
+
+	/**
+	 * The main JAR of an installed Maven package in the local repository
+	 * ({@code maven-repo} in the package user directory, in the standard Maven layout),
+	 * e.g. {@code maven-repo/io/github/compevol/ccd/1.2.2/ccd-1.2.2.jar}. This needs no
+	 * Maven resolver, so it also works where the resolver is not available, e.g. to list
+	 * a package's apps.
+	 *
+	 * @return the JAR, or null if it has not been downloaded
+	 */
+	public static File getMavenPackageJar(MavenCoordinate coord) {
+		File jar = new File(getPackageUserDir() + File.separator + "maven-repo"
+				+ File.separator + coord.groupId.replace('.', File.separatorChar)
+				+ File.separator + coord.artifactId + File.separator + coord.version
+				+ File.separator + coord.artifactId + "-" + coord.version + ".jar");
+		return jar.isFile() ? jar : null;
 	}
 
 	/**

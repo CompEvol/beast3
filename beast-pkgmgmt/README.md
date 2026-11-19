@@ -97,6 +97,47 @@ External packages follow the conventions in
 - `module-info.java` with `provides beast.base.core.BEASTInterface with ...`.
 - JARs in `lib/` within the ZIP; fxtemplates in `fxtemplates/`.
 
+### version.xml in a Maven package
+
+A package installed from Maven has no package directory, so its `version.xml` goes inside
+its main JAR (the one named `<artifactId>-<version>.jar`), at either of:
+
+- `version.xml` at the JAR root (as in [CCD](https://github.com/CompEvol/CCD)), or
+- `META-INF/beast/version.xml`, if the root is taken.
+
+The root is read first. BEAST reads the services (`<service>`) and the apps
+(`<packageapp>`) from it, as from the `version.xml` of a ZIP package, so
+`applauncher -list` shows the apps of a Maven package too. Only the main JAR is read; a
+`version.xml` in one of its dependencies is not.
+
+To put the project's `version.xml` at the JAR root, copy it into the classes directory
+before packaging, as CCD does:
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-resources-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>embed-version-xml-in-jar</id>
+            <phase>generate-resources</phase>
+            <goals><goal>copy-resources</goal></goals>
+            <configuration>
+                <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                <resources>
+                    <resource>
+                        <directory>${project.basedir}</directory>
+                        <includes>
+                            <include>version.xml</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
 ### Resource directory namespacing
 
 Resources under `src/main/resources/` or `src/test/resources/` must be placed under a directory

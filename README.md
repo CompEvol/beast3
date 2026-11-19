@@ -228,8 +228,9 @@ packagemanager -maven io.github.compevol:morph-models:1.3.1
 
 Maven packages are resolved via [Apache Maven Resolver](https://maven.apache.org/resolver/),
 downloaded to a local cache (`~/.beast/2.8/maven-repo/`), and loaded into a JPMS
-`ModuleLayer` at runtime — just like ZIP-installed packages. The package's `version.xml`
-(embedded at the JAR root) is used for service discovery.
+`ModuleLayer` at runtime — just like ZIP-installed packages. The package's `version.xml`,
+embedded in its main JAR, is used for service discovery and for the apps that AppLauncher
+lists (`<packageapp>` elements); see [beast-pkgmgmt/README.md](beast-pkgmgmt/README.md#version-xml-in-a-maven-package).
 
 Installed Maven packages are tracked in `maven-packages.xml` alongside the
 standard `beauti.cfg` package list.
