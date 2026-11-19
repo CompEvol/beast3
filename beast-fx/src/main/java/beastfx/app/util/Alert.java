@@ -3,6 +3,7 @@ package beastfx.app.util;
 
 
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Optional;
 
 import javax.swing.Icon;
@@ -14,7 +15,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.TextArea;
@@ -81,18 +81,14 @@ public class Alert {
 				message, 
 				ButtonType.OK);
 		alert.setResizable(true);
-		if (parent != null) {
-			Scene node = parent.getScene();
-			alert.setX(node.getX() + node.getWidth()/2);
-			alert.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(alert, parent);
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
 		alert.showAndWait();
 	}
 
 	/**
-	 * @return the button chosen, or {@link #CLOSED_OPTION} if the dialog was closed without
-	 * choosing one
+	 * @return the button chosen; if the dialog was closed without choosing one,
+	 * {@link #CANCEL_OPTION} when it offers Cancel, and {@link #CLOSED_OPTION} otherwise
 	 */
 	public static ButtonType showConfirmDialog(Parent parent, String message, String header, ButtonType ... yesNoCancelOption) {
 		// remove HTML before the text goes into the dialog, so tags such as <br> do not show
@@ -101,14 +97,22 @@ public class Alert {
 				message, 
 				yesNoCancelOption);
 		alert.setHeaderText(header);
-		if (parent != null) {
-			Scene node = parent.getScene();
-			alert.setX(node.getX() + node.getWidth()/2);
-			alert.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(alert, parent);
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
 		Optional<ButtonType> option = alert.showAndWait();
-		return option.orElse(CLOSED_OPTION);
+		// closed without a choice: Cancel if the dialog offers it, as JavaFX itself does when
+		// the window's close button is used, so a caller never takes it for Yes or No
+		return option.orElse(List.of(yesNoCancelOption).contains(CANCEL_OPTION) ? CANCEL_OPTION : CLOSED_OPTION);
+	}
+
+	/**
+	 * Shows the dialog centred over the window that holds {@code parent}: a dialog with an
+	 * owner is centred on it by JavaFX. Must be called before the dialog is shown.
+	 */
+	private static void centreOn(Dialog<?> dialog, Parent parent) {
+		if (parent != null && parent.getScene() != null && parent.getScene().getWindow() != null) {
+			dialog.initOwner(parent.getScene().getWindow());
+		}
 	}
 
 	public static void showMessageDialog(Parent parent, String message, String header, AlertType informationMessage) {
@@ -117,11 +121,7 @@ public class Alert {
 				message, 
 				ButtonType.OK);
 		alert.setHeaderText(header);
-		if (parent != null) {
-			Scene node = parent.getScene();
-			alert.setX(node.getX() + node.getWidth()/2);
-			alert.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(alert, parent);
     	ThemeProvider.loadStyleSheet(alert.getDialogPane().getScene());
 		alert.showAndWait();
 	}
@@ -166,11 +166,7 @@ public class Alert {
 		pane.setContent(message);
 		alert.setDialogPane(pane);
 		alert.setHeaderText(header);
-		if (parent != null) {
-			Scene node = parent.getScene();
-			alert.setX(node.getX() + node.getWidth()/2);
-			alert.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(alert, parent);
 		alert.getDialogPane().getButtonTypes().addAll(CLOSED_OPTION, OK_OPTION);
 		pane.setPrefHeight(600);
 		pane.setPrefWidth(600);
@@ -200,11 +196,7 @@ public class Alert {
     	dlg.setHeaderText(message.toString());
     	dlg.setResizable(true);
     	ThemeProvider.loadStyleSheet(dlg.getDialogPane().getScene());
-		if (parent != null) {
-			Scene node = parent.getScene();
-			dlg.setX(node.getX() + node.getWidth()/2);
-			dlg.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(dlg, parent);
     	Optional<?> option = dlg.showAndWait();
 		if (option.isEmpty()) {
 			return null;
@@ -232,12 +224,7 @@ public class Alert {
     	TextInputDialog dlg = new TextInputDialog(initialSelectionValue);
     	dlg.setHeaderText(title);
     	ThemeProvider.loadStyleSheet(dlg.getDialogPane().getScene());
-		// position the dialog before it is shown: after showAndWait() it is already closed
-		if (parent != null) {
-			Scene node = parent.getScene();
-			dlg.setX(node.getX() + node.getWidth()/2);
-			dlg.setY(node.getY() + node.getHeight()/2);
-		}
+		centreOn(dlg, parent);
 		return dlg.showAndWait();
     }
 }
