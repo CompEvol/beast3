@@ -30,7 +30,9 @@ import beast.pkgmgmt.plan.LoadPlan.PlannedModule;
  *     within the same minor version (2.8.x).</li>
  * <li>Of several installed copies of a package, the first that works is used: a copy on the
  *     boot layer, then one on {@code BEAST_PACKAGE_PATH}, then the newest. So an upgraded core
- *     package is used if it works, and the bundled copy otherwise.</li>
+ *     package is used if it works, and the bundled copy otherwise. When a package needs another
+ *     version of a dependency than the copy tried, and another copy fits, that copy is tried
+ *     before the package is excluded. Copies available to download come last.</li>
  * <li>A copy that needs a newer launcher than the installer has is not used, nor is a core copy
  *     of another major version than the launcher's: that needs a new installer.</li>
  * <li>One copy of each module: a package's own module before any library copy of it. Library
@@ -68,6 +70,7 @@ public final class Planner {
                 case BOOT -> 0;
                 case OVERRIDE -> 1;
                 case ARCHIVE -> 3;
+                case AVAILABLE -> 4;
                 default -> 2;
             })
             .thenComparing(InstalledPackage::version, Comparator.reverseOrder())
@@ -221,6 +224,21 @@ public final class Planner {
             String why = dependencyFailure(p, chosen);
             if (why != null) {
                 failing.put(p.name(), why);
+            }
+        }
+        // a dependency whose copy does not fit a package that needs it, while another copy
+        // would: try that copy first, before excluding the package
+        for (InstalledPackage p : chosen.values()) {
+            for (Dependency d : p.depends()) {
+                InstalledPackage q = chosen.get(d.name());
+                List<InstalledPackage> copies = candidates.get(d.name());
+                boolean core = CORE_PACKAGES.contains(d.name());
+                if (q != null && q.location() != Location.BOOT && !d.accepts(q.version(), core)
+                        && copies.subList(1, copies.size()).stream().anyMatch(c -> d.accepts(c.version(), core))) {
+                    // a copy that fails on its own is rejected for its own reason
+                    String own = failing.get(q.name());
+                    return new Rejection(q, own != null ? own : p.name() + " " + p.version() + " needs " + d.describe(core));
+                }
             }
         }
         if (failing.isEmpty()) {

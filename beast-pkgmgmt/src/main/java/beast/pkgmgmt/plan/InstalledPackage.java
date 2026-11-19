@@ -31,9 +31,10 @@ public record InstalledPackage(String name, Version version, Location location,
      * {@code OVERRIDE}: on {@code BEAST_PACKAGE_PATH}, used whatever its version.
      * {@code ARCHIVE}: {@code archive/<name>/<version>/}, installed with
      * {@code packagemanager -add NAME -version V} for {@code -strictversions}; used only when no
-     * other copy is, or when an analysis pins that version. The others are used newest first.
+     * other copy is, or when an analysis pins that version. {@code AVAILABLE}: a version on
+     * offer from a repository, when planning an install. The others are used newest first.
      */
-    public enum Location { BOOT, OVERRIDE, USER, MAVEN, SYSTEM, BUNDLED, ARCHIVE }
+    public enum Location { BOOT, OVERRIDE, USER, MAVEN, SYSTEM, BUNDLED, ARCHIVE, AVAILABLE }
 
     @Override
     public String toString() {

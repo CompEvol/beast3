@@ -278,6 +278,20 @@ class PlannerTest {
         assertNull(reason(plan, "Aardvark"));
     }
 
+    /** SA 2.4.0 works, but Aardvark accepts only 2.3.x: the 2.3.0 copy is used, and both load */
+    @Test
+    void anotherCopyOfADependencyIsTriedBeforeExcluding() {
+        InstalledPackage sa24 = pkg("SA", "2.4.0", USER).own("sa", pkgs("sa"), requires()).build();
+        InstalledPackage sa23 = pkg("SA", "2.3.0", BUNDLED).own("sa", pkgs("sa"), requires()).build();
+        InstalledPackage early = pkg("Aardvark", "1.0", USER).needsUpTo("SA", "2.3.0", "2.3.99")
+                .own("aardvark", pkgs("aardvark"), requires("sa")).build();
+        LoadPlan plan = Planner.plan(with(sa24, sa23, early), release());
+        assertLoaded(plan, "SA", "2.3.0");
+        assertLoaded(plan, "Aardvark", "1.0");
+        assertEquals("Aardvark 1.0 needs SA 2.3.0 to 2.3.99", plan.notUsed().stream()
+                .filter(e -> e.copy().version().equals(Version.of("2.4.0"))).findFirst().get().reason());
+    }
+
     @Test
     void pomNamingAFutureCoreExcludesThePackage() {
         InstalledPackage next = pkg("Next", "0.1", MAVEN).needs("BEAST.base", "2.9.0-SNAPSHOT")

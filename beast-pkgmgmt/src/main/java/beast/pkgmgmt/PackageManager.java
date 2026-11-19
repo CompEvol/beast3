@@ -553,7 +553,6 @@ public class PackageManager {
 	
 	    processInstallList(packages);
 	
-	//    checkInstalledDependencies(packages);
 	}
 
 	/**
@@ -1026,16 +1025,6 @@ public class PackageManager {
         new DependencyResolver().resolve(packageMap, packagesToInstall);
     }
 
-    /**
-     * Checks that dependencies of all installed packages are met.
-     */
-    private static void checkInstalledDependencies(Map<String, Package> packageMap) {
-        new DependencyResolver().checkInstalled(packageMap);
-    }
-
-    public static void checkInstalledDependencies() {
-    	checkInstalledDependencies(packages);
-    }
 
     /**
      * Display a warning to console or as a dialog, depending
