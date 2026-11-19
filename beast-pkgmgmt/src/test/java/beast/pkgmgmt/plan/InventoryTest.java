@@ -126,13 +126,103 @@ class InventoryTest {
                 "<package name='SA' version='2.3.0'/>");
         Files.writeString(dir.resolve("maven-packages.xml"),
                 "<packages><package groupId='io.github.compevol' artifactId='ccd' version='1.3.0'/></packages>");
-        Inventory inventory = new Inventory().addMavenPackages(dir, coordinate -> List.of(ccd, sa));
+        Inventory inventory = new Inventory().addMavenPackages(dir,
+                coordinate -> coordinate.contains(":ccd:") ? List.of(ccd, sa) : List.of(sa));
         assertTrue(inventory.problems().isEmpty(), inventory.problems().toString());
-        InstalledPackage p = inventory.packages().get(0);
+        InstalledPackage p = inventory.packages().stream().filter(q -> q.name().equals("CCD")).findFirst().get();
         assertEquals(List.of(Dependency.fromMaven("BEAST.base", "[2.8.0-rc3,2.9.0-alpha)"), Dependency.fromMaven("SA", "2.3.0")),
                 p.depends());
         assertEquals(List.of("CCD 1.3.0: its version.xml says it needs BEAST.base 2.8.0 or later, its POM says "
                 + "BEAST.base [2.8.0-rc3,2.9.0-alpha); for a Maven package the POM counts"), inventory.warnings());
+    }
+
+    /**
+     * nested-sampling 1.3.1 depends on model-selection 1.7.0, a BEAST package (MODEL_SELECTION):
+     * that is a package of its own, so the planner finds it, and not a library of NS
+     */
+    @Test
+    void mavenDependencyOnAnotherBeastPackage() throws Exception {
+        Path repo = dir.resolve("maven-repo");
+        Path nsDir = Files.createDirectories(repo.resolve("io/github/beast2-dev/nested-sampling/1.3.1"));
+        Files.writeString(nsDir.resolve("nested-sampling-1.3.1.pom"), """
+                <project><properties><model-selection.version>1.7.0</model-selection.version></properties><dependencies>
+                  <dependency><groupId>io.github.beast2-dev</groupId><artifactId>model-selection</artifactId><version>${model-selection.version}</version></dependency>
+                </dependencies></project>""");
+        Path ns = jar(nsDir.resolve("nested-sampling-1.3.1.jar"), "<package name='NS' version='1.3.1'/>");
+        Path msDir = Files.createDirectories(repo.resolve("io/github/beast2-dev/model-selection/1.7.0"));
+        Files.writeString(msDir.resolve("model-selection-1.7.0.pom"), "<project/>");
+        Path ms = jar(msDir.resolve("model-selection-1.7.0.jar"), "<package name='MODEL_SELECTION' version='1.7.0'/>");
+        Files.writeString(dir.resolve("maven-packages.xml"),
+                "<packages><package groupId='io.github.beast2-dev' artifactId='nested-sampling' version='1.3.1'/></packages>");
+        Map<String, List<Path>> resolved = Map.of("io.github.beast2-dev:nested-sampling:1.3.1", List.of(ns, ms),
+                "io.github.beast2-dev:model-selection:1.7.0", List.of(ms));
+        Inventory inventory = new Inventory().addMavenPackages(dir, resolved::get);
+
+        assertEquals(List.of("MODEL_SELECTION 1.7.0", "NS 1.3.1"),
+                inventory.packages().stream().map(p -> p.name() + " " + p.version()).sorted().toList());
+        InstalledPackage nsPackage = inventory.packages().stream().filter(p -> p.name().equals("NS")).findFirst().get();
+        assertEquals(List.of(Dependency.fromMaven("MODEL_SELECTION", "1.7.0")), nsPackage.depends());
+        assertTrue(nsPackage.artifacts().stream().noneMatch(art -> art.jar().equals(ms)), nsPackage.artifacts().toString());
+        assertTrue(inventory.packages().stream().allMatch(p -> p.location() == Location.MAVEN));
+    }
+
+    /** package apps are providers of has.main.method, which the app launcher looks them up by */
+    @Test
+    void packageAppsAreServices() throws Exception {
+        Path ccd = Files.createDirectories(dir.resolve("CCD"));
+        Files.writeString(ccd.resolve("version.xml"), """
+                <package name="CCD" version="1.2.2">
+                  <packageapp description="CCD Sampler" class="ccd.tools.CCDSampler" args=""/>
+                  <addonapp description="Old style" class="ccd.tools.Old"/>
+                </package>""");
+        Inventory inventory = new Inventory().addFolder(dir, Location.USER);
+        assertEquals(Map.of(Inventory.APP_SERVICE, java.util.Set.of("ccd.tools.CCDSampler", "ccd.tools.Old")),
+                inventory.packages().get(0).services());
+    }
+
+    /**
+     * lphybeast-mm 1.4.0 inherits its version from its parent and depends on lphybeast
+     * ${project.version}; lphybeast 1.4.0 takes beast-base's version from the parent's
+     * dependencyManagement
+     */
+    @Test
+    void pomVersionsFromTheParent() throws Exception {
+        Path rootDir = Files.createDirectories(dir.resolve("io/github/lphy/lphybeast-root/1.4.0"));
+        Files.writeString(rootDir.resolve("lphybeast-root-1.4.0.pom"), """
+                <project><version>1.4.0</version><properties><beast.version>2.8.0-rc3</beast.version></properties>
+                <dependencyManagement><dependencies>
+                  <dependency><groupId>io.github.compevol</groupId><artifactId>beast-base</artifactId><version>${beast.version}</version></dependency>
+                </dependencies></dependencyManagement></project>""");
+        String parent = "<parent><groupId>io.github.lphy</groupId><artifactId>lphybeast-root</artifactId><version>1.4.0</version></parent>";
+        Path mm = dir.resolve("lphybeast-mm-1.4.0.pom");
+        Files.writeString(mm, "<project>" + parent + """
+                <dependencies><dependency><groupId>io.github.lphy</groupId><artifactId>lphybeast</artifactId><version>${project.version}</version></dependency>
+                <dependency><groupId>io.github.lphy</groupId><artifactId>other</artifactId><version>${project.parent.version}</version></dependency>
+                </dependencies></project>""");
+        assertEquals(List.of("1.4.0", "1.4.0"), Inventory.pomDependencies(mm, dir).stream().map(d -> d[2]).toList());
+
+        Path lphybeast = dir.resolve("lphybeast-1.4.0.pom");
+        Files.writeString(lphybeast, "<project>" + parent + """
+                <dependencies><dependency><groupId>io.github.compevol</groupId><artifactId>beast-base</artifactId></dependency>
+                <dependency><groupId>org.x</groupId><artifactId>unmanaged</artifactId></dependency></dependencies></project>""");
+        List<String[]> deps = Inventory.pomDependencies(lphybeast, dir);
+        assertEquals("2.8.0-rc3", deps.get(0)[2]);
+        assertEquals(null, deps.get(1)[2]);
+    }
+
+    /** a core dependency whose version cannot be read is a warning: the #298 check is skipped */
+    @Test
+    void unreadableCoreVersionIsWarned() throws Exception {
+        Path repo = dir.resolve("maven-repo");
+        Path xDir = Files.createDirectories(repo.resolve("org/x/x/1.0"));
+        Files.writeString(xDir.resolve("x-1.0.pom"), """
+                <project><dependencies><dependency><groupId>io.github.compevol</groupId><artifactId>beast-base</artifactId>
+                <version>${not.defined}</version></dependency></dependencies></project>""");
+        Path x = jar(xDir.resolve("x-1.0.jar"), "<package name='X' version='1.0'/>");
+        Files.writeString(dir.resolve("maven-packages.xml"), "<packages><package groupId='org.x' artifactId='x' version='1.0'/></packages>");
+        Inventory inventory = new Inventory().addMavenPackages(dir, c -> List.of(x));
+        assertEquals(List.of("X 1.0: its POM gives no version of io.github.compevol:beast-base that can be read, "
+                + "so which BEAST it needs is not checked"), inventory.warnings());
     }
 
     @Test

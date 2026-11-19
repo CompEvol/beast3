@@ -948,45 +948,8 @@ public class PackageManager {
 	 * @return
 	 */
     public static Map<String, Set<String>> parseServices(Document doc) {
-		Map<String, Set<String>> serviceMap = new HashMap<>();
-
-        // process "service" elements
-		NodeList nodes = doc.getElementsByTagName("service");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element service = (Element) nodes.item(i);
-            String type = service.getAttribute("type");
-            Set<String> providers = new HashSet<>();
-
-            NodeList content = service.getChildNodes();
-            for (int j = 0; j < content.getLength(); j++) {
-            	Node n = content.item(j);
-            	if (n.getNodeType() == Node.ELEMENT_NODE) {
-            		if (n.getNodeName().equals("provider")) {
-            			String clazz = ((Element)n).getAttribute("classname");
-            			providers.add(clazz);
-            		} else {
-            			System.err.println("Unrecognised element " + n.getNodeName() + " found. Expected 'provider'");
-            		}
-            	}
-            }
-            serviceMap.put(type, providers);
-        }
-        
-        // process "packageapp" elements
-        // package apps are services of type "has.main.method"
-        Set<String> providers = new HashSet<>();
-		nodes = doc.getElementsByTagName("packageapp");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element service = (Element) nodes.item(i);
-			String clazz = service.getAttribute("class");
-			providers.add(clazz);
-		}
-        if (providers.size() > 0) {
-        	serviceMap.put("has.main.method", providers);
-        }
-
-		return serviceMap;
-	}
+        return Inventory.services(doc);
+    }
 
     
 	public static Set<String> listServices(String service) {

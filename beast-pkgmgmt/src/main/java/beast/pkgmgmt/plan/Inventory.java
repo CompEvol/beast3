@@ -50,6 +50,8 @@ public final class Inventory {
     private final List<InstalledPackage> packages = new ArrayList<>();
     private final List<String> problems = new ArrayList<>();
     private final List<String> warnings = new ArrayList<>();
+    /** the Maven packages read so far: a BEAST package that two others depend on is read once */
+    private final Set<String> mavenCoordinates = new java.util.HashSet<>();
 
     public List<InstalledPackage> packages() {
         return packages;
@@ -164,6 +166,9 @@ public final class Inventory {
 
     private void addMavenPackage(Path repo, String g, String a, String v, Function<String, List<Path>> resolver) {
         String coordinate = g + ":" + a + ":" + v;
+        if (!mavenCoordinates.add(coordinate)) {
+            return;
+        }
         try {
             List<Path> jars = resolver.apply(coordinate);
             Path main = jars.stream().filter(p -> p.getFileName().toString().equals(a + "-" + v + ".jar")).findFirst()
@@ -200,6 +205,10 @@ public final class Inventory {
                             })
                             .filter(n -> n != null && !n.isEmpty()).findFirst().orElse(null);
                 }
+                if (core != null && spec == null) {
+                    warnings.add(name + " " + version + ": its POM gives no version of " + depGroup + ":" + depArtifact
+                            + " that can be read, so which BEAST it needs is not checked");
+                }
                 if (beastPackage != null && spec != null) {
                     try {
                         depends.add(Dependency.fromMaven(beastPackage, spec));
@@ -218,8 +227,17 @@ public final class Inventory {
                     }
                 }
             }
+            // a BEAST package among the resolved jars is a package of its own, with its own POM
+            // dependencies, not a library of this one
             List<Artifact> artifacts = new ArrayList<>();
             for (Path jar : jars) {
+                if (!jar.equals(main) && readVersionXml(jar) != null) {
+                    String[] gav = coordinateInRepo(repo, jar);
+                    if (gav != null) {
+                        addMavenPackage(repo, gav[0], gav[1], gav[2], resolver);
+                        continue;
+                    }
+                }
                 Artifact art = readJar(jar, jar.equals(main) ? version : null, null);
                 if (art != null) {
                     artifacts.add(jar.equals(main)
@@ -235,6 +253,25 @@ public final class Inventory {
         }
     }
 
+    /** groupId, artifactId and version of a jar in the local repository, from its path, or null */
+    private static String[] coordinateInRepo(Path repo, Path jar) {
+        Path rel;
+        try {
+            rel = repo.toAbsolutePath().normalize().relativize(jar.toAbsolutePath().normalize());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        int n = rel.getNameCount();
+        if (n < 4 || rel.startsWith("..")) {
+            return null;
+        }
+        String a = rel.getName(n - 3).toString(), v = rel.getName(n - 2).toString();
+        if (!rel.getFileName().toString().equals(a + "-" + v + ".jar")) {
+            return null;
+        }
+        return new String[] {rel.subpath(0, n - 3).toString().replace(rel.getFileSystem().getSeparator(), "."), a, v};
+    }
+
     /**
      * The dependencies a published POM declares, other than test-scoped ones: groupId,
      * artifactId and version (a plain version or a range), with {@code ${...}} filled in from
@@ -245,39 +282,80 @@ public final class Inventory {
         if (!Files.isRegularFile(pom)) {
             return result;
         }
-        Map<String, String> properties = new HashMap<>();
+        // the POM and its parents, nearest first: properties and dependencyManagement are inherited
         Document doc = parse(Files.newInputStream(pom));
-        for (Document d = doc; d != null; d = parentPom(d, repo)) {
-            NodeList props = d.getElementsByTagName("properties");
-            for (int i = 0; i < props.getLength(); i++) {
-                for (Node n = props.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
+        List<Document> chain = new ArrayList<>();
+        for (Document d = doc; d != null && chain.size() < 20; d = parentPom(d, repo)) {
+            chain.add(d);
+        }
+        Map<String, String> properties = new HashMap<>();
+        Map<String, String> managed = new HashMap<>();
+        for (Document d : chain) {
+            for (Element props : children(d.getDocumentElement(), "properties")) {
+                for (Node n = props.getFirstChild(); n != null; n = n.getNextSibling()) {
                     if (n instanceof Element p) {
                         properties.putIfAbsent(p.getTagName(), p.getTextContent().trim());
                     }
                 }
             }
-        }
-        Element project = doc.getDocumentElement();
-        properties.putIfAbsent("project.version", String.valueOf(text(project, "version")));
-        NodeList deps = doc.getElementsByTagName("dependency");
-        for (int i = 0; i < deps.getLength(); i++) {
-            Element d = (Element) deps.item(i);
-            if (d.getParentNode() == null || !"dependencies".equals(d.getParentNode().getNodeName())
-                    || (d.getParentNode().getParentNode() instanceof Element pe && pe.getTagName().equals("dependencyManagement"))) {
-                continue;
-            }
-            String scope = text(d, "scope"), version = text(d, "version");
-            if ("test".equals(scope)) {
-                continue;
-            }
-            if (version != null) {
-                Matcher m = Pattern.compile("\\$\\{([^}]+)}").matcher(version);
-                version = m.replaceAll(r -> Matcher.quoteReplacement(properties.getOrDefault(r.group(1), r.group())));
-                if (version.contains("${")) {
-                    version = null;
+            for (Element dm : children(d.getDocumentElement(), "dependencyManagement")) {
+                for (Element deps : children(dm, "dependencies")) {
+                    for (Element dep : children(deps, "dependency")) {
+                        if (text(dep, "version") != null) {
+                            managed.putIfAbsent(text(dep, "groupId") + ":" + text(dep, "artifactId"), text(dep, "version"));
+                        }
+                    }
                 }
             }
-            result.add(new String[] {text(d, "groupId"), text(d, "artifactId"), version});
+        }
+        Element project = doc.getDocumentElement();
+        Element parent = children(project, "parent").stream().findFirst().orElse(null);
+        String parentVersion = parent == null ? null : text(parent, "version");
+        String projectVersion = text(project, "version") != null ? text(project, "version") : parentVersion;
+        if (projectVersion != null) {
+            properties.putIfAbsent("project.version", projectVersion);
+        }
+        if (parentVersion != null) {
+            properties.putIfAbsent("project.parent.version", parentVersion);
+        }
+        for (Element deps : children(project, "dependencies")) {
+            for (Element d : children(deps, "dependency")) {
+                if ("test".equals(text(d, "scope"))) {
+                    continue;
+                }
+                String version = text(d, "version");
+                if (version == null) {
+                    version = managed.get(text(d, "groupId") + ":" + text(d, "artifactId"));
+                }
+                result.add(new String[] {text(d, "groupId"), text(d, "artifactId"), fillIn(version, properties)});
+            }
+        }
+        return result;
+    }
+
+    /** {@code ${...}} filled in from the properties, or null if one is unknown */
+    private static String fillIn(String value, Map<String, String> properties) {
+        if (value == null) {
+            return null;
+        }
+        // a property may refer to another, as ${project.version} often does
+        for (int depth = 0; depth < 10 && value.contains("${"); depth++) {
+            Matcher m = Pattern.compile("\\$\\{([^}]+)}").matcher(value);
+            String next = m.replaceAll(r -> Matcher.quoteReplacement(properties.getOrDefault(r.group(1), r.group())));
+            if (next.equals(value)) {
+                break;
+            }
+            value = next;
+        }
+        return value.contains("${") ? null : value;
+    }
+
+    private static List<Element> children(Element parent, String tag) {
+        List<Element> result = new ArrayList<>();
+        for (Node n = parent.getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (n instanceof Element e && e.getTagName().equals(tag)) {
+                result.add(e);
+            }
         }
         return result;
     }
@@ -396,8 +474,12 @@ public final class Inventory {
         return result;
     }
 
-    /** the service providers of a version.xml: {@code <service type><provider classname/>} */
-    static Map<String, Set<String>> services(Document doc) {
+    /**
+     * The service providers of a version.xml: {@code <service type><provider classname/>}, and
+     * the package apps ({@code <packageapp class>}, or {@code <addonapp>} in old packages) as
+     * providers of {@link #APP_SERVICE}, which is how the app launcher finds their classes.
+     */
+    public static Map<String, Set<String>> services(Document doc) {
         Map<String, Set<String>> services = new java.util.TreeMap<>();
         NodeList nodes = doc.getElementsByTagName("service");
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -409,8 +491,20 @@ public final class Inventory {
                 }
             }
         }
+        for (String tag : List.of("packageapp", "addonapp")) {
+            NodeList apps = doc.getElementsByTagName(tag);
+            for (int i = 0; i < apps.getLength(); i++) {
+                String c = ((Element) apps.item(i)).getAttribute("class");
+                if (!c.isEmpty()) {
+                    services.computeIfAbsent(APP_SERVICE, k -> new java.util.TreeSet<>()).add(c);
+                }
+            }
+        }
         return services;
     }
+
+    /** the service the package apps of a version.xml provide; no module-info declares it */
+    public static final String APP_SERVICE = "has.main.method";
 
     /**
      * Services are module-info's job (decision 5): warns about providers that only version.xml
@@ -436,7 +530,7 @@ public final class Inventory {
         declared.forEach((service, providers) -> providers.forEach(p -> {
             if (!classes.contains(p) && !classes.contains(p.replace('$', '.'))) {
                 notInJars.add(p);
-            } else if (!provided.getOrDefault(service, Set.of()).contains(p)) {
+            } else if (!service.equals(APP_SERVICE) && !provided.getOrDefault(service, Set.of()).contains(p)) {
                 onlyInVersionXml.add(service + " -> " + p);
             }
         }));
