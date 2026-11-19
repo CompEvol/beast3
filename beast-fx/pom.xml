@@ -115,6 +115,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                    <!-- Last resort if a test hangs despite test.beastfx.util.DialogWatchdog and
+                         the JUnit timeout in junit-platform.properties (#302): kill the test JVM. -->
+                    <forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
                     <workingDirectory>${project.build.testOutputDirectory}</workingDirectory>
                     <argLine>
                         --add-reads beast.fx=ALL-UNNAMED
