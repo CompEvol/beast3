@@ -123,6 +123,8 @@ Or as a workflow step (requires `contents: write` permission):
 
 `release/Linux/assemble-bundle.sh` (called by `test-linux-on-mac.sh`):
 
+0. **Check the version** — stops if `VERSION` differs from the version in
+   `version.xml`, so the bundle and the Mac DMG are built with the same version.
 1. **Stage JARs** — copies beast-fx + dependencies into `staging-<OS_ARCH>/`.
    All `javafx-*` and `jdk-jsobject-*` JARs excluded (already in the bundled
    JRE+FX as platform modules).

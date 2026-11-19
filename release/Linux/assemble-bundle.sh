@@ -35,6 +35,16 @@ VERSION="${VERSION:?ERROR: VERSION is required. Example: VERSION=2.8.0 bash asse
 JRE_DIR="${JRE_DIR:?ERROR: JRE_DIR is required — set it to the Zulu JRE+FX 25 home for the target platform}"
 DEST="${DEST:-$RELEASE_DIR/dist}"
 
+# CI (release-bundles.yml) passes VERSION from pom.xml with -SNAPSHOT stripped, and the
+# Mac script takes it from version.xml, which this bundle ships. Stop if the two
+# disagree, so the three platforms are built with the same version.
+XML_VERSION=$(sed -n 's/^<package .*version="\([^"]*\)".*/\1/p' "$REPO_ROOT/version.xml" | head -n 1)
+if [ "$XML_VERSION" != "$VERSION" ]; then
+    echo "ERROR: VERSION is ${VERSION}, but version.xml has version ${XML_VERSION:-<none found>}." >&2
+    echo "       Make pom.xml (without -SNAPSHOT) and version.xml agree before releasing." >&2
+    exit 1
+fi
+
 # ── Auto-detection ────────────────────────────────────────────────────────────
 _HOST="$(uname -s)-$(uname -m)"
 if [ -z "${OS_ARCH:-}" ]; then

@@ -22,6 +22,12 @@
 # Usage:
 #   cd release/Mac && ./build-sign-dmg.sh
 #
+# NOTE: this script edits tracked files. Step 1 runs `mvn versions:set` on every
+# pom.xml in the working tree to build with the release version, and an EXIT trap
+# runs `mvn versions:revert` to put them back, also when the build fails. If the
+# script is killed (kill -9), the trap does not run: run `mvn versions:revert`
+# yourself before committing.
+#
 # ─────────────────────────────────────────────────────────────────────────────
 # HOW TO SAFELY MOVE AND DMG YOUR APP
 # ─────────────────────────────────────────────────────────────────────────────
@@ -111,6 +117,16 @@ if [ -z "$VERSION" ]; then
     exit 1
 fi
 echo "==> BEAST version: ${VERSION}"
+
+# CI (release-bundles.yml) takes the release version from pom.xml with -SNAPSHOT
+# stripped; this script takes it from version.xml. Stop if the two disagree, so the
+# three platforms are built with the same version.
+POM_VERSION=$(perl -0777 -ne 'print $1 if /<version>([^<]+)<\/version>/' < "$REPO_ROOT/pom.xml")
+if [ "${POM_VERSION%-SNAPSHOT}" != "$VERSION" ]; then
+    echo "ERROR: version.xml has version ${VERSION}, but pom.xml has ${POM_VERSION}"
+    echo "       (${POM_VERSION%-SNAPSHOT} without -SNAPSHOT). Make them agree before releasing."
+    exit 1
+fi
 
 # ── Verify jpackage is available ─────────────────────────────────────────────
 if ! command -v jpackage &>/dev/null; then

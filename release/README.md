@@ -48,7 +48,9 @@ Keep `pom.xml` at `x.y.z-SNAPSHOT`; never commit a release version to the poms. 
 | Linux, Windows (CI) | `pom.xml`, `-SNAPSHOT` stripped | `versions:set` in `release-bundles.yml`, on a throw-away checkout |
 | Mac DMG (local) | `version="..."` in `version.xml` | `versions:set` in Step 1 of `build-sign-dmg.sh`; `versions:revert` on exit puts the poms back |
 
-All three bundle scripts stop with an error if any jar or package zip in the bundle still has `SNAPSHOT` in its name. The 2.8.0-rc3 DMG shipped `beast.pkgmgmt@2.8.0-SNAPSHOT`, because the Mac script did not set the version yet (#297).
+The two sources must agree, so all three bundle scripts check them before doing anything else: `build-sign-dmg.sh` compares `version.xml` with `pom.xml` (without `-SNAPSHOT`), and `Linux/assemble-bundle.sh` and `Windows/assemble-bundle.sh` compare the `VERSION` that CI passes with `version.xml`, which the bundle ships. A mismatch stops the build.
+
+All three bundle scripts also stop with an error if any jar or package zip in the bundle still has `SNAPSHOT` in its name. The 2.8.0-rc3 DMG shipped `beast.pkgmgmt@2.8.0-SNAPSHOT`, because the Mac script did not set the version yet (#297).
 
 ## Maven resolver on the classpath
 
@@ -60,7 +62,7 @@ All three bundle scripts stop with an error if any jar or package zip in the bun
 | Windows | `BEAST.v<ver>/app/resolver/` |
 | Linux | `BEAST.v<ver>/lib/resolver/` |
 
-They come from `beast-pkgmgmt/target/resolver/`, which the `copy-resolver` execution in `beast-pkgmgmt/pom.xml` writes during `mvn package`.
+They come from `beast-pkgmgmt/target/resolver/`, which the `copy-resolver` execution in `beast-pkgmgmt/pom.xml` writes during `mvn package`. It copies every runtime dependency of beast-pkgmgmt, which today is only the resolver and `slf4j-nop`, both `<optional>`. A new runtime dependency of beast-pkgmgmt would land in `resolver/` too, so exclude it there or stage it separately.
 
 **They go on the classpath, not the module path.** Maven's own jars split two packages between them (`org.apache.maven.artifact.repository.metadata` in `maven-artifact` and `maven-repository-metadata`; `org.apache.maven.model.merge` in `maven-model` and `maven-model-builder`). On the module path they become automatic modules, and the JVM refuses to start with a `ResolutionException`. On the classpath they all go into the unnamed module, where split packages are allowed. The `resolver/` subfolder is not scanned by `--module-path`, which only looks at the jars directly in the folder.
 

@@ -25,7 +25,9 @@ Produces:
 - `BEAST.v<version>.dmg` — signed, distributable DMG
 
 The version number is read from `version="..."` in `version.xml` at the
-repository root. Step 1 sets the poms to that version with `mvn versions:set`
+repository root. The script stops if it differs from the version in `pom.xml`
+without `-SNAPSHOT`, which is the version CI uses for Linux and Windows.
+Step 1 sets the poms to that version with `mvn versions:set`
 before building, and `versions:revert` puts them back to `-SNAPSHOT` when the
 script exits, also on failure. If the script is killed (`kill -9`), run
 `mvn versions:revert` yourself. The jar names, the package zips and the module
@@ -87,7 +89,8 @@ release/Mac/
 - Auto-generates `entitlements.plist` (3 JVM entitlements: `allow-jit`,
   `allow-unsigned-executable-memory`, `allow-dyld-environment-variables`)
   if the file does not already exist.
-- Parses `VERSION` from `version.xml` via Perl.
+- Parses `VERSION` from `version.xml` via Perl, and stops if it differs from
+  the version in `pom.xml` without `-SNAPSHOT`.
 - Checks `jpackage` is on PATH.
 - Validates `BUILD_JAVA_HOME` (`$ZULU_JRE_FX_DIR/Contents/Home`) exists; fails
   fast if the Zulu JRE+FX is not downloaded or `ZULU_JRE_FX_DIR` is wrong.

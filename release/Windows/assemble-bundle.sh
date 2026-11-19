@@ -52,6 +52,16 @@ JRE_DIR="${JRE_DIR:?ERROR: JRE_DIR is required — set it to the Zulu JRE+FX 25 
 DEST="${DEST:-$RELEASE_DIR/dist}"
 OS_ARCH="${OS_ARCH:-Windows.x86_64}"
 
+# CI (release-bundles.yml) passes VERSION from pom.xml with -SNAPSHOT stripped, and the
+# Mac script takes it from version.xml, which this bundle ships. Stop if the two
+# disagree, so the three platforms are built with the same version.
+XML_VERSION=$(sed -n 's/^<package .*version="\([^"]*\)".*/\1/p' "$REPO_ROOT/version.xml" | head -n 1)
+if [ "$XML_VERSION" != "$VERSION" ]; then
+    echo "ERROR: VERSION is ${VERSION}, but version.xml has version ${XML_VERSION:-<none found>}." >&2
+    echo "       Make pom.xml (without -SNAPSHOT) and version.xml agree before releasing." >&2
+    exit 1
+fi
+
 STAGING="$RELEASE_DIR/staging-${OS_ARCH}"
 BUNDLE="$DEST/BEAST.v${VERSION}"
 ZIP="$DEST/BEAST.v${VERSION}.${OS_ARCH}.zip"

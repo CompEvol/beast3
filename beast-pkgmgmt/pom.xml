@@ -36,6 +36,13 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <!-- Copies the Maven resolver and its dependencies to target/resolver/,
+                             which the release bundles put on the classpath (#297). It copies
+                             every runtime dependency of beast-pkgmgmt, which today is only the
+                             resolver and slf4j-nop, both <optional>. Any other runtime
+                             dependency added to beast-pkgmgmt would also land in resolver/, and
+                             so on both the module path and the classpath: exclude it here
+                             (excludeArtifactIds), or make the bundle scripts stage it separately. -->
                         <id>copy-resolver</id>
                         <phase>package</phase>
                         <goals><goal>copy-dependencies</goal></goals>
