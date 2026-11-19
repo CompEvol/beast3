@@ -41,8 +41,9 @@ public class CompoundIntScalarParam<D extends Int> extends IntVectorParam<D> {
 
     @Override
     public D getDomain() {
-        // TODO or throw Exception ?
-        return parameters.getFirst().getDomain();
+        // before init, the parameters are read from their input
+        List<IntScalarParam<D>> ps = parameters.isEmpty() ? parameterListInput.get() : parameters;
+        return ps.isEmpty() ? null : ps.getFirst().getDomain();
     }
 
     /** {@inheritDoc} */

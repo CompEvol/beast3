@@ -3,7 +3,6 @@ package test.beast.evolution.substmodel;
 import org.junit.jupiter.api.Test;
 
 import beast.base.spec.domain.PositiveReal;
-import beast.base.spec.domain.UnitInterval;
 import beast.base.spec.evolution.substitutionmodel.BinaryCovarion;
 import beast.base.spec.evolution.substitutionmodel.Frequencies;
 import beast.base.spec.inference.parameter.RealScalarParam;
@@ -42,7 +41,7 @@ public class BinaryCovarionModelTest  {
 
 	        double d = 0.05+Randomizer.nextDouble()*0.9;
 	        Simplex vfrequencies = new SimplexParam(new double[]{d, 1.0 - d});
-	        RealVector<UnitInterval> switchrate = new RealVectorParam<>(new double[]{Randomizer.nextDouble(), Randomizer.nextDouble()}, UnitInterval.INSTANCE);
+	        RealVector<PositiveReal> switchrate = new RealVectorParam<>(new double[]{Randomizer.nextDouble(), Randomizer.nextDouble()}, PositiveReal.INSTANCE);
 	        
 	        substModel = new BinaryCovarion();
 	        substModel.initByName("frequencies", dummyFreqs, 

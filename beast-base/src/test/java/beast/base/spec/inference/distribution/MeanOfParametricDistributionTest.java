@@ -100,12 +100,12 @@ public class MeanOfParametricDistributionTest  {
 	@Test
     public void testMeanOfExponential() {
 		Exponential exp = new Exponential();
-        exp.initByName("mean", new RealScalarParam<>(10, Real.INSTANCE));
+        exp.initByName("mean", new RealScalarParam<>(10, PositiveReal.INSTANCE));
 		double mean = exp.getMean();
         assertEquals(mean, 10, 1e-10);
 
         exp = new Exponential();
-        exp.initByName("mean", new RealScalarParam<>(1, Real.INSTANCE));
+        exp.initByName("mean", new RealScalarParam<>(1, PositiveReal.INSTANCE));
 		mean = exp.getMean();
         assertEquals(mean, 1, 1e-10);
 	}

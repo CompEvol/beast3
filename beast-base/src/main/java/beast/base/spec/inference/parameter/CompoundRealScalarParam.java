@@ -41,8 +41,9 @@ public class CompoundRealScalarParam<D extends Real> extends RealVectorParam<D> 
 
     @Override
     public D getDomain() {
-        // TODO or throw Exception ?
-        return parameters.getFirst().getDomain();
+        // before init, the parameters are read from their input
+        List<RealScalarParam<D>> ps = parameters.isEmpty() ? parameterListInput.get() : parameters;
+        return ps.isEmpty() ? null : ps.getFirst().getDomain();
     }
 
     /** {@inheritDoc} */

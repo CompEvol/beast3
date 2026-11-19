@@ -22,7 +22,10 @@ public class IntSimplexParam<D extends NonNegativeInt> extends IntVectorParam<D>
 
     public IntSimplexParam() {
         super();
-        super.setDomain((D) NonNegativeInt.INSTANCE); // correct domain using setter
+        // the default domain, set on the input only: until initAndValidate(), getDomain()
+        // reads the input, so a domain given in XML (e.g. PositiveInt for BSP group sizes)
+        // is seen before then too, as for the other parameter types
+        domainTypeInput.setValue(NonNegativeInt.INSTANCE, this);
     }
 
     // Note: for group size of BSP, need to set domain="PositiveInt"

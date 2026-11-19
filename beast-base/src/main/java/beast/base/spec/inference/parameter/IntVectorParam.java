@@ -164,7 +164,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
 //        for (Integer value : values) {
 //            if (! isValid(value))
 //                throw new IllegalArgumentException("Value " + value +
-//                        " is not valid for domain " + domain.getClass().getName());
+//                        " is not valid for domain " + getDomain().getClass().getName());
 //
 //            valuesInput.get().add(value);
 //        }
@@ -292,7 +292,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         startEditing(null);
         if (! isValid(value)) {
             throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         }
         values[i] = value;
         isDirty[i] = true;
@@ -350,7 +350,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         // inclusive, as getLower() is: PositiveInt starts at 1
         if (lower < getDomain().getInclusiveLower())
             throw new IllegalArgumentException("Lower bound " + lower +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.lower = lower;
         lowerValueInput.setValue(lower, this);
     }
@@ -359,7 +359,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     public void setUpper(Integer upper) {
         if (upper > getDomain().getInclusiveUpper())
             throw new IllegalArgumentException("Upper bound " + upper +
-                    " is not valid for domain " + domain.getClass().getName());
+                    " is not valid for domain " + getDomain().getClass().getName());
         this.upper = upper;
         upperValueInput.setValue(upper, this);
     }
@@ -442,7 +442,9 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
         try {
             @SuppressWarnings("unchecked") final IntVectorParam<D> copy = (IntVectorParam<D>) this.clone();
             copy.values = values.clone();
-            copy.setDomain(domain);
+            if (domain != null) {
+                copy.setDomain(domain);
+            }
             copy.isDirty = new boolean[values.length];
             return copy;
         } catch (Exception e) {

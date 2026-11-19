@@ -22,7 +22,7 @@ beast: [
          spec: "beast.base.spec.evolution.tree.coalescent.RandomTree",
          taxa: "@alignment",
          populationModel: {spec: "beast.base.spec.evolution.tree.coalescent.ConstantPopulation",
-             popSize: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "Real", value: "1"}
+             popSize: {spec: "beast.base.spec.inference.parameter.RealScalarParam", domain: "PositiveReal", value: "1"}
          },
          initial: {id: "tree", spec: "beast.base.evolution.tree.Tree"}
         }
