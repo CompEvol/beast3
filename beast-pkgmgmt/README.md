@@ -64,7 +64,15 @@ packagemanager -addMavenRepository https://beast2.org/maven/
 
 # List configured Maven repositories
 packagemanager -listMavenRepositories
+
+# Show what BEAST loads from what is installed, and why the rest is not loaded
+packagemanager -plan
 ```
+
+An install downloads the package (never BEAST's own core or JavaFX, which always come from the
+installed BEAST), checks that BEAST would load it, and records it. It is loaded when BEAST next
+starts. If BEAST would not load it, for example because it needs another BEAST version, the
+install is refused with the reason.
 
 Maven Central is always included. Custom repositories are stored in `beauti.properties` under
 the key `maven.repositories` as a comma-separated list.
@@ -78,8 +86,11 @@ package loading. A package with both a core and an FX module loads the core and 
 module with a message:
 
 ```
-Skipping modules with unsatisfied dependencies in .../MM: [beast.morph.models.fx]
+Not loading module beast.morph.models.fx of MM: headless
 ```
+
+BEAST.app itself is left out the same way. A package that declares a dependency on BEAST.app
+still loads its core module.
 
 No special configuration or flags are needed.
 
@@ -105,10 +116,41 @@ its main JAR (the one named `<artifactId>-<version>.jar`), at either of:
 - `version.xml` at the JAR root (as in [CCD](https://github.com/CompEvol/CCD)), or
 - `META-INF/beast/version.xml`, if the root is taken.
 
-The root is read first. BEAST reads the services (`<service>`) and the apps
-(`<packageapp>`) from it, as from the `version.xml` of a ZIP package, so
-`applauncher -list` shows the apps of a Maven package too. Only the main JAR is read; a
-`version.xml` in one of its dependencies is not.
+The root is read first. BEAST reads the package name, the services (`<service>`) and the apps
+(`<packageapp>`) from it, so `applauncher -list` shows the apps of a Maven package too. Only
+the main JAR is read; a `version.xml` in one of its dependencies is not. A Maven package's
+dependencies come from its POM, not from `version.xml` (next section).
+
+### Declaring the BEAST versions a package works with
+
+Each kind of package states its dependencies in one place:
+
+| Package | Dependencies on BEAST and other BEAST packages | Libraries |
+|---|---|---|
+| ZIP | `version.xml`: `<depends on='BEAST.base' atleast='2.8.0'/>` (`atmost` optional) | jars in `lib/` |
+| Maven | its POM: the `beast-base` / `beast-fx` dependency, and other BEAST packages | its POM |
+
+For a Maven package, give the core as a version range. For a package built for BEAST 2.8:
+
+```xml
+<dependency>
+    <groupId>io.github.compevol</groupId>
+    <artifactId>beast-base</artifactId>
+    <version>[2.8.0-rc3,2.9.0-alpha)</version>
+</dependency>
+```
+
+This means any 2.8.x from 2.8.0-rc3 on, and nothing from 2.9, including 2.9 pre-releases. The
+upper bound must be `2.9.0-alpha`: `[2.8.0-rc3,2.9)` would let in `2.9.0-SNAPSHOT` and
+`2.9.0-rc1`, which Maven orders before `2.9`. A package that depends on `beast-fx` gives it the
+same range.
+
+A plain version (e.g. `2.8.0-rc1`) or an `atleast` without `atmost` is a minimum within the
+same minor version: a package built for 2.8.x is not loaded on 2.9, since minor releases of
+BEAST have broken packages. BEAST never downloads its own core for a package; it checks the
+installed core against the range. Where `version.xml` and the POM disagree, the POM counts for a
+Maven package; `packagemanager -plan` warns about it, and about services declared only in
+`version.xml` (`provides` in `module-info.java` is what counts).
 
 To put the project's `version.xml` at the JAR root, copy it into the classes directory
 before packaging, as CCD does:
@@ -312,49 +354,58 @@ beast.run();
 | **ZIP** (legacy) | `~/.beast/2.8/<PackageName>/` — contains `version.xml`, `lib/*.jar`, `fxtemplates/`, `examples/` | Any subdirectory with `version.xml` is treated as a package |
 | **Maven** (recommended) | `~/.beast/2.8/maven-repo/` (local cache) | `~/.beast/2.8/maven-packages.xml` lists which coordinates are installed |
 
-### Directory search order
+### Where packages are found
 
-`PackageManager.getBeastDirectories()` searches these locations in order:
+| Location | Used |
+|---|---|
+| Boot layer (developer mode: `mvn exec`, an IDE) | Always: BEAST's own core when run from source |
+| `BEAST_PACKAGE_PATH` (environment variable or `-D` property) | Whatever its version, e.g. a package under development |
+| User package directory (`~/.beast/2.8/`, platform-specific, see above), and Maven packages | Newest version first |
+| System package directory, BEAST installation directory | Newest version first |
+| `archive/<name>/<version>/` in the user directory (`-add NAME -version V`) | Only when no other copy is, or when `beast -strictversions` asks for that version |
 
-1. **`BEAST_PACKAGE_PATH`** — environment variable or `-D` system property. Useful for CI or
-   custom layouts.
-2. **User package directory** — `~/.beast/2.8/` (platform-specific, see install paths above).
-3. ~~**System package directory**~~ *(deprecated)* — e.g. `/opt/beast/` on Linux.
-4. ~~**BEAST installation directory**~~ *(deprecated)* — redundant with JPMS boot layer.
+### How BEAST decides what to load
 
-Within each directory, subdirectories containing a `version.xml` are prepended to the list and
-visited first, so individual package directories take precedence over their parent containers.
+All decisions are made in one place, the planner (`beast.pkgmgmt.plan.Planner`), before
+anything is loaded. Its result says which jar provides each module and why every package or
+copy that is left out is left out (`packagemanager -plan`). The rules:
 
-### Design principles
+1. **BEAST's own core and JavaFX come only from BEAST.** `beast.base`, `beast.fx`,
+   `beast.pkgmgmt`, JavaFX and the JRE's own modules are never taken from a package's
+   dependencies. BEAST.base and BEAST.app can be upgraded as packages, within the major version
+   of the installer; a core upgrade that needs a newer installer is not used.
+2. **Of several copies of a package, the first that works is used** (table above). When a
+   package needs a different version of a dependency than the copy tried, another copy that
+   fits is tried before the package is left out.
+3. **Libraries:** versions with the same major version share one copy, the highest. Packages
+   that need incompatible (different major) versions each get their own copy, in a module layer
+   with the packages that use it and those that build on them. A package that would need two
+   such copies is left out, naming the library.
+4. **Each Java package is in exactly one module**, so a class name always means one class. A
+   package that would put a Java package in a second module is left out, naming both.
+5. **Headless** (no JavaFX), modules that need JavaFX or `beast.fx` are left out; the rest of
+   their package loads.
+6. **One version order everywhere:** Maven's, for ZIP and Maven packages alike.
+7. **`beast -strictversions`** loads the package versions an analysis was made with (its
+   `required` attribute), from the archive, and no other packages; a missing version is
+   reported with the command that installs it.
 
-1. **One module layer per package.** Each external package is loaded into its own JPMS
-   `ModuleLayer`, giving namespace isolation while still letting every package see the core
-   BEAST API.
-
-2. **Same code path for development and deployment.** A developer running BEAST and their
-   package together in an IDE sees exactly the same service discovery as an end user who
-   installed the package from a ZIP or Maven coordinate. The `module-info.java` `provides`
-   declarations are the single source of truth in both cases.
-
-3. **Graceful degradation.** When a dependency is unavailable (e.g. JavaFX on a headless
-   cluster), unsatisfied modules are silently skipped rather than failing the whole application.
-
-4. **First-found wins, no silent duplicates.** When the same JPMS module name appears in more
-   than one location (boot layer, installed package), the first one encountered is loaded and
-   all subsequent copies are skipped. This prevents "reads more than one module" errors and
-   ensures deterministic behaviour.
-
-5. **Dual distribution.** ZIP archives (CBAN) and Maven Central JARs both converge on the same
-   `ModuleLayer` creation path — no runtime difference between them.
+The loader then loads the plan in one go: the shared modules in one module layer on top of the
+boot layer, and a child layer for each set of packages with their own copy of a library. If the
+JVM still rejects the plan, BEAST starts without its packages rather than not at all.
 
 ### Key classes
 
 | Class | Role |
 |-------|------|
-| `PackageManager` | Orchestrator: package discovery, JPMS `ModuleLayer` creation, Maven integration |
-| `BEASTClassLoader` | Facade for class loading and service registry across all layers |
-| `MavenPackageResolver` | Resolves Maven coordinates to local JAR paths via Apache Maven Resolver |
-| `DependencyResolver` | Resolves transitive package dependencies and checks installed dependency health |
+| `PackageManager` | Entry points: load the installed packages, install and uninstall, list |
+| `plan.Inventory` | Reads what is installed (ZIP folders, archive, Maven packages) into one model |
+| `plan.Planner` | Decides what to load, with a reason for everything left out |
+| `plan.Loader`, `plan.LoadedPackages` | Loads a plan as module layers; class and service lookup |
+| `plan.Version`, `plan.Dependency` | Maven's version order and ranges, without the resolver |
+| `BEASTClassLoader` | Class and service lookup used by BEAST's code; the loaded layers are registered with it |
+| `MavenPackageResolver` | Downloads Maven packages and their libraries (never BEAST's core or JavaFX) |
+| `DependencyResolver` | Chooses the versions to install, with the planner |
 | `PackageRepository` | Fetches available-package lists from CBAN repository URLs |
 | `PackageInstaller` | Installs and uninstalls ZIP packages |
 | `PackageManagerCLI` | CLI entry point (`main()`) |
