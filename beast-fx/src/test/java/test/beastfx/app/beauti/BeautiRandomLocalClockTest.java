@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +16,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 import beast.base.core.BEASTInterface;
+import beast.base.inference.Logger;
 import beast.base.inference.MCMC;
 import beast.base.parser.XMLParser;
 import beast.base.spec.inference.distribution.CountPrior;
@@ -52,7 +51,8 @@ public class BeautiRandomLocalClockTest extends BeautiBase {
 	void randomLocalClockHasCountPriorOnIndicators(FxRobot robot) throws Exception {
 		importAlignment(NEXUS_DIR, new File("anolis.nex"));
 		selectTab(robot, "Clock Model");
-		robot.clickOn(".combo-box").clickOn("Random Local Clock");
+		// the clock model choice: the panel's input is called "index" (BeautiPanelConfig)
+		robot.clickOn("#indexComboBox").clickOn("Random Local Clock");
 		// the priors panel shows the new prior
 		selectTab(robot, "Priors");
 		printBeautiState();
@@ -63,18 +63,15 @@ public class BeautiRandomLocalClockTest extends BeautiBase {
 		assertEquals(Math.log(2), count.lambdaInput.get().get(), 1e-12);
 		BitFlipOperator flip = assertInstanceOf(BitFlipOperator.class, doc.pluginmap.get("IndicatorsBitFlip.c:anolis"));
 		assertFalse(flip.uniformInput.get(), "the bit flip must be symmetric with CountPrior");
-		assertTrue(doc.pluginmap.containsKey("RRateChanges.c:anolis"), "the number of rate changes is still logged");
+		// the number of rate changes is still logged
+		Logger tracelog = (Logger) doc.pluginmap.get("tracelog");
+		assertTrue(tracelog.loggersInput.get().contains(doc.pluginmap.get("RRateChanges.c:anolis")),
+				"RRateChanges.c:anolis not in the tracelog: " + tracelog.loggersInput.get());
 
 		// the XML that BEAUti writes can be read
 		File file = tmp.resolve("rlc-beauti.xml").toFile();
 		doc.save(file);
 		BEASTInterface run = new XMLParser().parseFile(file);
 		assertTrue(run instanceof MCMC);
-
-		// for running it by hand, e.g. sampling from the prior
-		String copyTo = System.getProperty("rlc.xml.copy");
-		if (copyTo != null) {
-			Files.copy(file.toPath(), Path.of(copyTo), StandardCopyOption.REPLACE_EXISTING);
-		}
 	}
 }
