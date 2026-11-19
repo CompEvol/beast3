@@ -12,6 +12,7 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResult;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
+import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.transfer.AbstractTransferListener;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
@@ -121,7 +122,10 @@ public class MavenPackageResolver {
     }
 
     private CloseableSession createSession(RepositorySystem system, ProgressListener listener) {
-        return system.createSessionBuilder()
+        // Maven's own session defaults, among them conflict resolution: one version of each
+        // groupId:artifactId (nearest wins), as Maven builds the package (guava 14 and 33 both
+        // reached lphybeast-mm without it)
+        return new SessionBuilderSupplier(system).get()
                 .withLocalRepositoryBaseDirectories(localRepoDir)
                 .setSystemProperties(System.getProperties())
                 .setTransferListener(listener)
