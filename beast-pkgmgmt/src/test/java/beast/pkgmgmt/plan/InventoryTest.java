@@ -144,11 +144,4 @@ class InventoryTest {
         assertEquals(1, inventory.problems().size());
     }
 
-    @Test
-    void javafxVersionFromTheJreReleaseFile() throws Exception {
-        Files.writeString(dir.resolve("release"), "JAVA_VERSION=\"25.0.3\"\nMODULES=\"java.base javafx.base javafx.controls\"\n");
-        assertEquals(Version.of("25.0.3"), Inventory.javafxVersion(dir));
-        Files.writeString(dir.resolve("release"), "JAVA_VERSION=\"25.0.3\"\nMODULES=\"java.base java.xml\"\n");
-        assertEquals(null, Inventory.javafxVersion(dir));
-    }
 }

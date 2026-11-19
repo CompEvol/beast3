@@ -21,8 +21,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -136,30 +134,6 @@ public final class Inventory {
         return this;
     }
 
-    /**
-     * The package zips an installed application ships in {@code packagesDir}, as copies at
-     * {@link Location#BUNDLED}: the fallback when an upgraded copy does not work. Each zip is
-     * unpacked into {@code unpackInto}/its name.
-     */
-    public Inventory addBundledZips(Path packagesDir, Path unpackInto) {
-        if (!Files.isDirectory(packagesDir)) {
-            return this;
-        }
-        try (Stream<Path> zips = Files.list(packagesDir)) {
-            for (Path zip : zips.filter(p -> p.toString().endsWith(".zip")).sorted().toList()) {
-                Path target = unpackInto.resolve(zip.getFileName().toString().replaceAll("\\.zip$", ""));
-                try {
-                    unzip(zip, target);
-                    addPackageFolder(target, Location.BUNDLED);
-                } catch (IOException e) {
-                    problems.add(zip + ": " + e.getMessage());
-                }
-            }
-        } catch (IOException e) {
-            problems.add(packagesDir + ": " + e.getMessage());
-        }
-        return this;
-    }
 
     // ---- Maven packages ----
 
@@ -325,50 +299,7 @@ public final class Inventory {
 
     // ---- the runtime of an installed application ----
 
-    /**
-     * The runtime of an installed application: {@code appDir} is the folder of the boot-layer
-     * jars ({@code BEAST.app/Contents/app} on macOS), {@code javaHome} the bundled JRE.
-     */
-    public static Runtime readRuntime(Path appDir, Path javaHome) throws IOException {
-        List<BootModule> boot = new ArrayList<>();
-        Version launcher = null;
-        try (Stream<Path> jars = Files.list(appDir)) {
-            for (Path jar : jars.filter(p -> p.toString().endsWith(".jar")).sorted().toList()) {
-                ModuleDescriptor d = ModuleFinder.of(jar).findAll().iterator().next().descriptor();
-                boot.add(new BootModule(d.name(), d.packages()));
-                if (d.name().equals("beast.pkgmgmt")) {
-                    launcher = versionOf(d, jar);
-                }
-            }
-        }
-        return new Runtime(launcher, javafxVersion(javaHome), boot);
-    }
 
-    /**
-     * The runtime in developer mode ({@code mvn exec}, an IDE): every module on the module path
-     * is on the boot layer, the core included. {@code modulePath} = jars and exploded module
-     * folders, as for {@code --module-path}.
-     */
-    public static Runtime readDeveloperRuntime(List<Path> modulePath) {
-        List<BootModule> boot = new ArrayList<>();
-        Version launcher = Version.of("0"), javafx = null;
-        for (Path entry : modulePath) {
-            try {
-                for (ModuleReference ref : ModuleFinder.of(entry).findAll()) {
-                    ModuleDescriptor d = ref.descriptor();
-                    boot.add(new BootModule(d.name(), d.packages()));
-                    if (d.name().equals("beast.pkgmgmt")) {
-                        launcher = versionOf(d, entry);
-                    } else if (d.name().equals("javafx.base")) {
-                        javafx = versionOf(d, entry);
-                    }
-                }
-            } catch (IOException | RuntimeException e) {
-                // not a module: not on the boot layer as one
-            }
-        }
-        return new Runtime(launcher, javafx, boot);
-    }
 
     /** the runtime of this JVM, from its boot layer: what a {@link Loader} here builds on */
     public static Runtime readThisRuntime() {
@@ -401,24 +332,6 @@ public final class Inventory {
         return this;
     }
 
-    /** JavaFX in the JRE: its version from the release file, or null when it has no JavaFX */
-    static Version javafxVersion(Path javaHome) throws IOException {
-        Path release = javaHome.resolve("release");
-        if (!Files.isRegularFile(release)) {
-            return null;
-        }
-        String text = Files.readString(release);
-        if (!text.contains("javafx.base")) {
-            return null;
-        }
-        // Zulu FX names no JavaFX version; it ships the JavaFX that matches its Java version
-        Matcher m = Pattern.compile("JAVAFX_VERSION=\"?([^\"\\s]+)").matcher(text);
-        if (m.find()) {
-            return Version.of(m.group(1));
-        }
-        m = Pattern.compile("JAVA_VERSION=\"?([^\"\\s]+)").matcher(text);
-        return Version.of(m.find() ? m.group(1) : "0");
-    }
 
     // ---- jars ----
 
@@ -557,22 +470,4 @@ public final class Inventory {
         }
     }
 
-    private static void unzip(Path zip, Path target) throws IOException {
-        try (ZipFile zf = new ZipFile(zip.toFile())) {
-            for (ZipEntry e : zf.stream().toList()) {
-                Path out = target.resolve(e.getName()).normalize();
-                if (!out.startsWith(target)) {
-                    throw new IOException("entry outside the target: " + e.getName());
-                }
-                if (e.isDirectory()) {
-                    Files.createDirectories(out);
-                } else {
-                    Files.createDirectories(out.getParent());
-                    try (InputStream in = zf.getInputStream(e)) {
-                        Files.copy(in, out, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                    }
-                }
-            }
-        }
-    }
 }
