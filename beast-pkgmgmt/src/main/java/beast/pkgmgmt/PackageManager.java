@@ -687,7 +687,10 @@ public class PackageManager {
 			}
 		}
 		inventory.addFolder(Path.of(getPackageSystemDir()), InstalledPackage.Location.SYSTEM);
-		if (getBEASTInstallDir() != null) {
+		// in developer mode the folder above the launcher's jar is a build tree (beast-base/target),
+		// whose version.xml and lib/ look like a BEAST.base package without its own jar
+		boolean coreOnBootLayer = runtime.bootModules().stream().anyMatch(b -> b.name().equals("beast.base"));
+		if (getBEASTInstallDir() != null && !coreOnBootLayer) {
 			inventory.addFolder(Path.of(getBEASTInstallDir()), InstalledPackage.Location.SYSTEM);
 		}
 		return inventory;
