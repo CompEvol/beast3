@@ -54,6 +54,7 @@ BEAST.v<version>/
   lib/              boot-layer JARs (beast-pkgmgmt + deps, DensiTree.jar)
   lib/packages/     beast-base and beast-fx package ZIPs — seeded into
                     ~/.beast/2.8/ on first run, loaded as plugin layers
+  lib/resolver/     Maven resolver JARs, on the classpath (#297)
   version.xml
   README.txt
   LICENSE.txt
@@ -61,9 +62,15 @@ BEAST.v<version>/
 
 `bin/` scripts resolve `BUNDLE_HOME` via symlink-safe path resolution and invoke:
 ```sh
-$BUNDLE_HOME/jre/bin/java --module-path $BUNDLE_HOME/lib --add-modules ALL-MODULE-PATH \
+$BUNDLE_HOME/jre/bin/java --module-path $BUNDLE_HOME/lib \
+    -cp "$BUNDLE_HOME/lib/resolver/*" --add-reads beast.pkgmgmt=ALL-UNNAMED \
+    --add-modules ALL-MODULE-PATH,java.compiler \
     -m beast.pkgmgmt/beast.pkgmgmt.launcher.BeastLauncher "$@"
 ```
+
+The Maven resolver is on the classpath because Maven's own JARs split packages,
+which stops the JVM at start on the module path; see "Maven resolver on the
+classpath" in [../README.md](../README.md).
 
 `BEAGLE_LIB` is respected if set — it is appended to `LD_LIBRARY_PATH`.
 
@@ -116,6 +123,8 @@ Or as a workflow step (requires `contents: write` permission):
 
 `release/Linux/assemble-bundle.sh` (called by `test-linux-on-mac.sh`):
 
+0. **Check the version** — stops if `VERSION` differs from the version in
+   `version.xml`, so the bundle and the Mac DMG are built with the same version.
 1. **Stage JARs** — copies beast-fx + dependencies into `staging-<OS_ARCH>/`.
    All `javafx-*` and `jdk-jsobject-*` JARs excluded (already in the bundled
    JRE+FX as platform modules).
@@ -127,6 +136,8 @@ Or as a workflow step (requires `contents: write` permission):
    `BEAST.app.package.v*.zip` are placed in `lib/packages/`. On first launch,
    `BeastLauncher.seedBundledPackage()` extracts them into `~/.beast/2.8/` and
    loads them as plugin `ModuleLayer`s, allowing patch releases without a new tgz.
+   **Copy the Maven resolver → lib/resolver/** — the JARs from
+   `beast-pkgmgmt/target/resolver/` (Step 3c of the script).
 6. **Copy JRE+FX** — `cp -a` from `JRE_DIR` to preserve all symlinks inside the
    JRE tree (a plain `cp -r` dereferences symlinks, corrupting the runtime).
 7. **Copy bin/ scripts** — static launcher scripts are copied from
@@ -140,7 +151,10 @@ Or as a workflow step (requires `contents: write` permission):
 9. **Copy version.xml and docs** — `version.xml`, `README.txt`, `LICENSE.txt`.
 10. **Verify bundle** — checks required files, JAR count, beast-base/beast-fx
     absent from `lib/`, package ZIPs present in `lib/packages/`, bin/
-    executability, and `jre/bin/java` arch and JavaFX `.so` libs.
+    executability, and `jre/bin/java` arch and JavaFX `.so` libs; also that
+    `lib/resolver/` has all the resolver JARs, no `maven-*.jar` is directly in
+    `lib/` (it would break the module path), `bin/packagemanager` has
+    `--add-reads`, and no file in `lib/` has `SNAPSHOT` in its name.
     Fails immediately if any check fails.
 11. **Create tgz** — packages `BEAST.v<VERSION>/` into
     `dist/BEAST.v<VERSION>.<OS_ARCH>.tgz`.

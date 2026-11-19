@@ -473,41 +473,7 @@ public class Input<T> {
                 	((BEASTInterface) value).getOutputs().add(beastObject);
                 }
             	this.value = (T) value;
-                if (true) return;
-                
-                // check type of parameterised interface
-                Type[] genericInterfaces = value.getClass().getGenericInterfaces();
-                for (Type genericInterface : genericInterfaces) {
-                    if (genericInterface instanceof ParameterizedType) {
-                        ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
-                        Type rawType = parameterizedType.getRawType();
-
-                        // Check if it's the interface you're interested in
-                        if (rawType.equals(tensorClass)) {
-                            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-
-                            for (int i = 0; i < actualTypeArguments.length; i++) {
-                                Type typeArg = actualTypeArguments[i];
-                                if (typeArg instanceof Class) {
-                                    Class<?> typeClass = (Class<?>) typeArg;
-                                    if (theClass.isAssignableFrom(typeClass)) {
-                                    	this.value = (T) value;
-                                    	return;
-                                    }
-                                } else if (typeArg instanceof ParameterizedType) {
-                                    // Handle cases where a template argument itself is a parameterised type
-                                    ParameterizedType nestedParameterisedType = (ParameterizedType) typeArg;
-                                    rawType = parameterizedType.getRawType();
-                                    if (rawType.equals(theClass)) {
-                                    	this.value = (T) value;
-                                    	return;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }                
-                
+                return;
             }
             throw new RuntimeException(typeMismatchMessage("102b", value, beastObject));
         } else {
@@ -524,6 +490,81 @@ public class Input<T> {
                         "\nProvide type " + value.getClass() + ", but expected " + theClass);
             }
         }
+    }
+
+    /**
+     * Whether the domain of a tensor value fits the domain this input declares, e.g. a
+     * parameter with domain Real for an {@code Input<RealScalar<PositiveReal>>}. A value whose
+     * domain is the declared one or a sub-domain of it fits, e.g. a PositiveReal parameter for
+     * an input declared NonNegativeReal.
+     * <p>
+     * This is the only domain check on input values. It runs in
+     * {@link BEASTInterface#validateInputs()}, not in {@link #setValue(Object, BEASTInterface)}:
+     * when a value is set, its own inputs, such as its {@code domain}, may not be set yet.
+     *
+     * @param owner the object this input belongs to, for the message; may be null
+     * @return why the value does not fit, or null if it fits, its domain is not known yet,
+     * or this is not a tensor input with a declared domain
+     */
+    public String domainMismatch(BEASTInterface owner) {
+        if (tensorClass == null || theClass == null || !Domain.class.isAssignableFrom(theClass)
+                || !(value instanceof Tensor<?, ?> tensor)) {
+            return null;
+        }
+        Object domain;
+        try {
+            domain = tensor.getDomain();
+        } catch (RuntimeException e) {
+            // the value has no domain (e.g. RPNcalculator), or a package's value cannot give it
+            // before initAndValidate(); a deprecation check must not stop the model loading
+            return null;
+        }
+        if (domain == null || theClass.isInstance(domain)) {
+            return null;
+        }
+        String declared = theClass.getSimpleName();
+        String valueName = value instanceof BEASTInterface b && b.getID() != null ? "'" + b.getID() + "'" : "its value";
+        String of = owner == null ? ""
+                : " of " + owner.getClass().getSimpleName() + (owner.getID() != null ? " '" + owner.getID() + "'" : "");
+        return "Input '" + getName() + "'" + of + " is declared " + declared + ", but "
+                + valueName + " has domain " + domain.getClass().getSimpleName() + ". "
+                + "This is deprecated and will be an error in a future version of BEAST: "
+                + domainAdvice(valueName, declared);
+    }
+
+    /** what to change so the value fits a declared domain */
+    private String domainAdvice(String valueName, String declared) {
+        // a compound parameter has a domain input (from RealVectorParam/IntVectorParam), but its
+        // domain is that of the parameters inside it: setting its own would change nothing
+        if (value instanceof beast.base.spec.inference.parameter.CompoundRealScalarParam<?>
+                || value instanceof beast.base.spec.inference.parameter.CompoundIntScalarParam<?>) {
+            return "the domain of " + valueName + " is that of the parameters inside it, so give each of them domain=\""
+                    + declared + "\" (or a narrower domain).";
+        }
+        // an element of a vector has the vector's domain
+        if (value instanceof beast.base.spec.inference.parameter.VectorElement<?> element) {
+            Object vector = element.vectorInput.get();
+            String vectorName = vector instanceof BEASTInterface v && v.getID() != null ? "'" + v.getID() + "'" : "the vector it reads";
+            return "the domain of " + valueName + " is that of " + vectorName + ", so give " + vectorName + " domain=\""
+                    + declared + "\" (or a narrower domain), or wrap " + valueName + ": <" + getName()
+                    + " spec=\"beast.base.spec.inference.util.AsRealScalar\" domain=\"" + declared + "\" arg=\"@...\"/>.";
+        }
+        if (value instanceof BEASTInterface b) {
+            for (Input<?> input : b.listInputs()) {
+                if (input.getName().equals("domain")) {
+                    return "give " + valueName + " domain=\"" + declared + "\" (or a narrower domain).";
+                }
+            }
+        }
+        // the value's domain is fixed, e.g. Sum, IntSum, RateStatistic
+        String wrapper = value instanceof RealScalar<?> ? "beast.base.spec.inference.util.AsRealScalar"
+                : value instanceof IntScalar<?> ? "beast.base.spec.inference.util.AsIntScalar"
+                : null;
+        if (wrapper != null) {
+            return "the domain of " + valueName + " is fixed, so wrap it: <" + getName() + " spec=\"" + wrapper
+                    + "\" domain=\"" + declared + "\" arg=\"@...\"/>.";
+        }
+        return "use a value with domain " + declared + " (or a narrower domain).";
     }
 
     /**

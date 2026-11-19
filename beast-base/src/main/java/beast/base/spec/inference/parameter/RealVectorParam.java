@@ -472,7 +472,9 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
         try {
             @SuppressWarnings("unchecked") final RealVectorParam<D> copy = (RealVectorParam<D>) this.clone();
             copy.values = values.clone();
-            copy.setDomain(domain);
+            if (domain != null) {
+                copy.setDomain(domain);
+            }
             copy.isDirty = new boolean[values.length];
             return copy;
         } catch (Exception e) {

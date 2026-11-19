@@ -58,9 +58,8 @@ public class AsRealScalar<D extends Real> extends CalculationNode implements Rea
 
 	@Override
 	public D getDomain() {
-        if (domain == null) {
-        	this.domain = (D) domainTypeInput.get(); // used before init
-        }
+        // before init, read the input each time: it may still be set
+        if (domain == null) return (D) domainTypeInput.get();
 		return domain;
 	}
 

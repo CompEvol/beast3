@@ -2748,7 +2748,71 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
         determinePartitions();
     } // renamePartition
 
+    /**
+     * The partition context of an object, from the partition named in its ID, e.g.
+     * {@code .c:dna}. An object without an ID, or with an ID that names no partition of this
+     * document, gets a context for the partition its ID names, or the empty partition.
+     * Use {@link #getContextFor(BEASTInterface, BEASTInterface)} when the owner of the input
+     * can give the partition instead.
+     */
     public PartitionContext getContextFor(BEASTInterface beastObject) {
+        if (beastObject == null || beastObject.getID() == null) {
+            return new PartitionContext("");
+        }
+        PartitionContext context = knownContextFor(beastObject);
+        return context != null ? context : new PartitionContext(partitionNamedIn(beastObject.getID()));
+    }
+
+    /**
+     * The partition context for a new value of an input of {@code owner}, e.g. a template
+     * chosen in an input editor. Taken from the first of these that names a partition of
+     * this document in its ID: the input's current value, the owner, or an object among the
+     * owner's inputs (e.g. the tree of an MRCA prior {@code human-chimp.prior}). When the
+     * owner's inputs name several partitions, the first in the order its inputs are declared
+     * is used:
+     * a new value has to go in one partition, and the owner itself does not say which. If none
+     * does, as {@link #getContextFor(BEASTInterface)} of the value, or of the owner if the
+     * value has no ID.
+     *
+     * @param value the input's current value; may be null or have no ID
+     * @param owner the object the input belongs to; may be null or have no ID
+     */
+    public PartitionContext getContextFor(BEASTInterface value, BEASTInterface owner) {
+        PartitionContext context = knownContextFor(value);
+        if (context == null) {
+            context = knownContextFor(owner);
+        }
+        if (context == null && owner != null) {
+            // in the order the inputs are declared: listActiveBEASTObjects() goes through a
+            // HashMap, which would make "first" depend on the input names' hash codes
+            search:
+            for (Input<?> input : owner.listInputs()) {
+                Object v = input.get();
+                for (Object o : v instanceof List<?> list ? list : java.util.Collections.singletonList(v)) {
+                    context = o instanceof BEASTInterface b ? knownContextFor(b) : null;
+                    if (context != null) {
+                        break search;
+                    }
+                }
+            }
+        }
+        if (context != null) {
+            return context;
+        }
+        return getContextFor(value != null && value.getID() != null ? value : owner);
+    }
+
+    /** partition named in an ID, e.g. dna for {@code clockRate.c:dna} */
+    private String partitionNamedIn(String id) {
+        String partition = id.indexOf('.') >= 0 ? id.substring(id.indexOf('.') + 1) : "";
+        return partition.indexOf(':') >= 0 ? parsePartition(id) : partition;
+    }
+
+    /** the context of the partition of this document named in the object's ID, or null */
+    private PartitionContext knownContextFor(BEASTInterface beastObject) {
+        if (beastObject == null || beastObject.getID() == null) {
+            return null;
+        }
         String id = beastObject.getID();
         String partition = id.indexOf('.') >= 0 ? id.substring(id.indexOf('.') + 1) : "";
 
@@ -2771,7 +2835,6 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
 
         
         for (PartitionContext context : partitionNames) {
-        	System.out.println(context.toString());
             switch (partitionID) {
                 case ALIGNMENT_PARTITION:
                     if (context.partition.equals(partition)) {
@@ -2793,12 +2856,9 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                         return context;
                     }
                     break;
-                default:
-                    // should never get here, unless template contains .X$(n) where X is not 'c', 't', or 's'
-                    return null;
             }
         }
-        return new PartitionContext(partition);
+        return null;
     }
 
 

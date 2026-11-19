@@ -25,6 +25,34 @@
                     </argLine>
                 </configuration>
             </plugin>
+            <!-- The Maven resolver used to install Maven packages (#297). It is an optional
+                 dependency, so it is not in beast-fx/target/lib; the release scripts bundle
+                 these jars in a resolver/ folder and the launchers put them on the classpath.
+                 They cannot go on the module path: Maven's own jars split packages (e.g.
+                 org.apache.maven.artifact.repository.metadata is in both maven-artifact and
+                 maven-repository-metadata), which stops the JVM at start. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Copies the Maven resolver and its dependencies to target/resolver/,
+                             which the release bundles put on the classpath (#297). It copies
+                             every runtime dependency of beast-pkgmgmt, which today is only the
+                             resolver and slf4j-nop, both <optional>. Any other runtime
+                             dependency added to beast-pkgmgmt would also land in resolver/, and
+                             so on both the module path and the classpath: exclude it here
+                             (excludeArtifactIds), or make the bundle scripts stage it separately. -->
+                        <id>copy-resolver</id>
+                        <phase>package</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/resolver</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 

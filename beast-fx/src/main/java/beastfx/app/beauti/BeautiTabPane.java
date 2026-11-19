@@ -534,8 +534,8 @@ public class BeautiTabPane extends beastfx.app.inputeditor.BeautiTabPane impleme
             ButtonType result = Alert.showConfirmDialog(null,
                     "Do you want to save the Beast specification?",
                     "Save before closing?", Alert.YES_NO_CANCEL_OPTION);
-            Log.err.println("result=" + result);
-            if (result == Alert.CANCEL_OPTION) {
+            // only an explicit Yes or No quits: anything else, Cancel or a closed dialog, stays open
+            if (result != Alert.YES_OPTION && result != Alert.NO_OPTION) {
                 return false;
             }
             if (result == Alert.YES_OPTION) {

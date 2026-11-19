@@ -49,7 +49,7 @@
     </tree>
     <tree spec="beast.base.spec.evolution.tree.coalescent.RandomTree" id="coalescentSimulator" initial="@tree" taxa="@alignment">
         <populationModel spec="beast.base.spec.evolution.tree.coalescent.ConstantPopulation">
-            <popSize value="0.05" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="Real"/>
+            <popSize value="0.05" spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal"/>
         </populationModel>
     </tree>
 

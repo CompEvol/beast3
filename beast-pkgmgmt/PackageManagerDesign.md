@@ -157,6 +157,14 @@ out, with the reason. Later calls are no-ops, so BEAST's own calls need no chang
   package and its libraries, excluding BEAST's core and `org.openjfx:*` (#298). The planner checks
   that the package would load; if not, it is refused with the reason, otherwise recorded in
   `maven-packages.xml`. Uninstalling removes it from there; cached jars stay in `maven-repo/`.
+- **The resolver in the release bundles.** `MavenPackageResolver` needs `maven-resolver-supplier-mvn4`
+  and its dependencies at runtime, to install and to read installed Maven packages at start. In
+  the release bundles these jars are on the **classpath** (`app/resolver/`, `lib/resolver/` on
+  Linux), not the module path: Maven's own jars split packages and would stop the JVM at start as
+  automatic modules. The launchers add `--add-reads beast.pkgmgmt=ALL-UNNAMED` and `java.compiler`
+  (#297; see "Maven resolver on the classpath" in `release/README.md`). Without the resolver,
+  installing a Maven package fails, and the inventory reports a problem and leaves the installed
+  Maven packages out of the plan.
 - Installs take effect at the next start: nothing is loaded into the running BEAST.
 
 ## 8. Versions
