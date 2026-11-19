@@ -210,6 +210,10 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
             } else {
             	id2 = input.getName();
             }
+            if (id2 == null) {
+                // the owner, or the value, has no ID, e.g. a distribution nested in another
+                id2 = input.getName();
+            }
             if (id2.indexOf('.')>=0) {
             	id2 = id2.substring(0, id2.indexOf('.'));
             }
@@ -226,21 +230,14 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
                 Object value = m_selectBEASTObjectBox.getValue();
                 BeautiSubTemplate selected = value instanceof BeautiSubTemplate t ? t : null;
                 BEASTInterface beastObject = (BEASTInterface) m_input.get();
-                String id = beastObject==null ? "no_id" : beastObject.getID();
-                String partition = id.indexOf('.') >= 0 ? 
-                		id.substring(id.indexOf('.') + 1) : "";
-                if (partition.indexOf(':') >= 0) {
-                	partition = id.substring(id.indexOf(':') + 1);
-                }
 
                 if (selected == null) {
                     beastObject = null;
                 } else {
                     try {
-                        // the input may have no value yet: then the object it belongs to
-                        // gives the partition
-                        BEASTInterface contextSource = beastObject != null ? beastObject : m_beastObject;
-                        beastObject = selected.createSubNet(doc.getContextFor(contextSource), m_beastObject, m_input, true);
+                        // the input may have no value yet, or a value without a partition
+                        // in its ID: then the object it belongs to gives the partition
+                        beastObject = selected.createSubNet(doc.getContextFor(beastObject, m_beastObject), m_beastObject, m_input, true);
                     } catch (Exception ex) {
                         // also log to the console: the dialog alone leaves no trace, which
                         // makes selection failures (e.g. BEAST2-Dev/bModelTest#9) undiagnosable
@@ -271,8 +268,8 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
                         if (!m_input.canSetValue(beastObject, m_beastObject)) {
                             throw new IllegalArgumentException("Cannot set input to this value");
                         }
-                        id = beastObject.getID();
-                        if (id.indexOf('.') != -1) {
+                        String id = beastObject.getID();
+                        if (id != null && id.indexOf('.') != -1) {
                         	id = id.substring(0,  id.indexOf('.'));
                         }
                          for (int i = 0; i < m_selectBEASTObjectBox.getItems().size(); i++) {
@@ -308,8 +305,9 @@ public class BEASTObjectInputEditor extends InputEditor.Base {
                     sync();
                     refreshPanel();
                 } catch (Exception ex) {
-                    id = ((BEASTInterface) m_input.get()).getID();
-                    m_selectBEASTObjectBox.setValue(id);
+                    // the input may have no value, e.g. when selection failed for an empty input
+                    Object current = m_input.get();
+                    m_selectBEASTObjectBox.setValue(current instanceof BEASTInterface b && b.getID() != null ? b.getID() : NO_VALUE);
                     ex.printStackTrace();
                     Alert.showMessageDialog(null, "Could not change beastObject: " +
                             ex.getClass().getName() + " " +

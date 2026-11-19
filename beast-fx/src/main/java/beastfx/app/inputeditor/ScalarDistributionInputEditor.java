@@ -267,13 +267,7 @@ public class ScalarDistributionInputEditor extends BEASTObjectInputEditor implem
 	 * the object owning the input is used.
 	 */
 	private PartitionContext contextFor(BEASTInterface dist) {
-		if (dist != null && dist.getID() != null) {
-			return doc.getContextFor(dist);
-		}
-		if (inputOwner != null && inputOwner.getID() != null) {
-			return doc.getContextFor(inputOwner);
-		}
-		return new PartitionContext("");
+		return doc.getContextFor(dist, inputOwner);
 	}
 
 
