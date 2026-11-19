@@ -78,6 +78,15 @@ public final class Version implements Comparable<Version> {
         return first.kind == KIND_INT ? (Long) first.value : ((BigInteger) first.value).longValue();
     }
 
+    /** @return the second number, e.g. 8 for 2.8.0, or 0 if there is none */
+    public long minor() {
+        Item second = items.size() < 2 ? null : items.get(1);
+        if (second == null || !second.isNumber()) {
+            return 0;
+        }
+        return second.kind == KIND_INT ? (Long) second.value : ((BigInteger) second.value).longValue();
+    }
+
     @Override
     public int compareTo(Version that) {
         List<Item> these = items, those = that.items;

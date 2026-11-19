@@ -197,7 +197,6 @@ public final class Inventory {
             Document versionXml = readVersionXml(main);
             String name = versionXml != null ? versionXml.getDocumentElement().getAttribute("name") : a;
             Version version = Version.of(v);
-            List<Dependency> depends = new ArrayList<>(versionXml != null ? dependencies(versionXml, name) : List.of());
             if (versionXml != null) {
                 String declared = versionXml.getDocumentElement().getAttribute("version");
                 if (!declared.isEmpty() && !Version.of(declared).equals(version)) {
@@ -205,16 +204,44 @@ public final class Inventory {
                             + ", but it is installed as " + coordinate + "; the Maven version counts");
                 }
             }
-            // the BEAST packages it needs, at what versions, are version.xml's job (decision 5);
-            // the POM's core versions count only when version.xml says nothing
+            // a Maven package's dependencies are its POM's job (decision 5): the core and other
+            // BEAST packages as minimums or ranges, checked and never downloaded (#298); the rest
+            // are libraries, resolved by Maven
+            List<Dependency> depends = new ArrayList<>();
             Path pom = repo.resolve(g.replace('.', '/')).resolve(a).resolve(v).resolve(a + "-" + v + ".pom");
-            for (Map.Entry<String, Version> core : coreVersionsInPom(pom).entrySet()) {
-                Dependency stated = depends.stream().filter(d -> d.name().equals(core.getKey())).findFirst().orElse(null);
-                if (stated == null) {
-                    depends.add(new Dependency(core.getKey(), core.getValue(), null));
-                } else if (stated.atLeast() != null && !stated.atLeast().equals(core.getValue())) {
-                    warnings.add(name + " " + version + ": version.xml needs " + core.getKey() + " " + stated.atLeast()
-                            + " or later, but its POM was built against " + core.getValue() + "; version.xml counts");
+            for (String[] dep : pomDependencies(pom, repo)) {
+                String depGroup = dep[0], depArtifact = dep[1], spec = dep[2];
+                String core = "io.github.compevol".equals(depGroup) ? CORE_ARTIFACTS.get(depArtifact) : null;
+                String beastPackage = core;
+                if (beastPackage == null && !"beast-pkgmgmt".equals(depArtifact)) {
+                    beastPackage = jars.stream()
+                            .filter(j -> j.toString().replace('\\', '/').contains("/" + depGroup.replace('.', '/') + "/" + depArtifact + "/"))
+                            .map(j -> {
+                                try {
+                                    Document d = readVersionXml(j);
+                                    return d == null ? null : d.getDocumentElement().getAttribute("name");
+                                } catch (Exception e) {
+                                    return null;
+                                }
+                            })
+                            .filter(n -> n != null && !n.isEmpty()).findFirst().orElse(null);
+                }
+                if (beastPackage != null && spec != null) {
+                    try {
+                        depends.add(Dependency.fromMaven(beastPackage, spec));
+                    } catch (IllegalArgumentException e) {
+                        problems.add(coordinate + ": " + depGroup + ":" + depArtifact + " " + e.getMessage());
+                    }
+                }
+            }
+            if (versionXml != null) {
+                for (Dependency stated : dependencies(versionXml, name)) {
+                    Dependency inPom = depends.stream().filter(d -> d.name().equals(stated.name())).findFirst().orElse(null);
+                    if (inPom == null || !inPom.equals(stated)) {
+                        warnings.add(name + " " + version + ": its version.xml says it needs " + stated.describe(false)
+                                + ", its POM " + (inPom == null ? "does not mention " + stated.name() : "says " + inPom.describe(false))
+                                + "; for a Maven package the POM counts");
+                    }
                 }
             }
             List<Artifact> artifacts = new ArrayList<>();
@@ -234,37 +261,66 @@ public final class Inventory {
         }
     }
 
-    /** the beast-base / beast-fx versions a POM depends on, resolving ${...} from its properties */
-    static Map<String, Version> coreVersionsInPom(Path pom) throws Exception {
-        Map<String, Version> result = new HashMap<>();
+    /**
+     * The dependencies a published POM declares, other than test-scoped ones: groupId,
+     * artifactId and version (a plain version or a range), with {@code ${...}} filled in from
+     * its properties and those of its parent POMs in the local repository.
+     */
+    static List<String[]> pomDependencies(Path pom, Path repo) throws Exception {
+        List<String[]> result = new ArrayList<>();
         if (!Files.isRegularFile(pom)) {
             return result;
         }
-        Document doc = parse(Files.newInputStream(pom));
         Map<String, String> properties = new HashMap<>();
-        NodeList props = doc.getElementsByTagName("properties");
-        for (int i = 0; i < props.getLength(); i++) {
-            for (Node n = props.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
-                if (n instanceof Element p) {
-                    properties.put(p.getTagName(), p.getTextContent().trim());
+        Document doc = parse(Files.newInputStream(pom));
+        for (Document d = doc; d != null; d = parentPom(d, repo)) {
+            NodeList props = d.getElementsByTagName("properties");
+            for (int i = 0; i < props.getLength(); i++) {
+                for (Node n = props.item(i).getFirstChild(); n != null; n = n.getNextSibling()) {
+                    if (n instanceof Element p) {
+                        properties.putIfAbsent(p.getTagName(), p.getTextContent().trim());
+                    }
                 }
             }
         }
+        Element project = doc.getDocumentElement();
+        properties.putIfAbsent("project.version", String.valueOf(text(project, "version")));
         NodeList deps = doc.getElementsByTagName("dependency");
         for (int i = 0; i < deps.getLength(); i++) {
             Element d = (Element) deps.item(i);
-            String artifactId = text(d, "artifactId"), version = text(d, "version"), scope = text(d, "scope");
-            String core = CORE_ARTIFACTS.get(artifactId);
-            if (core == null || version == null || "test".equals(scope)) {
+            if (d.getParentNode() == null || !"dependencies".equals(d.getParentNode().getNodeName())
+                    || (d.getParentNode().getParentNode() instanceof Element pe && pe.getTagName().equals("dependencyManagement"))) {
                 continue;
             }
-            Matcher m = Pattern.compile("\\$\\{([^}]+)}").matcher(version);
-            version = m.replaceAll(r -> Matcher.quoteReplacement(properties.getOrDefault(r.group(1), r.group())));
-            if (!version.contains("${")) {
-                result.put(core, Version.of(version));
+            String scope = text(d, "scope"), version = text(d, "version");
+            if ("test".equals(scope)) {
+                continue;
             }
+            if (version != null) {
+                Matcher m = Pattern.compile("\\$\\{([^}]+)}").matcher(version);
+                version = m.replaceAll(r -> Matcher.quoteReplacement(properties.getOrDefault(r.group(1), r.group())));
+                if (version.contains("${")) {
+                    version = null;
+                }
+            }
+            result.add(new String[] {text(d, "groupId"), text(d, "artifactId"), version});
         }
         return result;
+    }
+
+    /** the parent POM of a POM, from the local repository, or null */
+    private static Document parentPom(Document doc, Path repo) throws Exception {
+        for (Node n = doc.getDocumentElement().getFirstChild(); n != null; n = n.getNextSibling()) {
+            if (n instanceof Element parent && parent.getTagName().equals("parent")) {
+                String g = text(parent, "groupId"), a = text(parent, "artifactId"), v = text(parent, "version");
+                if (g == null || a == null || v == null) {
+                    return null;
+                }
+                Path p = repo.resolve(g.replace('.', '/')).resolve(a).resolve(v).resolve(a + "-" + v + ".pom");
+                return Files.isRegularFile(p) ? parse(Files.newInputStream(p)) : null;
+            }
+        }
+        return null;
     }
 
     // ---- the runtime of an installed application ----
