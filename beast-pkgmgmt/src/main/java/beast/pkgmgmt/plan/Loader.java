@@ -63,7 +63,9 @@ public final class Loader {
                 .filter(m -> m.layer().equals(layerName) && m.jar() != null).toList();
         Set<String> roots = modules.stream().map(PlannedModule::name).collect(Collectors.toCollection(LinkedHashSet::new));
         ModuleFinder finder = ModuleFinder.of(modules.stream().map(PlannedModule::jar).toArray(Path[]::new));
-        Configuration cf = parent.configuration().resolveAndBind(finder, ModuleFinder.of(), roots);
+        // JDK modules that nothing on the boot layer needed, e.g. jdk.dynalink for BEASTLabs'
+        // Nashorn, are found in the runtime image; the planner takes java.* and jdk.* as given
+        Configuration cf = parent.configuration().resolveAndBind(finder, ModuleFinder.ofSystem(), roots);
         return ModuleLayer.defineModulesWithManyLoaders(cf, List.of(parent), ClassLoader.getSystemClassLoader()).layer();
     }
 

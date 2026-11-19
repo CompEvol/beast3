@@ -43,7 +43,7 @@ class LoaderTest {
     @TempDir
     Path installed;
 
-    private static Path foo1, foo11, foo2, alpha, beta, gamma, view, delta;
+    private static Path foo1, foo11, foo2, alpha, beta, gamma, view, delta, scripted;
 
     @BeforeAll
     static void compile() throws IOException {
@@ -75,6 +75,11 @@ class LoaderTest {
         Path missing = moduleJar("beast-missingfx.jar", List.of(), Map.of(
                 "module-info.java", "module beast.missingfx { exports missingfx; }",
                 "missingfx/Missing.java", "package missingfx; public class Missing { }"));
+        // needs a JDK module that nothing on the boot layer needs, as BEASTLabs' Nashorn needs jdk.dynalink
+        scripted = moduleJar("beast-scripted.jar", List.of(), Map.of(
+                "module-info.java", "module beast.scripted { requires jdk.dynalink; exports scripted; }",
+                "scripted/Scripted.java", "package scripted; public class Scripted {"
+                        + " public static String hello() { return \"scripted with \" + jdk.dynalink.StandardOperation.GET; } }"));
         view = moduleJar("beast-view.jar", List.of(missing), Map.of(
                 "module-info.java", "module beast.view { requires beast.missingfx; }",
                 "view/View.java", "package view; public class View { }"));
@@ -194,6 +199,35 @@ class LoaderTest {
         assertEquals("alpha on foo 1.0", hello(loaded, "alpha.Alpha"));
         assertThrows(ClassNotFoundException.class, () -> loaded.loadClass("view.View"));
         assertEquals("needs module beast.missingfx", loaded.plan().droppedModules().get(0).reason());
+    }
+
+    /**
+     * A package module that needs a JDK module the boot layer does not have, as BEASTLabs'
+     * Nashorn needs jdk.dynalink in the release: the module comes from the runtime image. It
+     * used to make the JVM reject the whole plan, so BEAST loaded none of its packages.
+     * <p>
+     * Run in a JVM of its own whose main class is in a named module, as BEAST's launchers do:
+     * in this test JVM the main class is on the class path, so every JDK module with an API,
+     * jdk.dynalink among them, is already on the boot layer.
+     */
+    @Test
+    void jdkModuleNotOnTheBootLayerIsFoundInTheRuntime() throws Exception {
+        packageFolder("Scripted", "1.0", "", scripted);
+        Path pkgmgmt = Path.of("target", "classes").toAbsolutePath();
+        Path probe = moduleJar("probe.jar", List.of(pkgmgmt), Map.of(
+                "module-info.java", "module probe { requires beast.pkgmgmt; }",
+                "probe/Main.java", "package probe; public class Main { public static void main(String[] a) throws Exception {"
+                        + " System.out.println(\"boot has jdk.dynalink: \" + ModuleLayer.boot().findModule(\"jdk.dynalink\").isPresent());"
+                        + " beast.pkgmgmt.PackageManager.loadExternalJars();"
+                        + " System.out.println(beast.pkgmgmt.BEASTClassLoader.forName(\"scripted.Scripted\").getMethod(\"hello\").invoke(null)); } }"));
+        Path javaExe = Path.of(System.getProperty("java.home"), "bin", "java");
+        Process p = new ProcessBuilder(javaExe.toString(), "-Dbeast.user.package.dir=" + installed,
+                "--module-path", pkgmgmt + java.io.File.pathSeparator + probe, "-m", "probe/probe.Main")
+                .redirectErrorStream(true).start();
+        String out = new String(p.getInputStream().readAllBytes());
+        assertEquals(0, p.waitFor(), out);
+        assertTrue(out.contains("boot has jdk.dynalink: false"), out);
+        assertTrue(out.contains("scripted with GET"), out);
     }
 
     /** a plan the planner would never make (two modules with Java package alpha): the JVM's error names both packages */
