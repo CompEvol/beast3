@@ -5,19 +5,30 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.testfx.framework.junit5.ApplicationExtension;
+import org.testfx.framework.junit5.Start;
 
 import beast.base.parser.PartitionContext;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.Normal;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import javafx.stage.Stage;
 
 /**
  * The partition context for a new value of an input (#302, #304): taken from the current
  * value, the owner or the owner's inputs, whichever names a partition of the document, and
  * never a NullPointerException for a missing value or ID.
  */
+@ExtendWith(ApplicationExtension.class)
 public class BeautiDocContextTest {
+
+    @Start
+    public void start(Stage stage) {
+        // BeautiDoc needs the JavaFX toolkit; without this the test passed only after another
+        // test had started it
+    }
 
     private BeautiDoc doc;
     private PartitionContext dna;
@@ -65,6 +76,27 @@ public class BeautiDocContextTest {
         mean.setID("height.t:dnaTree");
         owner.initByName("mean", mean, "sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
         assertSame(rbcl, doc.getContextFor(null, owner));
+    }
+
+    /**
+     * An owner whose inputs name two partitions: the first input that names one is used,
+     * here mean (rbcl's tree) before sigma (dna's site model)
+     */
+    @Test
+    void ownerWithInputsFromTwoPartitionsUsesTheFirst() {
+        Normal owner = normal("human-chimp.prior");
+        RealScalarParam<Real> mean = new RealScalarParam<>(0.0, Real.INSTANCE);
+        mean.setID("height.t:dnaTree");
+        RealScalarParam<PositiveReal> sigma = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+        sigma.setID("sigma.s:dna");
+        owner.initByName("mean", mean, "sigma", sigma);
+        assertSame(rbcl, doc.getContextFor(null, owner));
+    }
+
+    /** as on master: an ID with a letter other than s, c or t is read as naming an alignment */
+    @Test
+    void unexpectedPartitionLetterIsAnAlignment() {
+        assertSame(dna, doc.getContextFor(normal("x.x:dna")));
     }
 
     @Test

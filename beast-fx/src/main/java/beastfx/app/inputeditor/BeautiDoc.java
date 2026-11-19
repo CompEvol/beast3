@@ -2767,7 +2767,10 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
      * The partition context for a new value of an input of {@code owner}, e.g. a template
      * chosen in an input editor. Taken from the first of these that names a partition of
      * this document in its ID: the input's current value, the owner, or an object among the
-     * owner's inputs (e.g. the tree of an MRCA prior {@code human-chimp.prior}). If none
+     * owner's inputs (e.g. the tree of an MRCA prior {@code human-chimp.prior}). When the
+     * owner's inputs name several partitions, the first in the order its inputs are declared
+     * is used:
+     * a new value has to go in one partition, and the owner itself does not say which. If none
      * does, as {@link #getContextFor(BEASTInterface)} of the value, or of the owner if the
      * value has no ID.
      *
@@ -2780,10 +2783,16 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
             context = knownContextFor(owner);
         }
         if (context == null && owner != null) {
-            for (BEASTInterface o : owner.listActiveBEASTObjects()) {
-                context = knownContextFor(o);
-                if (context != null) {
-                    break;
+            // in the order the inputs are declared: listActiveBEASTObjects() goes through a
+            // HashMap, which would make "first" depend on the input names' hash codes
+            search:
+            for (Input<?> input : owner.listInputs()) {
+                Object v = input.get();
+                for (Object o : v instanceof List<?> list ? list : java.util.Collections.singletonList(v)) {
+                    context = o instanceof BEASTInterface b ? knownContextFor(b) : null;
+                    if (context != null) {
+                        break search;
+                    }
                 }
             }
         }
@@ -2847,9 +2856,6 @@ public class BeautiDoc extends BEASTObject implements RequiredInputProvider {
                         return context;
                     }
                     break;
-                default:
-                    // should never get here, unless template contains .X$(n) where X is not 'c', 't', or 's'
-                    return null;
             }
         }
         return null;
