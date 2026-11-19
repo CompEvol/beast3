@@ -1391,6 +1391,10 @@ public class PackageManager {
     }
 
     public static void main(String[] args) {
+        // run straight after installing BEAST, packagemanager is the first to start: without
+        // the bundled core in the package dir, every Maven package would be refused as
+        // needing BEAST.base
+        beast.pkgmgmt.launcher.BeastLauncher.seedBundledPackages();
         PackageManagerCLI.main(args);
     }
 

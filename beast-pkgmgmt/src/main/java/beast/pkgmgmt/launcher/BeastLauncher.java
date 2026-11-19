@@ -489,19 +489,26 @@ public class BeastLauncher {
 	}
 
 	/**
+	 * Seeds the packages shipped with the application into the user package dir: the core
+	 * (BEAST.base, BEAST.app) and the other bundled packages (#248). In an installed
+	 * application this extracts {@code <app>/packages/<pkg>.package*.zip}, so the package
+	 * manager can upgrade them in place; in developer/IDE runs there is no bundled zip, the core
+	 * is on the boot layer, and this does nothing. Every launcher calls it first, and so does
+	 * {@code packagemanager}, which may be the first thing run after installing BEAST.
+	 */
+	public static void seedBundledPackages() {
+		seedBundledPackage("BEAST.base");
+		seedBundledPackage("BEAST.app");
+		seedOtherBundledPackages();
+	}
+
+	/**
 	 * @param useStrictVersions
 	 * @param beastFile
 	 * @return an empty class path, in literal quotes: packages are loaded as module layers
 	 */
 	public static String getPath(boolean useStrictVersions, String beastFile) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
-		// Seed the bundled core packages into the user package dir. In an installed
-		// application these extract <app>/packages/<pkg>.package*.zip so the package
-		// manager can upgrade them in place; in developer/IDE runs there is no bundled
-		// zip, and the core is on the boot layer.
-		seedBundledPackage("BEAST.base");
-		seedBundledPackage("BEAST.app");
-		// the other packages shipped with the application (#248)
-		seedOtherBundledPackages();
+		seedBundledPackages();
 		PackageManager.initialise();
 
 
