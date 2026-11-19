@@ -1,6 +1,6 @@
 # Mac Release
 
-Last update 2026-03-27
+Last update 2026-11-18
 
 ## Prerequisites
 
@@ -24,9 +24,15 @@ Produces:
 - `dmg-staging/BEAST <version>/` — signed `.app` bundles (kept for inspection)
 - `BEAST.v<version>.dmg` — signed, distributable DMG
 
-The version number is read from `version.xml` at the repository root.
-The Maven artifact version is detected from `beast-fx/target/beast-fx-*.jar`
-and may include a `-SNAPSHOT` suffix independently of the release version.
+The version number is read from `version="..."` in `version.xml` at the
+repository root. The script stops if it differs from the version in `pom.xml`
+without `-SNAPSHOT`, which is the version CI uses for Linux and Windows.
+Step 1 sets the poms to that version with `mvn versions:set`
+before building, and `versions:revert` puts them back to `-SNAPSHOT` when the
+script exits, also on failure. If the script is killed (`kill -9`), run
+`mvn versions:revert` yourself. The jar names, the package zips and the module
+versions (`beast.pkgmgmt@2.8.0`) therefore match the DMG; the script stops if
+anything staged still has `SNAPSHOT` in its name.
 
 ## Notarisation
 
@@ -62,6 +68,7 @@ release/Mac/
 ├── dmg-staging/              ← final DMG layout (kept for inspection)
 │   ├── BEAST <version>/      ← OUTPUT: all apps, bin/, examples/, README
 │   │   ├── BEAST.app         ← full app with bundled JRE
+│   │   │                       (Contents/app/: boot-layer JARs, packages/, resolver/)
 │   │   ├── BEAUti.app        ← shell-script wrapper
 │   │   ├── TreeAnnotator.app ← shell-script wrapper
 │   │   ├── LogCombiner.app   ← shell-script wrapper
@@ -82,16 +89,20 @@ release/Mac/
 - Auto-generates `entitlements.plist` (3 JVM entitlements: `allow-jit`,
   `allow-unsigned-executable-memory`, `allow-dyld-environment-variables`)
   if the file does not already exist.
-- Parses `VERSION` from `version.xml` via Perl.
+- Parses `VERSION` from `version.xml` via Perl, and stops if it differs from
+  the version in `pom.xml` without `-SNAPSHOT`.
 - Checks `jpackage` is on PATH.
 - Validates `BUILD_JAVA_HOME` (`$ZULU_JRE_FX_DIR/Contents/Home`) exists; fails
   fast if the Zulu JRE+FX is not downloaded or `ZULU_JRE_FX_DIR` is wrong.
 
 ### Step 1 — Maven Build
 
-Runs `mvn clean package -DskipTests` against the repository root `pom.xml`.
-Detects the Maven artifact version from the built `beast-fx-*.jar` filename
-and derives `MAIN_JAR = beast-pkgmgmt-<mvn_version>.jar`.
+Runs `mvn versions:set -DnewVersion=$VERSION` (with backup poms, and
+`versions:revert` in an `EXIT` trap), then `mvn clean package -DskipTests`
+against the repository root `pom.xml`. Detects the Maven artifact version from
+the built `beast-fx-*.jar` filename and derives
+`MAIN_JAR = beast-pkgmgmt-<mvn_version>.jar`; after `versions:set` this is the
+release version.
 
 ### Step 2 — Stage JARs
 
@@ -105,11 +116,15 @@ eliminating the main source of codesign seal corruption.
   Zulu JRE+FX already provides these as platform modules in `lib/modules`).
 - Removes `beast-base-*.jar` and `beast-fx-*.jar` from staging so they are
   **not** placed on the boot module path by jpackage. Instead their full package
-  ZIPs are placed in `BEAST.app/Contents/app/packages/` after jpackage runs,
+  ZIPs are placed in `BEAST.app/Contents/app/packages/` after jpackage runs (the
+  script stops if any of these ZIPs has `SNAPSHOT` in its name),
   where `BeastLauncher.seedBundledPackage()` extracts them into `~/.beast/2.8/`
   on first launch and loads them as plugin `ModuleLayer`s. This allows core
   patch releases without rebuilding the launcher or producing a new DMG.
 - Verifies `MAIN_JAR` is present before proceeding.
+- Checks that `beast-pkgmgmt/target/resolver/` (the Maven resolver JARs,
+  written by the `copy-resolver` execution in `beast-pkgmgmt/pom.xml`) exists.
+- Stops if any staged or resolver JAR has `SNAPSHOT` in its name.
 
 ### Step 3 — Create BEAST.app
 
@@ -118,9 +133,14 @@ macOS `.app` into `OUTPUT/`, embedding the Zulu JRE+FX 25 directly as the
 bundled runtime (no jlink). **No signing flag is passed to jpackage** — all
 signing is done manually in Step 3b for full inside-out control.
 
-**BEAST.cfg patch** (3 `sed` calls immediately after jpackage):
+**BEAST.cfg patch** (immediately after jpackage):
 jpackage's `--main-jar/--main-class` writes classpath-mode config. The patch
-switches to module-path mode so that module descriptors (`provides`/`requires`)
+switches to module-path mode, adds `java.compiler` to `--add-modules`, adds
+`java-options=--add-reads=beast.pkgmgmt=ALL-UNNAMED`, and inserts one
+`app.classpath=$APPDIR/resolver/<jar>` line per resolver JAR after
+`[Application]` (the Maven resolver must be on the classpath, see
+"Maven resolver on the classpath" in [../README.md](../README.md)). The script
+stops if the patch did not apply. The module-path mode is needed so that module descriptors (`provides`/`requires`)
 are visible at runtime and external BEAST packages loaded as `ModuleLayer`s
 resolve correctly. `--module/--module-path` cannot be used at jpackage time
 because automatic modules (e.g. `antlr4-runtime.jar`) are incompatible with
@@ -139,7 +159,9 @@ user's PATH.
 TreeAnnotator, LogCombiner, AppLauncher — each containing:
 - A shell-script launcher in `MacOS/` that resolves `BEAST.app/Contents`
   relative to its own location (`../../BEAST.app/Contents`) and invokes the
-  bundled `bin/java` with `--module-path $BEAST_APP/app -m module/class`.
+  bundled `bin/java` with `--module-path $BEAST_APP/app
+  -cp "$BEAST_APP/app/resolver/*" --add-reads beast.pkgmgmt=ALL-UNNAMED
+  -m module/class` (`java.compiler` added to `--add-modules`).
   BEAUti gets the extra argument `-capture`.
 - `Info.plist` (bundle ID `org.beast3.<name>`, version, icon reference).
 - `PkgInfo` (`APPL????`).
@@ -240,4 +262,6 @@ Verified with `--verify --verbose=4 --deep --strict`.
 | Unique JRE `CFBundleIdentifier` | Apple rejects `--deep` signing with duplicate nested bundle IDs |
 | `bin/` and `examples/` added after signing | Outside any `.app` bundle; cannot affect bundle seals |
 | UDRW → UDZO two-phase DMG | AppleScript Finder layout requires a writable mount |
+| `mvn versions:set` from `version.xml` in Step 1 | The version is compiled into the module descriptors and names the JARs and zips; CI does the same for Linux and Windows |
+| Maven resolver in `Contents/app/resolver/`, on the classpath | Maven's own JARs split packages, which stops the JVM at start on the module path (#297); copied after jpackage, like `packages/`, so the outer seal covers it |
 | `beast-base`/`beast-fx` removed from staging | Core modules must not be on the boot layer; they ship as package ZIPs in `BEAST.app/Contents/app/packages/`, seeded on first launch, loaded as plugin `ModuleLayer`s — enabling patch releases without a new DMG |

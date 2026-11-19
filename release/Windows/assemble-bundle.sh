@@ -52,6 +52,16 @@ JRE_DIR="${JRE_DIR:?ERROR: JRE_DIR is required — set it to the Zulu JRE+FX 25 
 DEST="${DEST:-$RELEASE_DIR/dist}"
 OS_ARCH="${OS_ARCH:-Windows.x86_64}"
 
+# CI (release-bundles.yml) passes VERSION from pom.xml with -SNAPSHOT stripped, and the
+# Mac script takes it from version.xml, which this bundle ships. Stop if the two
+# disagree, so the three platforms are built with the same version.
+XML_VERSION=$(sed -n 's/^<package .*version="\([^"]*\)".*/\1/p' "$REPO_ROOT/version.xml" | head -n 1)
+if [ "$XML_VERSION" != "$VERSION" ]; then
+    echo "ERROR: VERSION is ${VERSION}, but version.xml has version ${XML_VERSION:-<none found>}." >&2
+    echo "       Make pom.xml (without -SNAPSHOT) and version.xml agree before releasing." >&2
+    exit 1
+fi
+
 STAGING="$RELEASE_DIR/staging-${OS_ARCH}"
 BUNDLE="$DEST/BEAST.v${VERSION}"
 ZIP="$DEST/BEAST.v${VERSION}.${OS_ARCH}.zip"
@@ -215,6 +225,22 @@ done
 # the packages bundled with the release (#248), pinned in release/bundled-packages.tsv
 bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$BUNDLE/app/packages/"
 
+# ── Step 4c: Bundle the Maven resolver into app/resolver/ ────────────────────
+# The resolver (#297), written by beast-pkgmgmt's copy-resolver execution, goes on
+# the classpath (app.classpath in the .cfg files, -cp in bat/), not the module path:
+# Maven's own jars split packages, which stops the JVM at start on the module path.
+# app/resolver/ is a subdirectory, which the module path ($APPDIR) does not scan.
+echo ""
+echo "==> Step 4c: Bundling the Maven resolver into app/resolver/..."
+RESOLVER_SRC="$REPO_ROOT/beast-pkgmgmt/target/resolver"
+if ! ls "$RESOLVER_SRC"/*.jar >/dev/null 2>&1; then
+    echo "ERROR: Maven resolver JARs not found in $RESOLVER_SRC (run 'mvn package' first)" >&2
+    exit 1
+fi
+mkdir -p "$BUNDLE/app/resolver"
+cp "$RESOLVER_SRC"/*.jar "$BUNDLE/app/resolver/"
+echo "    Bundled $(ls "$BUNDLE/app/resolver" | wc -l | tr -d ' ') Maven resolver JARs into app/resolver/"
+
 # ── Step 5: Patch all .cfg files to module-path mode ─────────────────────────
 # jpackage emits classpath-mode cfg when --main-jar is used. Three transforms:
 #   1. Delete app.classpath= (all JARs go on module-path, not classpath)
@@ -228,8 +254,17 @@ bash "$REPO_ROOT/release/common/fetch-bundled-packages.sh" "$BUNDLE/app/packages
 # as platform modules, which ALL-MODULE-PATH does not pull in. The launcher loads
 # beast.fx as a plugin ModuleLayer; beast.fx requires javafx.graphics/controls, so
 # without these the GUI apps fail module resolution and never open a window.
+# The Maven resolver (#297) is the exception to 1.: its jars in app/resolver/ go back
+# on the classpath, one app.classpath line per jar (no wildcard), with
+# --add-reads=beast.pkgmgmt=ALL-UNNAMED so beast.pkgmgmt can use them, and
+# java.compiler in --add-modules because the resolver needs javax.tools, which a
+# module launch does not resolve by itself.
 echo ""
 echo "==> Step 5: Patching .cfg files to module-path mode..."
+RESOLVER_CP_LINES=$(mktemp)
+for jar in "$BUNDLE/app/resolver/"*.jar; do
+    echo "app.classpath=\$APPDIR\\resolver\\$(basename "$jar")"
+done > "$RESOLVER_CP_LINES"
 for cfg in "$BUNDLE/app/"*.cfg; do
     # Only the beast launcher loads the BEAGLE JNI library.
     NATIVE_ACCESS="javafx.graphics,javafx.media,javafx.web"
@@ -237,9 +272,13 @@ for cfg in "$BUNDLE/app/"*.cfg; do
     sed -i \
         -e '/^app\.classpath/d' \
         -e 's|^app\.mainclass=\(.*\)|app.mainmodule=beast.pkgmgmt/\1|' \
-        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\njava-options=--enable-native-access='"$NATIVE_ACCESS" \
+        -e '/^\[JavaOptions\]/a java-options=--module-path=$APPDIR\njava-options=--add-modules=ALL-MODULE-PATH,java.compiler,javafx.controls,javafx.fxml,javafx.swing,javafx.web,jdk.jsobject\njava-options=--add-reads=beast.pkgmgmt=ALL-UNNAMED\njava-options=--enable-native-access='"$NATIVE_ACCESS" \
         "$cfg"
+    awk -v f="$RESOLVER_CP_LINES" '{ print } /^\[Application\][[:space:]]*$/ { while ((getline l < f) > 0) print l; close(f) }' \
+        "$cfg" > "$cfg.new"
+    mv "$cfg.new" "$cfg"
 done
+rm -f "$RESOLVER_CP_LINES"
 
 # ── Step 6: Copy bat/ CLI launchers ──────────────────────────────────────────
 echo ""
@@ -313,6 +352,31 @@ grep -q 'app.mainmodule' "$BUNDLE/app/beast.cfg" \
 [ -z "$(find "$BUNDLE/app" -maxdepth 1 -name 'beast-base-*.jar' -o -name 'beast-fx-*.jar' 2>/dev/null)" ] \
     && _ok "beast-base/beast-fx removed from app/ (plugin layer only)" \
     || _fail "beast-base or beast-fx JAR still on boot module path in app/"
+
+RES_SRC_COUNT=$(ls "$REPO_ROOT/beast-pkgmgmt/target/resolver"/*.jar | wc -l | tr -d ' ')
+RES_COUNT=$(find "$BUNDLE/app/resolver" -name "*.jar" 2>/dev/null | wc -l | tr -d ' ')
+[ "$RES_COUNT" -gt 0 ] && [ "$RES_COUNT" -eq "$RES_SRC_COUNT" ] \
+    && _ok "app/resolver/ has ${RES_COUNT} Maven resolver JARs" \
+    || _fail "app/resolver/ has ${RES_COUNT} JARs, expected ${RES_SRC_COUNT}"
+[ -z "$(find "$BUNDLE/app" -maxdepth 1 -name 'maven-*.jar' 2>/dev/null)" ] \
+    && _ok "no Maven resolver JARs on the module path (app/)" \
+    || _fail "Maven resolver JARs in app/ — their split packages stop the JVM at start"
+CFG_NO_RESOLVER=""
+for cfg in "$BUNDLE/app/"*.cfg; do
+    if ! grep -q -- '--add-reads=beast.pkgmgmt=ALL-UNNAMED' "$cfg" \
+            || [ "$(grep -c '^app\.classpath=.*resolver' "$cfg")" -ne "$RES_COUNT" ]; then
+        CFG_NO_RESOLVER="$CFG_NO_RESOLVER $(basename "$cfg")"
+    fi
+done
+[ -z "$CFG_NO_RESOLVER" ] \
+    && _ok "all .cfg files put the ${RES_COUNT} Maven resolver JARs on the classpath" \
+    || _fail ".cfg files without the Maven resolver classpath:${CFG_NO_RESOLVER}"
+grep -q -- '--add-reads beast.pkgmgmt=ALL-UNNAMED' "$BUNDLE/bat/packagemanager.bat" \
+    && _ok "bat/packagemanager.bat puts the Maven resolver on the classpath" \
+    || _fail "bat/packagemanager.bat lacks --add-reads beast.pkgmgmt=ALL-UNNAMED"
+[ -z "$(find "$BUNDLE/app" -name '*SNAPSHOT*' 2>/dev/null)" ] \
+    && _ok "no SNAPSHOT JARs or package zips in app/" \
+    || _fail "SNAPSHOT files in app/: $(find "$BUNDLE/app" -name '*SNAPSHOT*' | xargs -n1 basename | tr '\n' ' ')"
 
 PKG_COUNT=$(find "$BUNDLE/app/packages" -name "*.zip" 2>/dev/null | wc -l | tr -d ' ')
 # the two core packages plus the bundled packages of release/bundled-packages.tsv
