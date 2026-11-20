@@ -96,6 +96,10 @@ public class BeastMain {
             	}
             }
         }
+        // packages installed from Maven have no package folder (#316)
+        for (beast.pkgmgmt.Package pkg : PackageManager.getMavenPackages()) {
+            Log.info(pkg.getName() + " v" + pkg.getInstalledLabel());
+        }
         Log.info("---");
     	Log.info("Java version " + System.getProperty("java.version"));
 	}
