@@ -4,4 +4,5 @@
 
 BEAST3="$(cd "$(dirname "$0")/.." && pwd)"
 java --module-path "$BEAST3/beast-fx/target/beast-fx-2.8.0-SNAPSHOT.jar:$BEAST3/beast-fx/target/lib" \
+     -cp "$BEAST3/beast-pkgmgmt/target/resolver/*" --add-reads beast.pkgmgmt=ALL-UNNAMED \
      -m beast.fx/beastfx.app.tools.LogCombiner "$@"
