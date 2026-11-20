@@ -783,7 +783,7 @@ public class PackageManager {
 		}
 	}
 
-	private static final String MAVEN_PACKAGES_FILE = "maven-packages.xml";
+	static final String MAVEN_PACKAGES_FILE = "maven-packages.xml";
 
 	/**
 	 * Load the list of Maven package coordinates from

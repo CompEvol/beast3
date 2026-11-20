@@ -54,7 +54,9 @@ public class PackageInstaller {
             if (thisPkg.isInstalled()) {
                 if (thisPkg.getInstalledVersion().equals(thisPkgVersion))
                     packagesToInstall.remove(thisPkg);
-                else
+                else if (!isMavenDependency(thisPkg))
+                    // a Maven dependency of another package stays for that package; the new copy is
+                    // installed next to it, and the planner loads the newer one (#316)
                     uninstallPackage(thisPkg, useAppDir, customDir);
             }
         }
@@ -181,14 +183,13 @@ public class PackageInstaller {
         }
         // a copy installed from Maven has no folder: it is a line in maven-packages.xml (#316)
         if (pkg.getMavenCoordinate() != null && !useArchive && pkgVersion.equals(pkg.getInstalledVersion())) {
-            String[] gav = pkg.getMavenCoordinate().split(":");
-            if (PackageManager.loadMavenPackageConfig().stream()
-                    .noneMatch(c -> c.groupId.equals(gav[0]) && c.artifactId.equals(gav[1]))) {
+            if (isMavenDependency(pkg)) {
                 throw new IOException(pkg.getName() + " " + pkgVersion + " was installed from Maven as a dependency"
                         + " of another package; uninstall that package instead");
             }
+            String[] gav = pkg.getMavenCoordinate().split(":");
             PackageManager.uninstallMavenPackage(gav[0], gav[1]);
-            return new File(PackageManager.getPackageUserDir(), "maven-packages.xml").getPath();
+            return new File(PackageManager.getPackageUserDir(), PackageManager.MAVEN_PACKAGES_FILE).getPath();
         }
         String dirName = getPackageDir(pkg, pkgVersion, useAppDir, customDir);
         File dir = new File(dirName);
@@ -221,6 +222,19 @@ public class PackageInstaller {
 
         Utils6.saveBeautiProperty("package.path", null);
         return dirName;
+    }
+
+    /**
+     * True if the installed copy is from Maven but not listed in maven-packages.xml: it came in
+     * as a dependency of another Maven package (#316).
+     */
+    static boolean isMavenDependency(Package pkg) {
+        if (pkg.getMavenCoordinate() == null) {
+            return false;
+        }
+        String[] gav = pkg.getMavenCoordinate().split(":");
+        return PackageManager.loadMavenPackageConfig().stream()
+                .noneMatch(c -> c.groupId.equals(gav[0]) && c.artifactId.equals(gav[1]));
     }
 
     private static void unloadPackage(File dir) {
