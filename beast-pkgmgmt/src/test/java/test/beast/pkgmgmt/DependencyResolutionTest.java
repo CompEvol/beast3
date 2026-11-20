@@ -215,4 +215,38 @@ class DependencyResolutionTest {
         assertThrows(DependencyResolutionException.class,
                 () -> PackageManager.populatePackagesToInstall(packageMap, toInstall));
     }
+
+    @Test
+    void installedDependencyUpgradedWhenNeeded() throws DependencyResolutionException {
+        // B 1.0 installed, 2.0 available; A needs B >= 2.0: B 2.0 is installed
+        Package pkgB = makePackage("B", new String[][]{{"1.0"}, {"2.0"}});
+        markInstalled(pkgB, "1.0");
+        Package pkgA = makePackage("A", "1.0", new PackageDependency("B", new PackageVersion("2.0"), null));
+        Map<String, Package> packageMap = new TreeMap<>(Map.of("A", pkgA, "B", pkgB));
+        Map<Package, PackageVersion> toInstall = new HashMap<>(Map.of(pkgA, new PackageVersion("1.0")));
+        PackageManager.populatePackagesToInstall(packageMap, toInstall);
+        assertEquals("2.0", toInstall.get(pkgB).getVersionString());
+    }
+
+    @Test
+    void installedDependencyKeptWhenItFits() throws DependencyResolutionException {
+        // B 1.0 installed, 2.0 available; A needs B >= 1.0: B is not upgraded
+        Package pkgB = makePackage("B", new String[][]{{"1.0"}, {"2.0"}});
+        markInstalled(pkgB, "1.0");
+        Package pkgA = makePackage("A", "1.0", new PackageDependency("B", new PackageVersion("1.0"), null));
+        Map<String, Package> packageMap = new TreeMap<>(Map.of("A", pkgA, "B", pkgB));
+        Map<Package, PackageVersion> toInstall = new HashMap<>(Map.of(pkgA, new PackageVersion("1.0")));
+        PackageManager.populatePackagesToInstall(packageMap, toInstall);
+        assertFalse(toInstall.containsKey(pkgB));
+    }
+
+    @Test
+    void packagesNothingNeedsAreNotInstalled() throws DependencyResolutionException {
+        Package pkgA = makePackage("A", "1.0");
+        Package pkgZ = makePackage("Z", "1.0");
+        Map<String, Package> packageMap = new TreeMap<>(Map.of("A", pkgA, "Z", pkgZ));
+        Map<Package, PackageVersion> toInstall = new HashMap<>(Map.of(pkgA, new PackageVersion("1.0")));
+        PackageManager.populatePackagesToInstall(packageMap, toInstall);
+        assertEquals(Set.of(pkgA), toInstall.keySet());
+    }
 }

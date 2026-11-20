@@ -4,4 +4,5 @@
 
 BEAST3="$(cd "$(dirname "$0")/.." && pwd)"
 java --module-path "$BEAST3/beast-base/target/beast-base-2.8.0-SNAPSHOT.jar:$BEAST3/beast-base/target/lib" \
-     -m beast.pkgmgmt/beast.pkgmgmt.PackageManager "$@"
+     -cp "$BEAST3/beast-pkgmgmt/target/resolver/*" --add-reads beast.pkgmgmt=ALL-UNNAMED \
+     --add-modules beast.base -m beast.pkgmgmt/beast.pkgmgmt.PackageManager "$@"

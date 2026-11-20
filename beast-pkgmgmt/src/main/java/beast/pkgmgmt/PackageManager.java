@@ -42,8 +42,6 @@ import javax.swing.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.lang.module.Configuration;
-import java.lang.module.ModuleFinder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
@@ -52,7 +50,16 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.stream.Collectors;
+
+import beast.pkgmgmt.plan.InstalledPackage;
+import beast.pkgmgmt.plan.Inventory;
+import beast.pkgmgmt.plan.LoadPlan;
+import beast.pkgmgmt.plan.LoadedPackages;
+import beast.pkgmgmt.plan.Loader;
+import beast.pkgmgmt.plan.Planner;
+import beast.pkgmgmt.plan.Runtime;
+import beast.pkgmgmt.plan.Selection;
+import beast.pkgmgmt.plan.Version;
 
 /**
  * Manages the full lifecycle of BEAST 2 packages.
@@ -536,89 +543,7 @@ public class PackageManager {
         return dirs;
     }
     
-    /*
-     * Get directories from archive, if not already loaded when traversing visitedDirs.
-     * Only add the latest version from the archive.
-     */
-    private static List<String> getLatestBeastArchiveDirectories(List<String> visitedDirs) {
-        List<String> dirs = new ArrayList<String>();
-        String FILESEPARATOR = "/"; //(Utils6.isWindows() ? "\\" : "/");
 
-    	String dir = getPackageUserDir() + FILESEPARATOR + ARCHIVE_DIR;
-    	File archiveDir = new File(dir);
-    	if (archiveDir.exists()) {
-    		
-    		// determine which packages will already be loaded
-        	Set<String> alreadyLoaded = new HashSet<String>();
-        	for (String d : visitedDirs) {
-        		File dir2 = new File(d);
-        		if (dir2.isDirectory()) {
-                    File versionFile = new File(dir2 + "/version.xml");
-                    if (versionFile.exists()) {
-                        try {
-                            // find name of package
-                            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                            Document doc = factory.newDocumentBuilder().parse(versionFile);
-                            Element packageElement = doc.getDocumentElement();
-                            alreadyLoaded.add(packageElement.getAttribute("name"));
-                        } catch (Exception e) {
-                            // too bad, won't print out any info
-                        }
-                    }
-
-        			alreadyLoaded.add(dir2.getName());
-    	        	for (String f : dir2.list()) {
-    	        		File dir3 = new File(f);
-    	        		if (dir3.isDirectory()) {
-    	                    versionFile = new File(dir3 + "/version.xml");
-    	                    if (versionFile.exists()) {
-    	                        try {
-    	                            // find name of package
-    	                            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    	                            Document doc = factory.newDocumentBuilder().parse(versionFile);
-    	                            Element packageElement = doc.getDocumentElement();
-    	                            alreadyLoaded.add(packageElement.getAttribute("name"));
-    	                        } catch (Exception e) {
-    	                            // too bad, won't print out any info
-    	                        }
-    	                    }
-    	        		}
-    	        	}    		
-        		}
-        	}
-    		
-        	for (String f : archiveDir.list()) {
-        		File f2 = new File(dir + FILESEPARATOR + f);
-        		if (f2.isDirectory()) {
-        			// this may be a package directory -- pick the latest directory
-        			String [] versionDirs = f2.list();
-        			Arrays.sort(versionDirs,
-        					new Comparator<String>() {
-								@Override
-								public int compare(String v1, String v2) {
-			        				PackageVersion pv1 = new PackageVersion(v1);
-			        				PackageVersion pv2 = new PackageVersion(v2);
-			        				return (pv1.compareTo(pv2));
-								}
-        			});
-        			int k = versionDirs.length - 1;
-        			while (k >= 0) {
-        				String versionDir = versionDirs[k];
-        				File vDir = new File(f2.getPath() + FILESEPARATOR + versionDir);
-        				if (vDir.exists() && new File(vDir.getPath() + FILESEPARATOR + "version.xml").exists()) {
-        					// check it is not already loaded
-        					if (!alreadyLoaded.contains(f)) {
-        						dirs.add(vDir.getPath());
-        					}
-        					break;
-        				}
-        				k--;
-        			}
-        		}
-    		}        		
-    	}
-        return dirs;
-    } // getBeastDirectories
 
     
 	public static void initialise() {
@@ -628,7 +553,6 @@ public class PackageManager {
 	
 	    processInstallList(packages);
 	
-	//    checkInstalledDependencies(packages);
 	}
 
 	/**
@@ -642,347 +566,145 @@ public class PackageManager {
     }
     
     public static void loadExternalJarsEvenIfAlreadyLoaded() throws IOException {
-    	
-    	
-    	Utils6.logToSplashScreen("PackageManager::processDeleteList");
-        processDeleteList();
-
-    	Utils6.logToSplashScreen("PackageManager::addInstalledPackages");
-        addInstalledPackages(packages);
-
-    	Utils6.logToSplashScreen("PackageManager::processInstallList");
-        processInstallList(packages);
-
-        // checkInstalledDependencies() is intentionally deferred to after all packages are
-        // loaded (see end of this method). Running it here — before loadMavenPackages() and
-        // loadPackage() — would check dependencies against an incomplete package map, causing
-        // false warnings for packages whose dependencies arrive via plugin layers.
-
-        // Log BEAST-related modules already in the boot layer:
-        // core beast.* modules plus any module that requires one of them
-        // (i.e. BEAST packages loaded via the IDE workspace).
-        // In an IDE all modules are typically in the boot layer, so
-        // nothing will be loaded from disk — this message explains why.
-        ModuleLayer bootLayer = ModuleLayer.boot();
-        Set<String> beastCoreNames = bootLayer.modules().stream()
-            .map(Module::getName)
-            .filter(n -> n.startsWith("beast."))
-            .collect(Collectors.toSet());
-        List<String> bootBeastModules = bootLayer.modules().stream()
-            .filter(m -> beastCoreNames.contains(m.getName())
-                || m.getDescriptor().requires().stream()
-                    .anyMatch(r -> beastCoreNames.contains(r.name())))
-            .map(Module::getName)
-            .sorted()
-            .toList();
-        if (!bootBeastModules.isEmpty()) {
-            System.err.println("BEAST modules in boot layer: " + bootBeastModules);
-        }
-
-        // Load external package JARs into JPMS ModuleLayers.
-        // Maven packages are loaded first, then legacy ZIP packages.
-        // Because createAndRegisterModuleLayer() skips modules already
-        // present in the boot layer or a previously registered plugin
-        // layer, Maven packages take precedence over ZIP packages when
-        // both provide the same JPMS module.  This is the desired
-        // behaviour: Maven is the recommended distribution format going
-        // forward, so a newer Maven version should shadow a legacy ZIP.
-        Utils6.logToSplashScreen("PackageManager::loadMavenPackages");
-        List<MavenCoordinate> skippedMaven = loadMavenPackages();
-
-        // Load legacy ZIP packages (from ~/.beast/2.8/ and other dirs).
-        // These are loaded after Maven packages, so a Maven package with
-        // the same module name will take precedence.
-        List<String> skippedDirs = new ArrayList<>();
-        for (String jarDirName : getBeastDirectories()) {
-        	if (!loadPackage(jarDirName)) {
-        		skippedDirs.add(jarDirName);
-        	}
-        }
-
-        // Retry packages that had unsatisfied module dependencies.
-        // On each pass, newly loaded plugin layers may satisfy requires
-        // that were missing earlier (e.g. gammaspike requires
-        // sampled.ancestors, which wasn't loaded yet on the first pass).
-        // Repeat until a pass makes no progress.
-        boolean progress = !skippedMaven.isEmpty() || !skippedDirs.isEmpty();
-        while (progress) {
-        	progress = false;
-
-        	if (!skippedMaven.isEmpty()) {
-        		MavenPackageResolver resolver;
-        		try {
-        			resolver = createMavenResolver();
-        		} catch (UnsupportedOperationException e) {
-        			resolver = null;
-        		}
-        		if (resolver != null) {
-        			List<MavenCoordinate> stillSkipped = new ArrayList<>();
-        			for (MavenCoordinate coord : skippedMaven) {
-        				try {
-        					List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
-        					Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
-        					if (createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString())) {
-        						progress = true;
-        					} else {
-        						stillSkipped.add(coord);
-        					}
-        				} catch (Exception e) {
-        					// already reported on first pass
-        				}
-        			}
-        			skippedMaven = stillSkipped;
-        		}
-        	}
-
-        	List<String> stillSkippedDirs = new ArrayList<>();
-        	for (String jarDirName : skippedDirs) {
-        		if (loadPackage(jarDirName)) {
-        			progress = true;
-        		} else {
-        			stillSkippedDirs.add(jarDirName);
-        		}
-        	}
-        	skippedDirs = stillSkippedDirs;
-        }
-
-        // Re-run addInstalledPackages() so that any packages installed from the queued
-        // install list (processInstallList) above are reflected in the package map before
-        // the dependency check below.
-        addInstalledPackages(packages);
-
-        // Dependency check runs here -- after all Maven and ZIP packages are loaded and all
-        // plugin layers are registered -- so the package map is complete. Running it earlier
-        // would flag valid dependencies (resolved via plugin layers) as missing.
-        Utils6.logToSplashScreen("PackageManager::checkInstalledDependencies");
-        checkInstalledDependencies(packages);
-
-        externalJarsLoaded = true;
-    	Utils6.logToSplashScreen("PackageManager::Done");
-    } // loadExternalJars
-    
-//	private static void findDataTypes() {
-//		try {
-//			Method findDataTypes = BEASTClassLoader.forName("beast.base.evolution.alignment.Alignment").getMethod("findDataTypes");
-//			findDataTypes.invoke(null);
-//		} catch (Exception e) {
-//			// too bad, cannot load data types
-//			System.err.print(e.getMessage());
-//		}
-//	}
-
-	public static void loadExternalJars(String packagesString) throws IOException {
-        processDeleteList();
-
-        addInstalledPackages(packages);
-
-        processInstallList(packages);
-
-        if (packagesString != null && packagesString.trim().length() > 0) {
-        	String unavailablePacakges = "";
-        	String [] packageAndVersions = packagesString.split(":");
-        	for (String s : packageAndVersions) {
-        		s = s.trim();
-        		int i = s.lastIndexOf(" ");
-        		if (i > 0) {
-        			String pkgname = s.substring(0, i);
-        			String pkgversion = s.substring(i+1).trim().replaceAll("v", "");
-        			Package pkg = new Package(pkgname);
-        			PackageVersion version = new PackageVersion(pkgversion);
-        	    	PackageInstaller.useArchive(true);
-        			String dirName = getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-        			if (new File(dirName).exists()) {
-        				loadPackage(dirName);
-        			} else {
-        				// check the latest installed version
-        				Package pkg2 = packages.get(pkgname);
-        				if (pkg2 == null || !pkg2.isInstalled() || !pkg2.getInstalledVersion().equals(version)) {
-            				unavailablePacakges += s +", ";
-        				} else {
-	            	    	PackageInstaller.useArchive(false);
-	            			dirName = getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-	            			if (new File(dirName).exists()) {
-	            				loadPackage(dirName);
-	            			} else {
-	            				unavailablePacakges += s +", ";
-	            			}
-        				}
-        			}
-        		}
-        	}
-        	if (unavailablePacakges.length() > 1) {
-        		unavailablePacakges = unavailablePacakges.substring(0, unavailablePacakges.length() - 2);
-        		if (unavailablePacakges.contains(",")) {
-        			System.err.println("The following packages are required, but not available: " + unavailablePacakges);
-        		} else {
-        			System.err.println("The following package is required, but is not available: " + unavailablePacakges);
-        		}
-        		System.err.println("See http://beast2.org/managing-packages/ for details on how to install packages.");
-        	}
-        }
-        
-        externalJarsLoaded = true;
+        load(Selection.ALL);
     } // loadExternalJars
 
 	/**
-	 * @return true if all modules in the package were resolved, false if
-	 *         any modules were skipped due to unsatisfied dependencies.
+	 * Load the package versions an analysis was made with ({@code beast -strictversions}):
+	 * {@code packagesString} is the analysis's {@code required} attribute, e.g.
+	 * {@code "BEAST.base v2.8.0:SA v2.3.0"}. Does nothing if packages are already loaded.
+	 *
+	 * @throws IllegalArgumentException if a version the analysis needs is not installed
 	 */
-	private static boolean loadPackage(String jarDirName) {
-        try {
-            File versionFile = new File(jarDirName + "/version.xml");
-            String packageName = null;
-            String packageVersion = null;
-            Map<String,Set<String>> services = null;
-            if (versionFile.exists()) {
-                try {
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    Document doc = factory.newDocumentBuilder().parse(versionFile);
-                    Element packageElement = doc.getDocumentElement();
-                    packageName = packageElement.getAttribute("name");
-                    packageVersion = packageElement.getAttribute("version");
-                    services = parseServices(doc);
-                } catch (Exception e) {
-                    // File is called version.xml, but is not a Beast2 version file
-                }
-            }
+	public static void loadExternalJars(String packagesString) throws IOException {
+		if (externalJarsLoaded) {
+			return;
+		}
+		load(packagesString == null || packagesString.isBlank() ? Selection.ALL : Selection.fromRequired(packagesString));
+	}
 
-            // Collect JARs from lib/
-            File jarDir = new File(jarDirName + "/lib");
-            if (!jarDir.exists()) {
-                jarDir = new File(jarDirName + "\\lib");
-            }
-            List<Path> jarPaths = new ArrayList<>();
-            if (jarDir.exists() && jarDir.isDirectory()) {
-                for (String fileName : jarDir.list()) {
-                    if (fileName.endsWith(".jar")) {
-                        jarPaths.add(Path.of(jarDir.getAbsolutePath(), fileName));
-                    }
-                }
-            }
+	/** the plan the packages were loaded with, or null before loading */
+	private static LoadPlan loadPlan;
 
-            if (!jarPaths.isEmpty()) {
-                return createAndRegisterModuleLayer(jarPaths, services, packageName, packageVersion, jarDirName);
-            } else if (services != null && packageName != null) {
-                // No JARs but services found (e.g. running from IDE)
-                BEASTClassLoader.classLoader.addServices(packageName, services);
-            }
-        } catch (Exception e) {
-            System.err.println("Skip loading of " + jarDirName + " : " + e.getMessage());
-        }
-        return true;
+	public static LoadPlan getLoadPlan() {
+		return loadPlan;
 	}
 
 	/**
-	 * Create a JPMS ModuleLayer from a list of JAR paths and register it
-	 * with BEASTClassLoader.  Modules already present in the boot layer
-	 * or previously loaded plugin layers are excluded to avoid
-	 * "reads more than one module" errors.
-	 *
-	 * @param jarPaths       JARs to include in the new layer
-	 * @param services       service map from version.xml (may be null)
-	 * @param packageName    the BEAST package name (for fallback service registration)
-	 * @param packageVersion the package version string (may be null)
-	 * @param description    human-readable label used in warning messages
+	 * Decide what to load (the {@link Planner}), load it as module layers (the {@link Loader})
+	 * and register them with {@link BEASTClassLoader}. Reports what was loaded and what was not,
+	 * with the reason; {@code packagemanager -plan} gives the full plan with its warnings.
 	 */
-	/**
-	 * @return true if all candidate modules were resolved, false if any
-	 *         modules were skipped due to unsatisfied dependencies.
-	 */
-	public static boolean createAndRegisterModuleLayer(List<Path> jarPaths,
-			Map<String, Set<String>> services, String packageName,
-			String packageVersion, String description) {
-		try {
-			ModuleFinder finder = ModuleFinder.of(jarPaths.toArray(Path[]::new));
+	private static void load(Selection selection) throws IOException {
+		Utils6.logToSplashScreen("PackageManager::processDeleteList");
+		processDeleteList();
+		Utils6.logToSplashScreen("PackageManager::addInstalledPackages");
+		addInstalledPackages(packages);
+		processInstallList(packages);
 
-			// Parents for the new layer: the boot layer plus every previously
-			// registered plugin layer, so a package can read modules provided by
-			// other packages (e.g. beast.fx -> beast.base once the core modules
-			// leave the boot layer). The skip/retry loop in loadExternalJars loads
-			// dependencies before their dependents.
-			List<ModuleLayer> parentLayers = new ArrayList<>();
-			parentLayers.add(ModuleLayer.boot());
-			parentLayers.addAll(BEASTClassLoader.getPluginLayers());
-
-			Set<String> availableModules = parentLayers.stream()
-				.flatMap(l -> l.modules().stream())
-				.map(Module::getName)
-				.collect(Collectors.toCollection(HashSet::new));
-
-			// Collect candidate modules (not already loaded)
-			Set<String> candidates = finder.findAll().stream()
-				.map(ref -> ref.descriptor().name())
-				.filter(name -> !availableModules.contains(name))
-				.collect(Collectors.toSet());
-
-			if (candidates.isEmpty()) {
-				// All modules already loaded (e.g. retry after earlier pass)
-				return true;
-			}
-
-			// Filter out modules whose requires can't be satisfied
-			Set<String> resolvable = new LinkedHashSet<>();
-			Set<String> skipped = new LinkedHashSet<>();
-			for (String name : candidates) {
-				var ref = finder.find(name).orElse(null);
-				if (ref == null) continue;
-				boolean satisfied = ref.descriptor().requires().stream()
-					.filter(r -> !r.modifiers().contains(
-						java.lang.module.ModuleDescriptor.Requires.Modifier.STATIC))
-					.allMatch(r -> availableModules.contains(r.name())
-						|| candidates.contains(r.name())
-						|| r.name().equals("java.base"));
-				if (satisfied) {
-					resolvable.add(name);
-				} else {
-					skipped.add(name);
-				}
-			}
-
-			if (!skipped.isEmpty()) {
-				System.err.println("Skipping modules with unsatisfied dependencies in " +
-					description + ": " + skipped);
-			}
-
-			if (resolvable.isEmpty()) {
-				if (services != null && packageName != null) {
-					BEASTClassLoader.classLoader.addServices(packageName, services);
-				}
-				return false;
-			}
-
-			String packageNameAndVersion = packageName != null
-				? packageName + (packageVersion != null ? " v" + packageVersion : "")
-				: description;
-			System.err.println("Loading package " + packageNameAndVersion + " from " + description);
-			Utils6.logToSplashScreen("Loading package " + packageNameAndVersion);
-
-			// Re-create finder from only the resolvable JARs
-			List<Path> resolvableJars = jarPaths.stream()
-				.filter(p -> {
-					var refs = ModuleFinder.of(p).findAll();
-					return refs.stream().anyMatch(r -> resolvable.contains(r.descriptor().name()));
-				})
-				.toList();
-
-			ModuleFinder filteredFinder = ModuleFinder.of(resolvableJars.toArray(Path[]::new));
-			List<Configuration> parentConfigs = parentLayers.stream()
-				.map(ModuleLayer::configuration)
-				.collect(Collectors.toList());
-			Configuration config = Configuration.resolveAndBind(
-				filteredFinder, parentConfigs, ModuleFinder.of(), resolvable);
-			ModuleLayer layer = ModuleLayer.defineModulesWithOneLoader(
-				config, parentLayers, ClassLoader.getSystemClassLoader()).layer();
-			BEASTClassLoader.registerPluginLayer(layer, services);
-			return skipped.isEmpty();
-		} catch (Exception e) {
-			System.err.println("Warning: could not create ModuleLayer for " +
-				description + ": " + e.getMessage());
-			if (services != null && packageName != null) {
-				BEASTClassLoader.classLoader.addServices(packageName, services);
-			}
-			return false;
+		Runtime runtime = Inventory.readThisRuntime();
+		Inventory inventory = readInventory(runtime);
+		inventory.problems().forEach(p -> System.err.println("Warning: " + p));
+		LoadPlan plan = Planner.plan(inventory.packages(), runtime, selection);
+		if (!plan.missing().isEmpty()) {
+			String missing = String.join(", ", plan.missing());
+			System.err.println("The following package(s) are required, but not available: " + missing);
+			System.err.println("Install them with 'packagemanager -add NAME -version VERSION'.");
+			throw new IllegalArgumentException("The following package(s) are required, but not available: " + missing);
 		}
+		for (InstalledPackage p : plan.loaded()) {
+			if (p.location() != InstalledPackage.Location.BOOT) {
+				System.err.println("Loading package " + p.name() + " v" + p.version() + " (" + p.location().name().toLowerCase() + ")");
+				Utils6.logToSplashScreen("Loading package " + p.name() + " v" + p.version());
+			}
+		}
+		for (LoadPlan.Excluded e : plan.excluded()) {
+			System.err.println("Not loading package " + e.copy().name() + " v" + e.copy().version() + ": " + e.reason());
+		}
+		for (LoadPlan.DroppedModule d : plan.droppedModules()) {
+			System.err.println("Not loading module " + d.module() + " of " + d.packageName() + ": " + d.reason());
+		}
+
+		LoadedPackages loaded;
+		try {
+			loaded = Loader.load(plan);
+		} catch (Loader.LoadException e) {
+			// the planner missed something the JVM found: report it, and run on BEAST alone
+			// rather than not at all
+			System.err.println("Warning: " + e.getMessage());
+			System.err.println("Loading BEAST without its packages. Run 'packagemanager -plan' for details.");
+			List<InstalledPackage> coreOnly = inventory.packages().stream()
+					.filter(p -> p.name().equals(Planner.BASE) || p.name().equals(Planner.APP)).toList();
+			plan = Planner.plan(coreOnly, runtime);
+			try {
+				loaded = Loader.load(plan);
+			} catch (Loader.LoadException e2) {
+				throw new IOException("BEAST cannot load its own core: " + e2.getMessage(), e2);
+			}
+		}
+		loaded.registerWithBEASTClassLoader();
+		loadPlan = plan;
+		externalJarsLoaded = true;
+		Utils6.logToSplashScreen("PackageManager::Done");
+	}
+
+	/**
+	 * Everything installed, as the planner's inventory: the core on the boot layer (developer
+	 * mode), BEAST_PACKAGE_PATH, the user folder with its archive and Maven packages, the
+	 * system folder and the BEAST installation folder.
+	 */
+	public static Inventory readInventory(Runtime runtime) {
+		Inventory inventory = new Inventory();
+		inventory.addCoreOnBootLayer(runtime, new Version(beastVersion.getVersion()));
+		if (getBeastPackagePathProperty() != null) {
+			for (String dir : getBeastPackagePathProperty().split(File.pathSeparator.equals(";") ? ";" : ":")) {
+				if (dir.isBlank()) {
+					continue;
+				}
+				Path d = Path.of(dir);
+				if (new File(dir, "version.xml").exists()) {
+					inventory.addPackageFolder(d, InstalledPackage.Location.OVERRIDE);
+				} else {
+					inventory.addFolder(d, InstalledPackage.Location.OVERRIDE);
+				}
+			}
+		}
+		Path user = Path.of(getPackageUserDir());
+		inventory.addFolder(user, InstalledPackage.Location.USER);
+		inventory.addArchive(user);
+		if (!loadMavenPackageConfig().isEmpty()) {
+			try {
+				MavenPackageResolver resolver = createMavenResolver();
+				inventory.addMavenPackages(user, coordinate -> {
+					try {
+						return resolver.resolve(coordinate);
+					} catch (Exception e) {
+						throw new RuntimeException(e.getMessage(), e);
+					}
+				});
+			} catch (UnsupportedOperationException e) {
+				inventory.problems().add("packages installed from Maven are not loaded: " + e.getMessage());
+			}
+		}
+		inventory.addFolder(Path.of(getPackageSystemDir()), InstalledPackage.Location.SYSTEM);
+		// in developer mode the folder above the launcher's jar is a build tree (beast-base/target),
+		// whose version.xml and lib/ look like a BEAST.base package without its own jar
+		boolean coreOnBootLayer = runtime.bootModules().stream().anyMatch(b -> b.name().equals("beast.base"));
+		if (getBEASTInstallDir() != null && !coreOnBootLayer) {
+			inventory.addFolder(Path.of(getBEASTInstallDir()), InstalledPackage.Location.SYSTEM);
+		}
+		return inventory;
+	}
+
+	/** the plan for what is installed now, without loading anything ({@code packagemanager -plan}) */
+	public static String describePlan() {
+		Runtime runtime = Inventory.readThisRuntime();
+		Inventory inventory = readInventory(runtime);
+		StringBuilder b = new StringBuilder();
+		inventory.problems().forEach(p -> b.append("problem: ").append(p).append('\n'));
+		inventory.warnings().forEach(w -> b.append("package metadata: ").append(w).append('\n'));
+		b.append(Planner.plan(inventory.packages(), runtime).describe());
+		return b.toString();
 	}
 
 	// =========================================================================
@@ -1098,62 +820,41 @@ public class PackageManager {
 	}
 
 	/**
-	 * Load all Maven-installed packages at startup.  Each coordinate in
-	 * {@code maven-packages.xml} is resolved, and its JARs are loaded into
-	 * a new JPMS ModuleLayer.
-	 */
-	/**
-	 * @return list of coordinates that had modules skipped due to
-	 *         unsatisfied dependencies (empty if all resolved).
-	 */
-	public static List<MavenCoordinate> loadMavenPackages() {
-		List<MavenCoordinate> skipped = new ArrayList<>();
-		List<MavenCoordinate> coords = loadMavenPackageConfig();
-		if (coords.isEmpty()) return skipped;
-
-		MavenPackageResolver resolver;
-		try {
-			resolver = createMavenResolver();
-		} catch (UnsupportedOperationException e) {
-			System.err.println("Warning: " + e.getMessage());
-			return skipped;
-		}
-
-		for (MavenCoordinate coord : coords) {
-			try {
-				List<Path> jars = resolver.resolve(coord.groupId, coord.artifactId, coord.version);
-				Map<String, Set<String>> services = parseServicesFromJar(jars, coord);
-				if (!createAndRegisterModuleLayer(jars, services, coord.artifactId, coord.version, coord.toString())) {
-					skipped.add(coord);
-				}
-			} catch (Exception e) {
-				System.err.println(" FAILED: " + e.getMessage());
-			}
-		}
-		return skipped;
-	}
-
-	/**
-	 * Install a Maven package: resolve the coordinate, download JARs,
-	 * persist the coordinate in {@code maven-packages.xml}, and load the
-	 * package into the current runtime.
+	 * Install a Maven package: resolve and download it (without BEAST's own core and JavaFX),
+	 * check that the planner would load it with what is installed, and record it in
+	 * {@code maven-packages.xml}. It is loaded when BEAST next starts (decision 4).
+	 *
+	 * @throws IllegalArgumentException if it would not load, with the planner's reason; nothing
+	 *         is recorded then
 	 */
 	public static void installMavenPackage(String groupId, String artifactId, String version)
 			throws Exception {
-		// 1. Resolve to verify the coordinate is valid and downloadable
 		MavenPackageResolver resolver = createMavenResolver();
-		List<Path> jars = resolver.resolve(groupId, artifactId, version);
+		resolver.resolve(groupId, artifactId, version);
 
-		// 2. Add to maven-packages.xml
-		List<MavenCoordinate> coords = loadMavenPackageConfig();
-		coords.removeIf(c -> c.groupId.equals(groupId) && c.artifactId.equals(artifactId));
-		coords.add(new MavenCoordinate(groupId, artifactId, version));
-		saveMavenPackageConfig(coords);
-
-		// 3. Load into current runtime
-		Map<String, Set<String>> services = parseServicesFromJar(jars,
-				new MavenCoordinate(groupId, artifactId, version));
-		createAndRegisterModuleLayer(jars, services, artifactId, version, groupId + ":" + artifactId + ":" + version);
+		List<MavenCoordinate> before = loadMavenPackageConfig();
+		List<MavenCoordinate> after = new ArrayList<>(before);
+		after.removeIf(c -> c.groupId.equals(groupId) && c.artifactId.equals(artifactId));
+		after.add(new MavenCoordinate(groupId, artifactId, version));
+		saveMavenPackageConfig(after);
+		Runtime runtime = Inventory.readThisRuntime();
+		Inventory inventory = readInventory(runtime);
+		LoadPlan plan = Planner.plan(inventory.packages(), runtime);
+		String coordinate = groupId + ":" + artifactId + ":" + version;
+		Optional<LoadPlan.Excluded> refused = plan.excluded().stream()
+				.filter(e -> e.copy().location() == InstalledPackage.Location.MAVEN
+						&& e.copy().version().equals(new Version(version)))
+				.findFirst();
+		boolean listed = inventory.packages().stream().anyMatch(p -> p.location() == InstalledPackage.Location.MAVEN
+				&& p.version().equals(new Version(version)));
+		if (refused.isPresent() || !listed) {
+			saveMavenPackageConfig(before);
+			String why = refused.map(LoadPlan.Excluded::reason)
+					.orElse(String.join("; ", inventory.problems()));
+			throw new IllegalArgumentException("Not installing " + coordinate + ": " + why);
+		}
+		inventory.warnings().forEach(w -> System.err.println("Note for the package's author: " + w));
+		System.err.println("Installed " + coordinate + "; it is loaded when BEAST next starts.");
 	}
 
 	/**
@@ -1250,45 +951,8 @@ public class PackageManager {
 	 * @return
 	 */
     public static Map<String, Set<String>> parseServices(Document doc) {
-		Map<String, Set<String>> serviceMap = new HashMap<>();
-
-        // process "service" elements
-		NodeList nodes = doc.getElementsByTagName("service");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element service = (Element) nodes.item(i);
-            String type = service.getAttribute("type");
-            Set<String> providers = new HashSet<>();
-
-            NodeList content = service.getChildNodes();
-            for (int j = 0; j < content.getLength(); j++) {
-            	Node n = content.item(j);
-            	if (n.getNodeType() == Node.ELEMENT_NODE) {
-            		if (n.getNodeName().equals("provider")) {
-            			String clazz = ((Element)n).getAttribute("classname");
-            			providers.add(clazz);
-            		} else {
-            			System.err.println("Unrecognised element " + n.getNodeName() + " found. Expected 'provider'");
-            		}
-            	}
-            }
-            serviceMap.put(type, providers);
-        }
-        
-        // process "packageapp" elements
-        // package apps are services of type "has.main.method"
-        Set<String> providers = new HashSet<>();
-		nodes = doc.getElementsByTagName("packageapp");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Element service = (Element) nodes.item(i);
-			String clazz = service.getAttribute("class");
-			providers.add(clazz);
-		}
-        if (providers.size() > 0) {
-        	serviceMap.put("has.main.method", providers);
-        }
-
-		return serviceMap;
-	}
+        return Inventory.services(doc);
+    }
 
     
 	public static Set<String> listServices(String service) {
@@ -1327,16 +991,6 @@ public class PackageManager {
         new DependencyResolver().resolve(packageMap, packagesToInstall);
     }
 
-    /**
-     * Checks that dependencies of all installed packages are met.
-     */
-    private static void checkInstalledDependencies(Map<String, Package> packageMap) {
-        new DependencyResolver().checkInstalled(packageMap);
-    }
-
-    public static void checkInstalledDependencies() {
-    	checkInstalledDependencies(packages);
-    }
 
     /**
      * Display a warning to console or as a dialog, depending
@@ -1737,6 +1391,10 @@ public class PackageManager {
     }
 
     public static void main(String[] args) {
+        // run straight after installing BEAST, packagemanager is the first to start: without
+        // the bundled core in the package dir, every Maven package would be refused as
+        // needing BEAST.base
+        beast.pkgmgmt.launcher.BeastLauncher.seedBundledPackages();
         PackageManagerCLI.main(args);
     }
 

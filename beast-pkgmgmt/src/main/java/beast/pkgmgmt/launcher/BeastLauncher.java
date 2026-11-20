@@ -1,7 +1,6 @@
 package beast.pkgmgmt.launcher;
 
 import beast.pkgmgmt.*;
-import beast.pkgmgmt.Package;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -14,9 +13,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.security.MessageDigest;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -51,147 +48,9 @@ public class BeastLauncher {
 		}
 	}
 	
-	/**
-	 * Install BEAST package, if a none is installed, or a newer version can be found 
-	 **/
-	static private void installBEASTPackage(String packageName, boolean copyExamplesAndTemplates) throws IOException, NoSuchMethodException, SecurityException,
-			ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		BeastLauncher clu = new BeastLauncher();
 
-		// first try beast from the package_user_dir/lib/beast.jar
-		String beastUserDir = getPackageUserDir();
-		pathDelimiter = isWindows() ? "\\\\" : "/";
-		beastUserDir += pathDelimiter + packageName + pathDelimiter;
-		String beastJar = beastUserDir + "lib";
-		boolean foundJavaJarFile = checkForBEAST(new File(beastJar), packageName);
 
-		String launcherJar = clu.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-		// deal with special characters and spaces in path
-		launcherJar = URLDecoder.decode(launcherJar, "UTF-8");
-		//System.err.println("jardir = " + launcherJar);
-		File jarDir0 = new File(launcherJar).getParentFile();
-		while ((!foundJavaJarFile) && (jarDir0 != null)) {
-			foundJavaJarFile = checkForBEAST(jarDir0, packageName);
-			foundJavaJarFile = foundJavaJarFile
-					|| checkForBEAST(new File(jarDir0.getAbsolutePath() + pathDelimiter + "lib" + pathDelimiter + "packages"), packageName);
 
-			if (foundJavaJarFile) {
-				createBeastPackage(jarDir0, packageName, copyExamplesAndTemplates);
-			}
-
-			jarDir0 = jarDir0.getParentFile();
-		}
-
-		if (!foundJavaJarFile) {
-			System.err.println("WARNING: could not find " + packageName + ".jar");
-			// if beast.jar or its classes are not already in the class path (as
-			// is when launched e.g. as developer)
-			// the next line will fail
-		}
-
-		// initialise beast.jar
-//		Method method = Class.forName("beast.evolution.alignment.Alignment").getMethod("findDataTypes");
-//		method.invoke(null);
-
-	}
-
-	private static void createBeastPackage(File jarDir0, String packageName, boolean copyExamplesAndTemplates) {
-		try {
-			//System.err.println("jarDir0="+jarDir0.toString().toLowerCase());
-			if (jarDir0.toString().toLowerCase().endsWith("lib")) {
-				jarDir0 = jarDir0.getParentFile();
-			}
-			//System.err.println("jarDir0="+jarDir0.toString().toLowerCase());
-
-			// create package user dir, if it not already exists
-			String userDir = getPackageUserDir();
-			File dir = new File(userDir + pathDelimiter + packageName + pathDelimiter + "lib");
-			if (!dir.exists()) {
-				if (!dir.mkdirs()) {
-					// cannot create dir, let alone create a beast package
-					return;
-				}
-			}
-			File exampleDir = null, templateDir = null;
-			if (copyExamplesAndTemplates) {
-				exampleDir = new File(
-						userDir + pathDelimiter + packageName + pathDelimiter + "examples" + pathDelimiter + "nexus");
-				if (!exampleDir.exists()) {
-					if (!exampleDir.mkdirs()) {
-						// cannot create dir, let alone create a beast package
-						return;
-					}
-				}
-				
-				templateDir = new File(userDir + pathDelimiter + packageName + pathDelimiter + "fxtemplates");
-				if (!templateDir.exists()) {
-					if (!templateDir.mkdirs()) {
-						// cannot create dir, let alone create a beast package
-						return;
-					}
-				}
-			}
-
-			File beastJar = new File(jarDir0 + pathDelimiter + "lib" + pathDelimiter + "packages" + pathDelimiter + packageName + ".jar");
-			File target = new File(dir + pathDelimiter + packageName + ".jar");
-			copyFileUsingStream(beastJar, target);
-
-			File versionFile = new File(jarDir0 + pathDelimiter + "lib" + pathDelimiter + "packages" + pathDelimiter + packageName + ".version.xml");
-			if (!versionFile.exists()) {
-				versionFile = new File(jarDir0 + pathDelimiter + "lib" + pathDelimiter + "packages" + pathDelimiter + packageName.toLowerCase() + ".version.xml");
-			}				
-			if (!versionFile.exists()) {
-				System.err.println("Error: cannot find version file: " + versionFile);
-			} else {
-				File versionTarget = new File(userDir + pathDelimiter + packageName + pathDelimiter + "version.xml");
-				copyFileUsingStream(versionFile, versionTarget);
-			}
-
-			File beastSrcJar = new File(jarDir0 + pathDelimiter + "lib" + pathDelimiter + "packages" + pathDelimiter + packageName + ".src.jar");
-			File srcTarget = new File(userDir + pathDelimiter + packageName + pathDelimiter + packageName + ".src.jar");
-			copyFileUsingStream(beastSrcJar, srcTarget);
-
-			if (copyExamplesAndTemplates) {
-				copyFilesInDir(new File(jarDir0 + pathDelimiter + "examples"),
-						new File(userDir + pathDelimiter + packageName + pathDelimiter + "examples"));
-				copyFilesInDir(new File(jarDir0 + pathDelimiter + "examples" + pathDelimiter + "nexus"), exampleDir);
-				copyFilesInDir(new File(jarDir0 + pathDelimiter + "fxtemplates"), templateDir);
-			}
-
-		} catch (Exception e) {
-			// do net let exceptions hold up launch of BEAST & friends
-			e.printStackTrace();
-		}
-	}
-
-	private static void copyFilesInDir(File srcDir, File targetDir) throws IOException {
-		String targetDirName = targetDir.getAbsolutePath();
-		if (srcDir.exists() && srcDir.listFiles() != null) {
-			for (File src : srcDir.listFiles()) {
-				if (src.isFile()) {
-					copyFileUsingStream(src, new File(targetDirName + pathDelimiter + src.getName()));
-				}
-			}
-		}
-	}
-
-	// copy files
-	private static void copyFileUsingStream(File source, File dest) throws IOException {
-		InputStream is = null;
-		OutputStream os = null;
-		try {
-			is = new FileInputStream(source);
-			os = new FileOutputStream(dest);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = is.read(buffer)) > 0) {
-				os.write(buffer, 0, length);
-			}
-		} finally {
-			is.close();
-			os.close();
-		}
-	}
 
 	/** Name of the marker file holding the checksum of the bundled package zip
 	 *  that was last extracted into a user package directory. */
@@ -551,44 +410,6 @@ public class BeastLauncher {
 		dir.delete();
 	}
 
-	private static boolean checkForBEAST(File jarDir, String packageName) throws IOException {
-		//System.err.println("Checking out " + jarDir.getAbsolutePath());
-		boolean foundOne = false;
-		if (jarDir.exists()) {
-			// System.err.println(jarDir.getAbsolutePath() + "exists");
-			URL url = new URL("file://" + (isWindows() ? "/" : "") + jarDir.getAbsolutePath() + "/" + packageName +".jar");
-			if (new File(jarDir.getAbsoluteFile() + File.separator + packageName + ".jar").exists()) {
-				File versionFile = new File(jarDir.getParent() + pathDelimiter + "version.xml");
-				if (versionFile.exists()) {
-					BufferedReader fin = new BufferedReader(new FileReader(versionFile));
-					String str = null;
-					while (fin.ready()) {
-						str += fin.readLine();
-					}
-					fin.close();
-
-					int start = str.indexOf("version=");
-					int end = str.indexOf("\"",  start + 9);
-					if (end == -1 || str.indexOf("'",  start + 9) > 0) {
-						end = Math.min(end, str.indexOf("'",  start + 9));
-					}
-					String version = str.substring(start + 9, end);
-					double localVersion = parseVersion(version);
-					double desiredVersion = parseVersion(BEASTVersion.INSTANCE.getVersion());
-					if (localVersion < desiredVersion) {
-						return false;
-					}
-				}
-
-				foundOne = true;
-				String classpath = System.getProperty("java.class.path");
-				String jar = url + "";
-				classpath += System.getProperty("path.separator") + jar.substring(5);
-				System.setProperty("java.class.path", classpath);
-			}
-		}
-		return foundOne;
-	}
 
 	static boolean isMac() {
 		return System.getProperty("os.name").toLowerCase().startsWith("mac");
@@ -668,259 +489,50 @@ public class BeastLauncher {
 	}
 
 	/**
+	 * Seeds the packages shipped with the application into the user package dir: the core
+	 * (BEAST.base, BEAST.app) and the other bundled packages (#248). In an installed
+	 * application this extracts {@code <app>/packages/<pkg>.package*.zip}, so the package
+	 * manager can upgrade them in place; in developer/IDE runs there is no bundled zip, the core
+	 * is on the boot layer, and this does nothing. Every launcher calls it first, and so does
+	 * {@code packagemanager}, which may be the first thing run after installing BEAST.
+	 */
+	public static void seedBundledPackages() {
+		seedBundledPackage("BEAST.base");
+		seedBundledPackage("BEAST.app");
+		seedOtherBundledPackages();
+	}
+
+	/**
 	 * @param useStrictVersions
 	 * @param beastFile
-	 * @return Class path string for main BEAST process, enclosed in literal quotes.
+	 * @return an empty class path, in literal quotes: packages are loaded as module layers
 	 */
 	public static String getPath(boolean useStrictVersions, String beastFile) throws NoSuchMethodException, SecurityException, ClassNotFoundException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
-		// Seed the bundled core packages into the user package dir. In an installed
-		// application these extract <app>/packages/<pkg>.package*.zip so the package
-		// manager can upgrade them in place; in developer/IDE runs no bundled zip
-		// exists, so fall back to the legacy single-jar seeding.
-		if (!seedBundledPackage("BEAST.base")) {
-			installBEASTPackage("BEAST.base", false);
-		}
-		if (!seedBundledPackage("BEAST.app")) {
-			installBEASTPackage("BEAST.app", false);
-		}
-		// the other packages shipped with the application (#248)
-		seedOtherBundledPackages();
+		seedBundledPackages();
 		PackageManager.initialise();
 
 
         if (useStrictVersions) {
-        	// grab "required" attribute from beast spec
+            // load exactly the package versions the analysis was made with (its 'required'
+            // attribute); the loading run() asks for later is then already done
             if (beastFile.endsWith(".json")) {
-            	throw new IllegalArgumentException("The -strictversions flag is not implemented for JSON files yet (only XML files are supported).");
-            } else {
-            	try {
-	                BufferedReader fin = new BufferedReader(new FileReader(beastFile));
-	                StringBuilder buf = new StringBuilder();
-	                String str = null;
-	                int lineCount = 0;
-	                while (fin.ready() && lineCount < 100) {
-	                    str = fin.readLine();
-	                    buf.append(str);
-	                    buf.append(' ');
-	                }
-	                fin.close();
-	                str = buf.toString();
-	                int start = str.indexOf("required=");
-	                if (start < 0) {
-	                	throw new IllegalArgumentException("Could not find a 'required' attribute in the XML. Add the required attribute, or run without the -strictversions flag");
-	                }
-	                char c = str.charAt(start + 9);
-	                start += 10;
-	                int end = str.indexOf(c, start);
-	                String packages = str.substring(start, end);
-
-	                buf = new StringBuilder();
-	        		buf.append("\"");
-	        		buf.append(sanitise(System.getProperty("java.library.path")));
-	        		String packagePath = determinePackagePath("BEAST " + BEASTVersion.INSTANCE.getVersion() + ":" + packages);
-	        		buf.append(packagePath);
-	        		buf.append("\"");
-	        		return buf.toString();
-            	} catch (IOException e) {
-            		e.printStackTrace();
-            	}
+                throw new IllegalArgumentException("The -strictversions flag is not implemented for JSON files yet (only XML files are supported).");
             }
-        } 
+            beast.pkgmgmt.plan.Selection selection = beast.pkgmgmt.plan.Selection.fromAnalysis(java.nio.file.Path.of(beastFile));
+            PackageManager.loadExternalJars(String.join(":", selection.pinned().entrySet().stream()
+                    .map(e -> e.getKey() + " v" + e.getValue()).toList()));
+        }
 
-        PackageManager.checkInstalledDependencies();
-
-        // just load all packages
-        StringBuilder buf = new StringBuilder();
-		buf.append("\"");
-//		buf.append(sanitise(System.getProperty("java.library.path")));
-		String packagePath = Utils6.getBeautiProperty("package.path");
-		if (packagePath == null || packagePath.length() == 0) {
-			packagePath = determinePackagePath();
-			Utils6.saveBeautiProperty("package.path", packagePath);
-		}
-		buf.append(File.pathSeparator);
-		buf.append(packagePath);
-		buf.append("\"");
-		return buf.toString();
+		// The packages are loaded as module layers by PackageManager.loadExternalJars(), with
+		// their services; no class path is needed. An empty one is returned for callers that
+		// still read it.
+		return "\"\"";
 	}
 
 	
-	private static String determinePackagePath(String packagesString) throws UnsupportedEncodingException {
-		StringBuilder buf = new StringBuilder();
-//		if (PackageManager.getBEASTInstallDir() != null) {
-//			buf.append(File.pathSeparator);
-//			buf.append(URLDecoder.decode(PackageManager.getBEASTInstallDir() + "/lib/beast.base.jar", "UTF-8"));
-//		}
-	    if (packagesString != null && packagesString.trim().length() > 0) {
-	    	Map<String, Package> packages = new HashMap<String, Package>();
-	    	PackageManager.addInstalledPackages(packages);
-	    	
-	    	String unavailablePackages = "";
-	    	String [] packageAndVersions = packagesString.split(":");
-			Set<String> classes = new HashSet<String>();
-	    	for (String s : packageAndVersions) {
-	    		s = s.trim();
-	    		int i = s.lastIndexOf(" ");
-	    		if (i > 0) {
-	    			String pkgname = s.substring(0, i);
-	    			String pkgversion = s.substring(i+1).trim().replaceAll("v", "");
-	    			Package pkg = new Package(pkgname);
-	    			PackageVersion version = new PackageVersion(pkgversion);
-	    			PackageManager.useArchive(true);
-	    			String dirName = PackageManager.getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-	    			if (new File(dirName).exists()) {
-	    				buf.append(addJarsToPath(dirName, classes));
-	    			} else {
-	    				// check the latest installed version
-	    				Package pkg2 = packages.get(pkgname);
-	    				if (pkg2 == null || !pkg2.isInstalled() || !pkg2.getInstalledVersion().equals(version)) {
-	        				unavailablePackages += s +", ";
-	    				} else {
-	    					PackageManager.useArchive(false);
-	            			dirName = PackageManager.getPackageDir(pkg, version, false, PackageManager.getBeastPackagePathProperty());
-	            			if (new File(dirName).exists()) {
-	            				buf.append(addJarsToPath(dirName, classes));
-	            			} else {
-	            				unavailablePackages += s +", ";
-	            			}
-	    				}
-	    			}
-	    		}
-	    	}
-	    	if (unavailablePackages.length() > 1) {
-	    		unavailablePackages = unavailablePackages.substring(0, unavailablePackages.length() - 2);
-	    		if (unavailablePackages.contains(",")) {
-	    			System.err.println("The following packages are required, but not available: " + unavailablePackages);
-	    		} else {
-	    			System.err.println("The following package is required, but is not available: " + unavailablePackages);
-	    		}
-	    		System.err.println("See http://beast2.org/managing-packages/ for details on how to install packages.");
-	    		throw new IllegalArgumentException("The following package(s) are required, but not available: " + unavailablePackages);
-	    	}
-	    }
-	    return buf.toString();
-    }
-
-	private static String determinePackagePath() throws UnsupportedEncodingException {
-		StringBuilder buf = new StringBuilder();
-		Set<String> classes = new HashSet<String>();
-		for (String jarDirName : PackageManager.getBeastDirectories()) {
-			try {
-				File versionFile = new File(jarDirName + "/version.xml");
-				String packageNameAndVersion = null;
-				if (versionFile.exists()) {
-					try {
-						// print name and version of package
-						DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-						Document doc = factory.newDocumentBuilder().parse(versionFile);
-						Element packageElement = doc.getDocumentElement();
-						packageNameAndVersion = packageElement.getAttribute("name") + " v" + packageElement.getAttribute("version");
-						// System.err.println.println("Loading package " +
-						// packageNameAndVersion);
-						// Utils.logToSplashScreen("Loading package " +
-						// packageNameAndVersion);
-					} catch (Exception e) {
-						// too bad, won't print out any info
-
-						// File is called version.xml, but is not a Beast2
-						// version file
-						// Log.debug.print("Skipping "+jarDirName+" (not a
-						// Beast2 package)");
-					}
-				}
-				buf.append(addJarsToPath(jarDirName, classes));
-				
-
-			} catch (Exception e) {
-				// File exists, but cannot open the file for some reason
-				// Log.debug.println("Skipping "+jarDirName+"/version.xml
-				// (unable to open file");
-				// System.err.println.println("Skipping "+jarDirName+"/version.xml
-				// (unable to open file");
-			}
-
-		}
-//		if (PackageManager.getBEASTInstallDir() != null) {
-//			buf.append(File.pathSeparator);
-//			buf.append(URLDecoder.decode(PackageManager.getBEASTInstallDir() + "/lib/beast.base.jar", "UTF-8"));
-//			buf.append(File.pathSeparator);
-//			buf.append(URLDecoder.decode(PackageManager.getBEASTInstallDir() + "/lib/beast.app.jar", "UTF-8"));
-//		}
-		return buf.toString();
-	}
-
-	private static String addJarsToPath(String packageDirName, Set<String> classes) throws UnsupportedEncodingException {
-		StringBuilder buf = new StringBuilder();
-		File jarDir = new File(packageDirName + "/lib");
-		if (!jarDir.exists()) {
-			jarDir = new File(packageDirName + "\\lib");
-		}
-		if (jarDir.exists() && jarDir.isDirectory()) {
-			for (String fileName : jarDir.list()) {
-				if (fileName.endsWith(".jar")) {
-					// Log.debug.print("Probing: " + fileName + " ");
-					// check that we are not reload existing classes
-					boolean alreadyLoaded = false;
-					Set<String> jarClasses = new HashSet<String>();
-					try {
-						JarInputStream jarFile = new JarInputStream(
-								new FileInputStream(jarDir.getAbsolutePath() + "/" + fileName));
-						JarEntry jarEntry;
-
-						while (!alreadyLoaded) {
-							jarEntry = jarFile.getNextJarEntry();
-							if (jarEntry == null) {
-								break;
-							}
-							if ((jarEntry.getName().endsWith(".class"))) {
-								String className = jarEntry.getName().replaceAll("/", "\\.");
-								className = className.substring(0, className.lastIndexOf('.'));
-								if (classes.contains(className)) {
-									alreadyLoaded = true;
-								} else {
-									jarClasses.add(className);
-								}
-							}
-						}
-						jarFile.close();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					alreadyLoaded = false;
-					if (!alreadyLoaded) {
-						buf.append(File.pathSeparator);
-						buf.append(URLDecoder.decode(jarDir.getAbsolutePath() + "/" + fileName, "UTF-8"));
-						classes.addAll(jarClasses);
-					}
-				}
-			}
-		}
-		return buf.toString();
-	}
 
 
-	private static String sanitise(String property) {
-		// make absolute paths from relative paths
-		String pathSeparator = System.getProperty("path.separator");
-		String[] paths = property.split(pathSeparator);
-		StringBuilder b = new StringBuilder();
-		for (String path : paths) {
-			File f = new File(path);
-			b.append(f.getAbsolutePath());
-			b.append(pathSeparator);
-		}
-		// chop off last pathSeparator
-		property = b.substring(0, b.length() - 1);
 
-		// sanitise for windows
-		if (Utils6.isWindows()) {
-			String cwd = System.getProperty("user.dir");
-			cwd = cwd.replace("\\", "/");
-			property = property.replaceAll(";\\.", ";" + cwd + ".");
-			property = property.replace("\\", "/");
-		}
-		return property;
-	}
 
 	
 	public static boolean testCudaStatusOnMac() {
@@ -1041,12 +653,8 @@ public class BeastLauncher {
 			// Load external BEAST packages (creates ModuleLayers for each)
 			PackageManager.loadExternalJars();
 
-			// Populate service registry from version.xml files on classpath
-			BEASTClassLoader.initServices(classPath);
-
-			// Also scan java.class.path — the classpath above only covers
-			// installed packages; the app's own JARs (and their version.xml)
-			// are on java.class.path when launched via jpackage or bin/ scripts.
+			// services of the app's own jars (and their version.xml) on java.class.path; those
+			// of the packages are registered when they are loaded
 			BEASTClassLoader.initServices();
 
 			Class<?> mainClass = BEASTClassLoader.forName(main);

@@ -1,11 +1,25 @@
 package beast.pkgmgmt;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import beast.pkgmgmt.plan.Dependency;
+import beast.pkgmgmt.plan.InstalledPackage;
+import beast.pkgmgmt.plan.InstalledPackage.Location;
+import beast.pkgmgmt.plan.LoadPlan;
+import beast.pkgmgmt.plan.Planner;
+import beast.pkgmgmt.plan.Runtime;
+import beast.pkgmgmt.plan.Version;
 
 /**
- * Resolves package dependencies for BEAST package installations.
- * Given a set of packages to install, determines all transitive dependencies
- * that must also be installed and verifies that a consistent set of versions exists.
+ * Chooses the versions to install: the packages asked for and what they need. The same
+ * {@link Planner} that decides what loads decides this, with the versions a repository offers
+ * as one more kind of copy, so installing and loading follow the same rules. An installed copy
+ * that meets what is needed is kept; nothing is downgraded unless that version is asked for.
  */
 public class DependencyResolver {
 
@@ -21,113 +35,74 @@ public class DependencyResolver {
     }
 
     /**
-     * Populate the given map with versions of packages to install which satisfy
-     * dependencies of those already present.
+     * Adds to {@code packagesToInstall} the versions of other packages that the packages in it
+     * need and that are not installed in a version that fits.
      *
-     * @param packageMap        database of installed and available packages
-     * @param packagesToInstall map to populate with package versions requiring installation
-     * @throws DependencyResolutionException when no consistent set of dependent packages can be found
+     * @param packageMap        installed and available packages
+     * @param packagesToInstall the packages asked for, at the versions asked for
+     * @throws DependencyResolutionException when a package asked for cannot be installed, with the reason
      */
     public void resolve(Map<String, Package> packageMap,
                         Map<Package, PackageVersion> packagesToInstall) throws DependencyResolutionException {
+        Map<String, Version> asked = new LinkedHashMap<>();
+        packagesToInstall.forEach((p, v) -> asked.put(p.getName(), new Version(v.getVersion())));
 
-        Map<Package, PackageVersion> copy = new HashMap<>(packagesToInstall);
-
-        for (Map.Entry<Package, PackageVersion> entry : copy.entrySet()) {
-            resolve(packageMap, packagesToInstall, entry.getKey(), entry.getValue(),
-                    new LinkedHashSet<>());
-        }
-    }
-
-    private void resolve(Map<String, Package> packageMap,
-                         Map<Package, PackageVersion> packagesToInstall,
-                         Package rootPackage, PackageVersion rootPackageVersion,
-                         Set<String> resolving) throws DependencyResolutionException {
-
-        if (!resolving.add(rootPackage.getName()))
-            throw new DependencyResolutionException("Circular dependency detected: "
-                    + String.join(" -> ", resolving) + " -> " + rootPackage.getName());
-
-        if (!rootPackage.getAvailableVersions().contains(rootPackageVersion))
-            throw new IllegalArgumentException("Package version " + rootPackageVersion + " is not available.");
-
-        Set<PackageDependency> dependencies = rootPackage.getDependencies(rootPackageVersion);
-        for (PackageDependency dependency : dependencies) {
-            if (!packageMap.containsKey(dependency.dependencyName))
-                throw new DependencyResolutionException("Package " + rootPackage
-                        + " depends on unknown package " + dependency.dependencyName);
-
-            Package depPkg = packageMap.get(dependency.dependencyName);
-            PackageVersion intendedVersion = packagesToInstall.get(depPkg);
-            if (intendedVersion == null) {
-                if (depPkg.isInstalled() && dependency.isMetBy(depPkg.getInstalledVersion()))
-                    continue;
-            } else {
-                if (dependency.isMetBy(intendedVersion))
-                    continue;
-                else
-                    throw new DependencyResolutionException("Package " + rootPackage + " depends on a different " +
-                            "version of package " + dependency.dependencyName + " to that required by another package.");
+        List<InstalledPackage> copies = new ArrayList<>();
+        for (Package p : packageMap.values()) {
+            Version wanted = asked.get(p.getName());
+            Version installed = p.isInstalled() ? new Version(p.getInstalledVersion().getVersion()) : null;
+            if (installed != null && (wanted == null || wanted.equals(installed))) {
+                copies.add(copy(p.getName(), installed, Location.USER, p.getInstalledVersionDependencies()));
             }
-
-            boolean foundCompatible = false;
-            for (PackageVersion depPkgVersion : depPkg.getAvailableVersions()) {
-                if (dependency.isMetBy(depPkgVersion)) {
-                    if (depPkg.isInstalled() && depPkgVersion.compareTo(depPkg.getInstalledVersion()) < 0)
-                        continue; // No downgrading of installed versions
-
-                    packagesToInstall.put(depPkg, depPkgVersion);
-
-                    try {
-                        resolve(packageMap, packagesToInstall, depPkg, depPkgVersion,
-                                new LinkedHashSet<>(resolving));
-                        foundCompatible = true;
-                        break;
-                    } catch (DependencyResolutionException ignored) { }
-
-                    packagesToInstall.remove(depPkg);
+            for (PackageVersion offered : p.getAvailableVersions()) {
+                Version v = new Version(offered.getVersion());
+                boolean fits = wanted != null ? v.equals(wanted) && !v.equals(installed)
+                        : installed == null || v.compareTo(installed) > 0;
+                if (fits) {
+                    copies.add(copy(p.getName(), v, Location.AVAILABLE, p.getDependencies(offered)));
                 }
             }
-            if (!foundCompatible)
-                throw new DependencyResolutionException("Package " + rootPackage + " requires " + dependency + ", " +
-                        "but no installable version of that package was found.");
+        }
+
+        // nothing is loaded here, so no jars or launcher are involved: only versions
+        Version beast = new Version(PackageManager.beastVersion.getVersion());
+        LoadPlan plan = Planner.plan(copies, new Runtime(beast, beast, List.of()));
+
+        for (String name : asked.keySet()) {
+            if (plan.loadedPackage(name).isEmpty()) {
+                String why = plan.exclusion(name).map(LoadPlan.Excluded::reason).orElse("it is not available");
+                throw new DependencyResolutionException("Cannot install " + name + " " + asked.get(name) + ": " + why);
+            }
+        }
+        // what the packages asked for need, as planned; those not installed yet are installed
+        Set<String> needed = new LinkedHashSet<>(asked.keySet());
+        List<String> todo = new ArrayList<>(asked.keySet());
+        while (!todo.isEmpty()) {
+            plan.loadedPackage(todo.remove(todo.size() - 1)).ifPresent(p -> p.depends().forEach(d -> {
+                if (needed.add(d.name())) {
+                    todo.add(d.name());
+                }
+            }));
+        }
+        for (String name : needed) {
+            InstalledPackage chosen = plan.loadedPackage(name).orElse(null);
+            if (chosen != null && chosen.location() == Location.AVAILABLE && !asked.containsKey(name)) {
+                Package pkg = packageMap.get(name);
+                pkg.getAvailableVersions().stream().filter(v -> new Version(v.getVersion()).equals(chosen.version()))
+                        .findFirst().ifPresent(v -> packagesToInstall.put(pkg, v));
+            }
         }
     }
 
-    /**
-     * Checks that dependencies of all installed packages are met.
-     * Prints warnings for any broken dependencies.
-     *
-     * @param packageMap database of installed and available packages
-     */
-    public void checkInstalled(Map<String, Package> packageMap) {
-        Map<PackageDependency, Package> dependencies = new HashMap<>();
-
-        for (Package pkg : packageMap.values()) {
-            if (!pkg.isInstalled())
-                continue;
-            for (PackageDependency dep : pkg.getInstalledVersionDependencies())
-                dependencies.put(dep, pkg);
-        }
-
-        for (PackageDependency dep : dependencies.keySet()) {
-            Package depPackage = packageMap.get(dep.dependencyName);
-            Package requiredBy = dependencies.get(dep);
-            if (depPackage == null) {
-                System.err.println("WARNING: Package " + requiredBy.getName()
-                        + " requires another package (" + dep.dependencyName + ") which is not available.\n" +
-                        "Either uninstall " + requiredBy.getName() + " or ask the package maintainer for " +
-                        "information about this dependency.");
-            } else if (!depPackage.isInstalled()) {
-                System.err.println("WARNING: Package " + requiredBy.getName()
-                        + " requires another package (" + dep.dependencyName + ") which is not installed.\n" +
-                        "Either uninstall " + requiredBy.getName() + " or install the " + dep.dependencyName + " package.");
-            } else if (!dep.isMetBy(depPackage.getInstalledVersion())) {
-                System.err.println("WARNING: Package " + requiredBy.getName()
-                        + " requires another package " + dep
-                        + " but the installed " + dep.dependencyName + " has version " + depPackage.getInstalledVersion() + ".\n" +
-                        "Either uninstall " + requiredBy.getName() + " or install the correct version of " + dep.dependencyName + ".");
+    private static InstalledPackage copy(String name, Version version, Location location, Set<PackageDependency> deps) {
+        List<Dependency> depends = new ArrayList<>();
+        if (deps != null) {
+            for (PackageDependency d : deps) {
+                depends.add(new Dependency(d.dependencyName,
+                        d.atLeast == null ? null : new Version(d.atLeast.getVersion()),
+                        d.atMost == null ? null : new Version(d.atMost.getVersion())));
             }
         }
+        return new InstalledPackage(name, version, location, depends, List.of());
     }
 }
