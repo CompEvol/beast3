@@ -270,6 +270,10 @@ public class PackageManager {
             }
         }
 
+        // packages installed from Maven have no package folder: add them from the planner's
+        // inventory (#316)
+        addMavenPackages(packageMap, readMavenInventory(), mavenRepo());
+
         // Manually set currently-installed BEAST 2 version if not already set
         // This can happen when the BEAST package is not installed (perhaps due to 
         // file access issues)
@@ -305,6 +309,58 @@ public class PackageManager {
             beastAppPkg.setInstalled(new PackageVersion(beastVersion.getVersion()), new TreeSet<>());
         }
 
+    }
+
+    /**
+     * Every package installed from Maven, one per name, e.g. for {@code beast -version} (#316).
+     * Unlike {@link #addInstalledPackages(Map)}, a Maven copy is listed even if a ZIP copy of the
+     * same or a newer version is installed too.
+     */
+    public static List<Package> getMavenPackages() {
+        Map<String, Package> packageMap = new TreeMap<>();
+        addMavenPackages(packageMap, readMavenInventory(), mavenRepo());
+        return new ArrayList<>(packageMap.values());
+    }
+
+    /** the planner's inventory, or nothing if maven-packages.xml lists no package (no need to run the resolver) */
+    private static List<InstalledPackage> readMavenInventory() {
+        return loadMavenPackageConfig().isEmpty() ? List.of() : readInventory(Inventory.readThisRuntime()).packages();
+    }
+
+    /** the local Maven repository in the user package folder */
+    private static Path mavenRepo() {
+        return Path.of(getPackageUserDir(), "maven-repo");
+    }
+
+    /**
+     * Marks the Maven copies among {@code installed} as installed in {@code packageMap}, unless
+     * the package already has a copy of the same or a newer version: as in the planner, the
+     * newest copy is used, and a ZIP copy wins a tie.
+     *
+     * @param mavenRepo the local Maven repository, to read each copy's coordinate from its jar
+     */
+    static void addMavenPackages(Map<String, Package> packageMap, List<InstalledPackage> installed, Path mavenRepo) {
+        for (InstalledPackage p : installed) {
+            if (p.location() != InstalledPackage.Location.MAVEN) {
+                continue;
+            }
+            PackageVersion version = new PackageVersion(p.version().toString());
+            Package pkg = packageMap.computeIfAbsent(p.name(), Package::new);
+            if (pkg.isInstalled() && pkg.getInstalledVersion().compareTo(version) >= 0) {
+                continue;
+            }
+            Set<PackageDependency> dependencies = new TreeSet<>(Comparator.comparing(d -> d.dependencyName));
+            for (beast.pkgmgmt.plan.Dependency d : p.depends()) {
+                dependencies.add(new PackageDependency(d.name(),
+                        d.atLeast() == null ? null : new PackageVersion(d.atLeast().toString()),
+                        d.atMost() == null ? null : new PackageVersion(d.atMost().toString())));
+            }
+            pkg.setInstalled(version, dependencies);
+            pkg.setMavenCoordinate(p.artifacts().stream()
+                    .filter(a -> a.kind() == beast.pkgmgmt.plan.Artifact.Kind.OWN)
+                    .map(a -> Inventory.mavenCoordinate(mavenRepo, a.jar()))
+                    .filter(Objects::nonNull).findFirst().orElse(null));
+        }
     }
 
     /**

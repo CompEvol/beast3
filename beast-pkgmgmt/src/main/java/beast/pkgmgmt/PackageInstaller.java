@@ -179,6 +179,17 @@ public class PackageInstaller {
         if (pkgVersion == null) {
             pkgVersion = pkg.getInstalledVersion();
         }
+        // a copy installed from Maven has no folder: it is a line in maven-packages.xml (#316)
+        if (pkg.getMavenCoordinate() != null && !useArchive && pkgVersion.equals(pkg.getInstalledVersion())) {
+            String[] gav = pkg.getMavenCoordinate().split(":");
+            if (PackageManager.loadMavenPackageConfig().stream()
+                    .noneMatch(c -> c.groupId.equals(gav[0]) && c.artifactId.equals(gav[1]))) {
+                throw new IOException(pkg.getName() + " " + pkgVersion + " was installed from Maven as a dependency"
+                        + " of another package; uninstall that package instead");
+            }
+            PackageManager.uninstallMavenPackage(gav[0], gav[1]);
+            return new File(PackageManager.getPackageUserDir(), "maven-packages.xml").getPath();
+        }
         String dirName = getPackageDir(pkg, pkgVersion, useAppDir, customDir);
         File dir = new File(dirName);
         if (!dir.exists()) {
