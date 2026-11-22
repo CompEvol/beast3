@@ -18,12 +18,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.stage.Window;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -103,36 +98,10 @@ public class BeastMain extends Console {
 	private static void printVersion() {
     	Log.info("BEAST " + (new BEASTVersion()).getVersionString());
         Log.info("---");
-        // The same package can be discovered through more than one directory on
-        // the package path (e.g. BEAST.base is found both in the user package dir
-        // and via the bundle-root version.xml). List each package once, noting
-        // where it was found; later duplicates are reported as skipped, but only
-        // in verbose mode.
-        java.util.Set<String> printed = new java.util.HashSet<>();
-        for (String jarDirName : PackageManager.getBeastDirectories()) {
-            File versionFile = new File(jarDirName + "/version.xml");
-            if (versionFile.exists()) {
-            	try {
-	                // print name and version of package
-	                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-	                Document doc = factory.newDocumentBuilder().parse(versionFile);
-	                Element packageElement = doc.getDocumentElement();
-	                String nameAndVersion = packageElement.getAttribute("name") + " v" + packageElement.getAttribute("version");
-	                if (printed.add(nameAndVersion)) {
-	                	Log.info.print(nameAndVersion);
-	                	Log.debug.print(" (found in " + jarDirName + ")");
-	                	Log.info.print("\n");
-	                } else {
-	                	Log.debug.println("Skipping duplicate " + nameAndVersion + " found in " + jarDirName);
-	                }
-            	} catch (IOException| SAXException| ParserConfigurationException e) {
-            		Log.err(e.getMessage());
-            	}
-            }
-        }
-        // packages installed from Maven have no package folder (#316)
-        for (beast.pkgmgmt.Package pkg : PackageManager.getMavenPackages()) {
-            Log.info(pkg.getName() + " v" + pkg.getInstalledLabel());
+        // what is installed, and which copy of each package is used: the same answer as
+        // packagemanager -plan (#317)
+        for (String line : PackageManager.getVersionLines()) {
+            Log.info(line);
         }
         Log.info("---");
     	Log.info("Java version " + System.getProperty("java.version"));

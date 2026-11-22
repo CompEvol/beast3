@@ -205,7 +205,13 @@ public class PackageManagerCLI {
                     System.exit(1);
                 }
                 System.err.println("Installing Maven package " + coord + "...");
-                PackageManager.installMavenPackage(parts[0], parts[1], parts[2]);
+                try {
+                    PackageManager.installMavenPackage(parts[0], parts[1], parts[2]);
+                } catch (IllegalArgumentException e) {
+                    // refused, e.g. already installed: as -add, the reason and exit 1 (#317)
+                    System.out.println("Installation aborted: " + e.getMessage());
+                    System.exit(1);
+                }
                 System.out.println("Maven package " + coord + " installed successfully.");
                 return;
             }

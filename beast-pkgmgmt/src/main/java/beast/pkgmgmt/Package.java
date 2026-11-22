@@ -111,8 +111,11 @@ public class Package {
         if (!isInstalled()) {
             return "";
         }
-        return mavenCoordinate == null ? installedVersion.toString() : installedVersion + " (Maven)";
+        return mavenCoordinate == null ? installedVersion.toString() : installedVersion + MAVEN_LABEL;
     }
+
+    /** marks a version installed from Maven, here and in {@code beast -version} */
+    static final String MAVEN_LABEL = " (Maven)";
 
     public boolean isInstalled() {
         return installedVersion != null;
