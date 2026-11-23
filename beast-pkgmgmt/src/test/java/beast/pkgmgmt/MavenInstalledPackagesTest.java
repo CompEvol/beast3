@@ -229,12 +229,17 @@ public class MavenInstalledPackagesTest {
                 lines);
     }
 
-    /** a package with one copy is listed without its location, as before */
+    /** a package with one copy also says where it is; BEAST itself does not */
     @Test
-    void versionLinesLeaveASingleCopyAlone() {
-        List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.USER)));
-
-        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2"), lines);
+    void versionLinesSayWhereASingleCopyIs() {
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (user)"),
+                PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.USER))));
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (system)"),
+                PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.SYSTEM))));
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (BEAST_PACKAGE_PATH)"),
+                PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.OVERRIDE))));
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (Maven)"),
+                PackageManager.versionLines(plan(maven("CCD", "io.github.compevol", "ccd", "1.2.2"))));
     }
 
     /** a newer copy that needs a newer BEAST keeps its reason, which the line above does not explain */

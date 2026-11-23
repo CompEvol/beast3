@@ -315,9 +315,9 @@ public class PackageManager {
 
     /**
      * One line per installed package for {@code beast -version}, from the plan, so that it says
-     * what {@code packagemanager -plan} says (#317): "CCD v1.2.2" for the copy that is loaded.
-     * When a package has more than one copy, every line says which copy it is, and the copies
-     * that are not used come after the loaded one, e.g.
+     * what {@code packagemanager -plan} says (#317). Every line says where that copy is, e.g.
+     * "CCD v1.2.2 (user)"; BEAST itself (BEAST.base, BEAST.app) is listed without. Copies that
+     * are not used come after the loaded one, e.g.
      * <pre>
      * CCD v1.2.2 (user)
      * CCD v1.2.2 (Maven) - not used
@@ -361,23 +361,25 @@ public class PackageManager {
         }
         List<String> all = new ArrayList<>();
         for (List<InstalledPackage> list : copies.values()) {
-            boolean several = list.size() > 1;
             for (InstalledPackage p : list) {
-                all.add(p.name() + " v" + label(p, several) + status.get(p));
+                all.add(p.name() + " v" + label(p) + status.get(p));
             }
         }
         return all;
     }
 
     /**
-     * "1.2.2", or "1.2.2 (Maven)" for a copy from Maven, as {@link Package#getInstalledLabel()};
-     * with {@code where}, also where any other copy is: "1.2.2 (user)", "1.2.2 (BEAST_PACKAGE_PATH)"
+     * The version and where the copy is: "1.2.2 (user)", "1.2.2 (system)", "1.2.2 (Maven)" as in
+     * {@link Package#getInstalledLabel()}, "1.2.2 (BEAST_PACKAGE_PATH)"; just "2.8.0" for BEAST itself
      */
-    private static String label(InstalledPackage p, boolean where) {
+    private static String label(InstalledPackage p) {
+        if (p.name().equals(Planner.BASE) || p.name().equals(Planner.APP)) {
+            return p.version().toString();
+        }
         return switch (p.location()) {
             case MAVEN -> p.version() + Package.MAVEN_LABEL;
-            case OVERRIDE -> where ? p.version() + " (BEAST_PACKAGE_PATH)" : p.version().toString();
-            default -> where ? p.version() + " (" + p.location().name().toLowerCase() + ")" : p.version().toString();
+            case OVERRIDE -> p.version() + " (BEAST_PACKAGE_PATH)";
+            default -> p.version() + " (" + p.location().name().toLowerCase() + ")";
         };
     }
 
