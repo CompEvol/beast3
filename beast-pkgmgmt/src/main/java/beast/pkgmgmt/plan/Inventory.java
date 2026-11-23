@@ -253,6 +253,12 @@ public final class Inventory {
         }
     }
 
+    /** "groupId:artifactId:version" of a jar in the local repository {@code repo}, from its path, or null */
+    public static String mavenCoordinate(Path repo, Path jar) {
+        String[] gav = jar == null ? null : coordinateInRepo(repo, jar);
+        return gav == null ? null : String.join(":", gav);
+    }
+
     /** groupId, artifactId and version of a jar in the local repository, from its path, or null */
     private static String[] coordinateInRepo(Path repo, Path jar) {
         Path rel;

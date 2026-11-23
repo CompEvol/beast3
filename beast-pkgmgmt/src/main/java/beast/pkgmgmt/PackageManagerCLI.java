@@ -70,7 +70,7 @@ public class PackageManagerCLI {
             packageList.add(pkg);
 
             maxNameWidth = Math.max(pkg.getName().length(), maxNameWidth);
-            maxStatusWidth = Math.max(pkg.isInstalled() ? pkg.getInstalledVersion().toString().length() : 2, maxStatusWidth);
+            maxStatusWidth = Math.max(pkg.isInstalled() ? pkg.getInstalledLabel().length() : 2, maxStatusWidth);
             maxLatestWidth = Math.max(maxLatestWidth, pkg.isAvailable()
                             ? pkg.getLatestVersion().toString().length()
                             :  Math.max(2, maxStatusWidth));
@@ -107,7 +107,7 @@ public class PackageManagerCLI {
         	if (pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME) ||
         	    pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
         		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
-		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() : "NA"); ps.print(sep);
+		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() : "NA"); ps.print(sep);
 		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
 		        ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
 		        ps.printf("%s\n", pkg.getDescription());
@@ -122,7 +122,7 @@ public class PackageManagerCLI {
         	if (!pkg.getName().equals(PackageManager.BEAST_BASE_PACKAGE_NAME) &&
         	    !pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
 	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
-	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledVersion() :
+	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() :
 	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);
 	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
 	            ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
@@ -205,7 +205,13 @@ public class PackageManagerCLI {
                     System.exit(1);
                 }
                 System.err.println("Installing Maven package " + coord + "...");
-                PackageManager.installMavenPackage(parts[0], parts[1], parts[2]);
+                try {
+                    PackageManager.installMavenPackage(parts[0], parts[1], parts[2]);
+                } catch (IllegalArgumentException e) {
+                    // refused, e.g. already installed: as -add, the reason and exit 1 (#317)
+                    System.out.println("Installation aborted: " + e.getMessage());
+                    System.exit(1);
+                }
                 System.out.println("Maven package " + coord + " installed successfully.");
                 return;
             }

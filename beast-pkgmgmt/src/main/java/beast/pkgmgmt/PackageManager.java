@@ -270,6 +270,12 @@ public class PackageManager {
             }
         }
 
+        // packages installed from Maven have no package folder: add them from the plan (#316).
+        // Without maven-packages.xml there are none, and the folder scan above is complete.
+        if (!loadMavenPackageConfig().isEmpty()) {
+            addMavenPackages(packageMap, planInstalled(), mavenRepo());
+        }
+
         // Manually set currently-installed BEAST 2 version if not already set
         // This can happen when the BEAST package is not installed (perhaps due to 
         // file access issues)
@@ -305,6 +311,126 @@ public class PackageManager {
             beastAppPkg.setInstalled(new PackageVersion(beastVersion.getVersion()), new TreeSet<>());
         }
 
+    }
+
+    /**
+     * One line per installed package for {@code beast -version}, from the plan, so that it says
+     * what {@code packagemanager -plan} says (#317). Every line says where that copy is, e.g.
+     * "CCD v1.2.2 (user)"; BEAST itself (BEAST.base, BEAST.app) is listed without. Copies that
+     * are not used come after the loaded one, e.g.
+     * <pre>
+     * CCD v1.2.2 (user)
+     * CCD v1.2.2 (Maven) - not used
+     * </pre>
+     * with the reason a copy is not used if it is more than that another copy is preferred;
+     * then packages that are not loaded at all, with the reason.
+     */
+    public static List<String> getVersionLines() {
+        return versionLines(planInstalled());
+    }
+
+    static List<String> versionLines(LoadPlan plan) {
+        // the copies listed per package, in order: loaded, not used, not loaded
+        Map<String, List<InstalledPackage>> copies = new LinkedHashMap<>();
+        Map<InstalledPackage, String> status = new IdentityHashMap<>();
+        Map<String, InstalledPackage> loaded = new HashMap<>();
+        for (InstalledPackage p : plan.loaded()) {
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            status.put(p, "");
+            loaded.put(p.name(), p);
+        }
+        for (LoadPlan.Excluded e : plan.notUsed()) {
+            InstalledPackage p = e.copy();
+            // a second copy of the core, e.g. found in the user folder and the installation, and
+            // the archive kept for -strictversions, are not news
+            if (p.name().equals(Planner.BASE) || p.name().equals(Planner.APP)
+                    || p.location() == InstalledPackage.Location.ARCHIVE) {
+                continue;
+            }
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            // "using <the loaded copy>" only repeats the line above; any other reason, e.g. that
+            // this copy needs a newer BEAST, is kept
+            InstalledPackage used = loaded.get(p.name());
+            boolean onlyPreferred = used != null && e.reason().equals(Planner.usingReason(used));
+            status.put(p, onlyPreferred ? " - not used" : " - not used: " + e.reason());
+        }
+        for (LoadPlan.Excluded e : plan.excluded()) {
+            InstalledPackage p = e.copy();
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            status.put(p, " - not loaded: " + e.reason());
+        }
+        List<String> all = new ArrayList<>();
+        for (List<InstalledPackage> list : copies.values()) {
+            for (InstalledPackage p : list) {
+                all.add(p.name() + " v" + label(p) + status.get(p));
+            }
+        }
+        return all;
+    }
+
+    /**
+     * The version and where the copy is: "1.2.2 (user)", "1.2.2 (system)", "1.2.2 (Maven)" as in
+     * {@link Package#getInstalledLabel()}, "1.2.2 (BEAST_PACKAGE_PATH)"; just "2.8.0" for BEAST itself
+     */
+    private static String label(InstalledPackage p) {
+        if (p.name().equals(Planner.BASE) || p.name().equals(Planner.APP)) {
+            return p.version().toString();
+        }
+        return switch (p.location()) {
+            case MAVEN -> p.version() + Package.MAVEN_LABEL;
+            case OVERRIDE -> p.version() + " (BEAST_PACKAGE_PATH)";
+            default -> p.version() + " (" + p.location().name().toLowerCase() + ")";
+        };
+    }
+
+    /**
+     * What is installed now and what the planner would load from it, without loading anything.
+     * Everything that reports which copy of a package is used asks this, so that they all agree
+     * with what is loaded (#317).
+     */
+    private static LoadPlan planInstalled() {
+        Runtime runtime = Inventory.readThisRuntime();
+        return Planner.plan(readInventory(runtime).packages(), runtime);
+    }
+
+    /** the local Maven repository in the user package folder */
+    private static Path mavenRepo() {
+        return Path.of(getPackageUserDir(), "maven-repo");
+    }
+
+    /**
+     * Marks the Maven copy of each package as installed in {@code packageMap} if it is the copy
+     * the plan loads. A package whose copies are all excluded is still installed, so that it can
+     * be removed: its Maven copy counts unless the folder scan found a copy.
+     *
+     * @param mavenRepo the local Maven repository, to read each copy's coordinate from its jar
+     */
+    static void addMavenPackages(Map<String, Package> packageMap, LoadPlan plan, Path mavenRepo) {
+        List<InstalledPackage> shown = new ArrayList<>(plan.loaded());
+        for (LoadPlan.Excluded e : plan.excluded()) {
+            Package scanned = packageMap.get(e.copy().name());
+            if (scanned == null || !scanned.isInstalled()) {
+                shown.add(e.copy());
+            }
+        }
+        for (InstalledPackage p : shown) {
+            if (p.location() != InstalledPackage.Location.MAVEN) {
+                continue;
+            }
+            PackageVersion version = new PackageVersion(p.version().toString());
+            Package pkg = packageMap.computeIfAbsent(p.name(), Package::new);
+            Set<PackageDependency> dependencies = new TreeSet<>(Comparator.comparing(d -> d.dependencyName));
+            for (beast.pkgmgmt.plan.Dependency d : p.depends()) {
+                dependencies.add(new PackageDependency(d.name(),
+                        d.atLeast() == null ? null : new PackageVersion(d.atLeast().toString()),
+                        d.atMost() == null ? null : new PackageVersion(d.atMost().toString())));
+            }
+            pkg.setInstalled(version, dependencies);
+            pkg.setMavenCoordinate(p.artifacts().stream()
+                    .filter(a -> a.kind() == beast.pkgmgmt.plan.Artifact.Kind.OWN)
+                    .map(a -> Inventory.mavenCoordinate(mavenRepo, a.jar()))
+                    .filter(Objects::nonNull).findFirst().orElse(null));
+        }
     }
 
     /**
@@ -727,7 +853,7 @@ public class PackageManager {
 		}
 	}
 
-	private static final String MAVEN_PACKAGES_FILE = "maven-packages.xml";
+	static final String MAVEN_PACKAGES_FILE = "maven-packages.xml";
 
 	/**
 	 * Load the list of Maven package coordinates from
@@ -841,16 +967,21 @@ public class PackageManager {
 		Inventory inventory = readInventory(runtime);
 		LoadPlan plan = Planner.plan(inventory.packages(), runtime);
 		String coordinate = groupId + ":" + artifactId + ":" + version;
-		Optional<LoadPlan.Excluded> refused = plan.excluded().stream()
-				.filter(e -> e.copy().location() == InstalledPackage.Location.MAVEN
-						&& e.copy().version().equals(new Version(version)))
+		// the copy just added, found by its own jar's coordinate
+		Optional<InstalledPackage> added = inventory.packages().stream()
+				.filter(p -> p.location() == InstalledPackage.Location.MAVEN && p.artifacts().stream()
+						.anyMatch(a -> a.kind() == beast.pkgmgmt.plan.Artifact.Kind.OWN
+								&& coordinate.equals(Inventory.mavenCoordinate(mavenRepo(), a.jar()))))
 				.findFirst();
-		boolean listed = inventory.packages().stream().anyMatch(p -> p.location() == InstalledPackage.Location.MAVEN
-				&& p.version().equals(new Version(version)));
-		if (refused.isPresent() || !listed) {
+		// refused if it would not load, or if another copy would be used instead, e.g. the same
+		// version installed as a ZIP: -add refuses an installed package too (#317)
+		Optional<String> refused = added.flatMap(copy -> plan.excluded().stream()
+				.filter(e -> e.copy().equals(copy)).map(LoadPlan.Excluded::reason).findFirst()
+				.or(() -> plan.notUsed().stream().filter(e -> e.copy().equals(copy))
+						.map(e -> copy.name() + " is already installed, " + e.reason()).findFirst()));
+		if (refused.isPresent() || added.isEmpty()) {
 			saveMavenPackageConfig(before);
-			String why = refused.map(LoadPlan.Excluded::reason)
-					.orElse(String.join("; ", inventory.problems()));
+			String why = refused.orElse(String.join("; ", inventory.problems()));
 			throw new IllegalArgumentException("Not installing " + coordinate + ": " + why);
 		}
 		inventory.warnings().forEach(w -> System.err.println("Note for the package's author: " + w));

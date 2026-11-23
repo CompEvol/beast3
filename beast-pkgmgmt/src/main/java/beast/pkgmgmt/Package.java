@@ -95,6 +95,28 @@ public class Package {
         return installedVersion;
     }
 
+    /** "groupId:artifactId:version" if the installed copy is from Maven, else null (#316) */
+    protected String mavenCoordinate;
+
+    public String getMavenCoordinate() {
+        return mavenCoordinate;
+    }
+
+    public void setMavenCoordinate(String mavenCoordinate) {
+        this.mavenCoordinate = mavenCoordinate;
+    }
+
+    /** the installed version as shown to users: "1.2.2", or "1.2.2 (Maven)" for a copy from Maven; "" if not installed */
+    public String getInstalledLabel() {
+        if (!isInstalled()) {
+            return "";
+        }
+        return mavenCoordinate == null ? installedVersion.toString() : installedVersion + MAVEN_LABEL;
+    }
+
+    /** marks a version installed from Maven, here and in {@code beast -version} */
+    static final String MAVEN_LABEL = " (Maven)";
+
     public boolean isInstalled() {
         return installedVersion != null;
     }
