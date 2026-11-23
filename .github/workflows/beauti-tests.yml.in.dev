@@ -2,7 +2,7 @@ name: Beauti Tests (beast-fx)
 
 # Runs the full BeastFX/Beauti TestFX suite, including the tests tagged
 # "slow" that ci-publish.yml skips on every push/PR (surefire.excludedGroups
-# defaults to "slow" — see root pom.xml). These are headless-JavaFX GUI
+# defaults to "slow,network" — see root pom.xml). These are headless-JavaFX GUI
 # tests, slower and more flake-prone than the rest of the suite, so they
 # run nightly instead of gating every PR. Headless mode (TestFX + Monocle)
 # is already configured in beast-fx/pom.xml's surefire block, so no Xvfb
