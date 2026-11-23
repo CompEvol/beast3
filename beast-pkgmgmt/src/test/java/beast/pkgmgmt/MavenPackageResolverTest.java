@@ -1,7 +1,10 @@
 package beast.pkgmgmt;
 
+import org.eclipse.aether.artifact.Artifact;
+import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -126,6 +129,39 @@ class MavenPackageResolverTest {
                 "404 means the package is not there, not that the repository is unreachable");
         assertNotNull(MavenPackageResolver.unreachable(new Exception(new SocketTimeoutException("Read timed out"))));
         assertNotNull(MavenPackageResolver.unreachable(new Exception(new UnknownHostException("repo.maven.apache.org"))));
+    }
+
+    @Test
+    void unreachableNamesTheRepositoryThatFailed() {
+        // one repository answers 404, the other's host is unknown: the message must name the
+        // second, whichever order the resolver reports them in
+        Artifact art = new DefaultArtifact("g:a:1");
+        RemoteRepository central = MavenPackageResolver.remoteRepository("central", "https://central.example/");
+        RemoteRepository extra = MavenPackageResolver.remoteRepository("extra", "https://no-such-host.invalid/maven2/");
+        Exception notFound = new ArtifactTransferException(art, central, "not found", new HttpTransporterException(404));
+        Exception noHost = new ArtifactTransferException(art, extra, "no host",
+                new UnknownHostException("no-such-host.invalid"));
+        for (List<Exception> order : List.of(List.of(notFound, noHost), List.of(noHost, notFound))) {
+            Exception top = new Exception("Failed to collect dependencies");
+            order.forEach(top::addSuppressed);
+            String message = MavenPackageResolver.unreachable(top);
+            assertNotNull(message);
+            assertTrue(message.startsWith("cannot find the host of https://no-such-host.invalid/maven2/"), message);
+        }
+    }
+
+    @Test
+    void unknownHostAmongTwoRepositoriesIsReported() {
+        // the file:// repository does not have the package (not found); the other host
+        // cannot be found (.invalid never resolves)
+        RemoteRepository good = MavenPackageResolver.remoteRepository("test", remoteDir.toUri().toString());
+        RemoteRepository bad = MavenPackageResolver.remoteRepository("extra", "http://no-such-host.invalid/maven2/");
+        MavenPackageResolver two = new MavenPackageResolver(localRepo, List.of(good, bad), false);
+
+        MavenPackageResolver.UnreachableException e = assertThrows(MavenPackageResolver.UnreachableException.class,
+                () -> two.resolve("test.pkg", "missing", "1.0"));
+        assertTrue(e.getMessage().contains("cannot find the host of http://no-such-host.invalid/maven2/"),
+                e.getMessage());
     }
 
     /** writes {@code groupId:artifactId:version} (a POM and an empty jar) to the test repository */

@@ -198,29 +198,33 @@ public class MavenPackageResolver {
 
     /**
      * What went wrong if {@code e} was caused by the network or by a repository refusing
-     * requests, else null (e.g. the package does not exist).
+     * requests, else null (e.g. the package does not exist). The repository named is the
+     * one of the nearest transfer exception enclosing the problem, so with several
+     * repositories the message names the one that actually failed.
      */
     static String unreachable(Throwable e) {
-        String repo = "the Maven repository";
-        String problem = null;
+        record Node(Throwable t, String repo) {}
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-        Deque<Throwable> todo = new ArrayDeque<>();
-        todo.push(e);
+        Deque<Node> todo = new ArrayDeque<>();
+        todo.push(new Node(e, "the Maven repository"));
         while (!todo.isEmpty()) {
-            Throwable t = todo.pop();
+            Node n = todo.pop();
+            Throwable t = n.t();
             if (!seen.add(t)) continue;
+            String repo = n.repo();
             if (t instanceof ArtifactTransferException a && a.getRepository() instanceof RemoteRepository r) {
                 repo = r.getUrl();
             } else if (t instanceof MetadataTransferException m && m.getRepository() instanceof RemoteRepository r) {
                 repo = r.getUrl();
             }
-            if (problem == null) {
-                problem = describe(t);
+            String problem = describe(t);
+            if (problem != null) {
+                return problem.replace("{repo}", repo);
             }
-            if (t.getCause() != null) todo.push(t.getCause());
-            for (Throwable s : t.getSuppressed()) todo.push(s);
+            if (t.getCause() != null) todo.push(new Node(t.getCause(), repo));
+            for (Throwable s : t.getSuppressed()) todo.push(new Node(s, repo));
         }
-        return problem == null ? null : problem.replace("{repo}", repo);
+        return null;
     }
 
     private static String describe(Throwable t) {
