@@ -187,6 +187,7 @@
                 <provider classname="beast.base.spec.inference.parameter.RealVectorParam"/>
                 <provider classname="beast.base.spec.inference.parameter.SimplexParam"/>
                 <provider classname="beast.base.spec.inference.parameter.IntSimplexParam"/>
+                <provider classname="beast.base.spec.inference.parameter.VectorElement"/>
 
                 <provider classname="beast.base.spec.inference.util.AsRealScalar"/>
                 <provider classname="beast.base.spec.inference.util.AsIntScalar"/>
