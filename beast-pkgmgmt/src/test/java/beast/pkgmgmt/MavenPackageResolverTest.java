@@ -4,6 +4,7 @@ import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
@@ -131,23 +133,62 @@ class MavenPackageResolverTest {
         assertNotNull(MavenPackageResolver.unreachable(new Exception(new UnknownHostException("repo.maven.apache.org"))));
     }
 
+    private static final RemoteRepository CENTRAL =
+            MavenPackageResolver.remoteRepository("central", "https://repo.maven.apache.org/maven2/");
+
+    /** the resolver's failure when Central does not have the package and {@code added} fails with {@code cause} */
+    private static List<Exception> notOnCentralAnd(RemoteRepository added, Exception cause) {
+        Artifact art = new DefaultArtifact("io.github.compevol:no-such-pkg:9.9.9");
+        return List.of(new ArtifactNotFoundException(art, CENTRAL),
+                new ArtifactTransferException(art, added, "transfer failed", cause));
+    }
+
+    /**
+     * Central answered that it does not have the package, so the internet works: the message
+     * names the repository the user added (not Central, #321 review), says it does not exist,
+     * and how to remove it, whichever order the resolver reports them in
+     */
     @Test
     void unreachableNamesTheRepositoryThatFailed() {
-        // one repository answers 404, the other's host is unknown: the message must name the
-        // second, whichever order the resolver reports them in
-        Artifact art = new DefaultArtifact("g:a:1");
-        RemoteRepository central = MavenPackageResolver.remoteRepository("central", "https://central.example/");
-        RemoteRepository extra = MavenPackageResolver.remoteRepository("extra", "https://no-such-host.invalid/maven2/");
-        Exception notFound = new ArtifactTransferException(art, central, "not found", new HttpTransporterException(404));
-        Exception noHost = new ArtifactTransferException(art, extra, "no host",
-                new UnknownHostException("no-such-host.invalid"));
-        for (List<Exception> order : List.of(List.of(notFound, noHost), List.of(noHost, notFound))) {
+        RemoteRepository added = MavenPackageResolver.remoteRepository("extra-0", "https://no-such-host.invalid/maven2/");
+        List<Exception> failures = notOnCentralAnd(added, new UnknownHostException("no-such-host.invalid"));
+        for (List<Exception> order : List.of(failures, failures.reversed())) {
             Exception top = new Exception("Failed to collect dependencies");
             order.forEach(top::addSuppressed);
-            String message = MavenPackageResolver.unreachable(top);
-            assertNotNull(message);
-            assertTrue(message.startsWith("cannot find the host of https://no-such-host.invalid/maven2/"), message);
+            assertEquals("it is not on Maven Central, and https://no-such-host.invalid/maven2/ does not exist. "
+                    + "This Maven repository was added by you with packagemanager -addMavenRepository. "
+                    + "If its address is wrong, remove it with: "
+                    + "packagemanager -delMavenRepository https://no-such-host.invalid/maven2/",
+                    MavenPackageResolver.unreachable(top));
         }
+    }
+
+    /** the same when the repository the user added refuses the connection */
+    @Test
+    void anAddedRepositoryThatRefusesIsNamedAsTheUsers() {
+        RemoteRepository added = MavenPackageResolver.remoteRepository("extra-0", "https://no-such-host.invalid/maven2/");
+        Exception top = new Exception("Failed to collect dependencies");
+        notOnCentralAnd(added, new ConnectException("Connection refused")).forEach(top::addSuppressed);
+
+        String message = MavenPackageResolver.unreachable(top);
+        assertTrue(message.startsWith("it is not on Maven Central, and https://no-such-host.invalid/maven2/ "
+                + "cannot be reached (Connection refused). This Maven repository was added by you"), message);
+    }
+
+    /** if Central cannot be reached either, the internet is the likely cause: the message says so */
+    @Test
+    void withoutAnAnswerFromCentralTheInternetIsSuspected() {
+        Artifact art = new DefaultArtifact("io.github.compevol:ccd:1.2.2");
+        Exception top = new Exception("Failed to collect dependencies");
+        top.addSuppressed(new ArtifactTransferException(art, CENTRAL, "no host",
+                new UnknownHostException("repo.maven.apache.org")));
+        top.addSuppressed(new ArtifactTransferException(art,
+                MavenPackageResolver.remoteRepository("extra-0", "https://no-such-host.invalid/maven2/"), "no host",
+                new UnknownHostException("no-such-host.invalid")));
+
+        String message = MavenPackageResolver.unreachable(top);
+        assertTrue(message.contains("check your internet connection"), message);
+        assertFalse(message.contains("added by you"), message);
     }
 
     @Test

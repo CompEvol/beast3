@@ -17,6 +17,7 @@ import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 import org.eclipse.aether.transfer.ArtifactTransferException;
 import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.TransferEvent;
@@ -207,6 +208,8 @@ public class MavenPackageResolver {
         Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
         Deque<Node> todo = new ArrayDeque<>();
         todo.push(new Node(e, "the Maven repository"));
+        Node problem = null;
+        boolean centralAnswered = false;
         while (!todo.isEmpty()) {
             Node n = todo.pop();
             Throwable t = n.t();
@@ -217,17 +220,29 @@ public class MavenPackageResolver {
             } else if (t instanceof MetadataTransferException m && m.getRepository() instanceof RemoteRepository r) {
                 repo = r.getUrl();
             }
-            String problem = describe(t);
-            if (problem != null) {
-                return problem.replace("{repo}", repo);
+            if (t instanceof ArtifactNotFoundException && MAVEN_CENTRAL.getUrl().equals(repo)) {
+                centralAnswered = true;
+            }
+            if (problem == null && describe(t, false) != null) {
+                problem = new Node(t, repo);
             }
             if (t.getCause() != null) todo.push(new Node(t.getCause(), repo));
             for (Throwable s : t.getSuppressed()) todo.push(new Node(s, repo));
         }
-        return null;
+        if (problem == null) {
+            return null;
+        }
+        // Central answered, so the internet works: the problem is a repository the user added
+        boolean addedByUser = centralAnswered && !MAVEN_CENTRAL.getUrl().equals(problem.repo());
+        return describe(problem.t(), addedByUser).replace("{repo}", problem.repo());
     }
 
-    private static String describe(Throwable t) {
+    /** said of a repository the user added, when Central answered but that repository did not */
+    private static final String ADDED_BY_USER = "This Maven repository was added by you with "
+            + "packagemanager -addMavenRepository. If its address is wrong, remove it with: "
+            + "packagemanager -delMavenRepository {repo}";
+
+    private static String describe(Throwable t, boolean addedByUser) {
         if (t instanceof HttpTransporterException h) {
             return switch (h.getStatusCode()) {
                 case 429 -> "{repo} is refusing requests for now (HTTP 429 Too Many Requests). "
@@ -242,12 +257,17 @@ public class MavenPackageResolver {
                     + "Please check your internet connection and proxy settings, and try again.";
         }
         if (t instanceof UnknownHostException) {
-            return "cannot find the host of {repo} (" + t.getMessage() + "). "
-                    + "Please check your internet connection and proxy settings.";
+            return addedByUser
+                    ? "it is not on Maven Central, and {repo} does not exist. " + ADDED_BY_USER
+                    : "cannot find the host of {repo} (" + t.getMessage() + "). "
+                            + "Please check your internet connection and proxy settings.";
         }
         if (t instanceof SocketException) {
-            return "cannot connect to {repo} (" + t.getMessage() + "). "
-                    + "Please check your internet connection and proxy settings.";
+            return addedByUser
+                    ? "it is not on Maven Central, and {repo} cannot be reached (" + t.getMessage() + "). "
+                            + ADDED_BY_USER
+                    : "cannot connect to {repo} (" + t.getMessage() + "). "
+                            + "Please check your internet connection and proxy settings.";
         }
         return null;
     }
