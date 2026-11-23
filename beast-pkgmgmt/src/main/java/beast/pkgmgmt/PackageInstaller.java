@@ -37,6 +37,22 @@ public class PackageInstaller {
         return useArchive;
     }
 
+    /** installs a Maven package from its coordinate; replaced in tests so they need no network */
+    interface MavenInstall {
+        void install(String groupId, String artifactId, String version) throws Exception;
+    }
+
+    static MavenInstall mavenInstall = PackageManager::installMavenPackage;
+
+    /**
+     * True if {@code version} of {@code pkg} is installed from Maven, see
+     * {@link Package#installsAsMaven(PackageVersion)} (#316). Choosing an older version into the
+     * archive folder stays ZIP-only, unless the version has no ZIP.
+     */
+    public static boolean installsAsMaven(Package pkg, PackageVersion version) {
+        return pkg.installsAsMaven(version) && (!useArchive || pkg.getVersionURL(version) == null);
+    }
+
     /**
      * Looks through packages to be installed and uninstalls any that are already installed but
      * do not match the version that is to be installed.
@@ -54,7 +70,10 @@ public class PackageInstaller {
             if (thisPkg.isInstalled()) {
                 if (thisPkg.getInstalledVersion().equals(thisPkgVersion))
                     packagesToInstall.remove(thisPkg);
-                else if (!isMavenDependency(thisPkg))
+                else if (installsAsMaven(thisPkg, thisPkgVersion)) {
+                    // nothing to remove first: installing from Maven replaces the package's line in
+                    // maven-packages.xml, and leaves it unchanged if the new version is refused (#316)
+                } else if (!isMavenDependency(thisPkg))
                     // a Maven dependency of another package stays for that package; the new copy is
                     // installed next to it, and the planner loads the newer one (#316)
                     uninstallPackage(thisPkg, useAppDir, customDir);
@@ -82,6 +101,13 @@ public class PackageInstaller {
         for (Map.Entry<Package, PackageVersion> entry : packagesToInstall.entrySet()) {
             Package thisPkg = entry.getKey();
             PackageVersion thisPkgVersion = entry.getValue();
+
+            // from Maven if the package lists say so (see installsAsMaven), else the ZIP below;
+            // a version only on Maven has no ZIP URL, so it must not reach the download (#316)
+            if (installsAsMaven(thisPkg, thisPkgVersion)) {
+                dirList.put(thisPkg.getName(), installFromMaven(thisPkg, thisPkgVersion));
+                continue;
+            }
 
             URL templateURL = thisPkg.getVersionURL(thisPkgVersion);
 
@@ -132,6 +158,25 @@ public class PackageInstaller {
 
         Utils6.saveBeautiProperty("package.path", null);
         return dirList;
+    }
+
+    /**
+     * Installs {@code version} of {@code pkg} from the Maven coordinate the package list gives
+     * (#316). It is loaded when BEAST next starts.
+     *
+     * @return where it is recorded: maven-packages.xml in the user package folder
+     */
+    private static String installFromMaven(Package pkg, PackageVersion version) throws IOException {
+        String[] gav = pkg.getAvailableMavenCoordinate(version).split(":");
+        try {
+            mavenInstall.install(gav[0], gav[1], gav[2]);
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            // e.g. the planner refuses the new copy; maven-packages.xml is left unchanged then
+            throw new IOException(e.getMessage(), e);
+        }
+        return new File(PackageManager.getPackageUserDir(), PackageManager.MAVEN_PACKAGES_FILE).getPath();
     }
 
     private static String hasNamespaceClash(String packageName, String dirName) throws SAXException, IOException, ParserConfigurationException {

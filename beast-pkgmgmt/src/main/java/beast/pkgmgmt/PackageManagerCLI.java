@@ -72,7 +72,7 @@ public class PackageManagerCLI {
             maxNameWidth = Math.max(pkg.getName().length(), maxNameWidth);
             maxStatusWidth = Math.max(pkg.isInstalled() ? pkg.getInstalledLabel().length() : 2, maxStatusWidth);
             maxLatestWidth = Math.max(maxLatestWidth, pkg.isAvailable()
-                            ? pkg.getLatestVersion().toString().length()
+                            ? pkg.getLatestLabel().length()
                             :  Math.max(2, maxStatusWidth));
             maxDepsWidth = Math.max(pkg.getDependenciesString().length(), maxDepsWidth);
         }
@@ -108,7 +108,7 @@ public class PackageManagerCLI {
         	    pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
         		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() : "NA"); ps.print(sep);
-		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
+		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestLabel() : "NA"); ps.print(sep);
 		        ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
 		        ps.printf("%s\n", pkg.getDescription());
         	}
@@ -124,7 +124,7 @@ public class PackageManagerCLI {
 	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() :
 	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);
-	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
+	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestLabel() : "NA"); ps.print(sep);
 	            ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
 	            ps.printf("%s\n", pkg.getDescription());
         	}

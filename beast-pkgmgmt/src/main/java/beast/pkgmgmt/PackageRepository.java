@@ -140,7 +140,8 @@ public class PackageRepository {
         }
     }
 
-    private void loadURL(URL url, InputStream is, Map<String, Package> packageMap) throws IOException, ParserConfigurationException, SAXException {
+    // package-private for tests
+    void loadURL(URL url, InputStream is, Map<String, Package> packageMap) throws IOException, ParserConfigurationException, SAXException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse(new InputSource(is));
@@ -187,8 +188,16 @@ public class PackageRepository {
                     packageDependencies.add(dependency);
                 }
 
-                URL packageURL = new URL(element.getAttribute("url"));
-                pkg.addAvailableVersion(packageVersion, packageURL, packageDependencies);
+                // Optional groupId/artifactId (#316): this version can also be installed from Maven.
+                // An entry with them may leave out url when the version has no ZIP, i.e. it is
+                // installed from Maven only. An entry needs a url, a Maven coordinate, or both.
+                // Note that older BEAST versions require url on every entry.
+                String groupId = element.getAttribute("groupId");
+                String artifactId = element.getAttribute("artifactId");
+                String maven = groupId.isEmpty() || artifactId.isEmpty() ? null : groupId + ":" + artifactId;
+                URL packageURL = maven != null && element.getAttribute("url").isEmpty()
+                        ? null : new URL(element.getAttribute("url"));
+                pkg.addAvailableVersion(packageVersion, packageURL, packageDependencies, maven);
 
                 // issue 754 Package manager should make project links compulsory
                 if (pkg.isValidFormat()) {
