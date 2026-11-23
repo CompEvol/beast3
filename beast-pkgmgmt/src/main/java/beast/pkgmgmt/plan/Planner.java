@@ -537,12 +537,20 @@ public final class Planner {
 
     // ---- the plan ----
 
+    /**
+     * Why a copy is not used when only another copy of the same package is preferred:
+     * "using 1.2.2 (user)". {@code beast -version} leaves it out, since it lists that copy (#317).
+     */
+    public static String usingReason(InstalledPackage used) {
+        return "using " + used.version() + " (" + used.location().name().toLowerCase() + ")";
+    }
+
     private LoadPlan build(Map<String, InstalledPackage> chosen, Modules modules) {
         List<Excluded> unused = new ArrayList<>(notUsed);
         candidates.forEach((name, copies) -> {
             InstalledPackage used = copies.get(0);
             for (InstalledPackage other : copies.subList(1, copies.size())) {
-                unused.add(new Excluded(other, "using " + used.version() + " (" + used.location().name().toLowerCase() + ")"));
+                unused.add(new Excluded(other, usingReason(used)));
             }
         });
         List<PlannedModule> list = new ArrayList<>();

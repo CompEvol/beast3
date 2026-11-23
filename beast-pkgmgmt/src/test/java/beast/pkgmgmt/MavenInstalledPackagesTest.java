@@ -216,7 +216,37 @@ public class MavenInstalledPackagesTest {
         List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.USER),
                 maven("CCD", "io.github.compevol", "ccd", "1.2.2")));
 
-        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2", "CCD v1.2.2 (Maven) - not used: using 1.2.2 (user)"), lines);
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (user)", "CCD v1.2.2 (Maven) - not used"), lines);
+    }
+
+    /** #317, alexeid's nit: with several ZIP copies, each line says which copy it is */
+    @Test
+    void versionLinesSayWhichZipCopyIsLoaded() {
+        List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.SYSTEM),
+                folder("CCD", "1.2.2", Location.OVERRIDE)));
+
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (BEAST_PACKAGE_PATH)", "CCD v1.2.2 (system) - not used"),
+                lines);
+    }
+
+    /** a package with one copy is listed without its location, as before */
+    @Test
+    void versionLinesLeaveASingleCopyAlone() {
+        List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.USER)));
+
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2"), lines);
+    }
+
+    /** a newer copy that needs a newer BEAST keeps its reason, which the line above does not explain */
+    @Test
+    void versionLinesKeepTheReasonANewerCopyIsNotUsed() {
+        List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.2", Location.USER),
+                maven("CCD", "io.github.compevol", "ccd", "1.3.0", Dependency.atLeast("BEAST.base", "9.0.0"))));
+
+        assertEquals(3, lines.size(), lines.toString());
+        assertEquals("CCD v1.2.2 (user)", lines.get(1), lines.toString());
+        assertTrue(lines.get(2).startsWith("CCD v1.3.0 (Maven) - not used: ")
+                && lines.get(2).contains("BEAST.base"), lines.toString());
     }
 
     /** a newer Maven copy is used, and the ZIP copy is the one marked */
@@ -225,7 +255,7 @@ public class MavenInstalledPackagesTest {
         List<String> lines = PackageManager.versionLines(plan(folder("CCD", "1.2.1", Location.USER),
                 maven("CCD", "io.github.compevol", "ccd", "1.2.2")));
 
-        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (Maven)", "CCD v1.2.1 - not used: using 1.2.2 (maven)"), lines);
+        assertEquals(List.of("BEAST.base v2.8.0", "CCD v1.2.2 (Maven)", "CCD v1.2.1 (user) - not used"), lines);
     }
 
     /** a package that cannot be loaded is listed with the reason, not as if it worked */

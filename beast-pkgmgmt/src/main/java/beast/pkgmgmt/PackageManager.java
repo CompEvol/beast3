@@ -315,18 +315,29 @@ public class PackageManager {
 
     /**
      * One line per installed package for {@code beast -version}, from the plan, so that it says
-     * what {@code packagemanager -plan} says (#317): "CCD v1.2.2" for the copy that is loaded,
-     * followed by any other copy with the reason it is not used, e.g.
-     * "CCD v1.2.2 (Maven) - not used: using 1.2.2 (user)"; then packages that are not loaded at all.
+     * what {@code packagemanager -plan} says (#317): "CCD v1.2.2" for the copy that is loaded.
+     * When a package has more than one copy, every line says which copy it is, and the copies
+     * that are not used come after the loaded one, e.g.
+     * <pre>
+     * CCD v1.2.2 (user)
+     * CCD v1.2.2 (Maven) - not used
+     * </pre>
+     * with the reason a copy is not used if it is more than that another copy is preferred;
+     * then packages that are not loaded at all, with the reason.
      */
     public static List<String> getVersionLines() {
         return versionLines(planInstalled());
     }
 
     static List<String> versionLines(LoadPlan plan) {
-        Map<String, List<String>> lines = new LinkedHashMap<>();
+        // the copies listed per package, in order: loaded, not used, not loaded
+        Map<String, List<InstalledPackage>> copies = new LinkedHashMap<>();
+        Map<InstalledPackage, String> status = new IdentityHashMap<>();
+        Map<String, InstalledPackage> loaded = new HashMap<>();
         for (InstalledPackage p : plan.loaded()) {
-            lines.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p.name() + " v" + label(p));
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            status.put(p, "");
+            loaded.put(p.name(), p);
         }
         for (LoadPlan.Excluded e : plan.notUsed()) {
             InstalledPackage p = e.copy();
@@ -336,22 +347,38 @@ public class PackageManager {
                     || p.location() == InstalledPackage.Location.ARCHIVE) {
                 continue;
             }
-            lines.computeIfAbsent(p.name(), k -> new ArrayList<>())
-                    .add(p.name() + " v" + label(p) + " - not used: " + e.reason());
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            // "using <the loaded copy>" only repeats the line above; any other reason, e.g. that
+            // this copy needs a newer BEAST, is kept
+            InstalledPackage used = loaded.get(p.name());
+            boolean onlyPreferred = used != null && e.reason().equals(Planner.usingReason(used));
+            status.put(p, onlyPreferred ? " - not used" : " - not used: " + e.reason());
         }
         for (LoadPlan.Excluded e : plan.excluded()) {
             InstalledPackage p = e.copy();
-            lines.computeIfAbsent(p.name(), k -> new ArrayList<>())
-                    .add(p.name() + " v" + label(p) + " - not loaded: " + e.reason());
+            copies.computeIfAbsent(p.name(), k -> new ArrayList<>()).add(p);
+            status.put(p, " - not loaded: " + e.reason());
         }
         List<String> all = new ArrayList<>();
-        lines.values().forEach(all::addAll);
+        for (List<InstalledPackage> list : copies.values()) {
+            boolean several = list.size() > 1;
+            for (InstalledPackage p : list) {
+                all.add(p.name() + " v" + label(p, several) + status.get(p));
+            }
+        }
         return all;
     }
 
-    /** "1.2.2", or "1.2.2 (Maven)" for a copy from Maven, as {@link Package#getInstalledLabel()} */
-    private static String label(InstalledPackage p) {
-        return p.location() == InstalledPackage.Location.MAVEN ? p.version() + Package.MAVEN_LABEL : p.version().toString();
+    /**
+     * "1.2.2", or "1.2.2 (Maven)" for a copy from Maven, as {@link Package#getInstalledLabel()};
+     * with {@code where}, also where any other copy is: "1.2.2 (user)", "1.2.2 (BEAST_PACKAGE_PATH)"
+     */
+    private static String label(InstalledPackage p, boolean where) {
+        return switch (p.location()) {
+            case MAVEN -> p.version() + Package.MAVEN_LABEL;
+            case OVERRIDE -> where ? p.version() + " (BEAST_PACKAGE_PATH)" : p.version().toString();
+            default -> where ? p.version() + " (" + p.location().name().toLowerCase() + ")" : p.version().toString();
+        };
     }
 
     /**
