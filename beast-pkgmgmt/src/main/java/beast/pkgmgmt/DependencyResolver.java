@@ -78,7 +78,12 @@ public class DependencyResolver {
         Set<String> needed = new LinkedHashSet<>(asked.keySet());
         List<String> todo = new ArrayList<>(asked.keySet());
         while (!todo.isEmpty()) {
-            plan.loadedPackage(todo.remove(todo.size() - 1)).ifPresent(p -> p.depends().forEach(d -> {
+            String next = todo.remove(todo.size() - 1);
+            plan.loadedPackage(next)
+                    // a package installed from Maven gets its dependencies from Maven, so no ZIP
+                    // copies are added for them (#316); the plan above still checks they fit
+                    .filter(p -> !installsAsMaven(packageMap.get(next), p))
+                    .ifPresent(p -> p.depends().forEach(d -> {
                 if (needed.add(d.name())) {
                     todo.add(d.name());
                 }
@@ -92,6 +97,16 @@ public class DependencyResolver {
                         .findFirst().ifPresent(v -> packagesToInstall.put(pkg, v));
             }
         }
+    }
+
+    /** true if {@code chosen} is a version still to be installed, and it is installed from Maven */
+    private static boolean installsAsMaven(Package pkg, InstalledPackage chosen) {
+        if (pkg == null || chosen.location() != Location.AVAILABLE) {
+            return false;
+        }
+        return pkg.getAvailableVersions().stream()
+                .filter(v -> new Version(v.getVersion()).equals(chosen.version()))
+                .anyMatch(v -> PackageInstaller.installsAsMaven(pkg, v));
     }
 
     private static InstalledPackage copy(String name, Version version, Location location, Set<PackageDependency> deps) {

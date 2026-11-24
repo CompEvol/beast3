@@ -72,7 +72,7 @@ public class PackageManagerCLI {
             maxNameWidth = Math.max(pkg.getName().length(), maxNameWidth);
             maxStatusWidth = Math.max(pkg.isInstalled() ? pkg.getInstalledLabel().length() : 2, maxStatusWidth);
             maxLatestWidth = Math.max(maxLatestWidth, pkg.isAvailable()
-                            ? pkg.getLatestVersion().toString().length()
+                            ? pkg.getLatestLabel().length()
                             :  Math.max(2, maxStatusWidth));
             maxDepsWidth = Math.max(pkg.getDependenciesString().length(), maxDepsWidth);
         }
@@ -108,7 +108,7 @@ public class PackageManagerCLI {
         	    pkg.getName().equals(PackageManager.BEAST_APP_PACKAGE_NAME)) {
         		ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 		        ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() : "NA"); ps.print(sep);
-		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
+		        ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestLabel() : "NA"); ps.print(sep);
 		        ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
 		        ps.printf("%s\n", pkg.getDescription());
         	}
@@ -124,7 +124,7 @@ public class PackageManagerCLI {
 	            ps.printf(nameFormat, pkg.getName()); ps.print(sep);
 	            ps.printf(statusFormat, pkg.isInstalled() ? pkg.getInstalledLabel() :
 	            	(RECOMMENDED_PACKAGES.contains(pkg.getName()) ? "NA - Recommended": "NA")); ps.print(sep);
-	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestVersion() : "NA"); ps.print(sep);
+	            ps.printf(latestFormat, pkg.isAvailable() ? pkg.getLatestLabel() : "NA"); ps.print(sep);
 	            ps.printf(depsFormat, pkg.getDependenciesString()); ps.print(sep);
 	            ps.printf("%s\n", pkg.getDescription());
         	}
@@ -336,14 +336,29 @@ public class PackageManagerCLI {
                             }
                             try {
                                 PackageManager.populatePackagesToInstall(packageMap, packagesToInstall);
-                            } catch (PackageManager.DependencyResolutionException ex) {
+                            } catch (DependencyResolver.DependencyResolutionException ex) {
+                                // the class populatePackagesToInstall throws; PackageManager's
+                                // DependencyResolutionException is only a subclass of it (#322)
                                 System.err.println("Installation aborted: " + ex.getMessage());
+                                System.exit(1);
                             }
                             System.err.println("Start installation");
-                            PackageManager.prepareForInstall(packagesToInstall, useAppDir, customDir);
-                            Map<String, String> dirs = PackageManager.installPackages(packagesToInstall, useAppDir, customDir);
-                            for (String pkgName : dirs.keySet())
-                                System.out.println("Package " + pkgName + " is installed in " + dirs.get(pkgName) + ".");
+                            Map<String, String> dirs;
+                            try {
+                                PackageManager.prepareForInstall(packagesToInstall, useAppDir, customDir);
+                                dirs = PackageManager.installPackages(packagesToInstall, useAppDir, customDir);
+                            } catch (IOException ex) {
+                                // the message says what went wrong and what to do; no stack trace
+                                System.err.println("Installation failed: " + ex.getMessage());
+                                System.exit(1);
+                                return;
+                            }
+                            for (String pkgName : dirs.keySet()) {
+                                String where = dirs.get(pkgName);
+                                // a Maven install has no folder: maven-packages.xml records it (#316)
+                                String verb = where.endsWith(PackageManager.MAVEN_PACKAGES_FILE) ? " is recorded in " : " is installed in ";
+                                System.out.println("Package " + pkgName + verb + where + ".");
+                            }
                         } else {
                             System.out.println("Installation aborted: " + name + " is already installed.");
                             System.exit(1);
@@ -366,7 +381,14 @@ public class PackageManagerCLI {
                         	String versionString = arguments.getStringOption("version");
                         	PackageVersion version = new PackageVersion(versionString);
                             String dir = PackageManager.uninstallPackage(aPackage, version, useAppDir, customDir);
-                            System.out.println("Package " + name + " is uninstalled from " + dir + ".");
+                            if (dir != null) {
+                                System.out.println("Package " + name + " is uninstalled from " + dir + ".");
+                            } else {
+                                // a Maven copy in use of another version is not removed (#322)
+                                System.out.println("Nothing removed: " + name + " " + aPackage.getInstalledVersion()
+                                        + " is the version in use, but version " + version
+                                        + " was asked to be deleted, and there is no archive copy of it.");
+                            }
                         } else {
 	                        if (aPackage.isInstalled()) {
 	                            List<String> deps = PackageManager.getInstalledDependencyNames(aPackage, packageMap);

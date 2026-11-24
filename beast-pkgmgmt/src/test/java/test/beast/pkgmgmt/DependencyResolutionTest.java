@@ -170,6 +170,22 @@ class DependencyResolutionTest {
         assertTrue(ex.getMessage().contains("NonExistent"));
     }
 
+    /**
+     * a version no package list has, e.g. packagemanager -add A -version 9.9, throws
+     * DependencyResolver.DependencyResolutionException, which the CLI catches to abort (#322)
+     */
+    @Test
+    void unknownVersionThrows() {
+        Package pkgA = makePackage("A", "1.0");
+
+        Map<String, Package> packageMap = new TreeMap<>(Map.of("A", pkgA));
+        Map<Package, PackageVersion> toInstall = new HashMap<>(Map.of(pkgA, new PackageVersion("9.9")));
+
+        DependencyResolutionException ex = assertThrows(DependencyResolutionException.class,
+                () -> PackageManager.populatePackagesToInstall(packageMap, toInstall));
+        assertEquals("Cannot install A 9.9: it is not available", ex.getMessage());
+    }
+
     @Test
     void mutualDependencyResolvesWhenVersionsSatisfied() throws DependencyResolutionException {
         // A -> B -> A: not a problem when A is already scheduled and satisfies B's constraint

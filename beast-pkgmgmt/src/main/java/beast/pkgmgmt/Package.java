@@ -17,6 +17,10 @@ public class Package {
     protected String packageName, description;
     protected PackageVersion installedVersion;
     protected Set<PackageDependency> installedVersionDeps;
+    /**
+     * every version the package lists offer, ZIP or Maven (so also the latest version), with its
+     * ZIP; the ZIP is null for a version the lists have on Maven only, see availableVersionMaven (#316)
+     */
     protected TreeMap<PackageVersion, URL> availableVersionURLs;
     protected TreeMap<PackageVersion, Set<PackageDependency>> availableVersionDeps;
 
@@ -82,8 +86,58 @@ public class Package {
     }
 
     public void addAvailableVersion(PackageVersion version, URL url, Set<PackageDependency> dependencies) {
-        availableVersionURLs.put(version, url);
+        addAvailableVersion(version, url, dependencies, null);
+    }
+
+    /**
+     * @param url         the ZIP of this version, or null if the package list has it only on Maven
+     * @param mavenGroupArtifact "groupId:artifactId" if the package list says this version is
+     *                    available from Maven, else null (#316)
+     */
+    public void addAvailableVersion(PackageVersion version, URL url, Set<PackageDependency> dependencies,
+                                    String mavenGroupArtifact) {
+        // a version listed as a ZIP in one package list and on Maven in another is available as both
+        if (url != null || !availableVersionURLs.containsKey(version)) {
+            availableVersionURLs.put(version, url);
+        }
         availableVersionDeps.put(version, dependencies);
+        if (mavenGroupArtifact != null) {
+            availableVersionMaven.put(version, mavenGroupArtifact);
+        }
+    }
+
+    /** "groupId:artifactId" of each available version that the package list says is on Maven (#316) */
+    protected TreeMap<PackageVersion, String> availableVersionMaven = new TreeMap<>();
+
+    /**
+     * @return "groupId:artifactId:version" if the package list says {@code version} is available
+     *         from Maven, else null (#316)
+     */
+    public String getAvailableMavenCoordinate(PackageVersion version) {
+        String ga = availableVersionMaven.get(version);
+        return ga == null ? null : ga + ":" + version.getVersion();
+    }
+
+    /**
+     * True if {@code version} is installed from Maven rather than as a ZIP (#316): the package list
+     * has the version on Maven, and either has no ZIP of it or the copy in use is from Maven, so
+     * the package keeps its format. Otherwise the ZIP is installed, as before.
+     */
+    public boolean installsAsMaven(PackageVersion version) {
+        return getAvailableMavenCoordinate(version) != null
+                && (getVersionURL(version) == null || mavenCoordinate != null);
+    }
+
+    /**
+     * the latest version as shown to users: "1.2.3", or "1.2.3 (Maven)" if it would be installed
+     * from Maven; "" if none is available
+     */
+    public String getLatestLabel() {
+        PackageVersion latest = getLatestVersion();
+        if (latest == null) {
+            return "";
+        }
+        return installsAsMaven(latest) ? latest + MAVEN_LABEL : latest.toString();
     }
 
     public void setInstalled(PackageVersion version, Set<PackageDependency> dependencies) {
@@ -143,7 +197,8 @@ public class Package {
     }
 
     /**
-     * @return URL corresponding to latest available version of package.
+     * @return URL corresponding to latest available version of package, null if that version is
+     * only on Maven (#316).
      */
     public URL getLatestVersionURL() {
         return isAvailable()
@@ -155,7 +210,7 @@ public class Package {
      * Retrieve URL corresponding to particular available version of package.
      *
      * @param version version of package
-     * @return URL
+     * @return URL of its ZIP, null if the version is not available or only on Maven (#316)
      */
     public URL getVersionURL(PackageVersion version) {
         return isAvailable(version)

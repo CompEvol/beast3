@@ -84,10 +84,8 @@ public class JPackageDialog extends DialogPane {
     	}
     	
     	public String getLatestVersion() {
-    		if (pkg.getLatestVersion() != null) {
-    			return pkg.getLatestVersion().getVersion();
-    		}
-    		return "";
+    		// e.g. "1.2.3 (Maven)" if it would be installed from Maven (#316)
+    		return pkg.getLatestLabel();
     	}
     	
         public String getDependencies() {
@@ -189,8 +187,8 @@ public class JPackageDialog extends DialogPane {
 
         
 		String[] columnNames = {"Name", "Installed", "Latest", "Dependencies", "Link", "Detail"};
-		// Installed is wide enough for "1.2.2 (Maven)" (#316)
-		int[] columnWidth = {200, 120, 50, 200, 40, 1200};
+		// Installed and Latest are wide enough for "1.2.2 (Maven)" (#316)
+		int[] columnWidth = {200, 120, 120, 200, 40, 1200};
 		String[] names = {"Name", "InstalledVersion", "LatestVersion", "Dependencies", "ProjectURL", "Description"};
 
 		for (int i = 0; i < columnNames.length; i++) {
