@@ -221,7 +221,7 @@ In BEAST 2's `Gamma`, `beta` is the second parameter and its meaning depends on 
 
 **Defaults differ.** In BEAST 2, a missing `alpha` is 2 and a missing `beta` gives scale 2. In the spec `Gamma`, a missing `alpha` is 1, and one of `theta` or `rate` must be given. So write `alpha` out when moving a BEAST 2 Gamma that left it out.
 
-The rate input was called `lambda` in the 2.8.0 pre-releases (up to 2.8.0-rc3); it is `rate` from 2.8.0-rc4. The Java field is still `betaInput`.
+The rate input was called `lambda` in the 2.8.0 pre-releases (up to 2.8.0-rc3); it is `rate` from 2.8.0-rc4. The Java field is still `betaInput`, and it is the rate. Java code copied from BEAST 2 that sets `betaInput` to a scale still compiles but is wrong: set `thetaInput` instead.
 
 #### Substitution Models
 

@@ -73,9 +73,10 @@ public class GammaTest  {
     public void testBetaAndLambdaAreNotInputs() {
         for (String name : new String[] {"beta", "lambda", "mode"}) {
             Gamma dist = new Gamma();
-            assertThrows(Exception.class, () -> dist.initByName(
+            Exception e = assertThrows(Exception.class, () -> dist.initByName(
                     "alpha", new RealScalarParam<>(2.0, PositiveReal.INSTANCE),
                     name, new RealScalarParam<>(0.5, PositiveReal.INSTANCE)), name);
+            assertTrue(e.getMessage().contains("has no input with name " + name), e.getMessage());
         }
     }
 

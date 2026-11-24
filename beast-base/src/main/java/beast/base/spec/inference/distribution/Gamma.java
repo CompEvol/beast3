@@ -19,11 +19,13 @@ import java.util.List;
  * Not the same inputs as BEAST 2's {@code beast.base.inference.distribution.Gamma}: there,
  * {@code beta} is the scale by default and its meaning depends on {@code mode}, and the defaults
  * are alpha 2, scale 2. This class has no {@code beta} or {@code mode} input, so a copied
- * {@code beta=} or {@code mode=} fails when the XML is loaded, and its defaults are alpha 1,
- * scale 1 (#49).
+ * {@code beta=} or {@code mode=} fails when the XML is loaded. Alpha defaults to 1, not 2, and
+ * one of theta or rate must be given (#49).
  * <p>
  * The rate input was called {@code lambda} in the 2.8.0 pre-releases. The Java field is still
- * {@code betaInput}, so code that sets it keeps compiling.
+ * {@code betaInput}, and it is the rate. In BEAST 2's Gamma {@code betaInput} is the scale by
+ * default, so Java code copied from BEAST 2 that sets it still compiles but gets the wrong
+ * distribution: set {@code thetaInput} instead.
  */
 @Description("Gamma distribution. for x>0  g(x;alpha,theta) = 1/{Gamma(alpha) theta^alpha} x^{alpha - 1} e^{-\frac{x}{theta}}" +
         "If the input x is a multidimensional parameter, each of the dimensions is considered as a " +
@@ -33,9 +35,9 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
     final public Input<RealScalar<PositiveReal>> alphaInput = new Input<>("alpha",
             "shape parameter, defaults to 1");
     final public Input<RealScalar<PositiveReal>> thetaInput = new Input<>("theta",
-            "scale parameter for Shape–Scale form, which equals to 1/rate, defaults to 1.");
+            "scale parameter for Shape–Scale form, which equals 1/rate. Give either theta or rate.");
     final public Input<RealScalar<PositiveReal>> betaInput = new Input<>("rate",
-            "rate parameter for Shape–Rate form, which equals to 1/scale, defaults to 1.", Input.Validate.XOR, thetaInput);
+            "rate parameter for Shape–Rate form, which equals 1/theta. Give either theta or rate.", Input.Validate.XOR, thetaInput);
 
     private GammaDistribution dist = GammaDistribution.of(1.0, 1.0);
     private ContinuousDistribution.Sampler sampler;
@@ -61,7 +63,9 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
                 initByName("param", param, "alpha", alpha, "theta", theta);
             } else if (rate != null && theta == null) {
                 initByName("param", param, "alpha", alpha, "rate", rate);
-            } else
+            } else if (theta == null)
+                throw new IllegalArgumentException("Must have either theta (scale) or rate: neither was given");
+            else
                 throw new IllegalArgumentException("Must have either theta (scale) or rate, not both");
         } catch (Exception e) {
             throw new RuntimeException( "Failed to initialize " + getClass().getSimpleName() +
@@ -91,7 +95,7 @@ public class Gamma extends ScalarDistribution<RealScalar<PositiveReal>, Double> 
             scale  = 1.0 / betaInput.get().get() ;
 
         } else if (thetaInput.get() == null && betaInput.get()  == null) {
-            // both null, use default
+            // both null: only reachable from Java code that skips initAndValidate (XOR); use scale 1
         } else
             throw new IllegalArgumentException("Must have either theta (scale) or rate, not both");
 
