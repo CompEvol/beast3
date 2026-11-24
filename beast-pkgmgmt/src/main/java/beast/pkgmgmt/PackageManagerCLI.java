@@ -338,12 +338,25 @@ public class PackageManagerCLI {
                                 PackageManager.populatePackagesToInstall(packageMap, packagesToInstall);
                             } catch (PackageManager.DependencyResolutionException ex) {
                                 System.err.println("Installation aborted: " + ex.getMessage());
+                                System.exit(1);
                             }
                             System.err.println("Start installation");
-                            PackageManager.prepareForInstall(packagesToInstall, useAppDir, customDir);
-                            Map<String, String> dirs = PackageManager.installPackages(packagesToInstall, useAppDir, customDir);
-                            for (String pkgName : dirs.keySet())
-                                System.out.println("Package " + pkgName + " is installed in " + dirs.get(pkgName) + ".");
+                            Map<String, String> dirs;
+                            try {
+                                PackageManager.prepareForInstall(packagesToInstall, useAppDir, customDir);
+                                dirs = PackageManager.installPackages(packagesToInstall, useAppDir, customDir);
+                            } catch (IOException ex) {
+                                // the message says what went wrong and what to do; no stack trace
+                                System.err.println("Installation failed: " + ex.getMessage());
+                                System.exit(1);
+                                return;
+                            }
+                            for (String pkgName : dirs.keySet()) {
+                                String where = dirs.get(pkgName);
+                                // a Maven install has no folder: maven-packages.xml records it (#316)
+                                String verb = where.endsWith(PackageManager.MAVEN_PACKAGES_FILE) ? " is recorded in " : " is installed in ";
+                                System.out.println("Package " + pkgName + verb + where + ".");
+                            }
                         } else {
                             System.out.println("Installation aborted: " + name + " is already installed.");
                             System.exit(1);
@@ -366,7 +379,14 @@ public class PackageManagerCLI {
                         	String versionString = arguments.getStringOption("version");
                         	PackageVersion version = new PackageVersion(versionString);
                             String dir = PackageManager.uninstallPackage(aPackage, version, useAppDir, customDir);
-                            System.out.println("Package " + name + " is uninstalled from " + dir + ".");
+                            if (dir != null) {
+                                System.out.println("Package " + name + " is uninstalled from " + dir + ".");
+                            } else {
+                                // a Maven copy in use of another version is not removed (#322)
+                                System.out.println("Nothing removed: " + name + " " + aPackage.getInstalledVersion()
+                                        + " is the version in use, but version " + version
+                                        + " was asked to be deleted, and there is no archive copy of it.");
+                            }
                         } else {
 	                        if (aPackage.isInstalled()) {
 	                            List<String> deps = PackageManager.getInstalledDependencyNames(aPackage, packageMap);

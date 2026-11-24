@@ -271,7 +271,7 @@ public class CbanMavenPackagesTest {
         assertFalse(ccd.newVersionAvailable());
     }
 
-    /** choosing an older version into the archive folder stays a ZIP, unless that version has no ZIP */
+    /** choosing a version into the archive folder is always a ZIP */
     @Test
     void theArchiveFolderStaysZipOnly() {
         Package ccd = installed(ccd("1.2.2", "1.2.3"), "1.2.3", true);
@@ -280,9 +280,47 @@ public class CbanMavenPackagesTest {
 
         PackageInstaller.useArchive(true);
         assertFalse(PackageInstaller.installsAsMaven(ccd, new PackageVersion("1.2.2")));
-        assertTrue(PackageInstaller.installsAsMaven(mavenOnly, new PackageVersion("1.0.0")));
+        assertFalse(PackageInstaller.installsAsMaven(mavenOnly, new PackageVersion("1.0.0")));
         PackageInstaller.useArchive(false);
         assertTrue(PackageInstaller.installsAsMaven(ccd, new PackageVersion("1.2.2")));
+        assertTrue(PackageInstaller.installsAsMaven(mavenOnly, new PackageVersion("1.0.0")));
+    }
+
+    /**
+     * #322 review: with Maven 1.2.2 in use, choosing 1.2.1, which is only on Maven, into the
+     * archive is refused with a clear message, instead of replacing the copy in use
+     */
+    @Test
+    void anOlderMavenOnlyVersionIsRefusedInTheArchive() throws IOException {
+        PackageManager.saveMavenPackageConfig(List.of(new PackageManager.MavenCoordinate("io.github.compevol", "ccd", "1.2.2")));
+        Package ccd = new Package("CCD");
+        ccd.addAvailableVersion(new PackageVersion("1.2.1"), null, needs("BEAST.base", "2.8.0"), CCD_GA);
+        ccd.addAvailableVersion(new PackageVersion("1.2.2"), null, needs("BEAST.base", "2.8.0"), CCD_GA);
+        installed(ccd, "1.2.2", true);
+        Map<Package, PackageVersion> packagesToInstall = new HashMap<>(Map.of(ccd, new PackageVersion("1.2.1")));
+
+        PackageInstaller.useArchive(true);
+        PackageManager.prepareForInstall(packagesToInstall, false, null);
+        IOException e = assertThrows(IOException.class,
+                () -> PackageManager.installPackages(packagesToInstall, false, null));
+
+        assertTrue(e.getMessage().contains("CCD 1.2.1 is only available from Maven and can't be installed in the archive. To install it from Maven instead"), e.getMessage());
+        assertTrue(e.getMessage().contains("packagemanager -maven io.github.compevol:ccd:1.2.1"), e.getMessage());
+        assertEquals(List.of(), mavenInstalls);
+        assertEquals("1.2.2", PackageManager.loadMavenPackageConfig().get(0).version);
+    }
+
+    /** a version in no package list (e.g. a typo in -version) is refused as such, in the archive or not */
+    @Test
+    void aVersionInNoListIsRefusedAsSuch() {
+        Package ccd = ccd("1.2.3");
+        for (boolean archive : new boolean[] {true, false}) {
+            PackageInstaller.useArchive(archive);
+            IOException e = assertThrows(IOException.class, () -> PackageManager.installPackages(
+                    new HashMap<>(Map.of(ccd, new PackageVersion("9.9"))), false, null));
+            assertEquals("CCD 9.9 is not in any package list.", e.getMessage());
+        }
+        assertEquals(List.of(), mavenInstalls);
     }
 
     // ---- installing ----

@@ -373,6 +373,55 @@ public class MavenInstalledPackagesTest {
         assertEquals(1, PackageManager.loadMavenPackageConfig().size());
     }
 
+    /**
+     * -del CCD -version 1.2.2 with Maven 1.2.2 in use and no archive copy removes the Maven line,
+     * as BEAST 2 removes the copy in use when there is no archive copy of the version
+     */
+    @Test
+    void deletingTheMavenVersionInUseRemovesTheMavenLine() throws IOException {
+        PackageManager.saveMavenPackageConfig(List.of(
+                new PackageManager.MavenCoordinate("io.github.compevol", "morph-models", "1.3.1"),
+                new PackageManager.MavenCoordinate("io.github.compevol", "ccd", "1.2.2")));
+        Map<String, Package> packageMap = new HashMap<>();
+        PackageManager.addMavenPackages(packageMap, plan(maven("CCD", "io.github.compevol", "ccd", "1.2.2")), repo());
+
+        String from;
+        PackageInstaller.useArchive(true);
+        try {
+            from = PackageManager.uninstallPackage(packageMap.get("CCD"), new PackageVersion("1.2.2"), false, null);
+        } finally {
+            PackageInstaller.useArchive(false);
+        }
+
+        assertTrue(from.endsWith("maven-packages.xml"), from);
+        List<PackageManager.MavenCoordinate> left = PackageManager.loadMavenPackageConfig();
+        assertEquals(1, left.size());
+        assertEquals("morph-models", left.get(0).artifactId);
+    }
+
+    /**
+     * -del CCD -version 1.2.1 with Maven 1.2.2 in use and no archive copy of 1.2.1 removes nothing:
+     * only version 1.2.1 may be removed, never the copy in use of another version
+     */
+    @Test
+    void deletingAVersionNotInstalledKeepsTheMavenLine() throws IOException {
+        PackageManager.saveMavenPackageConfig(List.of(
+                new PackageManager.MavenCoordinate("io.github.compevol", "ccd", "1.2.2")));
+        Map<String, Package> packageMap = new HashMap<>();
+        PackageManager.addMavenPackages(packageMap, plan(maven("CCD", "io.github.compevol", "ccd", "1.2.2")), repo());
+
+        String from;
+        PackageInstaller.useArchive(true);
+        try {
+            from = PackageManager.uninstallPackage(packageMap.get("CCD"), new PackageVersion("1.2.1"), false, null);
+        } finally {
+            PackageInstaller.useArchive(false);
+        }
+
+        assertNull(from);
+        assertEquals(1, PackageManager.loadMavenPackageConfig().size());
+    }
+
     /** the existing check before an uninstall sees Maven dependencies: NS needs MODEL_SELECTION */
     @Test
     void aMavenPackageNeededByAnotherCannotBeRemoved() {
