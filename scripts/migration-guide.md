@@ -191,7 +191,7 @@ For your package
 |---|---|---|
 | `Prior` + `Normal` | `beast.base.spec.inference.distribution.Normal` | `param` replaces `Prior.x`; `mean` → `RealScalar<Real>`; `sigma` → `RealScalar<PositiveReal>` |
 | `Prior` + `LogNormalDistributionModel` | `beast.base.spec.inference.distribution.LogNormal` | `param`; `M` → `RealScalar<Real>`; `S` → `RealScalar<PositiveReal>` |
-| `Prior` + `Gamma` | `beast.base.spec.inference.distribution.Gamma` | `param`; `alpha` → `RealScalar<PositiveReal>`; `theta` (scale) XOR `lambda` (rate) |
+| `Prior` + `Gamma` | `beast.base.spec.inference.distribution.Gamma` | `param`; `alpha` → `RealScalar<PositiveReal>`; `theta` (scale) XOR `rate` (1/`theta`); no `beta` or `mode` input, see [Gamma](#gamma-from-beast-2s-beta-and-mode) below |
 | — | `beast.base.spec.inference.distribution.GammaMean` | New mean parameterization: `alpha` + `mean` |
 | `Prior` + `Exponential` | `beast.base.spec.inference.distribution.Exponential` | `param`; `mean` → `RealScalar<PositiveReal>` |
 | `Prior` + `Beta` | `beast.base.spec.inference.distribution.Beta` | `param` (must be `RealScalar<UnitInterval>`); `alpha`, `beta` → `RealScalar<PositiveReal>` |
@@ -207,6 +207,21 @@ For your package
 | `Prior` applying dist to vector elements | `beast.base.spec.inference.distribution.IID` | Applies a `ScalarDistribution` to each element of a `Vector` independently |
 | Offset-prior pattern | `beast.base.spec.inference.distribution.OffsetReal` | `distribution` + `offset` (`RealScalar<Real>`) |
 | — | `beast.base.spec.inference.distribution.TruncatedReal` | `distribution` + `lower`/`upper` (`RealScalar<Real>`) |
+
+##### Gamma: from BEAST 2's `beta` and `mode`
+
+In BEAST 2's `Gamma`, `beta` is the second parameter and its meaning depends on `mode`: by default it is the **scale**. The spec `Gamma` has no `beta` or `mode` input, so an XML that only changes `spec=` fails when it is loaded ("… has no input with name beta"), and you choose the scale or the rate explicitly:
+
+| BEAST 2 `Gamma` | Means | Spec equivalent |
+|---|---|---|
+| `mode="ShapeScale"` (the default), `beta=b` | scale b | `Gamma`: `alpha`, `theta=b` |
+| `mode="ShapeRate"`, `beta=b` | rate b | `Gamma`: `alpha`, `rate=b` |
+| `mode="ShapeMean"`, `beta=b` | mean b | `GammaMean`: `alpha`, `mean=b` |
+| `mode="OneParameter"` | scale 1/alpha, so mean 1 | `GammaMean`: `alpha`, `mean=1` |
+
+**Defaults differ.** In BEAST 2, a missing `alpha` is 2 and a missing `beta` gives scale 2. In the spec `Gamma`, a missing `alpha` is 1, and one of `theta` or `rate` must be given. So write `alpha` out when moving a BEAST 2 Gamma that left it out.
+
+The rate input was called `lambda` in the 2.8.0 pre-releases (up to 2.8.0-rc3); it is `rate` from 2.8.0-rc4. The Java field is still `betaInput`.
 
 #### Substitution Models
 
