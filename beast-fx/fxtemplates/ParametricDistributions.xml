@@ -77,11 +77,10 @@
 
         <!-- Gamma -->
         <subtemplate id='Gamma' class='beast.base.spec.inference.distribution.Gamma' mainid='[top]'
-        	suppressInputs='beast.base.spec.inference.distribution.Gamma.beta,beast.base.spec.inference.distribution.Gamma.param'
+        	suppressInputs='beast.base.spec.inference.distribution.Gamma.rate,beast.base.spec.inference.distribution.Gamma.param'
             hmc='
 			Gamma/theta/=ParametricDistributions/Gamma/beta/,
-			Gamma/alpha/=ParametricDistributions/Gamma/alpha/,
-			Gamma/mode/=ParametricDistributions/Gamma/mode/'>
+			Gamma/alpha/=ParametricDistributions/Gamma/alpha/'>
             <![CDATA[
         <distr spec="beast.base.spec.inference.distribution.Gamma">
                 <alpha spec="beast.base.spec.inference.parameter.RealScalarParam" domain="PositiveReal" value="2.0" estimate="false"/>

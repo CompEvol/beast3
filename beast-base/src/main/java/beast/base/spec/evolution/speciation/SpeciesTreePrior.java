@@ -58,15 +58,17 @@ public class SpeciesTreePrior extends SpeciesTreePopFunction {
                 break;
         }
 
-        // bottom prior = Gamma(2,Psi)
+        // bottom prior = Gamma(shape 2, scale Psi)
+        // Psi is a scale, so it goes in theta: the spec Gamma's betaInput is the rate,
+        // and its alpha defaults to 1, not 2 as in BEAST 2's Gamma
         gamma2Prior = new Gamma();
-        gamma2Prior.betaInput.setValue(gammaParameterInput.get(), gamma2Prior);
+        gamma2Prior.alphaInput.setValue(new RealScalarParam<>(2.0, PositiveReal.INSTANCE), gamma2Prior);
+        gamma2Prior.thetaInput.setValue(gammaParameterInput.get(), gamma2Prior);
 
-        // top prior = Gamma(4,Psi)
+        // top prior = Gamma(shape 4, scale Psi)
         gamma4Prior = new Gamma();
-        final RealScalarParam<PositiveReal> parameter = new RealScalarParam<>(4.0, PositiveReal.INSTANCE);
-        gamma4Prior.alphaInput.setValue(parameter, gamma4Prior);
-        gamma4Prior.betaInput.setValue(gammaParameterInput.get(), gamma4Prior);
+        gamma4Prior.alphaInput.setValue(new RealScalarParam<>(4.0, PositiveReal.INSTANCE), gamma4Prior);
+        gamma4Prior.thetaInput.setValue(gammaParameterInput.get(), gamma4Prior);
 
         if (popFunction != TreePopSizeFunction.constant && gamma4Prior == null) {
             throw new IllegalArgumentException("Top prior must be specified when population function is not constant");

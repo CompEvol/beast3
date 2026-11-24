@@ -42,7 +42,7 @@ public class GammaTest  {
     public void testGammaCumulative2() throws Exception {
         Gamma dist = new Gamma();
         dist.initByName("alpha", new RealScalarParam<>(0.001, PositiveReal.INSTANCE),
-                "lambda", new RealScalarParam<>((1.0/1000.0), PositiveReal.INSTANCE));
+                "rate", new RealScalarParam<>((1.0/1000.0), PositiveReal.INSTANCE));
         double v = dist.inverseCumulativeProbability(0.5);
         assertEquals(5.244206e-299, v, 1e-304);
         v = dist.inverseCumulativeProbability(0.05);
@@ -54,6 +54,30 @@ public class GammaTest  {
         assertEquals(2.973588e-20, v, 1e-24);
         v = dist.inverseCumulativeProbability(0.975);
         assertEquals(5.679252e-09, v, 1e-13);
+    }
+
+    /** the four-argument constructor with a rate gives the same distribution as theta = 1/rate (#49) */
+    @Test
+    public void testConstructorWithRate() {
+        RealScalarParam<PositiveReal> x = new RealScalarParam<>(1.5, PositiveReal.INSTANCE);
+        Gamma byRate = new Gamma(x, new RealScalarParam<>(2.0, PositiveReal.INSTANCE), null,
+                new RealScalarParam<>(4.0, PositiveReal.INSTANCE));
+        Gamma byScale = new Gamma(x, new RealScalarParam<>(2.0, PositiveReal.INSTANCE),
+                new RealScalarParam<>(0.25, PositiveReal.INSTANCE));
+        assertEquals(byScale.calculateLogP(), byRate.calculateLogP(), 1e-12);
+        assertEquals(0.5, byRate.getMean(), 1e-12);
+    }
+
+    /** BEAST 2's beta, and the pre-release name lambda, are not inputs of the spec Gamma (#49) */
+    @Test
+    public void testBetaAndLambdaAreNotInputs() {
+        for (String name : new String[] {"beta", "lambda", "mode"}) {
+            Gamma dist = new Gamma();
+            Exception e = assertThrows(Exception.class, () -> dist.initByName(
+                    "alpha", new RealScalarParam<>(2.0, PositiveReal.INSTANCE),
+                    name, new RealScalarParam<>(0.5, PositiveReal.INSTANCE)), name);
+            assertTrue(e.getMessage().contains("has no input with name " + name), e.getMessage());
+        }
     }
 
 	/** The code below is adapted from GammaDistributionTest from BEAST 1
@@ -97,7 +121,7 @@ public class GammaTest  {
                 case 1: { // ShapeRate
                     Gamma gamma = new Gamma();
                     gamma.initByName("alpha", new RealScalarParam<>(shape, PositiveReal.INSTANCE),
-                            "lambda", new RealScalarParam<>(1 / scale, PositiveReal.INSTANCE));
+                            "rate", new RealScalarParam<>(1 / scale, PositiveReal.INSTANCE));
                     gammaDist = (GammaDistribution) gamma.getApacheDistribution();
                     break;
                 }
@@ -119,7 +143,7 @@ public class GammaTest  {
                     throw new IllegalStateException("Unexpected value: " + index);
             }
 
-            // lambda is rate
+            // rate is 1/theta
             final double value = Randomizer.nextGamma(shape, 1/scale);
 
             final double mypdf = mypdf(value, shape, scale);
