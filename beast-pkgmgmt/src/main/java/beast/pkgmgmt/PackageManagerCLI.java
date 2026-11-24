@@ -336,7 +336,9 @@ public class PackageManagerCLI {
                             }
                             try {
                                 PackageManager.populatePackagesToInstall(packageMap, packagesToInstall);
-                            } catch (PackageManager.DependencyResolutionException ex) {
+                            } catch (DependencyResolver.DependencyResolutionException ex) {
+                                // the class populatePackagesToInstall throws; PackageManager's
+                                // DependencyResolutionException is only a subclass of it (#322)
                                 System.err.println("Installation aborted: " + ex.getMessage());
                                 System.exit(1);
                             }
