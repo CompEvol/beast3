@@ -1,5 +1,6 @@
 package beast.pkgmgmt;
 
+import org.eclipse.aether.ConfigurationProperties;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession.CloseableSession;
 import org.eclipse.aether.artifact.Artifact;
@@ -10,10 +11,15 @@ import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
+import org.eclipse.aether.resolution.DependencyResolutionException;
 import org.eclipse.aether.resolution.DependencyResult;
+import org.eclipse.aether.spi.connector.transport.http.HttpTransporterException;
 import org.eclipse.aether.supplier.RepositorySystemSupplier;
 import org.eclipse.aether.supplier.SessionBuilderSupplier;
 import org.eclipse.aether.transfer.AbstractTransferListener;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
+import org.eclipse.aether.transfer.ArtifactTransferException;
+import org.eclipse.aether.transfer.MetadataTransferException;
 import org.eclipse.aether.transfer.TransferEvent;
 import org.eclipse.aether.transfer.TransferResource;
 import org.eclipse.aether.util.filter.DependencyFilterUtils;
@@ -22,9 +28,18 @@ import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -66,10 +81,22 @@ public class MavenPackageResolver {
      *                           (Maven Central is always included)
      */
     public MavenPackageResolver(Path localRepoDir, List<RemoteRepository> extraRepositories) {
+        this(localRepoDir, extraRepositories, true);
+    }
+
+    /**
+     * @param includeMavenCentral false to search only {@code repositories}, so tests can
+     *                            resolve from a local {@code file://} repository without
+     *                            the network (#318)
+     */
+    MavenPackageResolver(Path localRepoDir, List<RemoteRepository> repositories,
+                         boolean includeMavenCentral) {
         this.localRepoDir = localRepoDir;
         this.repositories = new ArrayList<>();
-        this.repositories.add(MAVEN_CENTRAL);
-        this.repositories.addAll(extraRepositories);
+        if (includeMavenCentral) {
+            this.repositories.add(MAVEN_CENTRAL);
+        }
+        this.repositories.addAll(repositories);
     }
 
     /**
@@ -97,7 +124,17 @@ public class MavenPackageResolver {
             DependencyRequest depRequest = new DependencyRequest(collectRequest,
                     DependencyFilterUtils.classpathFilter("compile", "runtime"));
 
-            DependencyResult result = system.resolveDependencies(session, depRequest);
+            DependencyResult result;
+            try {
+                result = system.resolveDependencies(session, depRequest);
+            } catch (DependencyResolutionException e) {
+                String problem = unreachable(e);
+                if (problem != null) {
+                    throw new UnreachableException("Could not download " + groupId + ":" + artifactId
+                            + ":" + version + ": " + problem, e);
+                }
+                throw e;
+            }
             List<Path> jars = new ArrayList<>();
             for (ArtifactResult ar : result.getArtifactResults()) {
                 Path jarPath = ar.getArtifact().getPath();
@@ -144,9 +181,95 @@ public class MavenPackageResolver {
                 .setIgnoreArtifactDescriptorRepositories(true)
                 // Use depth-first collector to avoid thread-pool deadlocks
                 .setConfigProperty("aether.dependencyCollector.impl", "df")
-                // Set request timeout (milliseconds)
-                .setConfigProperty("aether.connector.requestTimeout", 30_000)
+                // Timeout for each request (milliseconds); a stalled download then fails, and
+                // is reported as unreachable, after 30 s, not the resolver's default 30 min
+                .setConfigProperty(ConfigurationProperties.REQUEST_TIMEOUT, 30_000)
                 .build();
+    }
+
+    /**
+     * Thrown when a Maven repository cannot be reached or refuses requests, so a package
+     * could not be downloaded (#318). Its message says what happened and what to do.
+     */
+    public static class UnreachableException extends IOException {
+        UnreachableException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    /**
+     * What went wrong if {@code e} was caused by the network or by a repository refusing
+     * requests, else null (e.g. the package does not exist). The repository named is the
+     * one of the nearest transfer exception enclosing the problem, so with several
+     * repositories the message names the one that actually failed.
+     */
+    static String unreachable(Throwable e) {
+        record Node(Throwable t, String repo) {}
+        Set<Throwable> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+        Deque<Node> todo = new ArrayDeque<>();
+        todo.push(new Node(e, "the Maven repository"));
+        Node problem = null;
+        boolean centralAnswered = false;
+        while (!todo.isEmpty()) {
+            Node n = todo.pop();
+            Throwable t = n.t();
+            if (!seen.add(t)) continue;
+            String repo = n.repo();
+            if (t instanceof ArtifactTransferException a && a.getRepository() instanceof RemoteRepository r) {
+                repo = r.getUrl();
+            } else if (t instanceof MetadataTransferException m && m.getRepository() instanceof RemoteRepository r) {
+                repo = r.getUrl();
+            }
+            if (t instanceof ArtifactNotFoundException && MAVEN_CENTRAL.getUrl().equals(repo)) {
+                centralAnswered = true;
+            }
+            if (problem == null && describe(t, false) != null) {
+                problem = new Node(t, repo);
+            }
+            if (t.getCause() != null) todo.push(new Node(t.getCause(), repo));
+            for (Throwable s : t.getSuppressed()) todo.push(new Node(s, repo));
+        }
+        if (problem == null) {
+            return null;
+        }
+        // Central answered, so the internet works: the problem is a repository the user added
+        boolean addedByUser = centralAnswered && !MAVEN_CENTRAL.getUrl().equals(problem.repo());
+        return describe(problem.t(), addedByUser).replace("{repo}", problem.repo());
+    }
+
+    /** said of a repository the user added, when Central answered but that repository did not */
+    private static final String ADDED_BY_USER = "This Maven repository was added by you with "
+            + "packagemanager -addMavenRepository. If its address is wrong, remove it with: "
+            + "packagemanager -delMavenRepository {repo}";
+
+    private static String describe(Throwable t, boolean addedByUser) {
+        if (t instanceof HttpTransporterException h) {
+            return switch (h.getStatusCode()) {
+                case 429 -> "{repo} is refusing requests for now (HTTP 429 Too Many Requests). "
+                        + "Please try again in a few minutes.";
+                case 503 -> "{repo} is temporarily unavailable (HTTP 503). "
+                        + "Please try again in a few minutes.";
+                default -> null;
+            };
+        }
+        if (t instanceof SocketTimeoutException) {
+            return "timed out connecting to {repo}. "
+                    + "Please check your internet connection and proxy settings, and try again.";
+        }
+        if (t instanceof UnknownHostException) {
+            return addedByUser
+                    ? "it is not on Maven Central, and {repo} does not exist. " + ADDED_BY_USER
+                    : "cannot find the host of {repo} (" + t.getMessage() + "). "
+                            + "Please check your internet connection and proxy settings.";
+        }
+        if (t instanceof SocketException) {
+            return addedByUser
+                    ? "it is not on Maven Central, and {repo} cannot be reached (" + t.getMessage() + "). "
+                            + ADDED_BY_USER
+                    : "cannot connect to {repo} (" + t.getMessage() + "). "
+                            + "Please check your internet connection and proxy settings.";
+        }
+        return null;
     }
 
     /** Prints download progress to stderr and tracks transfer count. */

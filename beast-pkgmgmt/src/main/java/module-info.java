@@ -2,6 +2,7 @@ open module beast.pkgmgmt {
     requires java.xml;
     requires java.desktop;
     requires static org.apache.maven.resolver;
+    requires static org.apache.maven.resolver.spi;
     requires static org.apache.maven.resolver.supplier;
     requires static org.apache.maven.resolver.util;
     requires static org.slf4j;

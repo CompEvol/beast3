@@ -463,6 +463,10 @@ public class PackageManagerCLI {
 
             }
 
+        } catch (MavenPackageResolver.UnreachableException e) {
+            // the message already says what went wrong and what to do; no stack trace
+            System.err.println(e.getMessage());
+            System.exit(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
