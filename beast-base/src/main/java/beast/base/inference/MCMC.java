@@ -398,10 +398,59 @@ public class MCMC extends Runnable {
 
         Log.warning.println("End likelihood: " + oldLogLikelihood);
 //        System.err.println(state);
-        state.storeToFile(chainLength);
-        operatorSchedule.storeToFile();
+        if (stoppedAtSample == Long.MIN_VALUE) {
+            state.storeToFile(chainLength);
+            operatorSchedule.storeToFile();
+        } else {
+            // doLoop already stored the state of the last completed sample
+            Log.warning.println("Stopped at sample " + stoppedAtSample + " on request; continue the run with -resume");
+        }
         //Randomizer.storeToFile(stateFileName);
     } // run;
+
+    /** Set from another thread by {@link #requestStop()}; read once per sample by {@link #doLoop()}. */
+    private volatile boolean stopRequested = false;
+
+    /** The last sample completed before a requested stop, or Long.MIN_VALUE if the chain ran to the end. */
+    protected long stoppedAtSample = Long.MIN_VALUE;
+
+    /**
+     * Asks the running chain to stop after the current sample. The chain then stores its
+     * state, so the run can be continued with -resume, and closes its loggers.
+     * Safe to call from any thread, e.g. the BEAST dialog's Stop button.
+     *
+     * @return false if this chain can't be stopped this way, because a subclass replaces
+     * {@link #doLoop()} and does not check {@link #isStopRequested()}
+     */
+    public boolean requestStop() {
+        if (!checksStopRequests()) {
+            return false;
+        }
+        stopRequested = true;
+        return true;
+    }
+
+    /** @return whether {@link #requestStop()} has been called; for subclasses that replace {@link #doLoop()} */
+    protected boolean isStopRequested() {
+        return stopRequested;
+    }
+
+    /**
+     * @return whether the main loop checks {@link #isStopRequested()}. True when {@link #doLoop()}
+     * is this class's own. A subclass that replaces doLoop() and checks isStopRequested()
+     * should override this to return true.
+     */
+    protected boolean checksStopRequests() {
+        for (Class<?> c = getClass(); c != MCMC.class; c = c.getSuperclass()) {
+            try {
+                c.getDeclaredMethod("doLoop");
+                return false;
+            } catch (NoSuchMethodException e) {
+                // not replaced at this level
+            }
+        }
+        return true;
+    }
 
 
     protected void makeSureLogFilesAreSameLength() throws IOException {
@@ -441,6 +490,14 @@ public class MCMC extends Runnable {
         	Log.warning.println("Please wait while BEAST takes " + burnIn + " pre-burnin samples");
         }
         for (long sampleNr = -burnIn; sampleNr <= chainLength; sampleNr++) {
+            if (stopRequested) {
+                // store the last completed sample, as at the end of a run, so -resume can continue it
+                stoppedAtSample = sampleNr - 1;
+                state.robustlyCalcNonStochasticPosterior(posterior);
+                state.storeToFile(stoppedAtSample);
+                operatorSchedule.storeToFile();
+                break;
+            }
             final Operator operator = propagateState(sampleNr);
 
 

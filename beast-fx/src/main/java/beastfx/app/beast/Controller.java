@@ -65,6 +65,8 @@ public class Controller implements Initializable {
 	private Stage stage;
 
 	private Thread beastThread = null;
+	/** the analysis beastThread runs, so Stop can ask it to end */
+	private BeastMCMC beastMCMC = null;
 
 	void setStage(Stage stage) {
 		this.stage = stage;
@@ -158,6 +160,7 @@ public class Controller implements Initializable {
 
 			final List<String> MCMCargs = getMCMCargs();
 			final BeastMCMC beastMCMC = new BeastMCMC();
+			this.beastMCMC = beastMCMC;
 
 			beastThread = new Thread() {
 				public void run() {
@@ -180,11 +183,18 @@ public class Controller implements Initializable {
 			};
 			beastThread.start();
 			runButton.setText("Stop");
+		} else if (beastMCMC.requestStop()) {
+			// the chain stops after the current sample, stores its state and closes its logs;
+			// when beastThread ends it closes the dialog, as after a complete run
+			logToView("Stopping after the current sample; continue later with -resume", "green");
+			runButton.setText("Stopping");
+			runButton.setDisable(true);
 		} else {
-			beastThread.stop();
-			beastThread = null;
-			closeDialog();
-			// runButton.setText("Quit");
+			// Thread.stop() is gone (it throws since Java 20, removed in Java 26), so an
+			// analysis that doesn't check for stop requests can only end with BEAST itself
+			logToView("This analysis can't be stopped while it runs. Quit ends BEAST; "
+					+ "the state was last saved at the most recent storeEvery sample.", "red");
+			runButton.setText("Quit");
 		}
 	}
 

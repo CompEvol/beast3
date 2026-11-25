@@ -30,6 +30,7 @@ import beast.base.core.BEASTVersion2;
 import beast.base.core.Log;
 import beast.base.core.ProgramStatus;
 import beast.base.inference.Logger;
+import beast.base.inference.MCMC;
 import beast.base.inference.Runnable;
 import beast.base.parser.JSONParser;
 import beast.base.parser.JSONParserException;
@@ -67,7 +68,7 @@ public class BeastMCMC {
     /**
      * MCMC object to execute *
      */
-    Runnable m_runnable;
+    volatile Runnable m_runnable; // volatile: requestStop() reads it from the FX thread
 
     /**
      * parse command line arguments, and load file if specified
@@ -260,6 +261,17 @@ public class BeastMCMC {
         ProgramStatus.g_exec.shutdown();
         ProgramStatus.g_exec.shutdownNow();
     } // run
+
+    /**
+     * Asks the running analysis to stop after the current sample, storing its state so
+     * it can be continued with -resume. Safe to call from another thread.
+     *
+     * @return false if there is nothing to stop yet (the file is still being parsed), or
+     * the analysis can't be stopped this way (see {@link MCMC#requestStop()})
+     */
+    public boolean requestStop() {
+        return m_runnable instanceof MCMC mcmc && mcmc.requestStop();
+    }
 
 
     public void validate() {
