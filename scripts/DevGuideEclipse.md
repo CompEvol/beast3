@@ -160,6 +160,87 @@ mvn test -DskipTests   # or mvn test to run all tests across all projects
 
 Edit `beast-workspace/pom.xml` to add or remove `<module>` entries, then **Maven → Update Project** (Alt+F5) in Eclipse. Each package must be a Maven project with a `pom.xml` that declares its BEAST 3 dependencies.
 
+## One plain project for the core and packages, without m2e
+
+This setup works like the Ant setup of BEAST 2.7. The core and several packages sit in **one plain Java project**, everything runs on the class path, and Eclipse never calls Maven. Maven is used once, by a script, to fetch the third-party JARs.
+
+An Eclipse project can hold only one `module-info.java`, so this setup leaves them all out. BEAST then finds each package's services in its `version.xml`, as in 2.7.
+
+### Checkouts
+
+Clone the core and the packages bundled with the release into the same folder:
+
+```
+git/
+├── beast3/              https://github.com/CompEvol/beast3
+├── ORC/                 https://github.com/jordandouglas/ORC
+├── sampled-ancestors/   https://github.com/CompEvol/sampled-ancestors
+├── bModelTest/          https://github.com/BEAST2-Dev/bModelTest
+├── CCD/                 https://github.com/CompEvol/CCD
+└── starbeast3/          https://github.com/rbouckaert/starbeast3
+```
+
+These five are the packages in `release/bundled-packages.tsv`. Together they cover a package that needs only `beast-base` (ORC, SA), one that also needs `beast-fx` (bModelTest, CCD), and one that needs other packages (StarBeast3 needs ORC and SA). If a checkout is missing, the script prints the `git clone` command for it.
+
+### Generate the project
+
+```bash
+cd beast3
+scripts/eclipse/make-single-project.sh
+```
+
+This creates `git/beast-eclipse/`. Use `--project-dir DIR` to put it somewhere else. The script:
+
+1. runs `mvn install -DskipTests` in `beast3` (skip this with `--skip-install`);
+2. asks Maven for the runtime JARs of each module and package, keeps the highest version of each, and copies them to `lib/`, with JavaFX in `lib/javafx/`;
+3. writes `.project` and `.classpath`. For each checkout, `src/main/java` (without `module-info.java`) and `src/main/resources` are linked source folders, so you edit the files in the checkouts themselves. Each checkout's root folder is also on the class path, as a class folder, for its `version.xml` and `fxtemplates/`;
+4. writes launch configurations for BEAUti, BEAST, TreeAnnotator, LogCombiner and AppLauncher.
+
+Re-run the script after a pull that changes a dependency, and after adding or removing a package. It only rewrites files in the project folder; your code is in the checkouts.
+
+To check the result without opening Eclipse, add `--check`. The script then compiles everything with ECJ, the Eclipse compiler, and runs each package's example in BEAST for 20 seconds, with no window:
+
+```
+==> PASS  compiled 895 source files with ECJ on Java 25
+==> PASS  beast-base  testHKY.xml
+==> PASS  ORC  caterpillars.xml
+...
+```
+
+### Import and run
+
+1. **File → Import → General → Existing Projects into Workspace**, and choose `git/beast-eclipse`. Don't use the Maven import.
+2. The project uses the **JavaSE-25** execution environment. Make sure a JDK 25 is listed under **Preferences → Java → Installed JREs** (see [Configure JDK](#configure-jdk)). Run the script with that same JDK as `java`: whether the JDK includes the `jdk.jsobject` module decides what goes on the class path.
+3. **Run → Run Configurations → Java Application** lists **BEAUti**, **BEAST** (asks for an XML file), **TreeAnnotator**, **LogCombiner** and **AppLauncher**.
+
+The launch configurations do three things to make this work:
+
+- They put `lib/javafx` on the module path with `--add-modules`. JavaFX refuses to start an application whose main class is on the class path only ("JavaFX runtime components are missing").
+- They set `-Dbeast.user.package.dir` to `beast-eclipse/user-packages`, an empty folder. Packages installed in your normal BEAST folder would otherwise load next to the ones built here and clash.
+- They turn off BEAUti's check for package updates (`package.update.status=DO_NOT_CHECK` in that folder). The check would otherwise try to install the packages you are editing.
+
+For BEAGLE, add `-Djava.library.path=...` to the VM arguments (see [BEAGLE native library](#beagle-native-library)).
+
+### Add another package
+
+Clone it next to the others and pass it to the script:
+
+```bash
+scripts/eclipse/make-single-project.sh --package ../MyPackage
+```
+
+Use `--package` once for each extra package. Each one needs a `pom.xml`, `src/main/java` and a `version.xml` at its root that lists every service in its `module-info.java`. On the module path BEAST reads `module-info.java`, so a class missing from `version.xml` goes unnoticed in a release but fails here. Its BEAUti templates go in `fxtemplates/` at the root, or in `src/main/resources/<module>/fxtemplates/`.
+
+Packages your package depends on but that aren't in the project come from Maven as JARs, like any other dependency.
+
+### Limitations
+
+- AppLauncher lists only the apps of installed packages, not of the packages in the project. To run a package app, run its main class directly (**Run As → Java Application**), with the VM arguments of the BEAUti launch configuration if it uses JavaFX.
+- Tests (`src/test`) are not in the project. Run them with Maven, or use the per-module import above.
+- StarBeast3 1.3.1 lacks `OperatorScheduleRecalculator` in its `version.xml`, so its examples fail here until [rbouckaert/starbeast3#21](https://github.com/rbouckaert/starbeast3/pull/21) is merged.
+- Use JDK 25 for the project, not 26. JDK 26 removed `Thread.stop()`, and `beastfx.app.beast.Controller` still calls it, so `beast-fx` doesn't compile in Eclipse on JDK 26.
+- `--check` uses ECJ on its own, which misses some of the checks Eclipse makes when it builds a project. Building in Eclipse remains the real test.
+
 ## Running tests
 
 Right-click a test class or the `src/test/java` folder and select **Run As → JUnit Test**. Eclipse picks up the JUnit 5 and JUnit 4 dependencies from Maven automatically.
