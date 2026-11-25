@@ -9,6 +9,7 @@ import beast.pkgmgmt.BEASTClassLoader;
 import beast.pkgmgmt.PackageManager;
 import beastfx.app.inputeditor.InputEditor.ButtonStatus;
 import beastfx.app.inputeditor.InputEditor.ExpandOption;
+import beastfx.app.inputeditor.spec.ScalarInputEditor;
 import beastfx.app.util.Alert;
 import javafx.scene.layout.VBox;
 
@@ -210,7 +211,10 @@ public class InputEditorFactory {
         		inputClass2 = inputClass2.getSuperclass(); 
         	}
         	if (inputClass2 == null) {
-        		inputEditor = new BEASTObjectInputEditor(doc);
+        		// an unset lower/upper of a Bounded prior is a number, not an object to choose:
+        		// give it the number editor rather than a combo box of templates (#330)
+        		inputEditor = ScalarInputEditor.isUnsetBound(input, beastObject)
+        				? new ScalarInputEditor(doc) : new BEASTObjectInputEditor(doc);
         	} else {
 	            // handle BEASTObject-input with custom input editors
 	            String inputEditorName = inputEditorMap.get(inputClass2);

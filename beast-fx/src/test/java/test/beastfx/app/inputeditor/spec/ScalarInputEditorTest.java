@@ -3,9 +3,19 @@ package test.beastfx.app.inputeditor.spec;
 
 import beast.base.core.BEASTInterface;
 import beast.base.core.Input;
+import beast.base.spec.domain.Int;
+import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveInt;
+import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.distribution.Normal;
+import beast.base.spec.inference.distribution.Poisson;
+import beast.base.spec.inference.distribution.TruncatedInt;
+import beast.base.spec.inference.distribution.TruncatedReal;
 import beast.base.spec.inference.distribution.Uniform;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beastfx.app.inputeditor.spec.ScalarInputEditor;
 import beastfx.app.inputeditor.BeautiConfig;
 import beastfx.app.inputeditor.BeautiDoc;
 import beastfx.app.inputeditor.InputEditor;
@@ -13,6 +23,10 @@ import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +87,126 @@ public class ScalarInputEditorTest {
 
 		assertFalse(lowerVisible.get(), "the estimate checkbox for Uniform's own \"lower\" bound must never be shown");
 		assertFalse(upperVisible.get(), "the estimate checkbox for Uniform's own \"upper\" bound must never be shown");
+	}
+
+
+	/**
+	 * #330: an unset lower/upper of a Bounded prior is a number field showing the default
+	 * bound, not a combo box of templates that would accept a distribution as the bound.
+	 * Typing a number sets a fixed value; clearing the field unsets the bound again.
+	 */
+	@Test
+	public void unsetBoundOfBoundedRealIsANumberField() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			RealScalarParam<PositiveReal> shape = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+			shape.setID("gammaShape.s:test");
+			Normal normal = new Normal();
+			normal.initByName("mean", new RealScalarParam<>(0.0, Real.INSTANCE),
+					"sigma", new RealScalarParam<>(1.0, PositiveReal.INSTANCE));
+			// as GammaShapePrior in Standard.xml: a lower bound, no upper
+			TruncatedReal bounded = new TruncatedReal();
+			bounded.initByName("param", shape, "distribution", normal,
+					"lower", new RealScalarParam<>(0.1, Real.INSTANCE));
+			bounded.setID("GammaShapePrior.s:test");
+			doc.registerPlugin(shape);
+			doc.registerPlugin(bounded);
+
+			TextField field = unsetBoundField(doc, bounded, "upper", String.valueOf(Real.INSTANCE.getUpper()));
+
+			type(field, "10");
+			assertTrue(bounded.upperInput.get() instanceof RealScalarParam<?> p && p.get() == 10.0,
+					"typing a number sets the upper bound, but it is " + bounded.upperInput.get());
+			assertFalse(((RealScalarParam<?>) bounded.upperInput.get()).isEstimatedInput.get(),
+					"a bound typed in is a fixed value, not estimated");
+
+			type(field, "");
+			assertNull(bounded.upperInput.get(), "clearing the field unsets the upper bound");
+		}, error);
+		rethrow(error);
+	}
+
+	/** #330, for an integer Bounded prior: the bound typed in is an integer */
+	@Test
+	public void unsetBoundOfBoundedIntIsANumberField() throws Exception {
+		AtomicReference<Throwable> error = new AtomicReference<>();
+		runOnFXThread(() -> {
+			BeautiDoc doc = new BeautiDoc();
+			doc.loadTemplate(doc.processTemplate(BeautiConfig.TEMPLATE_DIR + "/Standard.xml"));
+
+			IntScalarParam<PositiveInt> count = new IntScalarParam<>(1, PositiveInt.INSTANCE);
+			count.setID("count.s:test");
+			TruncatedInt bounded = new TruncatedInt();
+			bounded.initByName("param", count,
+					"distribution", new Poisson(null, new RealScalarParam<>(2.0, NonNegativeReal.INSTANCE)),
+					"lower", new IntScalarParam<>(1, Int.INSTANCE));
+			bounded.setID("CountPrior.s:test");
+			doc.registerPlugin(count);
+			doc.registerPlugin(bounded);
+
+			TextField field = unsetBoundField(doc, bounded, "upper", String.valueOf(Int.INSTANCE.getUpper()));
+
+			type(field, "8");
+			assertTrue(bounded.upperInput.get() instanceof IntScalarParam<?> p && p.get() == 8,
+					"typing a number sets the integer upper bound, but it is " + bounded.upperInput.get());
+		}, error);
+		rethrow(error);
+	}
+
+	/**
+	 * the editor BEAUti builds for an unset bound: a number editor with an empty field that
+	 * shows the default bound, and no combo box
+	 */
+	private TextField unsetBoundField(BeautiDoc doc, BEASTInterface bounded, String inputName,
+			String defaultBound) throws Exception {
+		Input<?> input = bounded.getInput(inputName);
+		assertNull(input.get(), inputName + " should start unset");
+		InputEditor editor = doc.getInputEditorFactory().createInputEditor(input, bounded, doc);
+		assertTrue(editor instanceof ScalarInputEditor,
+				"an unset bound gets the number editor, not " + editor.getClass().getSimpleName());
+		assertNull(find(editor.getComponent(), ComboBox.class, null),
+				"an unset bound must not be a combo box of templates");
+		TextField field = find(editor.getComponent(), TextField.class, inputName);
+		assertNotNull(field, "no \"" + inputName + "\" field found");
+		assertEquals("", field.getText(), "an unset bound shows no value");
+		assertEquals(defaultBound, field.getPromptText(), "an unset bound shows the default bound");
+		return field;
+	}
+
+	/** set the field's text and release a key, as typing does */
+	private static void type(TextField field, String text) {
+		field.setText(text);
+		field.getOnKeyReleased().handle(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.UNDEFINED,
+				false, false, false, false));
+	}
+
+	/** the first node of the given class (and id, unless null) in the tree rooted at node */
+	private static <T extends Node> T find(Node node, Class<T> type, String id) {
+		if (type.isInstance(node) && (id == null || id.equals(node.getId()))) {
+			return type.cast(node);
+		}
+		if (node instanceof Parent parent) {
+			for (Node child : parent.getChildrenUnmodifiable()) {
+				T found = find(child, type, id);
+				if (found != null) {
+					return found;
+				}
+			}
+		}
+		return null;
+	}
+
+	private static void rethrow(AtomicReference<Throwable> error) {
+		if (error.get() instanceof AssertionError a) {
+			throw a;
+		}
+		if (error.get() != null) {
+			error.get().printStackTrace();
+			fail("test could not be run: " + error.get());
+		}
 	}
 
 

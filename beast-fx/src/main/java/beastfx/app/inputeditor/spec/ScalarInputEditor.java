@@ -8,11 +8,15 @@ import beast.base.core.Log;
 import beast.base.inference.Operator;
 import beast.base.inference.StateNode;
 import beast.base.parser.PartitionContext;
+import beast.base.spec.domain.Int;
 import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.Real;
 import beast.base.spec.inference.distribution.ScalarDistribution;
+import beast.base.spec.inference.distribution.WrapsDistribution;
 import beast.base.spec.inference.parameter.BoolScalarParam;
 import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
+import beast.base.spec.type.IntScalar;
 import beast.base.spec.type.Scalar;
 import beastfx.app.inputeditor.BEASTObjectDialog;
 import beastfx.app.inputeditor.BEASTObjectInputEditor;
@@ -55,6 +59,61 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
     public Class<?>[] types() {
     	return new Class<?>[] {RealScalarParam.class, IntScalarParam.class, BoolScalarParam.class};
     }
+
+    /**
+     * the lower or upper input of a Bounded prior (one that truncates), set or not.
+     * Left out of the XML, the prior uses its default bound: the end of Real or Int.
+     */
+    static boolean isBoundOfBoundedPrior(Input<?> input, BEASTInterface owner) {
+    	return owner instanceof WrapsDistribution w && w.truncates()
+    			&& ("lower".equals(input.getName()) || "upper".equals(input.getName()));
+    }
+
+    /** a lower or upper of a Bounded prior that has no value, i.e. is left out of the XML */
+    public static boolean isUnsetBound(Input<?> input, BEASTInterface owner) {
+    	return input.get() == null && isBoundOfBoundedPrior(input, owner);
+    }
+
+    /**
+     * whether this bound is an integer, i.e. declared as {@code Input<IntScalar<?>>} by the
+     * Bounded prior. Input.getType() cannot tell: the wildcard resolves to Object.
+     */
+    private boolean isIntBound() {
+    	for (Class<?> c = m_beastObject.getClass(); c != null; c = c.getSuperclass()) {
+    		for (java.lang.reflect.Field field : c.getDeclaredFields()) {
+    			if (!Input.class.isAssignableFrom(field.getType())) {
+    				continue;
+    			}
+    			try {
+    				field.setAccessible(true);
+    				if (field.get(m_beastObject) != m_input) {
+    					continue;
+    				}
+    			} catch (ReflectiveOperationException | RuntimeException e) {
+    				continue;
+    			}
+    			if (field.getGenericType() instanceof java.lang.reflect.ParameterizedType input) {
+    				java.lang.reflect.Type arg = input.getActualTypeArguments()[0];
+    				if (arg instanceof java.lang.reflect.ParameterizedType p) {
+    					arg = p.getRawType();
+    				}
+    				return arg instanceof Class<?> type && IntScalar.class.isAssignableFrom(type);
+    			}
+    			return false;
+    		}
+    	}
+    	return false;
+    }
+
+    /** the bound a Bounded prior uses when this input is unset: an end of Real or Int */
+    private String defaultBoundText() {
+    	boolean isLower = "lower".equals(m_input.getName());
+    	// not one ?: over both, which would turn the Integer into a Double
+    	if (isIntBound()) {
+    		return String.valueOf(isLower ? Int.INSTANCE.getLower() : Int.INSTANCE.getUpper());
+    	}
+    	return String.valueOf(isLower ? Real.INSTANCE.getLower() : Real.INSTANCE.getUpper());
+    }
     
     
     @Override
@@ -86,6 +145,25 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
         try {
             String valueString = m_entry.getText();
             Scalar<?,?> parameter = (Scalar<?,?>) m_input.get();
+            if (itemNr < 0 && isBoundOfBoundedPrior(m_input, m_beastObject)) {
+            	if (valueString.trim().isEmpty()) {
+            		// cleared: unset, so the prior uses its default bound again
+            		m_input.setValue(null, m_beastObject);
+            		validateInput();
+            		return;
+            	}
+            	if (parameter == null) {
+            		// a number typed into an unset bound: a fixed value, as the templates write it
+            		StateNode bound = isIntBound()
+            				? new IntScalarParam<>(Integer.parseInt(valueString.trim()), Int.INSTANCE)
+            				: new RealScalarParam<>(Double.parseDouble(valueString.trim()), Real.INSTANCE);
+            		// a StateNode is estimated by default
+            		bound.isEstimatedInput.setValue(false, bound);
+            		m_input.setValue(bound, m_beastObject);
+            		validateInput();
+            		return;
+            	}
+            }
         	//String oldValue = "";
     		//oldValue += parameter.get() + "";
     		
@@ -119,7 +197,14 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
         	parameter = (Scalar<?,?>) input.get();
         }
 
-        if (parameter == null) {
+        if (parameter == null && itemNr < 0 && isBoundOfBoundedPrior(input, beastObject)) {
+            // an unset bound: an empty field showing the default bound, which the prior uses
+            // when the bound is left out of the XML. Nothing is written until a number is typed.
+            setUpEntry();
+            m_entry.setPromptText(defaultBoundText());
+            paramBox.getChildren().add(m_entry);
+            box.getChildren().add(paramBox);
+        } else if (parameter == null) {
             super.addComboBox(box, input, beastObject);
         } else {
             setUpEntry();
@@ -349,13 +434,21 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
     protected void addValidationLabel() {
         super.addValidationLabel();
         // make edit button invisible (if it exists) when this parameter is not estimateable
-        if (m_editBEASTObjectButton != null)
+        if (m_editBEASTObjectButton != null && m_isEstimatedBox != null)
             m_editBEASTObjectButton.setVisible(m_isEstimatedBox.isVisible());
     }
 
     @Override
     protected void refresh() {
         Scalar<?,?> parameter = (Scalar<?,?>) m_input.get();
+        if (parameter == null) {
+            // an unset bound of a Bounded prior: empty, showing the default bound as prompt
+            if (m_entry != null) {
+                m_entry.setText("");
+            }
+            repaint();
+            return;
+        }
 		String s = "";
 		s += parameter.get() + " ";
 		m_entry.setText(s);
