@@ -5,6 +5,31 @@ Last updated: November 2026
 
 All issues can be viewed at https://github.com/CompEvol/beast3/issues
 ================================================================================
+Version 2.8.0-rc4 November 2026
+	o Package manager: decide which copy of the core and of each package to load, and which versions to install, in one planner that compares versions at start-up, replacing load-order decisions #298 #315
+	o Bundle the Maven resolver on the classpath so Maven packages install and load in the release; release scripts check that version.xml and the pom version agree #297 #308
+	o Show packages installed from Maven as installed, let package lists give a Maven coordinate for a package version, and fix upgrading a package that came in as a Maven dependency #316 #317 #322
+	o beast -version, -list and -maven follow the planner on which copy is used, and say which copy each line is #317
+	o AppLauncher lists the apps of packages installed from Maven #82
+	o packagemanager -add stops with exit 1 when dependencies can't be resolved; unreachable-repository messages name the repository; fix the morph-models coordinate in help and docs #322 #300
+	o Spec Gamma: rename the rate input from lambda to rate; spec SpeciesTreePrior uses psi as the Gamma scale #49
+	o Add Geometric, NegativeBinomial and Binomial priors on counts; Geometric with p = 0 gives probability 0 instead of throwing #294
+	o CountPrior: the whole prior on indicators is in the model #231
+	o Offset and Bounded priors: generic in their domain with an optional declared domain; BEAUti gives them defaults and inner choices that fit the parameter's domain #291 #295
+	o Warn when a prior's support reaches outside its parameter's domain; integer domain bounds are inclusive #287
+	o Deprecate a tensor input value whose domain does not fit the declared one #226
+	o Fix TruncatedInt normalisation (including the right tail), sample() and getMean(); Offset CDFs shift by the offset #284
+	o TruncatedReal: use the survival function in the right tail of the inner distribution #289
+	o Parameters ignore the bounds of a prior that is not initialised yet; IntUniformOperator reads its bounds on the first proposal #286
+	o BEAUti: IID on a positive or unit-interval vector starts with LogNormal or Beta, from templates #290
+	o BEAUti: option to plot a positive prior's density on a log scale #293 #299
+	o BEAUti: choosing a distribution for an input with no value no longer throws, and message dialogs do not block when JavaFX is headless #302
+	o Alert: confirm dialog shows no HTML tags and can be closed, a closed Yes/No/Cancel dialog is Cancel, and dialogs are centred on their window #310
+	o Register VectorElement in version.xml and check module-info against it #319
+	o mvn exec: pass -Dbeast.args to any main class as program arguments #296
+	o Remove the BEAST 2 lib/ folder and scripts/doc.pl #313
+	o CI and tests: Maven cache falls back to an older cache, Maven retries rate limits longer, and resolver tests no longer fail when Maven Central rate-limits #312 #318
+
 Version 2.8.0-rc3 November 2026
 	o Bundle the pinned packages in the Mac, Linux and Windows installers, and seed every package bundled with the application #248
 	o Add BactrianSubtreeScale, a scale-invariant subtree slide, and use it with its default size for BEAUti's subtree slide (replacing the 0.01 BactrianSubtreeSlide of #201) and the example XMLs #214 #201
