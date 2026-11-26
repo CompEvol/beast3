@@ -261,6 +261,11 @@ public class OperatorSchedule extends BEASTObject {
         formatter.format(headerFormat, PR_M);
         formatter.format(headerFormat, PR_ACCEPT);
         out.println();
+        if (!reweighted) {
+            // no operator chosen yet, e.g. a chain stopped before its first sample
+            reweightOperators();
+            reweighted = true;
+        }
         int i = 0;
         for (final Operator operator : operators) {
             out.println(prettyPrintOperator(operator, longestName, colWidth, 5, normalizedWeights[i], detailedRejection));
