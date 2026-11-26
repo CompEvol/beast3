@@ -89,6 +89,73 @@ public class TreeAnnotator extends beast.base.inference.Runnable {
     	public abstract Tree next() throws IOException;
     	public abstract void reset() throws IOException;
 
+        /** whether the warning about collapsed single-child nodes has been given */
+        private boolean warnedAboutSingleChildNodes = false;
+
+        /**
+         * The tree with its unnamed single-child nodes, such as SIEVE's root above the trunk,
+         * spliced out (#333): they add no clade, and the clade system would count their child's
+         * clade twice. Trees without them are returned as they are.
+         *
+         * @throws IllegalArgumentException for a named single-child node, which may be a
+         * sampled ancestor written as a labelled internal node
+         */
+        protected Tree collapseSingleChildNodes(Tree tree) {
+            int count = 0;
+            for (Node node : tree.getNodesAsArray()) {
+                if (node.getChildCount() == 1) {
+                    if (node.getID() != null) {
+                        throw new IllegalArgumentException("Node '" + node.getID() + "' of tree " + tree.getID()
+                                + " has a single child. If it is a sampled ancestor, write it as a leaf with "
+                                + "a zero-length branch, the form the SA package uses.");
+                    }
+                    count++;
+                }
+            }
+            if (count == 0) {
+                return tree;
+            }
+            if (!warnedAboutSingleChildNodes) {
+                warnedAboutSingleChildNodes = true;
+                Log.warning("WARNING: collapsing unnamed internal nodes with a single child, for example a root "
+                        + "above a trunk (" + count + " in tree " + tree.getID() + "); the summary tree has none.");
+            }
+            Node root = tree.getRoot();
+            while (root.getChildCount() == 1) {
+                root = root.getChild(0);
+            }
+            root.setParent(null, false);
+            spliceOutSingleChildNodes(root);
+            // leaves keep their numbers; internal nodes are renumbered after them, the root last
+            int[] nr = {tree.getLeafNodeCount()};
+            numberInternalNodes(root, nr);
+            Tree collapsed = new Tree(root);
+            collapsed.setID(tree.getID());
+            return collapsed;
+        }
+
+        private void spliceOutSingleChildNodes(Node node) {
+            List<Node> children = node.getChildrenMutable();
+            for (int i = 0; i < children.size(); i++) {
+                Node child = children.get(i);
+                while (child.getChildCount() == 1) {
+                    child = child.getChild(0);
+                }
+                children.set(i, child);
+                child.setParent(node, false);
+                spliceOutSingleChildNodes(child);
+            }
+        }
+
+        private void numberInternalNodes(Node node, int[] nr) {
+            if (!node.isLeaf()) {
+                for (Node child : node.getChildren()) {
+                    numberInternalNodes(child, nr);
+                }
+                node.setNr(nr[0]++);
+            }
+        }
+
 
     	public String inputFileName;
         public int burninCount = 0;
@@ -177,7 +244,7 @@ public class TreeAnnotator extends beast.base.inference.Runnable {
             int treesToUse = parsedTrees.size() - burninCount;
 	      	trees = new Tree[treesToUse];
             for (int i=burninCount; i<parsedTrees.size(); i++)
-                trees[i-burninCount] = parsedTrees.get(i);
+                trees[i-burninCount] = collapseSingleChildNodes(parsedTrees.get(i));
 		}
 
 		@Override
@@ -408,7 +475,7 @@ public class TreeAnnotator extends beast.base.inference.Runnable {
                         treeParser = new TreeParser(taxa, str, 1, false);
                     }
                 }
-                return treeParser;
+                return collapseSingleChildNodes(treeParser);
     		}
     		
             // read trees from NEXUS file
@@ -441,7 +508,7 @@ public class TreeAnnotator extends beast.base.inference.Runnable {
                 //if (translationMap != null) treeParser.translateLeafIds(translationMap);
                 treeParser.setID(id);
                 
-                return treeParser;
+                return collapseSingleChildNodes(treeParser);
             }
     		return null;
     	}
