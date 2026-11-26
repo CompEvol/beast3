@@ -1,0 +1,15 @@
+# Line endings (#336). Git on Windows, as on the GitHub Actions runners, checks text
+# files out with CRLF by default (core.autocrlf=true). Bash then reads a trailing \r on
+# every line, which broke the Windows release job's checksum check. These rules fix the
+# endings at checkout, whatever the platform or Git setting.
+
+# Read by bash: always LF.
+*.sh                    text eol=lf
+*.tsv                   text eol=lf
+bin/*                   text eol=lf
+release/Linux/linuxbin/* text eol=lf
+release/Mac/macbin/*    text eol=lf
+
+# Read by cmd.exe, which mishandles LF-only batch files (labels, goto): always CRLF.
+*.bat                   text eol=crlf
+*.cmd                   text eol=crlf
