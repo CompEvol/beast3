@@ -105,14 +105,39 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
     	return false;
     }
 
-    /** the bound a Bounded prior uses when this input is unset: an end of Real or Int */
+    /**
+     * the bound a Bounded prior uses when this input is unset: an end of Real or Int.
+     * The Int ends are shown as -Infinity/Infinity too, which is what they mean in practice.
+     */
     private String defaultBoundText() {
-    	boolean isLower = "lower".equals(m_input.getName());
-    	// not one ?: over both, which would turn the Integer into a Double
-    	if (isIntBound()) {
-    		return String.valueOf(isLower ? Int.INSTANCE.getLower() : Int.INSTANCE.getUpper());
-    	}
-    	return String.valueOf(isLower ? Real.INSTANCE.getLower() : Real.INSTANCE.getUpper());
+    	return String.valueOf("lower".equals(m_input.getName())
+    			? Real.INSTANCE.getLower() : Real.INSTANCE.getUpper());
+    }
+
+    /**
+     * a bound of a Bounded prior is unset only when the field is left empty: on Enter or
+     * when it loses focus, not on every key, so backspacing over a set bound to type a new
+     * value keeps the same parameter (and any idref to a shared one)
+     */
+    @Override
+    protected void setUpEntry() {
+        super.setUpEntry();
+        if (itemNr < 0 && isBoundOfBoundedPrior(m_input, m_beastObject)) {
+            m_entry.setOnAction(e -> unsetIfEmpty());
+            m_entry.focusedProperty().addListener((obs, was, isFocused) -> {
+                if (!isFocused) {
+                    unsetIfEmpty();
+                }
+            });
+        }
+    }
+
+    /** an empty field unsets the bound, so the prior uses its default bound again */
+    public void unsetIfEmpty() {
+        if (m_entry.getText().trim().isEmpty() && m_input.get() != null) {
+            m_input.setValue(null, m_beastObject);
+            validateInput();
+        }
     }
     
     
@@ -147,9 +172,8 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             Scalar<?,?> parameter = (Scalar<?,?>) m_input.get();
             if (itemNr < 0 && isBoundOfBoundedPrior(m_input, m_beastObject)) {
             	if (valueString.trim().isEmpty()) {
-            		// cleared: unset, so the prior uses its default bound again
-            		m_input.setValue(null, m_beastObject);
-            		validateInput();
+            		// empty while typing: keep the bound as it is; it is unset only on
+            		// Enter or focus lost (see unsetIfEmpty)
             		return;
             	}
             	if (parameter == null) {
@@ -180,7 +204,9 @@ public class ScalarInputEditor extends BEASTObjectInputEditor {
             validateInput();
         } catch (Exception ex) {
             m_validateLabel.setVisible(true);
-            m_validateLabel.setTooltip(new Tooltip("Parsing error: " + ex.getMessage() + ". Value was left at " + m_input.get() + "."));
+            Object value = m_input.get();
+            m_validateLabel.setTooltip(new Tooltip("Parsing error: " + ex.getMessage() + ". Value was left "
+            		+ (value == null ? "unset" : "at " + value) + "."));
             m_validateLabel.setColor("orange");
             repaint();
         }

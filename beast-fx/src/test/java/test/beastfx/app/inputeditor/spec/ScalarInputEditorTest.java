@@ -123,8 +123,17 @@ public class ScalarInputEditorTest {
 			assertFalse(((RealScalarParam<?>) bounded.upperInput.get()).isEstimatedInput.get(),
 					"a bound typed in is a fixed value, not estimated");
 
+			// backspacing to empty and typing a new value keeps the same parameter (#331 review)
+			Object set = bounded.upperInput.get();
 			type(field, "");
-			assertNull(bounded.upperInput.get(), "clearing the field unsets the upper bound");
+			assertSame(set, bounded.upperInput.get(), "an empty field while typing keeps the bound");
+			type(field, "3");
+			assertSame(set, bounded.upperInput.get(), "retyping a set bound keeps the same parameter");
+			assertEquals(3.0, ((RealScalarParam<?>) set).get());
+
+			type(field, "");
+			pressEnter(field);
+			assertNull(bounded.upperInput.get(), "clearing the field and pressing Enter unsets the upper bound");
 		}, error);
 		rethrow(error);
 	}
@@ -147,7 +156,7 @@ public class ScalarInputEditorTest {
 			doc.registerPlugin(count);
 			doc.registerPlugin(bounded);
 
-			TextField field = unsetBoundField(doc, bounded, "upper", String.valueOf(Int.INSTANCE.getUpper()));
+			TextField field = unsetBoundField(doc, bounded, "upper", String.valueOf(Real.INSTANCE.getUpper()));
 
 			type(field, "8");
 			assertTrue(bounded.upperInput.get() instanceof IntScalarParam<?> p && p.get() == 8,
@@ -181,6 +190,11 @@ public class ScalarInputEditorTest {
 		field.setText(text);
 		field.getOnKeyReleased().handle(new KeyEvent(KeyEvent.KEY_RELEASED, "", "", KeyCode.UNDEFINED,
 				false, false, false, false));
+	}
+
+	/** press Enter in the field */
+	private static void pressEnter(TextField field) {
+		field.getOnAction().handle(new javafx.event.ActionEvent());
 	}
 
 	/** the first node of the given class (and id, unless null) in the tree rooted at node */
