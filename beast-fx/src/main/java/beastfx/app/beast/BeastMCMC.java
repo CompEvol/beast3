@@ -256,21 +256,39 @@ public class BeastMCMC {
 
 
     public void run() throws Exception {
+        if (stopRequested) {
+            // Stop was clicked while the file was being parsed
+            Log.warning.println("Stopped on request before the analysis started; nothing was run");
+            return;
+        }
     	ProgramStatus.g_exec = Executors.newFixedThreadPool(ProgramStatus.m_nThreads);
         m_runnable.run();
         ProgramStatus.g_exec.shutdown();
         ProgramStatus.g_exec.shutdownNow();
     } // run
 
+    /** Set by {@link #requestStop()}, so a stop before the analysis exists still counts. */
+    private volatile boolean stopRequested = false;
+
     /**
-     * Asks the running analysis to stop after the current sample, storing its state so
-     * it can be continued with -resume. Safe to call from another thread.
+     * Asks the analysis to stop after the current sample, storing its state so it can be
+     * continued with -resume. If the file is still being parsed, the analysis isn't started.
+     * Safe to call from another thread.
      *
-     * @return false if there is nothing to stop yet (the file is still being parsed), or
-     * the analysis can't be stopped this way (see {@link MCMC#requestStop()})
+     * @return false if the analysis can't be stopped this way (see {@link MCMC#requestStop()})
      */
     public boolean requestStop() {
-        return m_runnable instanceof MCMC mcmc && mcmc.requestStop();
+        stopRequested = true; // before reading m_runnable: run() checks it after m_runnable is set
+        Runnable runnable = m_runnable;
+        if (runnable == null) {
+            return true; // still parsing; run() won't start it
+        }
+        return runnable instanceof MCMC mcmc && mcmc.requestStop();
+    }
+
+    /** @return whether the file has been parsed, so there is an analysis to run or stop */
+    public boolean hasAnalysis() {
+        return m_runnable != null;
     }
 
 

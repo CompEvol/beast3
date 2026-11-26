@@ -403,10 +403,28 @@ public class MCMC extends Runnable {
             operatorSchedule.storeToFile();
         } else {
             // doLoop already stored the state of the last completed sample
-            Log.warning.println("Stopped at sample " + stoppedAtSample + " on request; continue the run with -resume");
+            Log.warning.println(stoppedMessage());
         }
         //Randomizer.storeToFile(stateFileName);
     } // run;
+
+    /**
+     * @return what a stop on request did: where the chain stopped, and what -resume does with
+     * the stored state. -resume starts a new chain of chainLength samples from that state,
+     * appending to the logs, rather than completing the stopped one.
+     */
+    protected String stoppedMessage() {
+        String resume = "; -resume starts a new chain of " + chainLength + " samples from it";
+        String logs = ", appending to the logs";
+        if (stoppedAtSample < -burnIn) {
+            return "Stopped on request before the first sample; the initial state is stored" + resume + logs;
+        }
+        if (stoppedAtSample < 0) {
+            return "Stopped on request during pre-burnin, after " + (stoppedAtSample + burnIn + 1) + " of " + burnIn
+                    + " pre-burnin samples; the state is stored" + resume + ", without the rest of the pre-burnin" + logs;
+        }
+        return "Stopped on request at sample " + stoppedAtSample + "; the state is stored" + resume + logs;
+    }
 
     /** Set from another thread by {@link #requestStop()}; read once per sample by {@link #doLoop()}. */
     private volatile boolean stopRequested = false;
@@ -436,17 +454,25 @@ public class MCMC extends Runnable {
     }
 
     /**
-     * @return whether the main loop checks {@link #isStopRequested()}. True when {@link #doLoop()}
-     * is this class's own. A subclass that replaces doLoop() and checks isStopRequested()
-     * should override this to return true.
+     * @return whether this chain handles {@link #requestStop()}. True when neither {@link #doLoop()}
+     * nor {@link #run()} is overridden, as MCMC's own loop checks for stop requests and its run()
+     * doesn't overwrite the stored state of a stopped chain.
+     * <p>
+     * For package authors: this is a guess from which methods a subclass declares, and it errs
+     * on the side of "can't be stopped". Override it to return true if your class handles stops,
+     * e.g. a doLoop() that checks {@link #isStopRequested()} or calls super.doLoop(), and a run()
+     * that, after a stop, doesn't store the state with chainLength as its sample (see
+     * {@link #stoppedAtSample}).
      */
     protected boolean checksStopRequests() {
         for (Class<?> c = getClass(); c != MCMC.class; c = c.getSuperclass()) {
-            try {
-                c.getDeclaredMethod("doLoop");
-                return false;
-            } catch (NoSuchMethodException e) {
-                // not replaced at this level
+            for (String method : new String[] {"doLoop", "run"}) {
+                try {
+                    c.getDeclaredMethod(method);
+                    return false;
+                } catch (NoSuchMethodException e) {
+                    // not overridden at this level
+                }
             }
         }
         return true;

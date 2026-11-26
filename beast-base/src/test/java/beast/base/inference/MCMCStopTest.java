@@ -50,16 +50,36 @@ class MCMCStopTest {
         Logger.FILE_MODE = Logger.LogFileMode.only_new;
     }
 
-    /** Runs testHKY on another thread, asks it to stop after a while, and returns the stopped chain. */
-    private MCMC runAndStop(boolean resume) throws Exception {
+    /** testHKY in dir, without pre-burnin, so any proposal is a sample */
+    private MCMC parse(boolean resume) throws Exception {
         System.setProperty("file.name.prefix", dir + File.separator);
         Logger.FILE_MODE = resume ? Logger.LogFileMode.resume : Logger.LogFileMode.overwrite;
         Randomizer.setSeed(1);
         // fixed log names: $(seed) in them differs between the two runs
         Path xml = dir.resolve("testHKY.xml");
-        Files.writeString(xml, Files.readString(TEST_HKY.toPath()).replace("test.$(seed).", "test."));
+        Files.writeString(xml, Files.readString(TEST_HKY.toPath())
+                .replace("test.$(seed).", "test.")
+                .replace("preBurnin=\"50000\"", "preBurnin=\"0\""));
         MCMC mcmc = (MCMC) new XMLParser().parseFile(xml.toFile());
         mcmc.setStateFile("testHKY.xml.state", resume); // file.name.prefix puts it in dir
+        return mcmc;
+    }
+
+    /** Proposals made by the chain's operators so far, including those restored by -resume. */
+    private static long proposals(MCMC mcmc) {
+        long n = 0;
+        for (Operator operator : mcmc.operatorsInput.get()) {
+            n += operator.get_m_nNrAccepted() + operator.get_m_nNrRejected();
+        }
+        return n;
+    }
+
+    /**
+     * Runs testHKY on another thread, asks it to stop once it has made 20,000 proposals more
+     * than at the start, and returns the stopped chain.
+     */
+    private MCMC runAndStop(boolean resume, long proposalsAtStart) throws Exception {
+        MCMC mcmc = parse(resume);
 
         AtomicReference<Throwable> failure = new AtomicReference<>();
         Thread chain = new Thread(() -> {
@@ -70,7 +90,13 @@ class MCMCStopTest {
             }
         });
         chain.start();
-        Thread.sleep(1500);
+        // wait until the chain is sampling, rather than for a fixed time (#329 review)
+        long deadline = System.currentTimeMillis() + 60_000;
+        while (proposals(mcmc) < proposalsAtStart + 20_000 && chain.isAlive()
+                && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        assertTrue(chain.isAlive(), "the chain is still running when asked to stop");
         assertTrue(mcmc.requestStop(), "a plain MCMC can be stopped");
         chain.join(60_000);
         assertFalse(chain.isAlive(), "the chain ends soon after the request");
@@ -79,7 +105,7 @@ class MCMCStopTest {
     }
 
     private static long stateFileSample(Path stateFile) throws Exception {
-        Matcher m = Pattern.compile("sample='(\\d+)'").matcher(Files.readString(stateFile));
+        Matcher m = Pattern.compile("sample='(-?\\d+)'").matcher(Files.readString(stateFile));
         assertTrue(m.find(), "state file names its sample");
         return Long.parseLong(m.group(1));
     }
@@ -94,7 +120,7 @@ class MCMCStopTest {
 
     @Test
     void stopStoresStateAndResumeContinues() throws Exception {
-        MCMC first = runAndStop(false);
+        MCMC first = runAndStop(false, 0);
         long stopped = first.stoppedAtSample;
         assertTrue(stopped > 0 && stopped < 5_000_000, "stopped part way: " + stopped);
 
@@ -105,13 +131,37 @@ class MCMCStopTest {
         List<Long> before = logSamples(log);
         assertTrue(before.get(before.size() - 1) <= stopped, "no log row after the stopped sample");
 
-        MCMC second = runAndStop(true);
+        MCMC second = runAndStop(true, proposals(first));
         List<Long> after = logSamples(log);
         assertTrue(after.size() > before.size(), "the resumed run appends to the log");
         for (int i = 1; i < after.size(); i++) {
             assertTrue(after.get(i) > after.get(i - 1), "log samples keep increasing at row " + i);
         }
         assertTrue(second.stoppedAtSample > 0);
+    }
+
+    @Test
+    void stopBeforeTheFirstSampleSaysSo() throws Exception {
+        MCMC mcmc = parse(false);
+        assertTrue(mcmc.requestStop());
+        mcmc.run();
+        assertEquals(-mcmc.burnIn - 1, mcmc.stoppedAtSample);
+        assertTrue(mcmc.stoppedMessage().startsWith("Stopped on request before the first sample"), mcmc.stoppedMessage());
+        assertEquals(mcmc.stoppedAtSample, stateFileSample(dir.resolve("testHKY.xml.state")));
+    }
+
+    @Test
+    void stoppedMessages() {
+        MCMC mcmc = new MCMC();
+        mcmc.burnIn = 100;
+        mcmc.chainLength = 1000;
+        mcmc.stoppedAtSample = -61; // samples -100 to -61 done
+        assertEquals("Stopped on request during pre-burnin, after 40 of 100 pre-burnin samples; the state is stored; "
+                + "-resume starts a new chain of 1000 samples from it, without the rest of the pre-burnin, "
+                + "appending to the logs", mcmc.stoppedMessage());
+        mcmc.stoppedAtSample = 250;
+        assertEquals("Stopped on request at sample 250; the state is stored; "
+                + "-resume starts a new chain of 1000 samples from it, appending to the logs", mcmc.stoppedMessage());
     }
 
     @Test
@@ -137,5 +187,12 @@ class MCMCStopTest {
         assertTrue(optedIn.isStopRequested());
 
         assertTrue(new MCMC().requestStop(), "MCMC's own loop checks for stop requests");
+
+        MCMC ownRun = new MCMC() {
+            @Override
+            public void run() {
+            }
+        };
+        assertFalse(ownRun.requestStop(), "its run() may overwrite the stopped state");
     }
 }

@@ -184,16 +184,19 @@ public class Controller implements Initializable {
 			beastThread.start();
 			runButton.setText("Stop");
 		} else if (beastMCMC.requestStop()) {
-			// the chain stops after the current sample, stores its state and closes its logs;
-			// when beastThread ends it closes the dialog, as after a complete run
-			logToView("Stopping after the current sample; continue later with -resume", "green");
+			// the chain stops after the current sample, stores its state and closes its logs,
+			// or, if the file is still being parsed, isn't started; when beastThread ends it
+			// closes the dialog, as after a complete run
+			logToView(beastMCMC.hasAnalysis()
+					? "Stopping after the current sample; the state will be stored for -resume"
+					: "Stopping: the analysis won't be started once the file is read", "green");
 			runButton.setText("Stopping");
 			runButton.setDisable(true);
 		} else {
 			// Thread.stop() is gone (it throws since Java 20, removed in Java 26), so an
 			// analysis that doesn't check for stop requests can only end with BEAST itself
-			logToView("This analysis can't be stopped while it runs. Quit ends BEAST; "
-					+ "the state was last saved at the most recent storeEvery sample.", "red");
+			logToView("This analysis can't be stopped while it runs. Quit ends BEAST, "
+					+ "and anything the analysis hasn't saved yet is lost.", "red");
 			runButton.setText("Quit");
 		}
 	}
