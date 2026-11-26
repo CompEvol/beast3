@@ -2,8 +2,10 @@ package beast.base.spec.inference.distribution;
 
 import beast.base.spec.domain.NonNegativeInt;
 import beast.base.spec.domain.NonNegativeReal;
+import beast.base.spec.domain.PositiveInt;
 import beast.base.spec.domain.PositiveReal;
 import beast.base.spec.domain.Real;
+import beast.base.spec.inference.parameter.IntScalarParam;
 import beast.base.spec.inference.parameter.IntSimplexParam;
 import beast.base.spec.inference.parameter.RealScalarParam;
 import beast.base.spec.inference.parameter.RealVectorParam;
@@ -99,7 +101,51 @@ public class InvalidValueMessageTest {
     public void testVectorCreatedWithElementOutsideRangeNamesElement() {
         String message = assertThrows(IllegalArgumentException.class,
                 () -> new RealVectorParam<>(new double[] {0.5, -1.0}, PositiveReal.INSTANCE)).getMessage();
-        assertTrue(message.contains("Element 2 (-1.0) is outside the allowed range"), message);
+        assertTrue(message.contains("Element 2 (-1.0) is not in the domain PositiveReal"), message);
+    }
+
+    /** #332: a value in the domain but outside a prior's bounds says so, and names the prior */
+    @Test
+    public void testSetOutsidePriorBoundsNamesBoundsAndPrior() {
+        RealScalarParam<PositiveReal> shape = new RealScalarParam<>(1.0, PositiveReal.INSTANCE);
+        shape.setID("gammaShape");
+        Uniform prior = new Uniform(null,
+                new RealScalarParam<>(0.1, Real.INSTANCE),
+                new RealScalarParam<>(5.0, Real.INSTANCE));
+        prior.setID("GammaShapePrior");
+        prior.paramInput.setValue(shape, prior);
+        prior.initAndValidate();
+
+        String message = assertThrows(IllegalArgumentException.class, () -> shape.set(5.1)).getMessage();
+        assertEquals("gammaShape = 5.1 is outside the allowed range [0.1,5.0], set by GammaShapePrior", message);
+
+        message = assertThrows(IllegalArgumentException.class, () -> shape.set(-1.0)).getMessage();
+        assertEquals("gammaShape = -1.0 is not in the domain PositiveReal", message);
+
+        shape.set(4.9); // inside both
+        assertEquals(4.9, shape.get());
+    }
+
+    /** #332: without a prior that narrows it, a value outside the domain names the domain's simple name */
+    @Test
+    public void testDomainFailureUsesSimpleName() {
+        IntScalarParam<PositiveInt> count = new IntScalarParam<>(1, PositiveInt.INSTANCE);
+        count.setID("count");
+        String message = assertThrows(IllegalArgumentException.class, () -> count.set(0)).getMessage();
+        assertEquals("count = 0 is not in the domain PositiveInt", message);
+
+        message = assertThrows(IllegalArgumentException.class,
+                () -> new RealScalarParam<>(-2.0, PositiveReal.INSTANCE)).getMessage();
+        assertEquals("the parameter = -2.0 is not in the domain PositiveReal", message);
+    }
+
+    /** #332: a vector names the element */
+    @Test
+    public void testVectorSetNamesElement() {
+        RealVectorParam<PositiveReal> rates = new RealVectorParam<>(new double[] {0.5, 1.5}, PositiveReal.INSTANCE);
+        rates.setID("rates");
+        String message = assertThrows(IllegalArgumentException.class, () -> rates.set(1, -3.0)).getMessage();
+        assertEquals("rates element 2 = -3.0 is not in the domain PositiveReal", message);
     }
 
     @Test

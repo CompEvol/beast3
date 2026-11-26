@@ -285,8 +285,7 @@ public class RealVectorParam<D extends Real> extends KeyVectorParam<Double> impl
     public void set(final int i, final double value) {
         startEditing(null);
         if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, i));
         }
         values[i] = value;
         isDirty[i] = true;

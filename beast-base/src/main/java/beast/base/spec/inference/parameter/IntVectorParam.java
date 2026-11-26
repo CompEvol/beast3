@@ -291,8 +291,7 @@ public class IntVectorParam<D extends Int> extends KeyVectorParam<Integer> imple
     public void set(final int i, final int value) {
         startEditing(null);
         if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, i));
         }
         values[i] = value;
         isDirty[i] = true;
