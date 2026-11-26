@@ -69,8 +69,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
 
         if (!isValid(value)) {
         	isValid(value);
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, -1));
         }
 
     }
@@ -105,8 +104,7 @@ public class RealScalarParam<D extends Real> extends StateNode implements RealSc
         startEditing(null);
 
         if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, -1));
         }
         this.value = value; // a primitive value
     }

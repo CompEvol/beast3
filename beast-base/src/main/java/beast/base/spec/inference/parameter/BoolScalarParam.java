@@ -73,8 +73,7 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
         this.storedValue = value;
 
         if (!isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, -1));
         }
     }
 
@@ -102,8 +101,7 @@ public class BoolScalarParam extends StateNode implements BoolScalar {
         startEditing(null);
 
         if (!isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, -1));
         }
         this.value = value;
     }

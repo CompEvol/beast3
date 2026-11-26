@@ -1,7 +1,12 @@
 package beast.base.spec.type;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import beast.base.core.BEASTInterface;
 import beast.base.spec.Bounded;
 import beast.base.spec.domain.Domain;
+import beast.base.spec.inference.distribution.TensorDistribution;
 
 /**
  * Tensor type - ordered value or values.
@@ -82,11 +87,65 @@ public interface Tensor<D extends Domain<T>, T> {
             T value = get(i);
             if (!isValid(value)) {
                 String element = size() > 1 ? "Element " + (i + 1) + " (" + value + ")" : "It";
-                if (this instanceof Bounded<?> bounded)
-                    return element + " is outside the allowed range " + bounded.boundsToString() + ".";
-                return element + " is not in the domain " + getDomain().getClass().getSimpleName() + ".";
+                return element + " " + whyValueNotValid(value) + ".";
             }
         }
         return null;
+    }
+
+    /**
+     * The message for a value this parameter rejects (#332): it names the parameter, and the
+     * element of a vector, and says whether the value is outside the domain or outside the
+     * bounds that priors set, e.g. "gammaShape = 5.1 is outside the allowed range [0.1,5.0],
+     * set by GammaShapePrior" or "gammaShape = -1.0 is not in the domain PositiveReal".
+     *
+     * @param value the rejected value
+     * @param index the element of a vector (0-based), or -1 for a scalar
+     */
+    default String invalidValueMessage(T value, int index) {
+        String name = this instanceof BEASTInterface b && b.getID() != null ? b.getID() : "the parameter";
+        if (index >= 0 && size() > 1) {
+            name += " element " + (index + 1);
+        }
+        return name + " = " + value + " " + whyValueNotValid(value);
+    }
+
+    /**
+     * Why a value is not valid: "is not in the domain X", or "is outside the allowed range
+     * [a,b]", naming the priors that narrow the domain's range, if any.
+     */
+    private String whyValueNotValid(T value) {
+        D domain = getDomain();
+        if (value == null || !domain.isValid(value) || !(this instanceof Bounded<?> bounded)) {
+            return "is not in the domain " + domain.getClass().getSimpleName();
+        }
+        String priors = boundingPriors();
+        return "is outside the allowed range " + bounded.boundsToString()
+                + (priors.isEmpty() ? "" : ", set by " + priors);
+    }
+
+    /** the IDs of the distributions on this parameter whose support is narrower than the domain */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private String boundingPriors() {
+        if (!(this instanceof BEASTInterface b) || b.getID() == null || !(getDomain() instanceof Bounded domainBounds)) {
+            return "";
+        }
+        List<String> ids = new ArrayList<>();
+        for (BEASTInterface o : b.getOutputs()) {
+            if (o instanceof TensorDistribution<?, ?> d && !d.isAwaitingInit() && d.getArguments().contains(b.getID())) {
+                try {
+                    Comparable lower = (Comparable) d.getLowerBoundOfParameter();
+                    Comparable upper = (Comparable) d.getUpperBoundOfParameter();
+                    boolean narrower = (lower != null && lower.compareTo(domainBounds.getLower()) > 0)
+                            || (upper != null && upper.compareTo(domainBounds.getUpper()) < 0);
+                    if (narrower) {
+                        ids.add(d.getID() != null ? d.getID() : d.getClass().getSimpleName());
+                    }
+                } catch (RuntimeException e) {
+                    // a distribution that can't give its bounds is left out of the message
+                }
+            }
+        }
+        return String.join(", ", ids);
     }
 }

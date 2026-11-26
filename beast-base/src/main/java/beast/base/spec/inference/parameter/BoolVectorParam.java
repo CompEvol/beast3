@@ -114,8 +114,9 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
 
         // Validate against domain and bounds constraints
         if (! isValid()) {
-            throw new IllegalArgumentException("Initial value of " + this +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            String why = whyNotValid();
+            throw new IllegalArgumentException("Initial value of " + this + " is not valid."
+                    + (why == null ? "" : " " + why));
         }
     }
 
@@ -183,8 +184,7 @@ public class BoolVectorParam extends KeyVectorParam<Boolean> implements BoolVect
     public void set(final int i, final boolean value) {
         startEditing(null);
         if (! isValid(value)) {
-            throw new IllegalArgumentException("Value " + value +
-                    " is not valid for domain " + getDomain().getClass().getName());
+            throw new IllegalArgumentException(invalidValueMessage(value, i));
         }
         values[i] = value;
         isDirty[i] = true;

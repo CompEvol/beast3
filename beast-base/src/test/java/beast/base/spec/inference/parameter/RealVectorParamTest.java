@@ -33,7 +33,7 @@ public class RealVectorParamTest {
             fail("Expected IllegalArgumentException not thrown");
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage();
-            assertTrue(message.contains("not valid for domain") & message.contains("PositiveReal"), ex.getMessage());
+            assertTrue(message.contains("element 3 = 0.0 is not in the domain PositiveReal"), ex.getMessage());
         }
 
         parameter.set(2, 2.0); // this will throw an exception
@@ -83,7 +83,7 @@ public class RealVectorParamTest {
             fail("Expected IllegalArgumentException not thrown");
         } catch (IllegalArgumentException ex) {
             String message = ex.getMessage();
-            assertTrue(message.contains("Element 1 (-1.0) is outside the allowed range [0.0,Infinity]"), ex.getMessage());
+            assertTrue(message.contains("Element 1 (-1.0) is not in the domain PositiveReal"), ex.getMessage());
         }
     }
 
