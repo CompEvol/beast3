@@ -24,9 +24,12 @@ Version 2.8.0-rc4 November 2026
 	o BEAUti: IID on a positive or unit-interval vector starts with LogNormal or Beta, from templates #290
 	o BEAUti: option to plot a positive prior's density on a log scale #293 #299
 	o BEAUti: choosing a distribution for an input with no value no longer throws, and message dialogs do not block when JavaFX is headless #302
+	o BEAUti: an unset lower or upper bound of a Bounded prior is a number field showing the default bound, not a dropdown of distributions #330
 	o Alert: confirm dialog shows no HTML tags and can be closed, a closed Yes/No/Cancel dialog is Cancel, and dialogs are centred on their window #310
+	o BEAST dialog: Stop asks the chain to stop after the current sample and stores its state for -resume, instead of calling Thread.stop(), which JDK 26 removed; a Stop while the file is being read means the analysis is not started #328
 	o Register VectorElement in version.xml and check module-info against it #319
 	o mvn exec: pass -Dbeast.args to any main class as program arguments #296
+	o Add scripts/eclipse/make-single-project.sh, which makes one plain Eclipse project for the core and the bundled packages #239
 	o Remove the BEAST 2 lib/ folder and scripts/doc.pl #313
 	o CI and tests: Maven cache falls back to an older cache, Maven retries rate limits longer, and resolver tests no longer fail when Maven Central rate-limits #312 #318
 
