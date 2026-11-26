@@ -24,6 +24,8 @@ sha256() {
 count=0
 while IFS=$'\t' read -r name version url sum; do
     case "$name" in ''|'#'*) continue ;; esac
+    # a Windows checkout may have CRLF line endings (#336): drop the \r from the last field
+    sum="${sum%$'\r'}"
     file="$CACHE/$(basename "$url")"
     if [ ! -f "$file" ] || [ "$(sha256 "$file")" != "$sum" ]; then
         echo "    Downloading $name $version"
