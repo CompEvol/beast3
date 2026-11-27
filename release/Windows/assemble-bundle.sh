@@ -153,8 +153,8 @@ _launcher "$LAUNCHERS_DIR/loganalyser.properties" \
     "arguments=beastfx.app.tools.LogAnalyser"
 _launcher "$LAUNCHERS_DIR/applauncher.properties" \
     "main-class=beast.pkgmgmt.launcher.AppLauncherLauncher"
-_launcher "$LAUNCHERS_DIR/packagemanager.properties" \
-    "main-class=beast.pkgmgmt.PackageManager"
+# No packagemanager launcher: it is a command-line tool, run from bat/packagemanager.bat,
+# like bin/packagemanager on Mac and Linux (no packagemanager.exe or PackageManager.app).
 
 # ── Step 3: jpackage app-image ────────────────────────────────────────────────
 # --name beast → primary exe is beast.exe; --add-launcher adds one exe per tool.
@@ -184,8 +184,7 @@ jpackage --type app-image \
     --add-launcher    "treeannotator=$LAUNCHERS_DIR/treeannotator.properties" \
     --add-launcher    "logcombiner=$LAUNCHERS_DIR/logcombiner.properties" \
     --add-launcher    "loganalyser=$LAUNCHERS_DIR/loganalyser.properties" \
-    --add-launcher    "applauncher=$LAUNCHERS_DIR/applauncher.properties" \
-    --add-launcher    "packagemanager=$LAUNCHERS_DIR/packagemanager.properties"
+    --add-launcher    "applauncher=$LAUNCHERS_DIR/applauncher.properties"
 
 rm -rf "$LAUNCHERS_DIR"; LAUNCHERS_DIR=  # consumed; clear so EXIT trap skips it
 
@@ -330,10 +329,13 @@ _ok()   { echo "  [ok]  $*"; PASS=$((PASS + 1)); }
 _fail() { echo "  [FAIL] $*"; FAIL=$((FAIL + 1)); }
 
 for f in beast.exe beauti.exe treeannotator.exe logcombiner.exe \
-          loganalyser.exe applauncher.exe packagemanager.exe \
+          loganalyser.exe applauncher.exe \
           runtime/bin/java.exe app version.xml examples; do
     [ -e "$BUNDLE/$f" ] && _ok "$f present" || _fail "$f MISSING"
 done
+[ ! -e "$BUNDLE/packagemanager.exe" ] \
+    && _ok "no packagemanager.exe (bat/packagemanager.bat only)" \
+    || _fail "packagemanager.exe present — the package manager ships only as bat/packagemanager.bat"
 
 for f in applauncher.bat beast.bat beauti.bat densitree.bat \
           loganalyser.bat logcombiner.bat packagemanager.bat treeannotator.bat; do
@@ -341,7 +343,7 @@ for f in applauncher.bat beast.bat beauti.bat densitree.bat \
 done
 
 CFG_COUNT=$(find "$BUNDLE/app" -name "*.cfg" | wc -l | tr -d ' ')
-[ "$CFG_COUNT" -ge 7 ] \
+[ "$CFG_COUNT" -ge 6 ] \
     && _ok "app/ has ${CFG_COUNT} .cfg files" \
     || _fail "app/ has too few .cfg files: ${CFG_COUNT}"
 
